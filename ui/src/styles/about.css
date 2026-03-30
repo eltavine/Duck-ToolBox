@@ -1,0 +1,31 @@
+@layer components {
+  .about-grid {
+    display: grid;
+    gap: 0.9rem;
+  }
+
+  .about-link-row {
+    margin-top: 0.9rem;
+  }
+
+  .about-link {
+    width: 100%;
+    text-decoration: none;
+  }
+}
+
+@media (min-width: 768px) {
+  @layer components {
+    .about-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+}
+
+@media (min-width: 1200px) {
+  @layer components {
+    .about-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+}

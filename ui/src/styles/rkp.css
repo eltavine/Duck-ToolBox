@@ -1,0 +1,102 @@
+@layer components {
+  .profile-note {
+    margin-bottom: 1rem;
+  }
+
+  .profile-summary-grid,
+  .profile-choice-grid {
+    display: grid;
+    gap: 0.9rem;
+  }
+
+  .choice-card,
+  .expand-card {
+    border: 1px solid var(--border);
+    border-radius: calc(var(--radius) - 0.2rem);
+    background: var(--tile-bg);
+  }
+
+  .choice-card {
+    width: 100%;
+    display: grid;
+    gap: 0.55rem;
+    padding: 1rem;
+    text-align: left;
+    transition:
+      transform 120ms ease,
+      border-color 120ms ease,
+      background-color 120ms ease;
+  }
+
+  .choice-card:hover,
+  .choice-card:focus-visible {
+    transform: translateY(-1px);
+    border-color: var(--border-strong);
+    background: var(--tile-hover-bg);
+  }
+
+  .choice-card:disabled {
+    opacity: 0.58;
+    transform: none;
+    cursor: not-allowed;
+  }
+
+  .choice-value {
+    font-size: 1.05rem;
+    line-height: 1.2;
+  }
+
+  .choice-action,
+  .expand-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  .choice-action {
+    color: var(--muted);
+    font-size: 0.82rem;
+  }
+
+  .expand-card {
+    margin-top: 1rem;
+    padding: 1rem;
+  }
+
+  .expand-summary {
+    list-style: none;
+    cursor: pointer;
+  }
+
+  .expand-summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .expand-title {
+    display: block;
+    margin-top: 0.35rem;
+  }
+}
+
+@media (min-width: 768px) {
+  @layer components {
+    .profile-summary-grid,
+    .profile-choice-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+}
+
+@media (min-width: 1200px) {
+  @layer components {
+    .profile-summary-grid,
+    .profile-choice-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .profile-choice-grid > :last-child {
+      grid-column: span 4;
+    }
+  }
+}

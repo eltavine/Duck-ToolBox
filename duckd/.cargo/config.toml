@@ -1,0 +1,6 @@
+[build]
+target = "aarch64-linux-android"
+
+[target.aarch64-linux-android]
+ar = "llvm-ar"
+linker = "aarch64-linux-android29-clang"

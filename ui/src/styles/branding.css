@@ -1,0 +1,23 @@
+@layer components {
+  .brand-lockup {
+    display: inline-grid;
+    justify-items: start;
+    gap: 0.6rem;
+    min-width: 0;
+  }
+
+  .brand-logo {
+    width: 2.75rem;
+    height: 2.75rem;
+    flex: 0 0 auto;
+    border: 1px solid var(--border);
+    border-radius: 0.95rem;
+    background: var(--brand-logo-bg);
+    padding: 0.42rem;
+    box-shadow: var(--brand-logo-shadow);
+  }
+
+  .brand-badge {
+    width: 100%;
+  }
+}

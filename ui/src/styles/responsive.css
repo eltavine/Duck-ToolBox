@@ -1,0 +1,130 @@
+@layer utilities {
+  .hero-panel {
+    margin-bottom: 1rem;
+  }
+}
+
+@media (max-width: 767px) {
+  @layer components {
+    .shell {
+      padding: 0.9rem 0.75rem 1.5rem;
+    }
+
+    .panel {
+      padding: 1rem;
+      border-radius: calc(var(--radius) - 0.05rem);
+    }
+
+    .panel-subsection {
+      margin-top: 1rem;
+      padding-top: 1rem;
+    }
+
+    .headline {
+      font-size: clamp(1.65rem, 10vw, 2.35rem);
+      letter-spacing: -0.06em;
+    }
+
+    .panel-title {
+      font-size: 1.2rem;
+    }
+
+    .panel-heading,
+    .history-row,
+    .list-row,
+    .copy-row {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .history-meta {
+      justify-items: start;
+      text-align: left;
+    }
+
+    .status-stack {
+      min-width: 100%;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .toolbar > * {
+      flex: 1 1 100%;
+    }
+
+    .toolbar .icon-button {
+      flex: 0 0 auto;
+      align-self: flex-start;
+    }
+
+    .workspace-nav {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      padding-bottom: 0.3rem;
+      margin-inline: -0.1rem;
+      scrollbar-width: none;
+    }
+
+    .workspace-nav::-webkit-scrollbar {
+      display: none;
+    }
+
+    .workspace-button {
+      flex: 0 0 auto;
+      min-width: max-content;
+      white-space: nowrap;
+    }
+
+    .mode-picker {
+      width: 100%;
+    }
+
+    .mode-option {
+      flex: 1 1 0;
+    }
+
+    .copy-row .icon-button {
+      align-self: flex-start;
+    }
+  }
+}
+
+@media (max-width: 420px) {
+  @layer components {
+    .status-stack {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+@media (min-width: 768px) {
+  @layer components {
+    .shell {
+      padding-inline: 1.5rem;
+    }
+
+    .summary-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .field-grid.two-up {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .device-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+}
+
+@media (min-width: 1024px) {
+  @layer components {
+    .hero-grid {
+      grid-template-columns: minmax(0, 1.15fr) minmax(24rem, 0.85fr);
+      align-items: end;
+    }
+
+    .shell-grid {
+      grid-template-columns: 18rem minmax(0, 1fr) 22rem;
+    }
+  }
+}

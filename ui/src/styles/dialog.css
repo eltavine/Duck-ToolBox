@@ -1,0 +1,113 @@
+@layer components {
+  .dialog-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: grid;
+    align-items: end;
+    background: var(--dialog-backdrop);
+    padding: 1rem 0.75rem;
+  }
+
+  .dialog-card {
+    width: min(100%, 34rem);
+    margin: 0 auto;
+    border: 1px solid var(--border-strong);
+    border-radius: calc(var(--radius) + 0.1rem);
+    background: var(--dialog-bg);
+    padding: 1rem;
+    box-shadow: var(--dialog-shadow);
+  }
+
+  .dialog-card-wide {
+    width: min(100%, 56rem);
+  }
+
+  .dialog-title {
+    margin-top: 0;
+  }
+
+  .dialog-options {
+    margin-top: 1rem;
+  }
+
+  .dialog-option {
+    width: 100%;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    border: 1px solid var(--border);
+    border-radius: calc(var(--radius) - 0.3rem);
+    background: var(--tile-bg);
+    padding: 0.95rem 1rem;
+    text-align: left;
+    transition:
+      transform 120ms ease,
+      border-color 120ms ease,
+      background-color 120ms ease;
+  }
+
+  .dialog-option:hover,
+  .dialog-option:focus-visible,
+  .dialog-option.is-active {
+    transform: translateY(-1px);
+    border-color: var(--border-strong);
+    background: var(--tile-hover-bg);
+  }
+
+  .dialog-option-title {
+    font-size: 1rem;
+    line-height: 1.2;
+  }
+
+  .dialog-code {
+    margin: 1rem 0 0;
+    max-height: min(60svh, 32rem);
+    overflow: auto;
+    border: 1px solid var(--border);
+    border-radius: calc(var(--radius) - 0.3rem);
+    background: var(--tile-bg);
+    padding: 1rem;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    line-height: 1.55;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  .dialog-toolbar {
+    margin-top: 1rem;
+    margin-bottom: 0;
+  }
+
+  .dialog-toolbar a {
+    text-decoration: none;
+  }
+
+  .dialog-copy {
+    display: grid;
+    gap: 0.75rem;
+    margin-top: 1rem;
+  }
+
+  .dialog-link-text {
+    padding: 0.8rem 0.95rem;
+    border: 1px solid var(--border);
+    border-radius: calc(var(--radius) - 0.35rem);
+    background: var(--tile-bg);
+  }
+}
+
+@media (min-width: 768px) {
+  @layer components {
+    .dialog-backdrop {
+      align-items: center;
+      padding: 1.25rem;
+    }
+
+    .dialog-card {
+      padding: 1.15rem;
+    }
+  }
+}

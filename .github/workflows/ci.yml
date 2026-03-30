@@ -1,0 +1,400 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  MODULE_ID: duck-toolbox
+  NDK_VERSION: 29.0.13846066
+  ANDROID_API_LEVEL: 21
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  module-zip:
+    name: Module Zip
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Accept Android SDK licenses
+        run: yes | sdkmanager --licenses > /dev/null
+
+      - name: Install Android NDK
+        run: sdkmanager "ndk;${NDK_VERSION}"
+
+      - name: Export Android NDK environment
+        run: |
+          set -euo pipefail
+          ndk_root="$ANDROID_SDK_ROOT/ndk/${NDK_VERSION}"
+          toolchain_bin="$ndk_root/toolchains/llvm/prebuilt/linux-x86_64/bin"
+          android_clang="$toolchain_bin/aarch64-linux-android${ANDROID_API_LEVEL}-clang"
+          android_clangxx="$toolchain_bin/aarch64-linux-android${ANDROID_API_LEVEL}-clang++"
+          llvm_ar="$toolchain_bin/llvm-ar"
+
+          if [ ! -d "$ndk_root" ]; then
+            echo "Android NDK was not installed at $ndk_root" >&2
+            exit 1
+          fi
+
+          if [ ! -x "$android_clang" ]; then
+            echo "Android clang was not found at $android_clang" >&2
+            exit 1
+          fi
+
+          if [ ! -x "$llvm_ar" ]; then
+            echo "llvm-ar was not found at $llvm_ar" >&2
+            exit 1
+          fi
+
+          echo "ANDROID_NDK_ROOT=$ndk_root" >> "$GITHUB_ENV"
+          echo "ANDROID_NDK_HOME=$ndk_root" >> "$GITHUB_ENV"
+          echo "ANDROID_NDK=$ndk_root" >> "$GITHUB_ENV"
+          echo "CC_aarch64_linux_android=$android_clang" >> "$GITHUB_ENV"
+          echo "CXX_aarch64_linux_android=$android_clangxx" >> "$GITHUB_ENV"
+          echo "AR_aarch64_linux_android=$llvm_ar" >> "$GITHUB_ENV"
+          echo "CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER=$android_clang" >> "$GITHUB_ENV"
+          echo "$toolchain_bin" >> "$GITHUB_PATH"
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android
+
+      - name: Cache Rust artifacts
+        uses: Swatinem/rust-cache@v2
+
+      - name: Run backend tests
+        working-directory: duckd
+        shell: bash
+        run: |
+          set -euo pipefail
+          host_target="$(rustc -vV | sed -n 's/^host: //p')"
+          cargo test --locked --target "$host_target"
+
+      - name: Build Android backend binary
+        working-directory: duckd
+        run: cargo build --locked --release --target aarch64-linux-android
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: ui/pnpm-lock.yaml
+
+      - name: Install frontend dependencies
+        working-directory: ui
+        run: pnpm install --frozen-lockfile
+
+      - name: Build WebUI
+        working-directory: ui
+        run: pnpm build
+
+      - name: Verify module file line endings
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if grep -n $'\r' module.prop customize.sh service.sh bin/duckctl.sh >/dev/null; then
+            echo "KernelSU module metadata and shell scripts must use LF line endings." >&2
+            exit 1
+          fi
+
+      - name: Smoke test KernelSU module hooks
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          stage="$RUNNER_TEMP/module-hook-smoke"
+          rm -rf "$stage"
+          mkdir -p "$stage/bin"
+
+          cp module.prop customize.sh service.sh "$stage"/
+          cp bin/duckctl.sh "$stage/bin/duckctl.sh"
+          cp duckd/target/aarch64-linux-android/release/duckd "$stage/bin/duckd"
+
+          chmod 644 "$stage/bin/duckctl.sh" "$stage/bin/duckd"
+          MODPATH="$stage" TMPDIR="$RUNNER_TEMP" sh -c '
+            before_flags=$-
+            before_umask=$(umask)
+            set_perm() {
+              path="$1"
+              owner="$2"
+              group="$3"
+              mode="$4"
+              context="$5"
+              return 0
+            }
+            set_perm_recursive() {
+              path="$1"
+              owner="$2"
+              group="$3"
+              dir_mode="$4"
+              file_mode="$5"
+              return 0
+            }
+            . "$1"
+            after_flags=$-
+            after_umask=$(umask)
+            [ "$after_flags" = "$before_flags" ]
+            [ "$after_umask" = "$before_umask" ]
+            for target in $REPLACE; do :; done
+            for target in $REMOVE; do :; done
+          ' _ "$stage/customize.sh"
+
+          test -d "$stage/var/outputs"
+          test -d "$stage/var/tmp"
+          test -d "$stage/var/logs"
+          test -x "$stage/bin/duckctl.sh"
+          test -x "$stage/bin/duckd"
+
+          rm -rf "$stage/var"
+          chmod 644 "$stage/bin/duckctl.sh" "$stage/bin/duckd"
+          DUCK_TOOLBOX_ROOT="$stage" sh "$stage/service.sh"
+
+          test -d "$stage/var/outputs"
+          test -d "$stage/var/tmp"
+          test -d "$stage/var/logs"
+          test -x "$stage/bin/duckctl.sh"
+          test -x "$stage/bin/duckd"
+
+      - name: Assemble module archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(grep '^version=' module.prop | cut -d= -f2)"
+          stage="$RUNNER_TEMP/module"
+          dist="$GITHUB_WORKSPACE/dist"
+
+          rm -rf "$stage" "$dist"
+          mkdir -p "$stage/bin" "$stage/webroot" "$dist"
+
+          cp module.prop README.md LICENSE customize.sh service.sh skip_mount "$stage"/
+          if [ -f update.json ]; then
+            cp update.json "$stage"/
+          fi
+          cp bin/duckctl.sh "$stage/bin/duckctl.sh"
+          cp duckd/target/aarch64-linux-android/release/duckd "$stage/bin/duckd"
+          cp -R webroot/. "$stage/webroot/"
+
+          chmod 755 "$stage/bin/duckctl.sh" "$stage/bin/duckd"
+
+          archive="$dist/${MODULE_ID}-${version}.zip"
+          (
+            cd "$stage"
+            zip -r "$archive" .
+          )
+
+          echo "MODULE_ARCHIVE=$archive" >> "$GITHUB_ENV"
+
+      - name: Upload module artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: duck-toolbox-module-zip
+          path: ${{ env.MODULE_ARCHIVE }}
+          if-no-files-found: error
+          retention-days: 14
+
+  push-telegram:
+    name: Push To Telegram
+    if: github.event_name == 'push'
+    needs: module-zip
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: Telegram
+
+    steps:
+      - name: Download module artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: duck-toolbox-module-zip
+          path: telegram-artifact
+
+      - name: Build Telegram caption
+        id: telegram
+        shell: bash
+        env:
+          COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+          COMMIT_AUTHOR: ${{ github.event.head_commit.author.name }}
+          GIT_BRANCH: ${{ github.ref_name }}
+          GIT_SHA: ${{ github.sha }}
+          GITHUB_ACTION_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+
+          artifact_path="$(find telegram-artifact -maxdepth 2 -type f -name '*.zip' | head -n 1)"
+          if [ -z "$artifact_path" ] || [ ! -f "$artifact_path" ]; then
+            echo "Module artifact was not downloaded successfully." >&2
+            exit 1
+          fi
+
+          caption=$(ARTIFACT_PATH="${artifact_path}" COMMIT_MESSAGE="${COMMIT_MESSAGE}" COMMIT_AUTHOR="${COMMIT_AUTHOR}" GIT_BRANCH="${GIT_BRANCH}" GIT_SHA="${GIT_SHA}" GITHUB_ACTION_URL="${GITHUB_ACTION_URL}" python3 - <<'PY'
+          import os
+          from pathlib import Path
+
+          artifact_path = Path(os.environ["ARTIFACT_PATH"])
+          commit_message = os.environ.get("COMMIT_MESSAGE", "").strip()
+          commit_author = os.environ.get("COMMIT_AUTHOR", "").strip() or "Unknown author"
+          git_branch = os.environ.get("GIT_BRANCH", "").strip() or "unknown"
+          git_sha = os.environ.get("GIT_SHA", "").strip()
+          action_url = os.environ.get("GITHUB_ACTION_URL", "").strip()
+
+          if commit_message:
+              lines = commit_message.splitlines()
+              subject = lines[0].strip()
+              body_lines = lines[1:]
+          else:
+              subject = f"Build artifact: {artifact_path.name}"
+              body_lines = []
+
+          def first_paragraph(lines):
+              paragraphs = []
+              current = []
+              for raw in lines:
+                  line = raw.strip()
+                  if not line:
+                      if current:
+                          paragraphs.append(" ".join(current))
+                          current = []
+                      continue
+                  current.append(line)
+              if current:
+                  paragraphs.append(" ".join(current))
+              return paragraphs[0] if paragraphs else ""
+
+          summary = first_paragraph(body_lines)
+          short_sha = git_sha[:7] if git_sha else "unknown"
+
+          def escape_html(text: str) -> str:
+              return (
+                  text.replace("&", "&amp;")
+                  .replace("<", "&lt;")
+                  .replace(">", "&gt;")
+              )
+
+          def render(subject_text: str, summary_text: str) -> str:
+              commit_lines = [subject_text] if subject_text else []
+              if summary_text:
+                  commit_lines.extend(["", summary_text])
+              commit_block = escape_html("\n".join(commit_lines))
+
+              lines = [
+                  "Commit:",
+                  f"<pre>{commit_block}</pre>",
+                  f"Author: <b>{escape_html(commit_author)}</b>",
+                  f"Branch: <b>{escape_html(git_branch)}@{escape_html(short_sha)}</b>",
+                  f'GitHub Action: <a href="{escape_html(action_url)}">Open run</a>',
+              ]
+              return "\n".join(lines)
+
+          def truncate(text: str, limit: int) -> str:
+              if limit <= 0:
+                  return ""
+              if len(text) <= limit:
+                  return text
+              if limit <= 3:
+                  return text[:limit]
+              return text[: limit - 3].rstrip() + "..."
+
+          max_caption_length = 1024
+          caption = render(subject, summary)
+
+          if len(caption) > max_caption_length and summary:
+              without_summary = render(subject, "")
+              summary_budget = max_caption_length - len(without_summary) - 2
+              summary = truncate(summary, summary_budget)
+              caption = render(subject, summary)
+
+          if len(caption) > max_caption_length:
+              without_subject = render("", summary)
+              subject_budget = max_caption_length - len(without_subject)
+              subject = truncate(subject, subject_budget)
+              caption = render(subject, summary)
+
+          print(caption, end="")
+          PY
+          )
+
+          {
+            echo "artifact_path=$artifact_path"
+            delimiter="CAPTION_$(date +%s)_$$"
+            echo "caption<<${delimiter}"
+            printf '%s\n' "$caption"
+            echo "${delimiter}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Push module zip to Telegram
+        shell: bash
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TELEGRAM_CAPTION: ${{ steps.telegram.outputs.caption }}
+          MODULE_ARCHIVE: ${{ steps.telegram.outputs.artifact_path }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${TELEGRAM_BOT_TOKEN}" ] || [ -z "${TELEGRAM_CHAT_ID}" ]; then
+            echo "Missing Telegram secrets. Configure TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID in the Telegram Env environment." >&2
+            exit 1
+          fi
+
+          response_file="$(mktemp)"
+          http_code=$(curl --silent --show-error --output "${response_file}" --write-out "%{http_code}" \
+            -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendDocument" \
+            -F "chat_id=${TELEGRAM_CHAT_ID}" \
+            -F "document=@${MODULE_ARCHIVE}" \
+            -F "parse_mode=HTML" \
+            --form-string "caption=${TELEGRAM_CAPTION}")
+
+          if [ "${http_code}" != "200" ]; then
+            echo "Telegram API returned HTTP ${http_code}." >&2
+            cat "${response_file}" >&2
+            exit 1
+          fi
+
+          RESPONSE_FILE="${response_file}" python3 - <<'PY'
+          import json
+          import os
+
+          response_path = os.environ["RESPONSE_FILE"]
+          with open(response_path, "r", encoding="utf-8") as fh:
+              payload = json.load(fh)
+
+          if not payload.get("ok"):
+              raise SystemExit(payload.get("description", "Telegram API returned ok=false"))
+
+          result = payload.get("result") or {}
+          message_id = result.get("message_id")
+          if message_id is None:
+              raise SystemExit("Telegram API succeeded but did not return a message_id.")
+
+          print(f"Telegram message_id: {message_id}")
+          PY
