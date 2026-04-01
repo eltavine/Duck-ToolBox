@@ -1,9 +1,17 @@
+@import url('https://mui.kernelsu.org/internal/insets.css');
 @import "tailwindcss";
 @import "./styles/responsive.css";
 @import "./styles/branding.css";
 @import "./styles/rkp.css";
 @import "./styles/dialog.css";
 @import "./styles/about.css";
+
+:root {
+  --top-inset: var(--window-inset-top, 0px);
+  --bottom-inset: var(--window-inset-bottom, 0px);
+  --left-inset: var(--window-inset-left, 0px);
+  --right-inset: var(--window-inset-right, 0px);
+}
 
 :root,
 [data-theme="light"] {
@@ -138,7 +146,10 @@
   .shell {
     width: min(100%, 92rem);
     margin: 0 auto;
-    padding: 1.5rem 1rem 2rem;
+    padding-top: calc(var(--top-inset) + 1rem);
+    padding-bottom: calc(var(--bottom-inset) + 2rem);
+    padding-left: calc(var(--left-inset) + 1rem);
+    padding-right: calc(var(--right-inset) + 1rem);
   }
 
   .shell,
