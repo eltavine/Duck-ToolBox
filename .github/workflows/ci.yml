@@ -144,8 +144,7 @@ jobs:
           name: duck-toolbox-module-zip
           path: telegram-artifact
 
-      - name: Build Telegram caption
-        id: telegram
+      - name: Push module zip to Telegram
         shell: bash
         env:
           COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
@@ -153,117 +152,8 @@ jobs:
           GIT_BRANCH: ${{ github.ref_name }}
           GIT_SHA: ${{ github.sha }}
           GITHUB_ACTION_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-        run: |
-          set -euo pipefail
-
-          artifact_path="$(find telegram-artifact -maxdepth 2 -type f -name '*.zip' | head -n 1)"
-          if [ -z "$artifact_path" ] || [ ! -f "$artifact_path" ]; then
-            echo "Module artifact was not downloaded successfully." >&2
-            exit 1
-          fi
-
-          caption=$(ARTIFACT_PATH="${artifact_path}" COMMIT_MESSAGE="${COMMIT_MESSAGE}" COMMIT_AUTHOR="${COMMIT_AUTHOR}" GIT_BRANCH="${GIT_BRANCH}" GIT_SHA="${GIT_SHA}" GITHUB_ACTION_URL="${GITHUB_ACTION_URL}" python3 - <<'PY'
-          import os
-          from pathlib import Path
-
-          artifact_path = Path(os.environ["ARTIFACT_PATH"])
-          commit_message = os.environ.get("COMMIT_MESSAGE", "").strip()
-          commit_author = os.environ.get("COMMIT_AUTHOR", "").strip() or "Unknown author"
-          git_branch = os.environ.get("GIT_BRANCH", "").strip() or "unknown"
-          git_sha = os.environ.get("GIT_SHA", "").strip()
-          action_url = os.environ.get("GITHUB_ACTION_URL", "").strip()
-
-          if commit_message:
-              lines = commit_message.splitlines()
-              subject = lines[0].strip()
-              body_lines = lines[1:]
-          else:
-              subject = f"Build artifact: {artifact_path.name}"
-              body_lines = []
-
-          def first_paragraph(lines):
-              paragraphs = []
-              current = []
-              for raw in lines:
-                  line = raw.strip()
-                  if not line:
-                      if current:
-                          paragraphs.append(" ".join(current))
-                          current = []
-                      continue
-                  current.append(line)
-              if current:
-                  paragraphs.append(" ".join(current))
-              return paragraphs[0] if paragraphs else ""
-
-          summary = first_paragraph(body_lines)
-          short_sha = git_sha[:7] if git_sha else "unknown"
-
-          def escape_html(text: str) -> str:
-              return (
-                  text.replace("&", "&amp;")
-                  .replace("<", "&lt;")
-                  .replace(">", "&gt;")
-              )
-
-          def render(subject_text: str, summary_text: str) -> str:
-              commit_lines = [subject_text] if subject_text else []
-              if summary_text:
-                  commit_lines.extend(["", summary_text])
-              commit_block = escape_html("\n".join(commit_lines))
-
-              lines = [
-                  "Commit:",
-                  f"<pre>{commit_block}</pre>",
-                  f"Author: <b>{escape_html(commit_author)}</b>",
-                  f"Branch: <b>{escape_html(git_branch)}@{escape_html(short_sha)}</b>",
-                  f'GitHub Action: <a href="{escape_html(action_url)}">Open run</a>',
-              ]
-              return "\n".join(lines)
-
-          def truncate(text: str, limit: int) -> str:
-              if limit <= 0:
-                  return ""
-              if len(text) <= limit:
-                  return text
-              if limit <= 3:
-                  return text[:limit]
-              return text[: limit - 3].rstrip() + "..."
-
-          max_caption_length = 1024
-          caption = render(subject, summary)
-
-          if len(caption) > max_caption_length and summary:
-              without_summary = render(subject, "")
-              summary_budget = max_caption_length - len(without_summary) - 2
-              summary = truncate(summary, summary_budget)
-              caption = render(subject, summary)
-
-          if len(caption) > max_caption_length:
-              without_subject = render("", summary)
-              subject_budget = max_caption_length - len(without_subject)
-              subject = truncate(subject, subject_budget)
-              caption = render(subject, summary)
-
-          print(caption, end="")
-          PY
-          )
-
-          {
-            echo "artifact_path=$artifact_path"
-            delimiter="CAPTION_$(date +%s)_$$"
-            echo "caption<<${delimiter}"
-            printf '%s\n' "$caption"
-            echo "${delimiter}"
-          } >> "$GITHUB_OUTPUT"
-
-      - name: Push module zip to Telegram
-        shell: bash
-        env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-          TELEGRAM_CAPTION: ${{ steps.telegram.outputs.caption }}
-          MODULE_ARCHIVE: ${{ steps.telegram.outputs.artifact_path }}
         run: |
           set -euo pipefail
 
@@ -272,13 +162,21 @@ jobs:
             exit 1
           fi
 
+          artifact_path="$(find telegram-artifact -maxdepth 2 -type f -name '*.zip' | head -n 1)"
+          if [ -z "$artifact_path" ] || [ ! -f "$artifact_path" ]; then
+            echo "Module artifact was not downloaded successfully." >&2
+            exit 1
+          fi
+
+          caption="$(python3 .github/workflows/scripts/telegram.py build-caption --artifact-path "${artifact_path}")"
+
           response_file="$(mktemp)"
           http_code=$(curl --silent --show-error --output "${response_file}" --write-out "%{http_code}" \
             -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendDocument" \
             -F "chat_id=${TELEGRAM_CHAT_ID}" \
-            -F "document=@${MODULE_ARCHIVE}" \
+            -F "document=@${artifact_path}" \
             -F "parse_mode=HTML" \
-            --form-string "caption=${TELEGRAM_CAPTION}")
+            --form-string "caption=${caption}")
 
           if [ "${http_code}" != "200" ]; then
             echo "Telegram API returned HTTP ${http_code}." >&2
@@ -286,21 +184,4 @@ jobs:
             exit 1
           fi
 
-          RESPONSE_FILE="${response_file}" python3 - <<'PY'
-          import json
-          import os
-
-          response_path = os.environ["RESPONSE_FILE"]
-          with open(response_path, "r", encoding="utf-8") as fh:
-              payload = json.load(fh)
-
-          if not payload.get("ok"):
-              raise SystemExit(payload.get("description", "Telegram API returned ok=false"))
-
-          result = payload.get("result") or {}
-          message_id = result.get("message_id")
-          if message_id is None:
-              raise SystemExit("Telegram API succeeded but did not return a message_id.")
-
-          print(f"Telegram message_id: {message_id}")
-          PY
+          python3 .github/workflows/scripts/telegram.py validate-response --response-file "${response_file}"
