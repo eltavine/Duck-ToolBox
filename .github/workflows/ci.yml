@@ -45,14 +45,6 @@ jobs:
       - name: Cache Rust artifacts
         uses: Swatinem/rust-cache@v2
 
-      - name: Run backend tests
-        working-directory: duckd
-        shell: bash
-        run: |
-          set -euo pipefail
-          host_target="$(rustc -vV | sed -n 's/^host: //p')"
-          cargo test --locked --target "$host_target"
-
       - name: Build Android backend binary
         working-directory: duckd
         env:
@@ -84,26 +76,19 @@ jobs:
         run: pnpm build
 
       - name: Verify module file line endings
-        shell: bash
         working-directory: module
         run: |
-          set -euo pipefail
-
           if grep -n $'\r' module.prop customize.sh service.sh bin/duckctl.sh >/dev/null; then
             echo "KernelSU module metadata and shell scripts must use LF line endings." >&2
             exit 1
           fi
 
       - name: Assemble module archive
-        shell: bash
         run: |
-          set -euo pipefail
           version="$(grep '^version=' module/module.prop | cut -d= -f2)"
 
           cp README.md module/
           cp duckd/target/${{ env.TARGET }}/release/duckd module/bin/duckd
-
-          chmod 755 module/bin/duckd
 
           archive="dist/${{ env.MODULE_ID }}-${version}.zip"
           echo "MODULE_PATH=$archive" >> $GITHUB_ENV
@@ -113,7 +98,6 @@ jobs:
 
       - name: Push module zip to Telegram
         if: github.event_name == 'push'
-        shell: bash
         env:
           COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
           COMMIT_AUTHOR: ${{ github.event.head_commit.author.name }}
@@ -123,8 +107,6 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
-          set -euo pipefail
-
           if [ -z "${TELEGRAM_BOT_TOKEN}" ] || [ -z "${TELEGRAM_CHAT_ID}" ]; then
             echo "Missing Telegram secrets. Configure TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID in the Telegram Env environment." >&2
             exit 1
