@@ -7,7 +7,10 @@
 @media (max-width: 767px) {
   @layer components {
     .shell {
-      padding: 0.9rem 0.75rem 1.5rem;
+      padding-top: calc(var(--top-inset) + 0.75rem);
+      padding-bottom: calc(var(--bottom-inset) + 1.5rem);
+      padding-left: calc(var(--left-inset) + 0.75rem);
+      padding-right: calc(var(--right-inset) + 0.75rem);
     }
 
     .panel {
@@ -99,7 +102,10 @@
 @media (min-width: 768px) {
   @layer components {
     .shell {
-      padding-inline: 1.5rem;
+      padding-top: calc(var(--top-inset) + 1.5rem);
+      padding-bottom: calc(var(--bottom-inset) + 2rem);
+      padding-left: calc(var(--left-inset) + 1.5rem);
+      padding-right: calc(var(--right-inset) + 1.5rem);
     }
 
     .summary-grid {
