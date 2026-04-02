@@ -9,7 +9,9 @@ import { APP_META } from "@/lib/meta"
 import { useTheme } from "@/lib/theme"
 import CommandLogPanel from "@/features/shared/CommandLogPanel.vue"
 import TextPreviewDialog from "@/features/shared/TextPreviewDialog.vue"
+import DeviceIdsWorkbench from "@/features/device-ids/DeviceIdsWorkbench.vue"
 import RkpWorkbench from "@/features/rkp/RkpWorkbench.vue"
+import { useDeviceIdsWorkbench } from "@/features/device-ids/useDeviceIdsWorkbench"
 import { useRkpWorkbench } from "@/features/rkp/useRkpWorkbench"
 
 import ToolboxHome from "./ToolboxHome.vue"
@@ -17,8 +19,10 @@ import ToolLibrary from "./ToolLibrary.vue"
 
 const OPEN_SOURCE_NOTICE_KEY = `duck-toolbox/open-source-notice/${APP_META.version}`
 const activeTool = ref("home")
+const deviceIdsWarningOpen = ref(false)
 const openSourceNoticeOpen = ref(false)
 const rkp = useRkpWorkbench()
+const deviceIds = useDeviceIdsWorkbench()
 const { locale, locales, t } = useI18n()
 const { theme } = useTheme()
 const historyCount = computed(() => rkp.historyCount.value)
@@ -53,7 +57,32 @@ const tools = computed(() => [
       t("workspace.verify"),
     ],
   },
+  {
+    id: "device-ids",
+    name: t("tool.deviceIdsName"),
+    category: t("tool.deviceIdsCategory"),
+    summary: t("tool.deviceIdsSummary"),
+    capabilities: [
+      t("deviceIds.capabilityAutofill"),
+      t("deviceIds.capabilityProvision"),
+      t("deviceIds.capabilityReport"),
+    ],
+  },
 ])
+
+const combinedHistory = computed(() =>
+  [...rkp.state.history, ...deviceIds.state.history]
+    .sort((left, right) => right.at.localeCompare(left.at))
+    .slice(0, 10),
+)
+
+const combinedLastError = computed(() => {
+  if (activeTool.value === "device-ids") {
+    return deviceIds.state.lastError || rkp.state.lastError
+  }
+
+  return rkp.state.lastError || deviceIds.state.lastError
+})
 
 const runtimeStatusLabel = computed(() =>
   bridgeAvailable.value
@@ -89,7 +118,13 @@ const summaryCards = computed(() => [
 ])
 
 function toggleTool(toolId: string) {
-  activeTool.value = activeTool.value === toolId ? "home" : toolId
+  const nextTool = activeTool.value === toolId ? "home" : toolId
+  activeTool.value = nextTool
+  deviceIdsWarningOpen.value = nextTool === "device-ids"
+}
+
+function dismissDeviceIdsWarning() {
+  deviceIdsWarningOpen.value = false
 }
 
 function dismissOpenSourceNotice() {
@@ -207,6 +242,20 @@ onMounted(() => {
             :runtime-status-label="runtimeStatusLabel"
           />
           <RkpWorkbench
+            v-else-if="activeTool === 'rkp'"
+            :actions="rkp.actions"
+            :history-count="historyCount"
+            :module-root="moduleRoot"
+            :output-directory="outputDirectory"
+            :secret-path="secretPath"
+            :state="rkp.state"
+          />
+          <DeviceIdsWorkbench
+            v-else-if="activeTool === 'device-ids'"
+            :actions="deviceIds.actions"
+            :state="deviceIds.state"
+          />
+          <RkpWorkbench
             v-else
             :actions="rkp.actions"
             :history-count="historyCount"
@@ -218,8 +267,8 @@ onMounted(() => {
         </section>
 
         <CommandLogPanel
-          :history="rkp.state.history"
-          :last-error="rkp.state.lastError"
+          :history="combinedHistory"
+          :last-error="combinedLastError"
         />
       </section>
 
@@ -242,6 +291,26 @@ onMounted(() => {
       :title="t('dialog.errorTitle')"
       @close="rkp.actions.dismissErrorDialog()"
       @copy="rkp.actions.copyText(rkp.state.errorDialogText)"
+    />
+
+    <TextPreviewDialog
+      :content="deviceIds.state.errorDialogText"
+      :copy-label="t('actions.copyError')"
+      :close-label="t('dialog.close')"
+      :description="t('dialog.errorDescription')"
+      :open="deviceIds.state.errorDialogOpen"
+      :title="t('dialog.errorTitle')"
+      @close="deviceIds.actions.dismissErrorDialog()"
+      @copy="deviceIds.actions.copyText(deviceIds.state.errorDialogText)"
+    />
+
+    <NoticeDialog
+      :body="t('deviceIds.warningBody')"
+      :close-label="t('actions.acknowledgeRisk')"
+      :description="t('deviceIds.warningDescription')"
+      :open="deviceIdsWarningOpen"
+      :title="t('deviceIds.warningTitle')"
+      @close="dismissDeviceIdsWarning()"
     />
 
     <NoticeDialog

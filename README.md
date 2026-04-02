@@ -4,18 +4,21 @@ Duck ToolBox is a KernelSU module scaffold for modular Android utilities.
 
 Current tool set:
 
-- `RKP Keybox`: profile persistence, CSR generation, certificate fetch, `keybox.xml` export, and CSR verification
+- `RKP Workbench`: profile persistence, CSR generation, certificate fetch, `keybox.xml` export, and CSR verification
+- `Device ID Provisioner`: Rust-based Qualcomm Keymaster device ID workbench with default auto-fill, advanced overrides, and provisioning reports
 
 Core layout:
 
 - `duckd/`: Rust backend
 - `duckd/src/runtime/`: shared runtime concerns such as paths, profile storage, JSON envelopes, errors
 - `duckd/src/features/rkp/`: RKP-specific feature modules
+- `duckd/src/features/device_ids/`: built-in Device ID Provisioner feature, including default detection and Qualcomm Keymaster provisioning logic
 - `duckd/src/shared/`: reusable parsing helpers such as Android XML decoding
 - `ui/`: WebUI source
-- `webroot/`: built KernelSU WebUI assets
-- `bin/duckctl.sh`: thin wrapper that forwards WebUI requests to `duckd`
-- `service.sh`: boot-time repair for runtime directories and backend permissions
+- `module/`: KernelSU module payload, including scripts, binaries, and built WebUI assets
+- `module/webroot/`: built KernelSU WebUI assets
+- `module/bin/duckctl.sh`: thin wrapper that forwards WebUI requests to `duckd`
+- `module/service.sh`: boot-time repair for runtime directories and backend permissions
 
 CLI shape:
 
@@ -26,6 +29,8 @@ CLI shape:
 - `duckd rkp provision --json`
 - `duckd rkp keybox --json`
 - `duckd rkp verify <csr-file> --json`
+- `duckd device-ids defaults --json`
+- `duckd device-ids provision --stdin-json --json`
 - `duckd artifacts list --json`
 
 Runtime paths:
@@ -39,10 +44,11 @@ Runtime paths:
 
 Runtime robustness notes:
 
-- `customize.sh` and `service.sh` repair runtime directories and sensitive file permissions at install time and on boot.
+- `module/customize.sh` and `module/service.sh` repair runtime directories and sensitive file permissions at install time and on boot.
 - Existing `var/` data is migrated out of the module directory into `/data/adb/duck-toolbox/var/`, so module updates no longer wipe saved profiles and generated files.
 - Relative `var/...` paths now resolve inside the shared Duck ToolBox data directory on Android, while other relative paths still stay under the module root.
 - RKP requests now validate required device fields before any network call, which makes profile mistakes fail early with clearer errors.
+- Device ID provisioning now lives fully in `duckd/src/features/device_ids/`; the WebUI auto-fills common fields from the current Android runtime and keeps uncommon options under an advanced section.
 
 Windows environment setup:
 
@@ -82,8 +88,9 @@ cd ..\ui
 pnpm install --frozen-lockfile
 pnpm build
 
+cd ..
 # Package a local module zip after the Android backend build
-pwsh ./scripts/package-module.ps1
+pwsh .\scripts\package-module.ps1
 ```
 
 Windows one-step build script:
@@ -97,7 +104,7 @@ The script:
 - uses `C:\Development\Android\NDK\android-ndk-r29` by default
 - builds the Rust Android backend with `cargo ndk -t arm64-v8a build --release`
 - installs WebUI dependencies with `pnpm install --frozen-lockfile`
-- builds the WebUI into `webroot/`
+- builds the WebUI into `module/webroot/`
 
 Optional module packaging in the same run:
 
@@ -108,7 +115,7 @@ pwsh ./scripts/build.ps1 -PackageModule
 Build outputs:
 
 - Rust Android binary: `duckd/target/aarch64-linux-android/release/duckd`
-- WebUI bundle: `webroot/`
+- WebUI bundle: `module/webroot/`
 - Optional module archive: `dist/duck-toolbox-<version>.zip`
 
 RKP note:

@@ -12,6 +12,37 @@
     width: 100%;
     text-decoration: none;
   }
+
+  .about-author-card {
+    width: 100%;
+    display: block;
+    text-align: left;
+    transition:
+      transform 120ms ease,
+      border-color 120ms ease,
+      background-color 120ms ease;
+  }
+
+  .about-author-card:hover,
+  .about-author-card:focus-visible {
+    transform: translateY(-1px);
+    border-color: var(--border-strong);
+    background: var(--tile-hover-bg);
+  }
+
+  .about-author-card:focus-visible {
+    outline: none;
+  }
+
+  .about-author-list {
+    display: grid;
+    gap: 0.75rem;
+    margin-top: 1rem;
+  }
+
+  .about-author-link {
+    text-decoration: none;
+  }
 }
 
 @media (min-width: 768px) {

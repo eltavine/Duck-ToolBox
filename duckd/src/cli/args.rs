@@ -14,6 +14,10 @@ pub enum Commands {
         #[command(subcommand)]
         command: ArtifactCommands,
     },
+    DeviceIds {
+        #[command(subcommand)]
+        command: DeviceIdsCommands,
+    },
     Rkp {
         #[command(subcommand)]
         command: RkpCommands,
@@ -23,6 +27,12 @@ pub enum Commands {
 #[derive(Subcommand)]
 pub enum ArtifactCommands {
     List(JsonOnlyArgs),
+}
+
+#[derive(Subcommand)]
+pub enum DeviceIdsCommands {
+    Defaults(JsonOnlyArgs),
+    Provision(DeviceIdsProvisionArgs),
 }
 
 #[derive(Subcommand)]
@@ -46,6 +56,14 @@ pub enum ProfileCommands {
 
 #[derive(Args, Clone)]
 pub struct JsonOnlyArgs {
+    #[arg(long)]
+    pub json: bool,
+}
+
+#[derive(Args, Clone)]
+pub struct DeviceIdsProvisionArgs {
+    #[arg(long = "stdin-json")]
+    pub stdin_json: bool,
     #[arg(long)]
     pub json: bool,
 }

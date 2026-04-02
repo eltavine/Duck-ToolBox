@@ -5,6 +5,8 @@ import type {
   ArtifactsData,
   BridgeStatus,
   CommandHistoryEntry,
+  DeviceIdsProfileData,
+  DeviceIdsProvisionData,
   DeviceInfo,
   Envelope,
   InfoData,
@@ -571,6 +573,17 @@ export function profileClear() {
 
 export function infoCommand() {
   return execJson<InfoData>(["rkp", "info", "--json"])
+}
+
+export function deviceIdsDefaultsCommand() {
+  return execJson<DeviceIdsProfileData>(["device-ids", "defaults", "--json"])
+}
+
+export function deviceIdsProvisionCommand(profile: DeviceIdsProfileData) {
+  return execJson<DeviceIdsProvisionData>(
+    ["device-ids", "provision", "--stdin-json", "--json"],
+    profile,
+  )
 }
 
 export function provisionCommand() {

@@ -12,19 +12,22 @@ use serde::Serialize;
 use serde_json::{Value, json};
 
 use super::args::{
-    ArtifactCommands, Commands, KeyboxArgs, ProfileCommands, ProvisionArgs, RkpCommands,
-    SharedRunArgs, VerifyArgs,
+    ArtifactCommands, Commands, DeviceIdsCommands, DeviceIdsProvisionArgs, KeyboxArgs,
+    ProfileCommands, ProvisionArgs, RkpCommands, SharedRunArgs, VerifyArgs,
 };
 use super::keybox_output::{KeyboxData, resolve_keybox_output_path};
 use duckd::{
-    features::rkp::{
-        cose_dice::{DeviceKeys, build_csr, generate_ec_keypair},
-        crypto_kdf::resolve_seed,
-        http::{fetch_eek, submit_csr},
-        keybox_xml::{
-            CertificateChainSummary, build_keybox_xml, parse_der_cert_chain, summarize_chain,
+    features::{
+        device_ids::{DeviceIdsProfile, detect_defaults as detect_device_ids_defaults, provision as provision_device_ids},
+        rkp::{
+            cose_dice::{DeviceKeys, build_csr, generate_ec_keypair},
+            crypto_kdf::resolve_seed,
+            http::{fetch_eek, submit_csr},
+            keybox_xml::{
+                CertificateChainSummary, build_keybox_xml, parse_der_cert_chain, summarize_chain,
+            },
+            verify::{VerifyReport, verify_csr},
         },
-        verify::{VerifyReport, verify_csr},
     },
     runtime::{
         errors::AppError,
@@ -95,6 +98,7 @@ struct ProvisionData {
 pub async fn dispatch(command: Commands, paths: &AppPaths) -> CommandResult {
     match command {
         Commands::Artifacts { command } => handle_artifacts_command(paths, command),
+        Commands::DeviceIds { command } => handle_device_ids_command(paths, command),
         Commands::Rkp { command } => handle_rkp_command(paths, command).await,
     }
 }
@@ -104,6 +108,18 @@ fn handle_artifacts_command(paths: &AppPaths, command: ArtifactCommands) -> Comm
         ArtifactCommands::List(_args) => handle_artifacts(paths)
             .map(|data| json_api::success("artifacts.list", data))
             .map_err(|error| ("artifacts.list", error, None)),
+    }
+}
+
+fn handle_device_ids_command(paths: &AppPaths, command: DeviceIdsCommands) -> CommandResult {
+    match command {
+        DeviceIdsCommands::Defaults(_args) => Ok(json_api::success(
+            "device-ids.defaults",
+            detect_device_ids_defaults(),
+        )),
+        DeviceIdsCommands::Provision(args) => handle_device_ids_provision(paths, &args)
+            .map(|data| json_api::success("device-ids.provision", data))
+            .map_err(|error| ("device-ids.provision", error, None)),
     }
 }
 
@@ -183,6 +199,25 @@ fn handle_profile_save(
 
     let profile = serde_json::from_str::<ProfileData>(&input).context("parse profile JSON")?;
     save_profile(paths, profile_name, &profile)
+}
+
+fn handle_device_ids_provision(
+    paths: &AppPaths,
+    args: &DeviceIdsProvisionArgs,
+) -> Result<duckd::features::device_ids::DeviceIdsProvisionResult> {
+    if !args.stdin_json {
+        anyhow::bail!("device-ids provision requires `--stdin-json`");
+    }
+
+    let mut input = String::new();
+    io::stdin()
+        .read_to_string(&mut input)
+        .context("read device ID profile JSON from stdin")?;
+
+    let profile =
+        serde_json::from_str::<DeviceIdsProfile>(&input).context("parse device ID profile JSON")?;
+
+    provision_device_ids(paths, profile)
 }
 
 fn handle_artifacts(paths: &AppPaths) -> Result<ArtifactsData> {

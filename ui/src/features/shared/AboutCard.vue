@@ -1,16 +1,36 @@
 <script setup lang="ts">
-import { ArrowUpRight, FolderRoot, Globe, Info, ShieldUser } from "lucide-vue-next"
+import { ref } from "vue"
+import { ArrowUpRight, FolderRoot, Globe, Info, ShieldUser, X } from "lucide-vue-next"
 
 import { useI18n } from "@/i18n"
 
-defineProps<{
+const props = defineProps<{
   projectAddress: string
   repositoryUrl: string
-  authors: string
+  authors: ReadonlyArray<{
+    name: string
+    href: string
+    label: string
+  }>
   version: string
 }>()
 
 const { t } = useI18n()
+const authorsDialogOpen = ref(false)
+
+function openAuthorsDialog() {
+  authorsDialogOpen.value = true
+}
+
+function closeAuthorsDialog() {
+  authorsDialogOpen.value = false
+}
+
+function onAuthorsBackdropClick(event: MouseEvent) {
+  if (event.target === event.currentTarget) {
+    closeAuthorsDialog()
+  }
+}
 </script>
 
 <template>
@@ -51,13 +71,17 @@ const { t } = useI18n()
         </div>
       </article>
 
-      <article class="summary-tile">
+      <button class="summary-tile about-author-card" type="button" @click="openAuthorsDialog">
         <div class="panel-heading compact">
           <span class="summary-label">{{ t("about.authors") }}</span>
           <ShieldUser class="icon-muted" />
         </div>
-        <p class="mono-inline mt-2">{{ authors }}</p>
-      </article>
+        <p class="mono-inline mt-2">{{ t("about.authorsHint") }}</p>
+        <div class="choice-action mt-3">
+          <span>{{ t("about.authorsCount", { count: props.authors.length }) }}</span>
+          <ArrowUpRight class="size-4" />
+        </div>
+      </button>
 
       <article class="summary-tile">
         <div class="panel-heading compact">
@@ -68,4 +92,53 @@ const { t } = useI18n()
       </article>
     </div>
   </section>
+
+  <Teleport to="body">
+    <div
+      v-if="authorsDialogOpen"
+      class="dialog-backdrop"
+      @click="onAuthorsBackdropClick"
+    >
+      <section
+        class="dialog-card"
+        role="dialog"
+        aria-modal="true"
+        :aria-label="t('about.authorsDialogTitle')"
+        @click.stop
+      >
+        <div class="panel-heading compact">
+          <div>
+            <h3 class="panel-title dialog-title">{{ t("about.authorsDialogTitle") }}</h3>
+            <p class="body-copy mt-2">{{ t("about.authorsDialogDescription") }}</p>
+          </div>
+          <button class="icon-button" type="button" @click="closeAuthorsDialog">
+            <X class="size-4" />
+          </button>
+        </div>
+
+        <div class="about-author-list">
+          <a
+            v-for="author in props.authors"
+            :key="author.href"
+            class="dialog-option about-author-link"
+            :href="author.href"
+            rel="noreferrer noopener"
+            target="_blank"
+          >
+            <div>
+              <strong class="dialog-option-title">{{ author.name }}</strong>
+              <p class="mono-inline mt-2 break-all">{{ author.label }}</p>
+            </div>
+            <ArrowUpRight class="size-4 icon-muted" />
+          </a>
+        </div>
+
+        <div class="toolbar dialog-toolbar">
+          <button class="action-primary" type="button" @click="closeAuthorsDialog">
+            {{ t("dialog.close") }}
+          </button>
+        </div>
+      </section>
+    </div>
+  </Teleport>
 </template>

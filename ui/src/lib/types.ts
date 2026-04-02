@@ -135,6 +135,39 @@ export interface VerifyData {
   report: VerifyReport
 }
 
+export interface DeviceIdsProfileData {
+  brand: string
+  device: string
+  product: string
+  serial: string
+  manufacturer: string
+  model: string
+  imei: string
+  imei2: string
+  meid: string
+  meid2: string
+  ta_name: string
+  ta_path: string
+  dry_run: boolean
+}
+
+export interface DeviceIdsProvisionedId {
+  label: string
+  value: string
+}
+
+export interface DeviceIdsProvisionData {
+  count: number
+  ids: DeviceIdsProvisionedId[]
+  dry_run: boolean
+  ta_name: string
+  ta_path: string
+  loaded_library: string | null
+  ta_api_version: string | null
+  ta_version: string | null
+  report_path: string
+}
+
 export interface ArtifactFile {
   name: string
   path: string

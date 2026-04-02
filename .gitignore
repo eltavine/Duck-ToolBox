@@ -2,7 +2,9 @@
 /duckd/target/
 /ui/node_modules/
 /ui/.vite/
+/webroot/
 /module/webroot/
+/dist/
 /var/
 module/bin/duckd
 module/bin/duckd.exe
