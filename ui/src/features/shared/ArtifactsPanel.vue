@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Copy, FolderSync, LoaderCircle, RefreshCcw } from "lucide-vue-next"
+import { Copy, FolderSync, LoaderCircle, RefreshCcw } from "@lucide/vue"
 
 import { useI18n } from "@/i18n"
 import type { RkpWorkbenchActions, RkpWorkbenchState } from "@/features/rkp/types"

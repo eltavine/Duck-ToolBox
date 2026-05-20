@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from "vue"
-import { LayoutPanelTop, PackageOpen, ShieldCheck } from "lucide-vue-next"
+import { LayoutPanelTop, PackageOpen, ShieldCheck } from "@lucide/vue"
 
 import { useI18n } from "@/i18n"
 import type { BridgeStatus } from "@/lib/types"

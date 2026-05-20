@@ -8,7 +8,7 @@ import {
   Save,
   ShieldAlert,
   Wrench,
-} from "lucide-vue-next"
+} from "@lucide/vue"
 
 import { useI18n } from "@/i18n"
 

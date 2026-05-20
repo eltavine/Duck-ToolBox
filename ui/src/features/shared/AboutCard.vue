@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from "vue"
-import { ArrowUpRight, FolderRoot, Globe, Info, ShieldUser, X } from "lucide-vue-next"
+import { ArrowUpRight, FolderRoot, Globe, Info, ShieldUser, X } from "@lucide/vue"
 
 import { useI18n } from "@/i18n"
 

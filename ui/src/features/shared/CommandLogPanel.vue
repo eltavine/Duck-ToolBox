@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Logs } from "lucide-vue-next"
+import { Logs } from "@lucide/vue"
 
 import { useI18n } from "@/i18n"
 import type { CommandHistoryEntry } from "@/lib/types"

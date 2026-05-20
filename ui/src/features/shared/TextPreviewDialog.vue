@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Copy, X } from "lucide-vue-next"
+import { Copy, X } from "@lucide/vue"
 
 const props = defineProps<{
   open: boolean

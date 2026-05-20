@@ -5,7 +5,7 @@ use aes_gcm::{
 use anyhow::{Context, Result, anyhow};
 use ed25519_dalek::{Signer as Ed25519Signer, SigningKey};
 use hkdf::Hkdf;
-use hkdf::hmac::{Hmac, Mac};
+use hkdf::hmac::{Hmac, Mac, digest::KeyInit as HmacKeyInit};
 use p256::{
     NonZeroScalar as P256NonZeroScalar, PublicKey as P256PublicKey, SecretKey as P256SecretKey,
     U256 as P256U256,
@@ -594,7 +594,8 @@ fn build_keys_to_sign_mac(mac_key: &[u8; 32], keys_to_sign_cbor: &[u8]) -> Resul
         int(ALG_HMAC_256),
     )]))?;
     let mac_structure = build_cose_structure("MAC0", &mac_protected, &[], keys_to_sign_cbor)?;
-    let mut mac = <Hmac<Sha256> as Mac>::new_from_slice(mac_key).context("create HMAC-SHA256")?;
+    let mut mac = <Hmac<Sha256> as HmacKeyInit>::new_from_slice(mac_key)
+        .map_err(|error| anyhow!("create HMAC-SHA256: {error}"))?;
     mac.update(&mac_structure);
     Ok(mac.finalize().into_bytes().to_vec())
 }

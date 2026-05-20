@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from "vue"
-import { Boxes, FileBadge2, FolderSync, KeyRound, Radar } from "lucide-vue-next"
+import { Boxes, FileBadge2, FolderSync, KeyRound, Radar } from "@lucide/vue"
 
 import { useI18n } from "@/i18n"
 import ArtifactsPanel from "@/features/shared/ArtifactsPanel.vue"

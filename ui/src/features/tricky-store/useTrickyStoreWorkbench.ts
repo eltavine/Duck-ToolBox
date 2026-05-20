@@ -93,6 +93,7 @@ export function useTrickyStoreWorkbench() {
     systemApps: [],
     autoAddNewApps: false,
     search: "",
+    packageScope: "all",
     keyboxSourcePath: "/storage/emulated/0/Download/keybox.xml",
     keyboxInstallResult: null,
     fileDialogOpen: false,
@@ -105,11 +106,16 @@ export function useTrickyStoreWorkbench() {
 
   const visiblePackages = computed(() => {
     const query = state.search.trim().toLowerCase()
-    if (!query) {
-      return state.packages
-    }
-
     return state.packages.filter((entry) => {
+      if (state.packageScope === "user" && entry.system) {
+        return false
+      }
+      if (state.packageScope === "system" && !entry.system) {
+        return false
+      }
+      if (!query) {
+        return true
+      }
       const haystack = `${entry.app_label} ${entry.package_name}`.toLowerCase()
       return haystack.includes(query)
     })
@@ -321,6 +327,10 @@ export function useTrickyStoreWorkbench() {
     removeSystemApp(packageName) {
       const normalized = normalizePackageName(packageName)
       state.systemApps = state.systemApps.filter((entry) => entry !== normalized)
+      setTarget(normalized, false)
+      state.packages = state.packages.filter((entry) =>
+        entry.package_name !== normalized || entry.system,
+      )
       state.packages = syncPackages(state.packages, state.targets, state.systemApps)
     },
   }

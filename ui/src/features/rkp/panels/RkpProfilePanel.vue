@@ -9,7 +9,7 @@ import {
   Smartphone,
   Trash2,
   Wrench,
-} from "lucide-vue-next"
+} from "@lucide/vue"
 
 import ChoiceDialog from "@/features/shared/ChoiceDialog.vue"
 import { useI18n } from "@/i18n"

@@ -108,6 +108,10 @@
     padding: 0.2rem;
   }
 
+  .package-scope-control {
+    flex-wrap: wrap;
+  }
+
   .segment-button {
     min-height: 2.2rem;
     border-radius: 999px;

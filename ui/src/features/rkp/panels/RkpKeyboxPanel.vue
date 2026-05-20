@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, toRefs } from "vue"
-import { ArrowRightLeft, Copy, Eye, FileJson2, LoaderCircle } from "lucide-vue-next"
+import { ArrowRightLeft, Copy, Eye, FileJson2, LoaderCircle } from "@lucide/vue"
 
 import ChoiceDialog from "@/features/shared/ChoiceDialog.vue"
 import TextPreviewDialog from "@/features/shared/TextPreviewDialog.vue"

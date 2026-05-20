@@ -15,12 +15,16 @@ import {
   ShieldQuestion,
   SlidersHorizontal,
   Trash2,
-} from "lucide-vue-next"
+} from "@lucide/vue"
 
 import { useI18n } from "@/i18n"
 import type { TrickyStoreTargetMode } from "@/lib/types"
 
-import type { TrickyStoreWorkbenchActions, TrickyStoreWorkbenchState } from "./types"
+import type {
+  TrickyStorePackageScope,
+  TrickyStoreWorkbenchActions,
+  TrickyStoreWorkbenchState,
+} from "./types"
 
 const props = defineProps<{
   state: TrickyStoreWorkbenchState
@@ -32,11 +36,16 @@ const systemAppInput = ref("")
 
 const visiblePackages = computed(() => {
   const query = props.state.search.trim().toLowerCase()
-  if (!query) {
-    return props.state.packages
-  }
-
   return props.state.packages.filter((entry) => {
+    if (props.state.packageScope === "user" && entry.system) {
+      return false
+    }
+    if (props.state.packageScope === "system" && !entry.system) {
+      return false
+    }
+    if (!query) {
+      return true
+    }
     const haystack = `${entry.app_label} ${entry.package_name}`.toLowerCase()
     return haystack.includes(query)
   })
@@ -60,6 +69,11 @@ const keyboxStatus = computed(() =>
     : t("trickyStore.keyboxMissing"),
 )
 
+const scopeOptions = computed<Array<{ value: TrickyStorePackageScope; label: string }>>(() => [
+  { value: "all", label: t("trickyStore.scopeAll") },
+  { value: "user", label: t("trickyStore.scopeUser") },
+  { value: "system", label: t("trickyStore.scopeSystem") },
+])
 const modeOptions = computed<Array<{ value: TrickyStoreTargetMode; label: string }>>(() => [
   { value: "auto", label: t("trickyStore.modeAuto") },
   { value: "generate", label: t("trickyStore.modeGenerate") },
@@ -166,6 +180,17 @@ function humanTime(unix?: number) {
           <Search class="size-4 icon-muted" />
           <input v-model="state.search" class="search-input-native" :placeholder="t('trickyStore.searchPlaceholder')">
         </label>
+        <div class="segmented-control package-scope-control">
+          <button
+            v-for="option in scopeOptions"
+            :key="option.value"
+            :class="['segment-button', { 'is-active': state.packageScope === option.value }]"
+            type="button"
+            @click="state.packageScope = option.value"
+          >
+            {{ option.label }}
+          </button>
+        </div>
         <button class="action-secondary" type="button" @click="actions.selectAllVisible(true)">
           <Check class="size-4" />
           {{ t("actions.selectAllVisible") }}

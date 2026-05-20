@@ -9,6 +9,8 @@ import type {
   TrickyStoreTargetMode,
 } from "@/lib/types"
 
+export type TrickyStorePackageScope = "all" | "user" | "system"
+
 export interface TrickyStoreBusyState {
   status: boolean
   save: boolean
@@ -26,6 +28,7 @@ export interface TrickyStoreWorkbenchState {
   systemApps: string[]
   autoAddNewApps: boolean
   search: string
+  packageScope: TrickyStorePackageScope
   keyboxSourcePath: string
   keyboxInstallResult: TrickyStoreKeyboxInstallData | null
   fileDialogOpen: boolean

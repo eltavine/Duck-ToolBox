@@ -1,12 +1,14 @@
 use std::{
     collections::{BTreeMap, BTreeSet},
     fs,
+    io::Cursor,
     path::{Path, PathBuf},
     process::Command,
     time::{SystemTime, UNIX_EPOCH},
 };
 
-use anyhow::{Context, Result, anyhow, bail};
+use anyhow::{Context, Result, bail};
+use quick_xml::{Reader, events::Event, name::QName};
 use serde::{Deserialize, Serialize};
 
 use crate::runtime::{files::write_string_atomic, paths::AppPaths};
@@ -17,6 +19,7 @@ const TARGET_FILE: &str = "/data/adb/tricky_store/target.txt";
 const SYSTEM_APP_FILE: &str = "/data/adb/tricky_store/system_app";
 const KEYBOX_FILE: &str = "/data/adb/tricky_store/keybox.xml";
 const AUTO_CONFIG_FILE_NAME: &str = "tricky-store-auto-target.toml";
+const AUTO_CONFIG_VERSION: u8 = 1;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "kebab-case")]
@@ -61,7 +64,13 @@ pub struct TargetSaveRequest {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AutoTargetConfig {
+    #[serde(default = "default_auto_config_version")]
+    pub version: u8,
     pub enabled: bool,
+    #[serde(default)]
+    pub baseline_initialized: bool,
+    #[serde(default)]
+    pub known_user_apps: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -120,6 +129,13 @@ pub struct AutoApplyData {
     pub target_path: String,
 }
 
+struct AutoTargetPlan {
+    config: AutoTargetConfig,
+    targets: Vec<TargetEntry>,
+    added_count: usize,
+    initialized_baseline: bool,
+}
+
 #[derive(Debug, Clone, Serialize)]
 pub struct KeyboxInstallData {
     pub source_path: String,
@@ -175,13 +191,16 @@ pub fn save_targets(paths: &AppPaths, request: TargetSaveRequest) -> Result<Targ
     write_plain_list(Path::new(SYSTEM_APP_FILE), &system_apps)?;
 
     let auto_config = AutoTargetConfig {
+        version: AUTO_CONFIG_VERSION,
         enabled: request.auto_add_new_apps,
+        baseline_initialized: request.auto_add_new_apps,
+        known_user_apps: if request.auto_add_new_apps {
+            current_user_packages()
+        } else {
+            Vec::new()
+        },
     };
     write_auto_config(paths, &auto_config)?;
-
-    if auto_config.enabled {
-        apply_auto_targets_with_config(&auto_config)?;
-    }
 
     Ok(TargetSaveData {
         target_path: TARGET_FILE.into(),
@@ -194,7 +213,7 @@ pub fn save_targets(paths: &AppPaths, request: TargetSaveRequest) -> Result<Targ
 
 pub fn apply_auto_targets(paths: &AppPaths) -> Result<AutoApplyData> {
     let auto_config = read_auto_config(paths)?;
-    apply_auto_targets_with_config(&auto_config)
+    apply_auto_targets_with_config(paths, &auto_config)
 }
 
 pub fn install_keybox(paths: &AppPaths, source: &str) -> Result<KeyboxInstallData> {
@@ -406,17 +425,46 @@ fn write_plain_list(path: &Path, entries: &[String]) -> Result<()> {
     write_string_atomic(path, &content).with_context(|| format!("write {}", path.display()))
 }
 
+fn default_auto_config_version() -> u8 {
+    AUTO_CONFIG_VERSION
+}
+
 fn read_auto_config(paths: &AppPaths) -> Result<AutoTargetConfig> {
     let path = config_path(paths);
     let content = match fs::read_to_string(&path) {
         Ok(content) => content,
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
-            return Ok(AutoTargetConfig { enabled: false });
+            return Ok(AutoTargetConfig {
+                version: AUTO_CONFIG_VERSION,
+                enabled: false,
+                baseline_initialized: false,
+                known_user_apps: Vec::new(),
+            });
         }
         Err(error) => return Err(error).with_context(|| format!("read {}", path.display())),
     };
 
-    toml::from_str(&content).with_context(|| format!("parse {}", path.display()))
+    let config: AutoTargetConfig =
+        toml::from_str(&content).with_context(|| format!("parse {}", path.display()))?;
+    let original_version = config.version;
+    let original_baseline_initialized = config.baseline_initialized;
+    let original_known_user_apps = config.known_user_apps.clone();
+    let mut config = normalize_auto_config(config);
+    let mut needs_write = original_version != config.version
+        || original_baseline_initialized != config.baseline_initialized
+        || original_known_user_apps != config.known_user_apps;
+
+    if config.enabled && !config.baseline_initialized {
+        config.known_user_apps = current_user_packages();
+        config.baseline_initialized = true;
+        needs_write = true;
+    }
+
+    if needs_write {
+        write_auto_config(paths, &config)?;
+    }
+
+    Ok(config)
 }
 
 fn write_auto_config(paths: &AppPaths, config: &AutoTargetConfig) -> Result<()> {
@@ -426,7 +474,24 @@ fn write_auto_config(paths: &AppPaths, config: &AutoTargetConfig) -> Result<()> 
     write_string_atomic(&path, &content).with_context(|| format!("write {}", path.display()))
 }
 
-fn apply_auto_targets_with_config(config: &AutoTargetConfig) -> Result<AutoApplyData> {
+fn normalize_auto_config(mut config: AutoTargetConfig) -> AutoTargetConfig {
+    config.version = AUTO_CONFIG_VERSION;
+    config.known_user_apps = normalize_package_list(config.known_user_apps);
+    if !config.enabled {
+        config.baseline_initialized = false;
+        config.known_user_apps.clear();
+    }
+    config
+}
+
+fn current_user_packages() -> Vec<String> {
+    normalize_package_list(list_pm_packages("-3"))
+}
+
+fn apply_auto_targets_with_config(
+    paths: &AppPaths,
+    config: &AutoTargetConfig,
+) -> Result<AutoApplyData> {
     if !config.enabled {
         return Ok(AutoApplyData {
             enabled: false,
@@ -436,18 +501,72 @@ fn apply_auto_targets_with_config(config: &AutoTargetConfig) -> Result<AutoApply
     }
 
     ensure_tricky_store_dir()?;
-    let mut targets = read_targets(Path::new(TARGET_FILE))?;
+    let config = normalize_auto_config(config.clone());
+    let user_packages = current_user_packages();
+
+    let targets = if config.baseline_initialized {
+        read_targets(Path::new(TARGET_FILE))?
+    } else {
+        Vec::new()
+    };
+    let plan = plan_auto_targets(config, targets, user_packages);
+
+    if !plan.initialized_baseline {
+        write_targets(Path::new(TARGET_FILE), &plan.targets)?;
+    }
+    write_auto_config(paths, &plan.config)?;
+
+    if plan.initialized_baseline {
+        return Ok(AutoApplyData {
+            enabled: true,
+            added_count: 0,
+            target_path: TARGET_FILE.into(),
+        });
+    }
+
+    Ok(AutoApplyData {
+        enabled: true,
+        added_count: plan.added_count,
+        target_path: TARGET_FILE.into(),
+    })
+}
+
+fn plan_auto_targets(
+    config: AutoTargetConfig,
+    targets: Vec<TargetEntry>,
+    user_packages: Vec<String>,
+) -> AutoTargetPlan {
+    let mut config = normalize_auto_config(config);
+    let user_packages = normalize_package_list(user_packages);
+    let targets = normalize_targets(targets);
+
+    if !config.baseline_initialized {
+        config.known_user_apps = user_packages;
+        config.baseline_initialized = true;
+        return AutoTargetPlan {
+            config,
+            targets,
+            added_count: 0,
+            initialized_baseline: true,
+        };
+    }
+
+    let known_user_apps = config
+        .known_user_apps
+        .iter()
+        .cloned()
+        .collect::<BTreeSet<_>>();
+    let mut targets = targets;
     let mut existing = targets
         .iter()
         .map(|entry| entry.package_name.clone())
         .collect::<BTreeSet<_>>();
-    let user_packages = list_pm_packages("-3");
     let mut added_count = 0;
 
-    for package_name in user_packages {
-        if existing.insert(package_name.clone()) {
+    for package_name in &user_packages {
+        if !known_user_apps.contains(package_name) && existing.insert(package_name.clone()) {
             targets.push(TargetEntry {
-                package_name,
+                package_name: package_name.clone(),
                 mode: TargetMode::Auto,
             });
             added_count += 1;
@@ -455,24 +574,30 @@ fn apply_auto_targets_with_config(config: &AutoTargetConfig) -> Result<AutoApply
     }
 
     targets = normalize_targets(targets);
-    write_targets(Path::new(TARGET_FILE), &targets)?;
+    config.known_user_apps = user_packages;
 
-    Ok(AutoApplyData {
-        enabled: true,
+    AutoTargetPlan {
+        config,
+        targets,
         added_count,
-        target_path: TARGET_FILE.into(),
-    })
+        initialized_baseline: false,
+    }
 }
 
 fn detect_tricky_store() -> ModuleDetection {
-    let path = Path::new(TRICKY_STORE_MODULE_DIR);
+    detect_tricky_store_from_path(Path::new(TRICKY_STORE_MODULE_DIR))
+}
+
+fn detect_tricky_store_from_path(path: &Path) -> ModuleDetection {
+    let module_dir_exists = path.is_dir();
     let props = parse_module_prop(&path.join("module.prop"));
-    let variant = classify_tricky_store_variant(&props);
+    let variant = module_dir_exists.then(|| classify_tricky_store_variant(&props));
+    let installed = module_dir_exists && variant.as_deref() != Some("tee-simulator");
 
     ModuleDetection {
-        installed: path.is_dir(),
+        installed,
         module_dir: path.display().to_string(),
-        variant: Some(variant),
+        variant,
         version: props.get("version").cloned(),
         version_code: props
             .get("versionCode")
@@ -487,8 +612,8 @@ fn detect_tee_simulator(tricky_store: &ModuleDetection) -> ModuleDetection {
         .is_some_and(|variant| variant == "tee-simulator");
 
     ModuleDetection {
-        installed: tricky_store.installed && is_tee_simulator,
-        module_dir: TRICKY_STORE_MODULE_DIR.into(),
+        installed: is_tee_simulator,
+        module_dir: tricky_store.module_dir.clone(),
         variant: tricky_store.variant.clone(),
         version: tricky_store.version.clone(),
         version_code: tricky_store.version_code,
@@ -565,9 +690,7 @@ fn installed_packages(
     }
 
     for package_name in system_packages {
-        if (system_app_set.contains(&package_name) || target_map.contains_key(&package_name))
-            && seen.insert(package_name.clone())
-        {
+        if seen.insert(package_name.clone()) {
             packages.push(package_entry(
                 package_name,
                 true,
@@ -678,14 +801,88 @@ fn validate_keybox_xml(content: &str) -> Result<()> {
         bail!("keybox XML is empty");
     }
 
-    if !trimmed.contains("<AndroidAttestation") || !trimmed.contains("</AndroidAttestation>") {
-        return Err(anyhow!(
-            "keybox XML must contain an AndroidAttestation document"
-        ));
+    let mut reader = Reader::from_reader(Cursor::new(trimmed.as_bytes()));
+    reader.config_mut().trim_text(true);
+
+    let mut buffer = Vec::new();
+    let mut depth = 0usize;
+    let mut root_seen = false;
+    let mut root_closed = false;
+    let mut keybox_seen = false;
+
+    loop {
+        match reader.read_event_into(&mut buffer).with_context(|| {
+            format!(
+                "parse keybox XML near byte offset {}",
+                reader.buffer_position()
+            )
+        })? {
+            Event::Start(event) => {
+                if depth == 0 {
+                    if root_seen {
+                        bail!("keybox XML must contain a single AndroidAttestation document");
+                    }
+                    if event.name() != QName(b"AndroidAttestation") {
+                        bail!("keybox XML root must be AndroidAttestation");
+                    }
+                    root_seen = true;
+                } else if root_closed {
+                    bail!("keybox XML must contain a single AndroidAttestation document");
+                }
+
+                if root_seen && event.name() == QName(b"Keybox") {
+                    keybox_seen = true;
+                }
+                depth += 1;
+            }
+            Event::Empty(event) => {
+                if depth == 0 {
+                    if root_seen {
+                        bail!("keybox XML must contain a single AndroidAttestation document");
+                    }
+                    if event.name() != QName(b"AndroidAttestation") {
+                        bail!("keybox XML root must be AndroidAttestation");
+                    }
+                    root_seen = true;
+                    root_closed = true;
+                } else if !root_closed && event.name() == QName(b"Keybox") {
+                    keybox_seen = true;
+                }
+            }
+            Event::End(event) => {
+                if depth == 0 {
+                    bail!("keybox XML has an unexpected closing tag");
+                }
+                depth -= 1;
+                if depth == 0 {
+                    if event.name() != QName(b"AndroidAttestation") {
+                        bail!("keybox XML root must be AndroidAttestation");
+                    }
+                    root_closed = true;
+                }
+            }
+            Event::Eof => break,
+            Event::Decl(_)
+            | Event::PI(_)
+            | Event::DocType(_)
+            | Event::Comment(_)
+            | Event::Text(_)
+            | Event::CData(_)
+            | Event::GeneralRef(_) => {}
+        }
+        buffer.clear();
     }
 
-    if !trimmed.contains("<Keybox") {
-        return Err(anyhow!("keybox XML must contain at least one Keybox entry"));
+    if !root_seen {
+        bail!("keybox XML must contain an AndroidAttestation document");
+    }
+
+    if !root_closed || depth != 0 {
+        bail!("keybox XML has an unclosed AndroidAttestation document");
+    }
+
+    if !keybox_seen {
+        bail!("keybox XML must contain at least one Keybox entry");
     }
 
     Ok(())
@@ -705,7 +902,28 @@ fn set_keybox_permissions(_path: &Path) {
 
 #[cfg(test)]
 mod tests {
-    use super::{TargetMode, parse_target_line, validate_keybox_xml};
+    use std::{
+        fs,
+        path::PathBuf,
+        time::{SystemTime, UNIX_EPOCH},
+    };
+
+    use super::{
+        AUTO_CONFIG_VERSION, AutoTargetConfig, TargetEntry, TargetMode, detect_tee_simulator,
+        detect_tricky_store_from_path, parse_target_line, plan_auto_targets, validate_keybox_xml,
+    };
+
+    fn temp_module_dir(name: &str) -> PathBuf {
+        let path = std::env::temp_dir().join(format!(
+            "duck-tricky-store-{name}-{}",
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        fs::create_dir_all(&path).unwrap();
+        path
+    }
 
     #[test]
     fn parses_target_suffix_modes() {
@@ -732,6 +950,29 @@ mod tests {
     }
 
     #[test]
+    fn validates_self_closing_keybox_entry() {
+        validate_keybox_xml(
+            r#"<?xml version="1.0"?><AndroidAttestation><Keybox DeviceID="x"/></AndroidAttestation>"#,
+        )
+        .unwrap();
+    }
+
+    #[test]
+    fn rejects_non_attestation_keybox_xml() {
+        assert!(validate_keybox_xml(r#"<Keybox DeviceID="x"></Keybox>"#).is_err());
+    }
+
+    #[test]
+    fn rejects_plain_text_keybox_markers() {
+        assert!(
+            validate_keybox_xml(
+                r#"<AndroidAttestation><Note>&lt;Keybox DeviceID="x"&gt;</Note></AndroidAttestation>"#,
+            )
+            .is_err()
+        );
+    }
+
+    #[test]
     fn classifies_jingmatrix_as_tee_simulator() {
         let props = [
             ("name".into(), "TEE Simulator".into()),
@@ -743,6 +984,99 @@ mod tests {
         assert_eq!(
             super::classify_tricky_store_variant(&props),
             "tee-simulator"
+        );
+    }
+
+    #[test]
+    fn detects_tee_simulator_variant_under_tricky_store_dir() {
+        let module_dir = temp_module_dir("tees");
+        fs::write(
+            module_dir.join("module.prop"),
+            "name=TEE Simulator\nauthor=JingMatrix\nversion=1\nversionCode=2\n",
+        )
+        .unwrap();
+
+        let tricky_store = detect_tricky_store_from_path(&module_dir);
+        let tee_simulator = detect_tee_simulator(&tricky_store);
+
+        assert!(!tricky_store.installed);
+        assert_eq!(tricky_store.variant.as_deref(), Some("tee-simulator"));
+        assert!(tee_simulator.installed);
+        assert_eq!(tee_simulator.module_dir, module_dir.display().to_string());
+    }
+
+    #[test]
+    fn detects_regular_tricky_store_variant_under_tricky_store_dir() {
+        let module_dir = temp_module_dir("ts");
+        fs::write(
+            module_dir.join("module.prop"),
+            "name=Tricky Store\nversion=1\nversionCode=2\n",
+        )
+        .unwrap();
+
+        let tricky_store = detect_tricky_store_from_path(&module_dir);
+        let tee_simulator = detect_tee_simulator(&tricky_store);
+
+        assert!(tricky_store.installed);
+        assert_eq!(tricky_store.variant.as_deref(), Some("tricky-store"));
+        assert!(!tee_simulator.installed);
+    }
+
+    #[test]
+    fn auto_target_plan_initializes_legacy_enabled_config_without_adding_targets() {
+        let plan = plan_auto_targets(
+            AutoTargetConfig {
+                version: AUTO_CONFIG_VERSION,
+                enabled: true,
+                baseline_initialized: false,
+                known_user_apps: Vec::new(),
+            },
+            Vec::new(),
+            vec!["com.example.existing".into()],
+        );
+
+        assert!(plan.initialized_baseline);
+        assert_eq!(plan.added_count, 0);
+        assert!(plan.targets.is_empty());
+        assert_eq!(plan.config.known_user_apps, vec!["com.example.existing"]);
+        assert!(plan.config.baseline_initialized);
+    }
+
+    #[test]
+    fn auto_target_plan_adds_only_new_user_apps_after_baseline() {
+        let plan = plan_auto_targets(
+            AutoTargetConfig {
+                version: AUTO_CONFIG_VERSION,
+                enabled: true,
+                baseline_initialized: true,
+                known_user_apps: vec!["com.example.old".into()],
+            },
+            vec![TargetEntry {
+                package_name: "com.example.selected".into(),
+                mode: TargetMode::Hack,
+            }],
+            vec![
+                "com.example.old".into(),
+                "com.example.new".into(),
+                "com.example.selected".into(),
+            ],
+        );
+
+        assert!(!plan.initialized_baseline);
+        assert_eq!(plan.added_count, 1);
+        assert_eq!(
+            plan.targets
+                .iter()
+                .map(|entry| (entry.package_name.as_str(), &entry.mode))
+                .collect::<Vec<_>>(),
+            vec![
+                ("com.example.new", &TargetMode::Auto),
+                ("com.example.selected", &TargetMode::Hack),
+            ]
+        );
+        assert_eq!(
+            plan.config.known_user_apps,
+            vec!["com.example.new", "com.example.old", "com.example.selected"]
         );
     }
 }

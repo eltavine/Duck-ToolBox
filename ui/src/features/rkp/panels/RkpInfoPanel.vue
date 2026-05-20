@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from "vue"
-import { LoaderCircle, Radar } from "lucide-vue-next"
+import { LoaderCircle, Radar } from "@lucide/vue"
 
 import { useI18n } from "@/i18n"
 import type { RkpWorkbenchActions, RkpWorkbenchState } from "../types"

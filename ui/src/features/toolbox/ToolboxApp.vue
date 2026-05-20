@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue"
-import { Boxes, HardDrive, MoonStar, ShieldCheck, SunMedium } from "lucide-vue-next"
+import { Boxes, HardDrive, MoonStar, ShieldCheck, SunMedium } from "@lucide/vue"
 
 import AboutCard from "@/features/shared/AboutCard.vue"
 import NoticeDialog from "@/features/shared/NoticeDialog.vue"

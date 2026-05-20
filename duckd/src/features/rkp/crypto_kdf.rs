@@ -1,6 +1,6 @@
-use aes_gcm::aes::Aes128;
+use aes::Aes128;
 use anyhow::{Context, Result};
-use cmac::{Cmac, Mac};
+use cmac::{Cmac, KeyInit, Mac};
 use hex::FromHex;
 
 use crate::runtime::{errors::AppError, profile::KeySource};
