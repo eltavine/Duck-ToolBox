@@ -12,7 +12,6 @@ import {
   Save,
   Search,
   ShieldCheck,
-  ShieldQuestion,
   SlidersHorizontal,
   Trash2,
 } from "@lucide/vue"
@@ -53,13 +52,9 @@ const visiblePackages = computed(() => {
 
 const selectedCount = computed(() => props.state.targets.length)
 const systemAppCount = computed(() => props.state.systemApps.length)
+const moduleName = computed(() => props.state.status?.tricky_store.name?.trim() || "Tricky Store")
 const trickyStoreStatus = computed(() =>
   props.state.status?.tricky_store.installed
-    ? t("trickyStore.installed")
-    : t("trickyStore.notInstalled"),
-)
-const teeSimulatorStatus = computed(() =>
-  props.state.status?.tee_simulator.installed
     ? t("trickyStore.installed")
     : t("trickyStore.notInstalled"),
 )
@@ -136,19 +131,11 @@ function humanTime(unix?: number) {
     <div class="summary-grid wide">
       <article class="summary-tile">
         <div class="panel-heading compact">
-          <span class="summary-label">Tricky Store</span>
+          <span class="summary-label">{{ moduleName }}</span>
           <ShieldCheck :class="['icon-muted', state.status?.tricky_store.installed ? 'status-icon-online' : 'status-icon-offline']" />
         </div>
         <p class="mono-inline mt-2">{{ trickyStoreStatus }}</p>
         <p class="muted mt-2 break-all">{{ state.status?.tricky_store.module_dir ?? "/data/adb/modules/tricky_store" }}</p>
-      </article>
-      <article class="summary-tile">
-        <div class="panel-heading compact">
-          <span class="summary-label">TEE Simulator</span>
-          <ShieldQuestion :class="['icon-muted', state.status?.tee_simulator.installed ? 'status-icon-online' : 'status-icon-offline']" />
-        </div>
-        <p class="mono-inline mt-2">{{ teeSimulatorStatus }}</p>
-        <p class="muted mt-2 break-all">{{ state.status?.tee_simulator.module_dir ?? "/data/adb/modules/tricky_store" }}</p>
       </article>
       <article class="summary-tile">
         <span class="summary-label">{{ t("trickyStore.targetFile") }}</span>
@@ -171,7 +158,7 @@ function humanTime(unix?: number) {
       </div>
 
       <p class="security-note">
-        <ShieldQuestion class="size-4" />
+        <SlidersHorizontal class="size-4" />
         {{ t("trickyStore.modeNote") }}
       </p>
 

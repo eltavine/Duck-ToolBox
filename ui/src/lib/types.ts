@@ -144,6 +144,7 @@ export type TrickyStoreTargetMode = "auto" | "generate" | "hack"
 export interface TrickyStoreModuleDetection {
   installed: boolean
   module_dir: string
+  name?: string | null
   variant?: string | null
   version?: string | null
   version_code?: number | null
@@ -176,7 +177,6 @@ export interface TrickyStoreKeyboxStatus {
 
 export interface TrickyStoreStatusData {
   tricky_store: TrickyStoreModuleDetection
-  tee_simulator: TrickyStoreModuleDetection
   target_path: string
   system_app_path: string
   keybox: TrickyStoreKeyboxStatus

@@ -48,7 +48,7 @@ export default {
       "这个工作台会默认从当前设备读取常用标识并自动填充主字段，必要时再展开高级扩展，最后将设备标识写入 Qualcomm Keymaster。",
     trickyStoreCategory: "TS / TEES",
     trickyStoreName: "TS/TEES 与 Keybox 管理",
-    trickyStoreSummary: "检测 Tricky Store 与 TEE Simulator，管理 target.txt 和本地 keybox.xml。",
+    trickyStoreSummary: "检测 tricky_store 模块，管理 target.txt 和本地 keybox.xml。",
     trickyStoreDescription:
       "这个工作台用于管理 Tricky Store 目标应用、系统应用补充列表、自动加入新安装应用，以及从本地路径安装 keybox.xml。",
     workspaceKicker: "工具",

@@ -216,7 +216,7 @@ fn tricky_store_status_reports_missing_modules() {
     assert_eq!(payload["ok"], true);
     assert_eq!(payload["command"], "tricky-store.status");
     assert_eq!(payload["data"]["tricky_store"]["installed"], false);
-    assert_eq!(payload["data"]["tee_simulator"]["installed"], false);
+    assert!(payload["data"].get("tee_simulator").is_none());
 }
 
 #[test]

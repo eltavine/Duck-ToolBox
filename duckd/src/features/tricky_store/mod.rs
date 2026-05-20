@@ -77,6 +77,7 @@ pub struct AutoTargetConfig {
 pub struct ModuleDetection {
     pub installed: bool,
     pub module_dir: String,
+    pub name: Option<String>,
     pub variant: Option<String>,
     pub version: Option<String>,
     pub version_code: Option<u64>,
@@ -103,7 +104,6 @@ pub struct KeyboxStatus {
 #[derive(Debug, Clone, Serialize)]
 pub struct StatusData {
     pub tricky_store: ModuleDetection,
-    pub tee_simulator: ModuleDetection,
     pub target_path: String,
     pub system_app_path: String,
     pub keybox: KeyboxStatus,
@@ -167,11 +167,9 @@ pub fn status(paths: &AppPaths) -> Result<StatusData> {
     let system_app_set = system_apps.iter().cloned().collect::<BTreeSet<_>>();
     let packages = installed_packages(&target_map, &system_app_set);
     let tricky_store = detect_tricky_store();
-    let tee_simulator = detect_tee_simulator(&tricky_store);
 
     Ok(StatusData {
         tricky_store,
-        tee_simulator,
         target_path: TARGET_FILE.into(),
         system_app_path: SYSTEM_APP_FILE.into(),
         keybox: keybox_status(Path::new(KEYBOX_FILE)),
@@ -590,33 +588,22 @@ fn detect_tricky_store() -> ModuleDetection {
 
 fn detect_tricky_store_from_path(path: &Path) -> ModuleDetection {
     let module_dir_exists = path.is_dir();
-    let props = parse_module_prop(&path.join("module.prop"));
+    let props = if module_dir_exists {
+        parse_module_prop(&path.join("module.prop"))
+    } else {
+        BTreeMap::new()
+    };
     let variant = module_dir_exists.then(|| classify_tricky_store_variant(&props));
-    let installed = module_dir_exists && variant.as_deref() != Some("tee-simulator");
 
     ModuleDetection {
-        installed,
+        installed: module_dir_exists,
         module_dir: path.display().to_string(),
+        name: props.get("name").cloned(),
         variant,
         version: props.get("version").cloned(),
         version_code: props
             .get("versionCode")
             .and_then(|value| value.trim().parse::<u64>().ok()),
-    }
-}
-
-fn detect_tee_simulator(tricky_store: &ModuleDetection) -> ModuleDetection {
-    let is_tee_simulator = tricky_store
-        .variant
-        .as_deref()
-        .is_some_and(|variant| variant == "tee-simulator");
-
-    ModuleDetection {
-        installed: is_tee_simulator,
-        module_dir: tricky_store.module_dir.clone(),
-        variant: tricky_store.variant.clone(),
-        version: tricky_store.version.clone(),
-        version_code: tricky_store.version_code,
     }
 }
 
@@ -909,7 +896,7 @@ mod tests {
     };
 
     use super::{
-        AUTO_CONFIG_VERSION, AutoTargetConfig, TargetEntry, TargetMode, detect_tee_simulator,
+        AUTO_CONFIG_VERSION, AutoTargetConfig, TargetEntry, TargetMode,
         detect_tricky_store_from_path, parse_target_line, plan_auto_targets, validate_keybox_xml,
     };
 
@@ -988,7 +975,7 @@ mod tests {
     }
 
     #[test]
-    fn detects_tee_simulator_variant_under_tricky_store_dir() {
+    fn detects_tee_simulator_name_under_tricky_store_dir_as_same_module() {
         let module_dir = temp_module_dir("tees");
         fs::write(
             module_dir.join("module.prop"),
@@ -997,12 +984,29 @@ mod tests {
         .unwrap();
 
         let tricky_store = detect_tricky_store_from_path(&module_dir);
-        let tee_simulator = detect_tee_simulator(&tricky_store);
+
+        assert!(tricky_store.installed);
+        assert_eq!(tricky_store.name.as_deref(), Some("TEE Simulator"));
+        assert_eq!(tricky_store.variant.as_deref(), Some("tee-simulator"));
+        assert_eq!(tricky_store.module_dir, module_dir.display().to_string());
+    }
+
+    #[test]
+    fn missing_module_dir_ignores_neighbor_module_prop_file() {
+        let module_dir = std::env::temp_dir().join(format!(
+            "duck-tricky-store-missing-{}",
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        fs::write(&module_dir, "name=TEE Simulator\n").unwrap();
+
+        let tricky_store = detect_tricky_store_from_path(&module_dir);
 
         assert!(!tricky_store.installed);
-        assert_eq!(tricky_store.variant.as_deref(), Some("tee-simulator"));
-        assert!(tee_simulator.installed);
-        assert_eq!(tee_simulator.module_dir, module_dir.display().to_string());
+        assert!(tricky_store.name.is_none());
+        assert!(tricky_store.variant.is_none());
     }
 
     #[test]
@@ -1015,11 +1019,10 @@ mod tests {
         .unwrap();
 
         let tricky_store = detect_tricky_store_from_path(&module_dir);
-        let tee_simulator = detect_tee_simulator(&tricky_store);
 
         assert!(tricky_store.installed);
+        assert_eq!(tricky_store.name.as_deref(), Some("Tricky Store"));
         assert_eq!(tricky_store.variant.as_deref(), Some("tricky-store"));
-        assert!(!tee_simulator.installed);
     }
 
     #[test]

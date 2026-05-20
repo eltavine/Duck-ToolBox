@@ -49,7 +49,7 @@ export default {
       "This workbench reads the common identifiers from the current device, keeps the main fields ready by default, and lets you expand advanced options only when you need to align unusual targets before provisioning Qualcomm Keymaster.",
     trickyStoreCategory: "TS / TEES",
     trickyStoreName: "TS/TEES & Keybox Manager",
-    trickyStoreSummary: "Detect Tricky Store and TEE Simulator, manage target.txt, and install a local keybox.xml.",
+    trickyStoreSummary: "Detect the tricky_store module, manage target.txt, and install a local keybox.xml.",
     trickyStoreDescription:
       "Use this workbench to manage Tricky Store target apps, extra system apps, automatic newly installed app inclusion, and local keybox.xml installation.",
     workspaceKicker: "Tool",
