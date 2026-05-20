@@ -134,7 +134,7 @@ function humanTime(unix?: number) {
           <ShieldQuestion :class="['icon-muted', state.status?.tee_simulator.installed ? 'status-icon-online' : 'status-icon-offline']" />
         </div>
         <p class="mono-inline mt-2">{{ teeSimulatorStatus }}</p>
-        <p class="muted mt-2 break-all">{{ state.status?.tee_simulator.module_dir ?? "/data/adb/modules/tee_simulator" }}</p>
+        <p class="muted mt-2 break-all">{{ state.status?.tee_simulator.module_dir ?? "/data/adb/modules/tricky_store" }}</p>
       </article>
       <article class="summary-tile">
         <span class="summary-label">{{ t("trickyStore.targetFile") }}</span>

@@ -144,6 +144,7 @@ export type TrickyStoreTargetMode = "auto" | "generate" | "hack"
 export interface TrickyStoreModuleDetection {
   installed: boolean
   module_dir: string
+  variant?: string | null
   version?: string | null
   version_code?: number | null
 }

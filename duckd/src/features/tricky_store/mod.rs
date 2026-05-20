@@ -13,11 +13,6 @@ use crate::runtime::{files::write_string_atomic, paths::AppPaths};
 
 const TRICKY_STORE_MODULE_DIR: &str = "/data/adb/modules/tricky_store";
 const TRICKY_STORE_DATA_DIR: &str = "/data/adb/tricky_store";
-const TEESIM_MODULE_DIRS: [&str; 3] = [
-    "/data/adb/modules/tee_simulator",
-    "/data/adb/modules/teesimulator",
-    "/data/adb/modules/TEESimulator",
-];
 const TARGET_FILE: &str = "/data/adb/tricky_store/target.txt";
 const SYSTEM_APP_FILE: &str = "/data/adb/tricky_store/system_app";
 const KEYBOX_FILE: &str = "/data/adb/tricky_store/keybox.xml";
@@ -73,6 +68,7 @@ pub struct AutoTargetConfig {
 pub struct ModuleDetection {
     pub installed: bool,
     pub module_dir: String,
+    pub variant: Option<String>,
     pub version: Option<String>,
     pub version_code: Option<u64>,
 }
@@ -154,10 +150,12 @@ pub fn status(paths: &AppPaths) -> Result<StatusData> {
     let target_map = target_map(&targets);
     let system_app_set = system_apps.iter().cloned().collect::<BTreeSet<_>>();
     let packages = installed_packages(&target_map, &system_app_set);
+    let tricky_store = detect_tricky_store();
+    let tee_simulator = detect_tee_simulator(&tricky_store);
 
     Ok(StatusData {
-        tricky_store: detect_module(Path::new(TRICKY_STORE_MODULE_DIR)),
-        tee_simulator: detect_tee_simulator(),
+        tricky_store,
+        tee_simulator,
         target_path: TARGET_FILE.into(),
         system_app_path: SYSTEM_APP_FILE.into(),
         keybox: keybox_status(Path::new(KEYBOX_FILE)),
@@ -466,29 +464,57 @@ fn apply_auto_targets_with_config(config: &AutoTargetConfig) -> Result<AutoApply
     })
 }
 
-fn detect_module(path: &Path) -> ModuleDetection {
-    let installed = path.is_dir();
-    let module_prop = parse_module_prop(&path.join("module.prop"));
+fn detect_tricky_store() -> ModuleDetection {
+    let path = Path::new(TRICKY_STORE_MODULE_DIR);
+    let props = parse_module_prop(&path.join("module.prop"));
+    let variant = classify_tricky_store_variant(&props);
 
     ModuleDetection {
-        installed,
+        installed: path.is_dir(),
         module_dir: path.display().to_string(),
-        version: module_prop.get("version").cloned(),
-        version_code: module_prop
+        variant: Some(variant),
+        version: props.get("version").cloned(),
+        version_code: props
             .get("versionCode")
             .and_then(|value| value.trim().parse::<u64>().ok()),
     }
 }
 
-fn detect_tee_simulator() -> ModuleDetection {
-    for candidate in TEESIM_MODULE_DIRS {
-        let path = Path::new(candidate);
-        if path.is_dir() {
-            return detect_module(path);
-        }
+fn detect_tee_simulator(tricky_store: &ModuleDetection) -> ModuleDetection {
+    let is_tee_simulator = tricky_store
+        .variant
+        .as_deref()
+        .is_some_and(|variant| variant == "tee-simulator");
+
+    ModuleDetection {
+        installed: tricky_store.installed && is_tee_simulator,
+        module_dir: TRICKY_STORE_MODULE_DIR.into(),
+        variant: tricky_store.variant.clone(),
+        version: tricky_store.version.clone(),
+        version_code: tricky_store.version_code,
+    }
+}
+
+fn classify_tricky_store_variant(props: &BTreeMap<String, String>) -> String {
+    let haystack = props
+        .iter()
+        .map(|(key, value)| format!("{key}={value}"))
+        .collect::<Vec<_>>()
+        .join("\n")
+        .to_lowercase();
+
+    if haystack.contains("jingmatrix")
+        || haystack.contains("teesimulator")
+        || haystack.contains("tee simulator")
+    {
+        return "tee-simulator".into();
     }
 
-    detect_module(Path::new(TEESIM_MODULE_DIRS[0]))
+    if haystack.contains("tricky store") || haystack.contains("trickystore") {
+        return "tricky-store".into();
+    }
+
+    "unknown".into()
 }
 
 fn parse_module_prop(path: &Path) -> BTreeMap<String, String> {
@@ -703,5 +729,20 @@ mod tests {
             r#"<AndroidAttestation><NumberOfKeyboxes>1</NumberOfKeyboxes><Keybox DeviceID="x"></Keybox></AndroidAttestation>"#,
         )
         .unwrap();
+    }
+
+    #[test]
+    fn classifies_jingmatrix_as_tee_simulator() {
+        let props = [
+            ("name".into(), "TEE Simulator".into()),
+            ("author".into(), "JingMatrix".into()),
+        ]
+        .into_iter()
+        .collect();
+
+        assert_eq!(
+            super::classify_tricky_store_variant(&props),
+            "tee-simulator"
+        );
     }
 }
