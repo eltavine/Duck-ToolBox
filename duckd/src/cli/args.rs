@@ -23,6 +23,10 @@ pub enum Commands {
         #[command(subcommand)]
         command: RkpCommands,
     },
+    TrickyStore {
+        #[command(subcommand)]
+        command: TrickyStoreCommands,
+    },
 }
 
 #[derive(Subcommand)]
@@ -34,6 +38,31 @@ pub enum ArtifactCommands {
 pub enum DeviceIdsCommands {
     Defaults(JsonOnlyArgs),
     Provision(DeviceIdsProvisionArgs),
+}
+
+#[derive(Subcommand)]
+pub enum TrickyStoreCommands {
+    Status(JsonOnlyArgs),
+    Targets {
+        #[command(subcommand)]
+        command: TrickyStoreTargetCommands,
+    },
+    Keybox {
+        #[command(subcommand)]
+        command: TrickyStoreKeyboxCommands,
+    },
+    Files(TrickyStoreFilesArgs),
+    AutoApply(JsonOnlyArgs),
+}
+
+#[derive(Subcommand)]
+pub enum TrickyStoreTargetCommands {
+    Save(StdinJsonArgs),
+}
+
+#[derive(Subcommand)]
+pub enum TrickyStoreKeyboxCommands {
+    Install(TrickyStoreKeyboxInstallArgs),
 }
 
 #[derive(Subcommand)]
@@ -57,6 +86,14 @@ pub enum ProfileCommands {
 
 #[derive(Args, Clone)]
 pub struct JsonOnlyArgs {
+    #[arg(long)]
+    pub json: bool,
+}
+
+#[derive(Args, Clone)]
+pub struct StdinJsonArgs {
+    #[arg(long = "stdin-json")]
+    pub stdin_json: bool,
     #[arg(long)]
     pub json: bool,
 }
@@ -133,6 +170,23 @@ pub struct KeyboxArgs {
     pub shared: SharedRunArgs,
     #[arg(long)]
     pub output: Option<String>,
+}
+
+#[derive(Args, Clone)]
+pub struct TrickyStoreKeyboxInstallArgs {
+    pub source: String,
+    #[arg(long)]
+    pub json: bool,
+}
+
+#[derive(Args, Clone)]
+pub struct TrickyStoreFilesArgs {
+    #[arg(long, default_value = "/storage/emulated/0/Download")]
+    pub path: String,
+    #[arg(long, default_value = "xml")]
+    pub extension: String,
+    #[arg(long)]
+    pub json: bool,
 }
 
 #[derive(Args, Clone)]

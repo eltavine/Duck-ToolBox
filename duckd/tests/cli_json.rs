@@ -27,6 +27,13 @@ fn temp_root() -> PathBuf {
     root
 }
 
+fn temp_root_with_data() -> (PathBuf, PathBuf) {
+    let root = temp_root();
+    let data = root.join("data");
+    fs::create_dir_all(data.join("var")).unwrap();
+    (root, data)
+}
+
 fn valid_device_info() -> DeviceInfo {
     DeviceInfo {
         brand: "google".into(),
@@ -63,6 +70,15 @@ fn run(root: &Path, args: &[&str]) -> serde_json::Value {
 fn run_output(root: &Path, args: &[&str]) -> std::process::Output {
     Command::new(env!("CARGO_BIN_EXE_duckd"))
         .env("DUCK_TOOLBOX_ROOT", root)
+        .args(args)
+        .output()
+        .unwrap()
+}
+
+fn run_output_with_data(root: &Path, data: &Path, args: &[&str]) -> std::process::Output {
+    Command::new(env!("CARGO_BIN_EXE_duckd"))
+        .env("DUCK_TOOLBOX_ROOT", root)
+        .env("DUCK_TOOLBOX_DATA_ROOT", data)
         .args(args)
         .output()
         .unwrap()
@@ -190,4 +206,81 @@ fn keybox_preflight_rejects_blank_required_device_profile() {
     assert_eq!(payload["ok"], false);
     assert_eq!(payload["command"], "rkp.keybox");
     assert_eq!(payload["error"]["code"], "missing_device_field");
+}
+
+#[test]
+fn tricky_store_status_reports_missing_modules() {
+    let root = temp_root();
+    let payload = run(&root, &["tricky-store", "status", "--json"]);
+
+    assert_eq!(payload["ok"], true);
+    assert_eq!(payload["command"], "tricky-store.status");
+    assert_eq!(payload["data"]["tricky_store"]["installed"], false);
+    assert_eq!(payload["data"]["tee_simulator"]["installed"], false);
+}
+
+#[test]
+fn tricky_store_keybox_install_rejects_non_keybox_xml() {
+    let (root, data) = temp_root_with_data();
+    let source = root.join("bad.xml");
+    fs::write(&source, "<not-keybox />").unwrap();
+
+    let output = run_output_with_data(
+        &root,
+        &data,
+        &[
+            "tricky-store",
+            "keybox",
+            "install",
+            source.to_str().unwrap(),
+            "--json",
+        ],
+    );
+
+    assert!(!output.status.success());
+    let payload: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(payload["ok"], false);
+    assert_eq!(payload["command"], "tricky-store.keybox.install");
+    assert!(
+        payload["error"]["message"]
+            .as_str()
+            .unwrap()
+            .contains("AndroidAttestation")
+    );
+}
+
+#[test]
+fn tricky_store_files_lists_xml_files() {
+    let (root, data) = temp_root_with_data();
+    let picker_dir = root.join("picker");
+    fs::create_dir_all(picker_dir.join("nested")).unwrap();
+    fs::write(picker_dir.join("keybox.xml"), "<xml />").unwrap();
+    fs::write(picker_dir.join("notes.txt"), "nope").unwrap();
+
+    let output = run_output_with_data(
+        &root,
+        &data,
+        &[
+            "tricky-store",
+            "files",
+            "--path",
+            picker_dir.to_str().unwrap(),
+            "--extension",
+            "xml",
+            "--json",
+        ],
+    );
+
+    assert!(output.status.success());
+    let payload: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    let names = payload["data"]["entries"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|entry| entry["name"].as_str().unwrap())
+        .collect::<Vec<_>>();
+
+    assert!(names.contains(&"nested"));
+    assert!(names.contains(&"keybox.xml"));
+    assert!(!names.contains(&"notes.txt"));
 }

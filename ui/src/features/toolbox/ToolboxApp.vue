@@ -11,8 +11,10 @@ import CommandLogPanel from "@/features/shared/CommandLogPanel.vue"
 import TextPreviewDialog from "@/features/shared/TextPreviewDialog.vue"
 import DeviceIdsWorkbench from "@/features/device-ids/DeviceIdsWorkbench.vue"
 import RkpWorkbench from "@/features/rkp/RkpWorkbench.vue"
+import TrickyStoreWorkbench from "@/features/tricky-store/TrickyStoreWorkbench.vue"
 import { useDeviceIdsWorkbench } from "@/features/device-ids/useDeviceIdsWorkbench"
 import { useRkpWorkbench } from "@/features/rkp/useRkpWorkbench"
+import { useTrickyStoreWorkbench } from "@/features/tricky-store/useTrickyStoreWorkbench"
 
 import ToolboxHome from "./ToolboxHome.vue"
 import ToolLibrary from "./ToolLibrary.vue"
@@ -23,6 +25,7 @@ const deviceIdsWarningOpen = ref(false)
 const openSourceNoticeOpen = ref(false)
 const rkp = useRkpWorkbench()
 const deviceIds = useDeviceIdsWorkbench()
+const trickyStore = useTrickyStoreWorkbench()
 const { locale, locales, t } = useI18n()
 const { theme } = useTheme()
 const historyCount = computed(() => rkp.historyCount.value)
@@ -68,10 +71,21 @@ const tools = computed(() => [
       t("deviceIds.capabilityReport"),
     ],
   },
+  {
+    id: "tricky-store",
+    name: t("tool.trickyStoreName"),
+    category: t("tool.trickyStoreCategory"),
+    summary: t("tool.trickyStoreSummary"),
+    capabilities: [
+      t("trickyStore.capabilityDetect"),
+      t("trickyStore.capabilityTargets"),
+      t("trickyStore.capabilityKeybox"),
+    ],
+  },
 ])
 
 const combinedHistory = computed(() =>
-  [...rkp.state.history, ...deviceIds.state.history]
+  [...rkp.state.history, ...deviceIds.state.history, ...trickyStore.state.history]
     .sort((left, right) => right.at.localeCompare(left.at))
     .slice(0, 10),
 )
@@ -81,7 +95,11 @@ const combinedLastError = computed(() => {
     return deviceIds.state.lastError || rkp.state.lastError
   }
 
-  return rkp.state.lastError || deviceIds.state.lastError
+  if (activeTool.value === "tricky-store") {
+    return trickyStore.state.lastError || rkp.state.lastError
+  }
+
+  return rkp.state.lastError || deviceIds.state.lastError || trickyStore.state.lastError
 })
 
 const runtimeStatusLabel = computed(() =>
@@ -255,6 +273,11 @@ onMounted(() => {
             :actions="deviceIds.actions"
             :state="deviceIds.state"
           />
+          <TrickyStoreWorkbench
+            v-else-if="activeTool === 'tricky-store'"
+            :actions="trickyStore.actions"
+            :state="trickyStore.state"
+          />
           <RkpWorkbench
             v-else
             :actions="rkp.actions"
@@ -302,6 +325,17 @@ onMounted(() => {
       :title="t('dialog.errorTitle')"
       @close="deviceIds.actions.dismissErrorDialog()"
       @copy="deviceIds.actions.copyText(deviceIds.state.errorDialogText)"
+    />
+
+    <TextPreviewDialog
+      :content="trickyStore.state.errorDialogText"
+      :copy-label="t('actions.copyError')"
+      :close-label="t('dialog.close')"
+      :description="t('dialog.errorDescription')"
+      :open="trickyStore.state.errorDialogOpen"
+      :title="t('dialog.errorTitle')"
+      @close="trickyStore.actions.dismissErrorDialog()"
+      @copy="trickyStore.actions.copyText(trickyStore.state.errorDialogText)"
     />
 
     <NoticeDialog

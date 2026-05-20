@@ -15,7 +15,11 @@ import type {
   ProfileData,
   ProfileEnvelopeData,
   ProvisionData,
+  TrickyStoreFileListData,
   TrickyStoreKeyboxInstallData,
+  TrickyStoreStatusData,
+  TrickyStoreTargetSaveData,
+  TrickyStoreTargetSaveRequest,
   VerifyData,
 } from "@/lib/types"
 import { defaultProfile } from "@/lib/types"
@@ -585,6 +589,39 @@ export function deviceIdsProvisionCommand(profile: DeviceIdsProfileData) {
     ["device-ids", "provision", "--stdin-json", "--json"],
     profile,
   )
+}
+
+export function trickyStoreStatusCommand() {
+  return execJson<TrickyStoreStatusData>(["tricky-store", "status", "--json"])
+}
+
+export function trickyStoreTargetsSaveCommand(request: TrickyStoreTargetSaveRequest) {
+  return execJson<TrickyStoreTargetSaveData>(
+    ["tricky-store", "targets", "save", "--stdin-json", "--json"],
+    request,
+  )
+}
+
+export function trickyStoreKeyboxInstallCommand(sourcePath: string) {
+  return execJson<TrickyStoreKeyboxInstallData>([
+    "tricky-store",
+    "keybox",
+    "install",
+    sourcePath.trim(),
+    "--json",
+  ])
+}
+
+export function trickyStoreFilesCommand(path: string, extension = "xml") {
+  return execJson<TrickyStoreFileListData>([
+    "tricky-store",
+    "files",
+    "--path",
+    path.trim() || "/storage/emulated/0/Download",
+    "--extension",
+    extension,
+    "--json",
+  ])
 }
 
 export function provisionCommand() {

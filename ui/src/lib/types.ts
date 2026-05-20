@@ -139,6 +139,85 @@ export interface TrickyStoreKeyboxInstallData {
   backup_path: string | null
 }
 
+export type TrickyStoreTargetMode = "auto" | "generate" | "hack"
+
+export interface TrickyStoreModuleDetection {
+  installed: boolean
+  module_dir: string
+  version?: string | null
+  version_code?: number | null
+}
+
+export interface TrickyStoreTargetEntry {
+  package_name: string
+  mode: TrickyStoreTargetMode
+}
+
+export interface TrickyStorePackageEntry {
+  package_name: string
+  app_label: string
+  system: boolean
+  selected: boolean
+  mode: TrickyStoreTargetMode
+  tracked_system: boolean
+}
+
+export interface TrickyStoreAutoConfig {
+  enabled: boolean
+}
+
+export interface TrickyStoreKeyboxStatus {
+  path: string
+  exists: boolean
+  size: number
+  modified_unix: number
+}
+
+export interface TrickyStoreStatusData {
+  tricky_store: TrickyStoreModuleDetection
+  tee_simulator: TrickyStoreModuleDetection
+  target_path: string
+  system_app_path: string
+  keybox: TrickyStoreKeyboxStatus
+  auto_config: TrickyStoreAutoConfig
+  targets: TrickyStoreTargetEntry[]
+  system_apps: string[]
+  packages: TrickyStorePackageEntry[]
+}
+
+export interface TrickyStoreTargetSaveRequest {
+  targets: TrickyStoreTargetEntry[]
+  system_apps: string[]
+  auto_add_new_apps: boolean
+}
+
+export interface TrickyStoreTargetSaveData {
+  target_path: string
+  system_app_path: string
+  auto_config: TrickyStoreAutoConfig
+  target_count: number
+  system_app_count: number
+}
+
+export interface TrickyStoreAutoApplyData {
+  enabled: boolean
+  added_count: number
+  target_path: string
+}
+
+export interface TrickyStoreFileEntry {
+  name: string
+  path: string
+  directory: boolean
+  size: number
+}
+
+export interface TrickyStoreFileListData {
+  path: string
+  parent?: string | null
+  entries: TrickyStoreFileEntry[]
+}
+
 export interface VerifyData {
   path: string
   report: VerifyReport

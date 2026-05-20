@@ -14,7 +14,9 @@ use x25519_dalek::{PublicKey as X25519PublicKey, StaticSecret as X25519StaticSec
 
 use super::args::{
     ArtifactCommands, Commands, DeviceIdsCommands, DeviceIdsProvisionArgs, KeyboxArgs,
-    ProfileCommands, ProvisionArgs, RkpCommands, SharedRunArgs, VerifyArgs,
+    ProfileCommands, ProvisionArgs, RkpCommands, SharedRunArgs, StdinJsonArgs, TrickyStoreCommands,
+    TrickyStoreFilesArgs, TrickyStoreKeyboxCommands, TrickyStoreKeyboxInstallArgs,
+    TrickyStoreTargetCommands, VerifyArgs,
 };
 use super::keybox_output::{KeyboxData, resolve_keybox_output_path};
 use duckd::{
@@ -31,6 +33,11 @@ use duckd::{
                 CertificateChainSummary, build_keybox_xml, parse_der_cert_chain, summarize_chain,
             },
             verify::{VerifyReport, verify_csr},
+        },
+        tricky_store::{
+            TargetSaveRequest, apply_auto_targets as apply_tricky_store_auto_targets,
+            install_keybox as install_tricky_store_keybox, list_files as list_tricky_store_files,
+            save_targets as save_tricky_store_targets, status as tricky_store_status,
         },
     },
     runtime::{
@@ -110,6 +117,7 @@ pub async fn dispatch(command: Commands, paths: &AppPaths) -> CommandResult {
         Commands::Artifacts { command } => handle_artifacts_command(paths, command),
         Commands::DeviceIds { command } => handle_device_ids_command(paths, command),
         Commands::Rkp { command } => handle_rkp_command(paths, command).await,
+        Commands::TrickyStore { command } => handle_tricky_store_command(paths, command),
     }
 }
 
@@ -130,6 +138,32 @@ fn handle_device_ids_command(paths: &AppPaths, command: DeviceIdsCommands) -> Co
         DeviceIdsCommands::Provision(args) => handle_device_ids_provision(paths, &args)
             .map(|data| json_api::success("device-ids.provision", data))
             .map_err(|error| ("device-ids.provision", error, None)),
+    }
+}
+
+fn handle_tricky_store_command(paths: &AppPaths, command: TrickyStoreCommands) -> CommandResult {
+    match command {
+        TrickyStoreCommands::Status(_args) => tricky_store_status(paths)
+            .map(|data| json_api::success("tricky-store.status", data))
+            .map_err(|error| ("tricky-store.status", error, None)),
+        TrickyStoreCommands::Targets { command } => match command {
+            TrickyStoreTargetCommands::Save(args) => handle_tricky_store_target_save(paths, &args)
+                .map(|data| json_api::success("tricky-store.targets.save", data))
+                .map_err(|error| ("tricky-store.targets.save", error, None)),
+        },
+        TrickyStoreCommands::Keybox { command } => match command {
+            TrickyStoreKeyboxCommands::Install(args) => {
+                handle_tricky_store_keybox_install(paths, &args)
+                    .map(|data| json_api::success("tricky-store.keybox.install", data))
+                    .map_err(|error| ("tricky-store.keybox.install", error, None))
+            }
+        },
+        TrickyStoreCommands::Files(args) => handle_tricky_store_files(paths, &args)
+            .map(|data| json_api::success("tricky-store.files", data))
+            .map_err(|error| ("tricky-store.files", error, None)),
+        TrickyStoreCommands::AutoApply(_args) => apply_tricky_store_auto_targets(paths)
+            .map(|data| json_api::success("tricky-store.auto-apply", data))
+            .map_err(|error| ("tricky-store.auto-apply", error, None)),
     }
 }
 
@@ -228,6 +262,39 @@ fn handle_device_ids_provision(
         serde_json::from_str::<DeviceIdsProfile>(&input).context("parse device ID profile JSON")?;
 
     provision_device_ids(paths, profile)
+}
+
+fn handle_tricky_store_target_save(
+    paths: &AppPaths,
+    args: &StdinJsonArgs,
+) -> Result<duckd::features::tricky_store::TargetSaveData> {
+    if !args.stdin_json {
+        anyhow::bail!("tricky-store targets save requires `--stdin-json`");
+    }
+
+    let mut input = String::new();
+    io::stdin()
+        .read_to_string(&mut input)
+        .context("read Tricky Store target JSON from stdin")?;
+
+    let request = serde_json::from_str::<TargetSaveRequest>(&input)
+        .context("parse Tricky Store target JSON")?;
+
+    save_tricky_store_targets(paths, request)
+}
+
+fn handle_tricky_store_keybox_install(
+    paths: &AppPaths,
+    args: &TrickyStoreKeyboxInstallArgs,
+) -> Result<duckd::features::tricky_store::KeyboxInstallData> {
+    install_tricky_store_keybox(paths, &args.source)
+}
+
+fn handle_tricky_store_files(
+    paths: &AppPaths,
+    args: &TrickyStoreFilesArgs,
+) -> Result<duckd::features::tricky_store::FileListData> {
+    list_tricky_store_files(paths, &args.path, &args.extension)
 }
 
 fn handle_artifacts(paths: &AppPaths) -> Result<ArtifactsData> {

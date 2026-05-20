@@ -17,3 +17,5 @@ VAR_DIR="$DATA_ROOT/var"
 . "$MODPATH/util_functions.sh"
 
 repair_runtime
+
+"$MODPATH/bin/duckctl.sh" tricky-store auto-apply --json >/dev/null 2>&1 || true
