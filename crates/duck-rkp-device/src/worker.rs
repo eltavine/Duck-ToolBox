@@ -23,7 +23,7 @@ const MAX_REPLY_FILE: usize = BUFFER_SIZE * 6;
 // default namespace. Keeping the default namespace retains system dependency links
 // (e.g. libcrypto), which the exported sphal namespace may not provide on a ROM.
 // Only this child receives the setting; the parent's loader state is untouched.
-const VENDOR_LIBRARY_PATH: &str = "/vendor/lib64:/odm/lib64:/vendor/lib64/hw:/odm/lib64/hw";
+const VENDOR_LIBRARY_PATH: &str = "/system/lib64:/vendor/lib64:/odm/lib64:/vendor/lib64/hw:/odm/lib64/hw";
 
 #[derive(Serialize, Deserialize)]
 enum Reply {
