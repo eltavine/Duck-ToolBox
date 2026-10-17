@@ -1,0 +1,64 @@
+{
+  "meta": {
+    "title": "Ekstraksi Material Atestasi TEE",
+    "description": "Ekstrak keybox dari rekaman dan verifikasi identitas RKP secara offline."
+  },
+  "scope": {
+    "title": "Pemrosesan offline",
+    "description": "Memproses rekaman yang tersedia tanpa pengambilan di perangkat. Berkas tetap di sini; hasil ekspor berisi material rahasia."
+  },
+  "input": {
+    "path": "Masukkan jalur berkas di perangkat",
+    "choose": "Pilih {label}",
+    "clear": "Hapus {label}",
+    "limit": "Pilih berkas tidak kosong hingga 32 KiB. Untuk rekaman lebih besar, masukkan jalur di perangkat (hingga 256 KiB)."
+  },
+  "keybox": {
+    "description": "Mendukung XML keybox dan kumpulan PEM, termasuk material dalam rekaman. Memeriksa kecocokan kunci privat dan semua tanda tangan sertifikat.",
+    "source": "Rekaman keybox",
+    "run": "Ekstrak dan verifikasi",
+    "count": "Jumlah keybox",
+    "certificates": "{count} sertifikat",
+    "validity": "Dalam masa berlaku",
+    "limits": "Memeriksa tanda tangan dan kecocokan kunci. Kepercayaan akar dan pencabutan tidak diperiksa; ini tidak membuktikan penerimaan Google.",
+    "export": "Ekspor keybox",
+    "installed": "Keybox terpasang",
+    "install": "Pasang ke {target}"
+  },
+  "seed": {
+    "title": "Identitas RKP",
+    "description": "Bandingkan kandidat 32 byte dengan kunci daun penanda tangan CSR terautentikasi. Pilih derivasi perangkat sumber.",
+    "source": "Rekaman identitas",
+    "csr": "Berkas CSR",
+    "format": "Pengodean masukan",
+    "raw": "Byte mentah",
+    "hex": "64 digit heksadesimal",
+    "derivation": "Derivasi kunci",
+    "scalar": "Skalar privat P-256",
+    "offset": "Offset byte (opsional)",
+    "offsetHint": "Kosong memerlukan tepat 32 byte. Isi offset desimal untuk mengekstrak 32 byte dari rekaman yang lebih besar.",
+    "run": "Verifikasi identitas",
+    "matched": "Kandidat cocok dengan identitas penanda tangan CSR.",
+    "mismatch": "Kandidat tidak cocok dengan identitas penanda tangan CSR.",
+    "limits": "Memverifikasi rantai DICE dan tanda tangan CSR. Kecocokan tidak membuktikan pendaftaran atau penerbitan. Skalar dan seed berbeda.",
+    "export": "Ekspor identitas yang cocok"
+  },
+  "result": {
+    "title": "Hasil verifikasi",
+    "sourceHash": "SHA-256 rekaman",
+    "publicHash": "SHA-256 kunci publik",
+    "csrHash": "SHA-256 CSR",
+    "yes": "Ya",
+    "no": "Tidak",
+    "saved": "Berkas rahasia tersimpan",
+    "material": "Berkas material",
+    "report": "Laporan verifikasi"
+  },
+  "errors": {
+    "invalid_input": "Tidak dapat membaca masukan atau permintaan.",
+    "invalid_keybox": "Verifikasi keybox gagal.",
+    "invalid_identity": "Verifikasi identitas atau CSR gagal.",
+    "identity_mismatch": "Identitas tidak cocok; tidak ada yang diekspor.",
+    "output_error": "Tidak dapat menyimpan keluaran lengkap."
+  }
+}

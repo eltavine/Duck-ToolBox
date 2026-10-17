@@ -1,0 +1,64 @@
+{
+  "meta": {
+    "title": "Trích xuất dữ liệu xác thực TEE",
+    "description": "Trích xuất keybox từ bản thu và xác minh danh tính RKP ngoại tuyến."
+  },
+  "scope": {
+    "title": "Xử lý ngoại tuyến",
+    "description": "Xử lý bản thu có sẵn, chưa gồm thu thập trên thiết bị. Tệp ở lại thiết bị; tệp xuất chứa dữ liệu bí mật."
+  },
+  "input": {
+    "path": "Nhập đường dẫn tệp trên thiết bị",
+    "choose": "Chọn {label}",
+    "clear": "Xóa {label}",
+    "limit": "Chọn tệp không rỗng, tối đa 32 KiB. Với bản thu lớn hơn, nhập đường dẫn trên thiết bị (tối đa 256 KiB)."
+  },
+  "keybox": {
+    "description": "Hỗ trợ XML keybox và tập PEM, kể cả dữ liệu nhúng trong bản thu. Kiểm tra khóa riêng và mọi chữ ký chứng chỉ.",
+    "source": "Bản thu keybox",
+    "run": "Trích xuất và xác minh",
+    "count": "Số keybox",
+    "certificates": "{count} chứng chỉ",
+    "validity": "Trong thời hạn hiệu lực",
+    "limits": "Kiểm tra chữ ký và khớp khóa. Chưa kiểm tra tin cậy gốc hay thu hồi; không chứng minh Google chấp nhận.",
+    "export": "Xuất keybox",
+    "installed": "Đã cài keybox",
+    "install": "Cài vào {target}"
+  },
+  "seed": {
+    "title": "Danh tính RKP",
+    "description": "So sánh 32 byte ứng viên với khóa lá ký CSR đã xác thực. Chọn cách dẫn xuất của thiết bị nguồn.",
+    "source": "Bản thu danh tính",
+    "csr": "Tệp CSR",
+    "format": "Mã hóa đầu vào",
+    "raw": "Byte thô",
+    "hex": "64 chữ số thập lục phân",
+    "derivation": "Dẫn xuất khóa",
+    "scalar": "Vô hướng khóa riêng P-256",
+    "offset": "Độ lệch byte (tùy chọn)",
+    "offsetHint": "Để trống yêu cầu đúng 32 byte. Nhập độ lệch thập phân để trích 32 byte từ bản thu lớn hơn.",
+    "run": "Xác minh danh tính",
+    "matched": "Ứng viên khớp danh tính ký CSR.",
+    "mismatch": "Ứng viên không khớp danh tính ký CSR.",
+    "limits": "Xác minh chuỗi DICE và chữ ký CSR. Khớp không chứng minh đăng ký máy chủ hay cấp chứng chỉ. Vô hướng và seed khác nhau.",
+    "export": "Xuất danh tính khớp"
+  },
+  "result": {
+    "title": "Kết quả xác minh",
+    "sourceHash": "SHA-256 bản thu",
+    "publicHash": "SHA-256 khóa công khai",
+    "csrHash": "SHA-256 CSR",
+    "yes": "Có",
+    "no": "Không",
+    "saved": "Đã lưu tệp bí mật",
+    "material": "Tệp dữ liệu",
+    "report": "Báo cáo xác minh"
+  },
+  "errors": {
+    "invalid_input": "Không đọc được đầu vào hoặc yêu cầu.",
+    "invalid_keybox": "Xác minh keybox thất bại.",
+    "invalid_identity": "Xác minh danh tính hoặc CSR thất bại.",
+    "identity_mismatch": "Danh tính không khớp; không xuất dữ liệu.",
+    "output_error": "Không lưu được đầu ra hoàn chỉnh."
+  }
+}

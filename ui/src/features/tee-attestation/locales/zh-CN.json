@@ -1,0 +1,64 @@
+{
+  "meta": {
+    "title": "TEE 认证材料提取",
+    "description": "从采集文件提取 Keybox，离线核验 RKP 身份材料。"
+  },
+  "scope": {
+    "title": "离线处理",
+    "description": "处理已有采集文件，暂不包含设备端采集。文件保留在本机，导出文件包含私密材料。"
+  },
+  "input": {
+    "path": "输入设备上的文件路径",
+    "choose": "选择{label}",
+    "clear": "清除{label}",
+    "limit": "请选择非空且不超过 32 KiB 的文件。 更大的采集文件请填写设备路径（最大 256 KiB）。"
+  },
+  "keybox": {
+    "description": "支持 Keybox XML 和 PEM 集合，也可提取嵌在采集文件中的材料。核对私钥与证书公钥，并验证每张证书的签名。",
+    "source": "Keybox 采集文件",
+    "run": "提取并校验",
+    "count": "Keybox 数量",
+    "certificates": "{count} 张证书",
+    "validity": "处于有效期内",
+    "limits": "已校验证书签名和密钥匹配；未检查根信任及吊销状态，不能据此判断 Google 是否接受。",
+    "export": "导出 Keybox",
+    "installed": "Keybox 已安装",
+    "install": "安装到{target}"
+  },
+  "seed": {
+    "title": "RKP 身份材料",
+    "description": "将 32 字节候选材料与认证 CSR 的签名叶节点比对。请选择来源设备实际使用的派生方式。",
+    "source": "身份采集文件",
+    "csr": "CSR 文件",
+    "format": "输入编码",
+    "raw": "原始字节",
+    "hex": "64 位十六进制",
+    "derivation": "密钥派生方式",
+    "scalar": "P-256 私钥标量",
+    "offset": "字节偏移（可选）",
+    "offsetHint": "留空要求输入恰好为 32 字节。填写十进制偏移，可从更大的原始采集文件提取 32 字节。",
+    "run": "核验身份",
+    "matched": "候选材料与 CSR 的签名身份匹配。",
+    "mismatch": "候选材料与 CSR 的签名身份不匹配。",
+    "limits": "会校验 DICE 链和 CSR 签名。匹配不能证明服务器注册或证书签发成功；私钥标量与种子不能互换。",
+    "export": "导出匹配的身份材料"
+  },
+  "result": {
+    "title": "校验结果",
+    "sourceHash": "采集文件 SHA-256",
+    "publicHash": "公钥 SHA-256",
+    "csrHash": "CSR SHA-256",
+    "yes": "是",
+    "no": "否",
+    "saved": "私密文件已保存",
+    "material": "材料文件",
+    "report": "校验报告"
+  },
+  "errors": {
+    "invalid_input": "无法读取输入文件或请求。",
+    "invalid_keybox": "Keybox 校验失败。",
+    "invalid_identity": "身份材料或 CSR 校验失败。",
+    "identity_mismatch": "身份不匹配，未导出任何内容。",
+    "output_error": "无法完整保存输出文件。"
+  }
+}

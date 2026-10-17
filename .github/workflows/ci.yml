@@ -57,7 +57,7 @@ jobs:
         run: cargo test --workspace --locked
       - name: Every feature builds on its own
         run: |
-          for feature in rkp rkp-device device-ids tricky-store system; do
+          for feature in rkp rkp-device tee-attestation device-ids tricky-store system; do
             echo "::group::duckd with only ${feature}"
             cargo check --locked --package duckd --no-default-features --features "${feature}"
             echo "::endgroup::"

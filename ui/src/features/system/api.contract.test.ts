@@ -22,6 +22,7 @@ describe.skipIf(!hasDuckd)("system API against the real duckd", CONTRACT, () => 
     expect(manifest.features.map((feature) => feature.id)).toEqual([
       "rkp",
       "rkp-device",
+      "tee-attestation",
       "device-ids",
       "tricky-store",
       "system",

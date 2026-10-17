@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+### TEE Attestation Extractor
+- New offline tool for extracting Keybox XML and PEM material from existing captures and
+  verifying private-key correspondence, certificate signatures and chain completeness.
+- Verifies candidate RKP identity material against the signing leaf of a locally verified
+  CSR, with separate Ed25519-seed, P-256-seed and P-256-scalar modes and raw capture offsets.
+- Returns summaries without exposing private material. Explicit exports use private output
+  directories and owner-only files; mismatched identity material cannot be exported.
+- Adds binary uploads, device file paths, manager installation through an extension point,
+  and translations in all 14 languages. Device-side acquisition is not included.
+- Local checks do not establish root trust, revocation status, registration or server acceptance.
+  Supported private keys are EC P-256/P-384 and RSA 2048–8192; RSA-1024 is unsupported.
+- Verifies private-key PEM labels against their DER encoding. Inline inputs are limited
+  to 32 KiB per file to fit shell transport; device file paths accept up to 256 KiB.
+
 ### Device RKP Issuer
 - Recognizes QTI as Qualcomm and gives the isolated worker vendor library search paths,
   retaining the default namespace's system dependency links for libraries such as libcrypto.

@@ -1,0 +1,32 @@
+[package]
+name = "duck-tee-attestation"
+description = "Offline extraction and verification of captured TEE attestation material"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+base64ct.workspace = true
+ciborium.workspace = true
+clap.workspace = true
+duck-core.workspace = true
+duck-rkp.workspace = true
+hex.workspace = true
+libc.workspace = true
+p256.workspace = true
+quick-xml.workspace = true
+rcgen.workspace = true
+rustls.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
+tempfile.workspace = true
+thiserror.workspace = true
+x509-cert.workspace = true
+zeroize.workspace = true
+
+[lints]
+workspace = true

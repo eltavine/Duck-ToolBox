@@ -8,6 +8,7 @@ const pages = [
   { name: "policy", route: "/tricky-store/policy", ready: "System patch" },
   { name: "rkp", route: "/rkp", ready: "Device" },
   { name: "rkp-device", route: "/rkp-device", ready: "Prerequisites" },
+  { name: "tee-attestation", route: "/tee-attestation", ready: "Offline processing" },
   { name: "system", route: "/system", ready: "Duck ToolBox" },
   { name: "settings", route: "/settings", ready: "Language" },
 ]

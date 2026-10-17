@@ -1,0 +1,64 @@
+{
+  "meta": {
+    "title": "TEE-Nachweismaterial extrahieren",
+    "description": "Keyboxes aus Mitschnitten extrahieren und RKP-Identitäten offline prüfen."
+  },
+  "scope": {
+    "title": "Offline-Verarbeitung",
+    "description": "Verarbeitet vorhandene Mitschnitte. Keine Erfassung auf dem Gerät. Dateien bleiben hier; Exporte enthalten geheimes Material."
+  },
+  "input": {
+    "path": "Dateipfad auf dem Gerät eingeben",
+    "choose": "{label} auswählen",
+    "clear": "{label} löschen",
+    "limit": "Eine nicht leere Datei mit höchstens 32 KiB wählen. Für größere Mitschnitte einen Gerätepfad eingeben (bis 256 KiB)."
+  },
+  "keybox": {
+    "description": "Unterstützt Keybox-XML und PEM-Sammlungen, auch in Mitschnitten. Prüft private Schlüssel und sämtliche Zertifikatssignaturen.",
+    "source": "Keybox-Mitschnitt",
+    "run": "Extrahieren und prüfen",
+    "count": "Keyboxes",
+    "certificates": "{count} Zertifikate",
+    "validity": "Im Gültigkeitszeitraum",
+    "limits": "Signaturen und Schlüsselzuordnung werden geprüft. Stammvertrauen und Widerruf werden nicht geprüft; dies belegt keine Annahme durch Google.",
+    "export": "Keybox exportieren",
+    "installed": "Keybox installiert",
+    "install": "In {target} installieren"
+  },
+  "seed": {
+    "title": "RKP-Identität",
+    "description": "Vergleicht einen 32-Byte-Kandidaten mit dem signierenden Blatt eines authentifizierten CSR. Ableitung des Quellgeräts wählen.",
+    "source": "Identitätsmitschnitt",
+    "csr": "CSR-Datei",
+    "format": "Eingabekodierung",
+    "raw": "Rohbytes",
+    "hex": "64 Hexadezimalziffern",
+    "derivation": "Schlüsselableitung",
+    "scalar": "Privater P-256-Skalar",
+    "offset": "Byte-Offset (optional)",
+    "offsetHint": "Leer erfordert genau 32 Bytes. Ein dezimaler Offset extrahiert 32 Bytes aus einem größeren Mitschnitt.",
+    "run": "Identität prüfen",
+    "matched": "Der Kandidat entspricht der CSR-Signieridentität.",
+    "mismatch": "Der Kandidat entspricht nicht der CSR-Signieridentität.",
+    "limits": "Prüft DICE-Kette und CSR-Signatur. Übereinstimmung belegt keine Registrierung oder Ausstellung. Skalar und Seed sind nicht austauschbar.",
+    "export": "Passende Identität exportieren"
+  },
+  "result": {
+    "title": "Prüfergebnis",
+    "sourceHash": "Mitschnitt SHA-256",
+    "publicHash": "Öffentlicher Schlüssel SHA-256",
+    "csrHash": "CSR SHA-256",
+    "yes": "Ja",
+    "no": "Nein",
+    "saved": "Private Dateien gespeichert",
+    "material": "Materialdatei",
+    "report": "Prüfbericht"
+  },
+  "errors": {
+    "invalid_input": "Eingabe oder Anfrage kann nicht gelesen werden.",
+    "invalid_keybox": "Keybox-Prüfung fehlgeschlagen.",
+    "invalid_identity": "Identitäts- oder CSR-Prüfung fehlgeschlagen.",
+    "identity_mismatch": "Identität stimmt nicht überein; nichts exportiert.",
+    "output_error": "Ausgabe konnte nicht vollständig gespeichert werden."
+  }
+}

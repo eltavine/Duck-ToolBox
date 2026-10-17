@@ -1,0 +1,64 @@
+{
+  "meta": {
+    "title": "Extração de material TEE",
+    "description": "Extrai keyboxes de capturas e verifica identidades RKP offline."
+  },
+  "scope": {
+    "title": "Processamento offline",
+    "description": "Processa capturas existentes. Não inclui coleta no dispositivo. Os arquivos ficam aqui e as exportações contêm material privado."
+  },
+  "input": {
+    "path": "Digite o caminho no dispositivo",
+    "choose": "Escolher {label}",
+    "clear": "Limpar {label}",
+    "limit": "Escolha um arquivo não vazio de até 32 KiB. Para capturas maiores, informe o caminho no dispositivo (até 256 KiB)."
+  },
+  "keybox": {
+    "description": "Aceita XML de keybox e conjuntos PEM, inclusive em capturas. Verifica as chaves privadas e todas as assinaturas dos certificados.",
+    "source": "Captura do keybox",
+    "run": "Extrair e verificar",
+    "count": "Keyboxes",
+    "certificates": "{count} certificados",
+    "validity": "Dentro da validade",
+    "limits": "Verifica assinaturas e correspondência de chaves. Não verifica confiança raiz nem revogação; isso não comprova aceitação pelo Google.",
+    "export": "Exportar keybox",
+    "installed": "Keybox instalado",
+    "install": "Instalar em {target}"
+  },
+  "seed": {
+    "title": "Identidade RKP",
+    "description": "Compara 32 bytes candidatos com a folha signatária de um CSR autenticado. Escolha a derivação do dispositivo de origem.",
+    "source": "Captura de identidade",
+    "csr": "Arquivo CSR",
+    "format": "Codificação da entrada",
+    "raw": "Bytes brutos",
+    "hex": "64 dígitos hexadecimais",
+    "derivation": "Derivação da chave",
+    "scalar": "Escalar privado P-256",
+    "offset": "Deslocamento em bytes (opcional)",
+    "offsetHint": "Em branco exige exatamente 32 bytes. Um deslocamento decimal extrai 32 bytes de uma captura maior.",
+    "run": "Verificar identidade",
+    "matched": "O candidato corresponde à identidade signatária do CSR.",
+    "mismatch": "O candidato não corresponde à identidade signatária do CSR.",
+    "limits": "Verifica a cadeia DICE e a assinatura CSR. A correspondência não comprova registro ou emissão. Escalar e semente são diferentes.",
+    "export": "Exportar identidade correspondente"
+  },
+  "result": {
+    "title": "Resultado da verificação",
+    "sourceHash": "SHA-256 da captura",
+    "publicHash": "SHA-256 da chave pública",
+    "csrHash": "SHA-256 do CSR",
+    "yes": "Sim",
+    "no": "Não",
+    "saved": "Arquivos privados salvos",
+    "material": "Arquivo de material",
+    "report": "Relatório de verificação"
+  },
+  "errors": {
+    "invalid_input": "Não foi possível ler a entrada ou solicitação.",
+    "invalid_keybox": "Falha na verificação do keybox.",
+    "invalid_identity": "Falha na verificação da identidade ou CSR.",
+    "identity_mismatch": "Identidade diferente; nada foi exportado.",
+    "output_error": "Não foi possível salvar a saída completa."
+  }
+}

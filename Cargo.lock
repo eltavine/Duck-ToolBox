@@ -697,6 +697,31 @@ dependencies = [
 ]
 
 [[package]]
+name = "duck-tee-attestation"
+version = "0.1.3-stable"
+dependencies = [
+ "anyhow",
+ "base64ct",
+ "ciborium",
+ "clap",
+ "duck-core",
+ "duck-rkp",
+ "hex",
+ "libc",
+ "p256",
+ "quick-xml",
+ "rcgen",
+ "rustls",
+ "serde",
+ "serde_json",
+ "sha2",
+ "tempfile",
+ "thiserror",
+ "x509-cert",
+ "zeroize",
+]
+
+[[package]]
 name = "duck-tricky-store"
 version = "0.1.3-stable"
 dependencies = [
@@ -734,6 +759,7 @@ dependencies = [
  "duck-rkp",
  "duck-rkp-device",
  "duck-system",
+ "duck-tee-attestation",
  "duck-tricky-store",
  "serde",
  "serde_json",

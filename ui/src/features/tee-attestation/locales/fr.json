@@ -1,0 +1,64 @@
+{
+  "meta": {
+    "title": "Extraction des données TEE",
+    "description": "Extrait les keyboxes des captures et vérifie les identités RKP hors ligne."
+  },
+  "scope": {
+    "title": "Traitement hors ligne",
+    "description": "Traite les captures existantes, sans acquisition sur l’appareil. Les fichiers restent ici et les exports contiennent des données privées."
+  },
+  "input": {
+    "path": "Chemin du fichier sur l’appareil",
+    "choose": "Choisir {label}",
+    "clear": "Effacer {label}",
+    "limit": "Choisissez un fichier non vide de 32 Kio maximum. Pour une capture plus grande, saisissez son chemin sur l’appareil (256 Kio maximum)."
+  },
+  "keybox": {
+    "description": "Accepte le XML keybox et les ensembles PEM, y compris dans des captures. Vérifie les clés privées et toutes les signatures de certificats.",
+    "source": "Capture keybox",
+    "run": "Extraire et vérifier",
+    "count": "Keyboxes",
+    "certificates": "{count} certificats",
+    "validity": "Dans la période de validité",
+    "limits": "Les signatures et les clés sont vérifiées. La confiance racine et la révocation ne le sont pas ; cela ne prouve pas l’acceptation par Google.",
+    "export": "Exporter le keybox",
+    "installed": "Keybox installé",
+    "install": "Installer dans {target}"
+  },
+  "seed": {
+    "title": "Identité RKP",
+    "description": "Compare un candidat de 32 octets à la feuille signataire d’un CSR authentifié. Choisissez la dérivation de l’appareil source.",
+    "source": "Capture d’identité",
+    "csr": "Fichier CSR",
+    "format": "Encodage d’entrée",
+    "raw": "Octets bruts",
+    "hex": "64 chiffres hexadécimaux",
+    "derivation": "Dérivation de clé",
+    "scalar": "Scalaire privé P-256",
+    "offset": "Décalage en octets (facultatif)",
+    "offsetHint": "Laisser vide exige exactement 32 octets. Un décalage décimal extrait 32 octets d’une capture plus grande.",
+    "run": "Vérifier l’identité",
+    "matched": "Le candidat correspond à l’identité signataire du CSR.",
+    "mismatch": "Le candidat ne correspond pas à l’identité signataire du CSR.",
+    "limits": "Vérifie la chaîne DICE et la signature CSR. Une correspondance ne prouve ni inscription ni émission. Un scalaire et une graine sont distincts.",
+    "export": "Exporter l’identité correspondante"
+  },
+  "result": {
+    "title": "Résultat de vérification",
+    "sourceHash": "SHA-256 de la capture",
+    "publicHash": "SHA-256 de la clé publique",
+    "csrHash": "SHA-256 du CSR",
+    "yes": "Oui",
+    "no": "Non",
+    "saved": "Fichiers privés enregistrés",
+    "material": "Fichier de données",
+    "report": "Rapport de vérification"
+  },
+  "errors": {
+    "invalid_input": "Lecture de l’entrée ou de la demande impossible.",
+    "invalid_keybox": "Échec de vérification du keybox.",
+    "invalid_identity": "Échec de vérification de l’identité ou du CSR.",
+    "identity_mismatch": "Identité différente ; aucun export.",
+    "output_error": "Impossible d’enregistrer toute la sortie."
+  }
+}

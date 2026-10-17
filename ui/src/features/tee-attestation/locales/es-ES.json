@@ -1,0 +1,64 @@
+{
+  "meta": {
+    "title": "Extractor de material TEE",
+    "description": "Extrae keyboxes de capturas y verifica identidades RKP sin conexión."
+  },
+  "scope": {
+    "title": "Procesamiento sin conexión",
+    "description": "Procesa capturas existentes. No incluye la captura en el dispositivo. Los archivos permanecen aquí y las exportaciones contienen material privado."
+  },
+  "input": {
+    "path": "Ruta del archivo en el dispositivo",
+    "choose": "Elegir {label}",
+    "clear": "Borrar {label}",
+    "limit": "Elige un archivo no vacío de hasta 32 KiB. Para capturas mayores, introduce una ruta del dispositivo (hasta 256 KiB)."
+  },
+  "keybox": {
+    "description": "Admite XML de keybox y conjuntos PEM, incluso dentro de capturas. Comprueba las claves privadas y las firmas de todos los certificados.",
+    "source": "Captura de keybox",
+    "run": "Extraer y verificar",
+    "count": "Keyboxes",
+    "certificates": "{count} certificados",
+    "validity": "Dentro del periodo de validez",
+    "limits": "Se comprueban firmas y claves. No se comprueban la confianza raíz ni la revocación; esto no acredita la aceptación de Google.",
+    "export": "Exportar keybox",
+    "installed": "Keybox instalado",
+    "install": "Instalar en {target}"
+  },
+  "seed": {
+    "title": "Identidad RKP",
+    "description": "Compara 32 bytes candidatos con la hoja firmante de un CSR autenticado. Elige la derivación del dispositivo de origen.",
+    "source": "Captura de identidad",
+    "csr": "Archivo CSR",
+    "format": "Codificación de entrada",
+    "raw": "Bytes sin procesar",
+    "hex": "64 dígitos hexadecimales",
+    "derivation": "Derivación de clave",
+    "scalar": "Escalar privado P-256",
+    "offset": "Desplazamiento en bytes (opcional)",
+    "offsetHint": "Vacío exige exactamente 32 bytes. Un desplazamiento decimal extrae 32 bytes de una captura mayor.",
+    "run": "Verificar identidad",
+    "matched": "El candidato coincide con la identidad firmante del CSR.",
+    "mismatch": "El candidato no coincide con la identidad firmante del CSR.",
+    "limits": "Verifica la cadena DICE y la firma CSR. Coincidir no acredita registro ni emisión. Un escalar no es intercambiable con una semilla.",
+    "export": "Exportar identidad coincidente"
+  },
+  "result": {
+    "title": "Resultado de verificación",
+    "sourceHash": "SHA-256 de captura",
+    "publicHash": "SHA-256 de clave pública",
+    "csrHash": "SHA-256 del CSR",
+    "yes": "Sí",
+    "no": "No",
+    "saved": "Archivos privados guardados",
+    "material": "Archivo de material",
+    "report": "Informe de verificación"
+  },
+  "errors": {
+    "invalid_input": "No se pudo leer la entrada o solicitud.",
+    "invalid_keybox": "Falló la verificación del keybox.",
+    "invalid_identity": "Falló la verificación de identidad o CSR.",
+    "identity_mismatch": "La identidad no coincide; no se exportó nada.",
+    "output_error": "No se pudo guardar la salida completa."
+  }
+}

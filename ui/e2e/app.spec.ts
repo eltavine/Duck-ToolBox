@@ -6,6 +6,7 @@ test("lists every tool on the home page", async ({ page, open }) => {
     "Tricky Store",
     "RKP Workbench",
     "Device RKP Issuer",
+    "TEE Attestation Extractor",
     "Device ID Provisioner",
     "Module & updates",
   ]) {

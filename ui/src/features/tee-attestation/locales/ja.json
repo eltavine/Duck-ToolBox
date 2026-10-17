@@ -1,0 +1,64 @@
+{
+  "meta": {
+    "title": "TEE 認証情報の抽出",
+    "description": "取得ファイルから Keybox を抽出し、RKP 識別情報をオフラインで検証します。"
+  },
+  "scope": {
+    "title": "オフライン処理",
+    "description": "既存の取得ファイルを処理します。端末上での取得は含みません。ファイルは端末内に保存され、出力には秘密情報が含まれます。"
+  },
+  "input": {
+    "path": "端末上のファイルパスを入力",
+    "choose": "{label}を選択",
+    "clear": "{label}をクリア",
+    "limit": "空でない 32 KiB 以下のファイルを選択してください。 大きな取得ファイルは端末上のパスで指定してください（最大 256 KiB）。"
+  },
+  "keybox": {
+    "description": "Keybox XML と PEM の集合に対応し、取得ファイルに埋め込まれた情報も抽出します。秘密鍵の一致と各証明書の署名を確認します。",
+    "source": "Keybox 取得ファイル",
+    "run": "抽出して検証",
+    "count": "Keybox 数",
+    "certificates": "証明書 {count} 件",
+    "validity": "有効期間内",
+    "limits": "署名と鍵の一致を確認します。ルートの信頼性と失効状態は確認せず、Google による受理を証明するものではありません。",
+    "export": "Keybox を出力",
+    "installed": "Keybox をインストールしました",
+    "install": "{target}にインストール"
+  },
+  "seed": {
+    "title": "RKP 識別情報",
+    "description": "32 バイトの候補を認証 CSR の署名リーフと比較します。元の端末で使われた導出方式を選択してください。",
+    "source": "識別情報の取得ファイル",
+    "csr": "CSR ファイル",
+    "format": "入力形式",
+    "raw": "生バイト",
+    "hex": "64 桁の 16 進数",
+    "derivation": "鍵の導出方式",
+    "scalar": "P-256 秘密鍵スカラー",
+    "offset": "バイトオフセット（任意）",
+    "offsetHint": "空欄の場合は正確に 32 バイトが必要です。10 進オフセットを指定すると、大きな生ファイルから 32 バイトを抽出します。",
+    "run": "識別情報を検証",
+    "matched": "候補は CSR の署名識別情報と一致します。",
+    "mismatch": "候補は CSR の署名識別情報と一致しません。",
+    "limits": "DICE チェーンと CSR 署名を検証します。一致してもサーバー登録や証明書発行を証明しません。スカラーとシードは異なります。",
+    "export": "一致した識別情報を出力"
+  },
+  "result": {
+    "title": "検証結果",
+    "sourceHash": "取得ファイル SHA-256",
+    "publicHash": "公開鍵 SHA-256",
+    "csrHash": "CSR SHA-256",
+    "yes": "はい",
+    "no": "いいえ",
+    "saved": "秘密ファイルを保存しました",
+    "material": "情報ファイル",
+    "report": "検証レポート"
+  },
+  "errors": {
+    "invalid_input": "入力またはリクエストを読み取れません。",
+    "invalid_keybox": "Keybox の検証に失敗しました。",
+    "invalid_identity": "識別情報または CSR の検証に失敗しました。",
+    "identity_mismatch": "識別情報が一致しないため、出力しませんでした。",
+    "output_error": "出力を完全に保存できませんでした。"
+  }
+}

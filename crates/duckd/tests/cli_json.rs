@@ -229,7 +229,14 @@ fn features_manifest_lists_every_registered_tool() {
         .collect();
     assert_eq!(
         ids,
-        ["rkp", "rkp-device", "device-ids", "tricky-store", "system"]
+        [
+            "rkp",
+            "rkp-device",
+            "tee-attestation",
+            "device-ids",
+            "tricky-store",
+            "system"
+        ]
     );
     assert_eq!(payload["data"]["api"], 1);
 }

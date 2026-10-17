@@ -51,6 +51,21 @@ changed, removed or added on its own.
   - On a OnePlus PJX110 running Android 16, loading from `/data/adb` and calling the TA
     were verified. Both this implementation and the reference client received TA status
     `-18` for the software-key `CSR_V2` request; that test did not issue a keybox.
+- **TEE Attestation Extractor**: offline extraction and verification of existing captures.
+  - Extracts complete Keybox XML documents and PEM bundles, including PEM embedded in binary
+    captures. Supports EC P-256/P-384 and RSA 2048–8192 private keys.
+  - Matches each private key to a certificate and verifies every signature along one
+    unambiguous leaf-to-root path. Reports certificate validity separately; root trust and
+    revocation are not checked.
+  - Compares raw or hex-encoded 32-byte identity material to the signing leaf of a verified
+    RKP CSR. Distinguishes Ed25519 seeds, P-256 seeds (`mod(n - 1) + 1`) and P-256 scalars.
+  - Verification returns summaries only. Explicit exports save material and reports in a
+    private directory (`0700`) with files restricted to the owner (`0600`). An identity
+    mismatch prevents export. Exported keyboxes can be installed through the manager.
+  - Processes device files up to 256 KiB locally; inline uploads are limited to 32 KiB per
+    file so two base64 inputs fit the root manager's shell transport. Device acquisition
+    and firmware patching are outside this feature's current capabilities; a local match
+    does not prove server acceptance.
 - **Device ID Provisioner**: writes attestation device IDs into the Qualcomm Keymaster
   trusted app through `libQSEEComAPI.so`, with a dry-run mode.
 - **Module & updates**: version and device summary, stable and canary updates with
@@ -69,6 +84,7 @@ crates/
                       and a Sysroot so every feature is testable off-device.
   duck-platform/      Device adapters: props/resetprop, pm, modules, root managers, HTTP.
   duck-rkp/           RKP workbench.            duck-rkp-device/  Device RKP issuer.
+  duck-tee-attestation/ Offline capture extraction and identity verification.
   duck-device-ids/    Device ID provisioning.   duck-tricky-store/ Keystore module manager.
   duck-system/        Module lifecycle, updates.
   duckd/              The binary: builds its CLI from the compiled-in features.
@@ -85,8 +101,8 @@ module/               Module payload: scripts, then the built WebUI and backend 
 What keeps it modular and resistant to breaking changes:
 
 - **Features never import each other.** Backend feature crates depend only on `duck-core`
-  and `duck-platform`, except the Device RKP Issuer, which reuses the RKP workbench's public
-  CSR primitives and clients instead of copying them. WebUI features depend only on `core/`;
+  and `duck-platform`, except the Device RKP Issuer and TEE Attestation Extractor, which reuse
+  the RKP workbench's public protocol primitives and verifier. WebUI features depend only on `core/`;
   ESLint (`eslint-plugin-boundaries`) rejects anything else, and only `core/bridge` may touch
   the KernelSU JavaScript API.
 - **Extension points instead of imports.** A feature contributes to others through
@@ -166,6 +182,9 @@ prerelease can be promoted by clearing its prerelease flag.
 duckd features | describe
 duckd rkp profile show|save|clear|detect
 duckd rkp info | provision | keybox | verify <file>
+duckd tee-attestation status
+duckd tee-attestation keybox <capture> [--format auto|xml|pem] [--export]
+duckd tee-attestation seed <capture> --csr <csr.cbor> [--format raw|hex] [--derivation ed25519-seed|p256-seed|p256-scalar] [--offset <decimal>] [--export]
 duckd device-ids defaults | provision
 duckd tricky-store status | save | props | auto-apply
 duckd tricky-store keybox install <file> | import | set-aosp | generate | fetch --url <u> [--decode <steps>]
@@ -177,6 +196,20 @@ duckd system log [--limit <n>] | open-url <url> | uninstall | reboot
 ```
 
 Commands that take input read JSON from stdin with `--stdin-json`.
+
+For offline identity checks, raw input must contain exactly 32 bytes unless `--offset`
+selects a 32-byte slice of a larger capture. Hex input must contain exactly 64 hexadecimal
+digits, with optional surrounding whitespace. The derivation is explicit: a P-256 scalar
+cannot be substituted for a seed. The CSR must be a complete CBOR `AuthenticatedRequest`
+with a valid DICE chain and KeyMint signature. Checks do not submit a request to a server
+or change an RKP profile. The saved identity is `identity.bin`; its derivation and CSR digest
+are recorded separately in `report.json`. Keep both files together.
+
+The WebUI accepts device file paths (up to 256 KiB) or binary files from the system picker
+(up to 32 KiB each). Both offline commands also accept `--stdin-json` with `source: {"path": "..."}` or
+`source: {"base64": "..."}`, plus `format` and `export`. Identity requests additionally take
+`csr` in the same file format, `derivation`, and an optional raw `offset`. CLI input options
+and JSON requests are separate modes; put all operation options in the JSON request.
 
 ## Building and testing
 
@@ -220,6 +253,11 @@ userdebug emulator (or any device with root adbd) and runs `ui/e2e-device` there
 
 ## Acknowledgements
 
+- Thanks to [gungnir-sanye](https://github.com/gungnir-sanye) for publishing
+  [tee-attestation-extraction](https://github.com/gungnir-sanye/tee-attestation-extraction),
+  whose research on Keybox and RKP/CDI extraction informed the TEE Attestation Extractor's
+  scope and verification workflow. The offline implementation uses the workspace's
+  existing libraries.
 - The Tricky Store manager, its translations and the keybox repository protocol come from
   KOWX712's
   [Tricky Addon: Update Target List](https://github.com/KOWX712/Tricky-Addon-Update-Target-List)

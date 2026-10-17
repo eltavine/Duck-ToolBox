@@ -1,0 +1,64 @@
+{
+  "meta": {
+    "title": "TEE 認證材料擷取",
+    "description": "從採集檔案擷取 Keybox，離線核驗 RKP 身分材料。"
+  },
+  "scope": {
+    "title": "離線處理",
+    "description": "處理既有採集檔案，尚未包含裝置端採集。檔案保留於本機，匯出檔案包含私密材料。"
+  },
+  "input": {
+    "path": "輸入裝置上的檔案路徑",
+    "choose": "選擇{label}",
+    "clear": "清除{label}",
+    "limit": "請選擇非空且不超過 32 KiB 的檔案。 較大的採集檔案請填寫裝置路徑（最大 256 KiB）。"
+  },
+  "keybox": {
+    "description": "支援 Keybox XML 和 PEM 集合，也可擷取嵌在採集檔案中的材料。核對私鑰與憑證公鑰，並驗證每張憑證的簽章。",
+    "source": "Keybox 採集檔案",
+    "run": "擷取並驗證",
+    "count": "Keybox 數量",
+    "certificates": "{count} 張憑證",
+    "validity": "處於有效期間",
+    "limits": "已驗證憑證簽章和金鑰匹配；未檢查根信任及撤銷狀態，無法據此判斷 Google 是否接受。",
+    "export": "匯出 Keybox",
+    "installed": "Keybox 已安裝",
+    "install": "安裝至{target}"
+  },
+  "seed": {
+    "title": "RKP 身分材料",
+    "description": "將 32 位元組候選材料與認證 CSR 的簽章葉節點比對。請選擇來源裝置實際使用的衍生方式。",
+    "source": "身分採集檔案",
+    "csr": "CSR 檔案",
+    "format": "輸入編碼",
+    "raw": "原始位元組",
+    "hex": "64 位十六進位",
+    "derivation": "金鑰衍生方式",
+    "scalar": "P-256 私鑰純量",
+    "offset": "位元組偏移（選填）",
+    "offsetHint": "留空要求輸入恰為 32 位元組。填寫十進位偏移，可從較大的原始採集檔案擷取 32 位元組。",
+    "run": "核驗身分",
+    "matched": "候選材料與 CSR 的簽章身分相符。",
+    "mismatch": "候選材料與 CSR 的簽章身分不符。",
+    "limits": "會驗證 DICE 鏈和 CSR 簽章。相符無法證明伺服器註冊或憑證簽發成功；私鑰純量與種子不可互換。",
+    "export": "匯出相符的身分材料"
+  },
+  "result": {
+    "title": "驗證結果",
+    "sourceHash": "採集檔案 SHA-256",
+    "publicHash": "公鑰 SHA-256",
+    "csrHash": "CSR SHA-256",
+    "yes": "是",
+    "no": "否",
+    "saved": "私密檔案已儲存",
+    "material": "材料檔案",
+    "report": "驗證報告"
+  },
+  "errors": {
+    "invalid_input": "無法讀取輸入檔案或請求。",
+    "invalid_keybox": "Keybox 驗證失敗。",
+    "invalid_identity": "身分材料或 CSR 驗證失敗。",
+    "identity_mismatch": "身分不符，未匯出任何內容。",
+    "output_error": "無法完整儲存輸出檔案。"
+  }
+}

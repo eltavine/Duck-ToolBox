@@ -1,0 +1,64 @@
+{
+  "meta": {
+    "title": "TEE Attestation Extractor",
+    "description": "Extract keyboxes from captures and verify RKP identity material offline."
+  },
+  "scope": {
+    "title": "Offline processing",
+    "description": "Uses existing capture files. Device-side acquisition is not included. Files stay on this device; exports contain private material."
+  },
+  "input": {
+    "path": "Enter a device file path",
+    "choose": "Choose {label}",
+    "clear": "Clear {label}",
+    "limit": "Choose a nonempty file of at most 32 KiB. For larger captures, enter a device file path (up to 256 KiB)."
+  },
+  "keybox": {
+    "description": "Accepts keybox XML or PEM bundles, including material embedded in captures. Checks private-key matching and every certificate signature.",
+    "source": "Keybox capture",
+    "run": "Extract and verify",
+    "count": "Keyboxes",
+    "certificates": "{count} certificates",
+    "validity": "Within validity period",
+    "limits": "Signatures and key matching are checked. Root trust and revocation are not checked; this does not prove Google acceptance.",
+    "export": "Export keybox",
+    "installed": "Keybox installed",
+    "install": "Install to {target}"
+  },
+  "seed": {
+    "title": "RKP identity",
+    "description": "Compare a 32-byte candidate with the signing leaf of an authenticated CSR. Choose the derivation used by the source device.",
+    "source": "Identity capture",
+    "csr": "CSR file",
+    "format": "Input encoding",
+    "raw": "Raw bytes",
+    "hex": "64 hexadecimal digits",
+    "derivation": "Key derivation",
+    "scalar": "P-256 private scalar",
+    "offset": "Byte offset (optional)",
+    "offsetHint": "Leave blank for an exact 32-byte input. Set a decimal offset to extract 32 bytes from a larger raw capture.",
+    "run": "Verify identity",
+    "matched": "The candidate matches the CSR signing identity.",
+    "mismatch": "The candidate does not match the CSR signing identity.",
+    "limits": "Verifies the DICE chain and CSR signature. Matching does not prove server registration or certificate issuance. A scalar is not interchangeable with a seed.",
+    "export": "Export matched identity"
+  },
+  "result": {
+    "title": "Verification result",
+    "sourceHash": "Capture SHA-256",
+    "publicHash": "Public key SHA-256",
+    "csrHash": "CSR SHA-256",
+    "yes": "Yes",
+    "no": "No",
+    "saved": "Private files saved",
+    "material": "Material file",
+    "report": "Verification report"
+  },
+  "errors": {
+    "invalid_input": "Cannot read the input or request.",
+    "invalid_keybox": "Keybox verification failed.",
+    "invalid_identity": "Identity or CSR verification failed.",
+    "identity_mismatch": "Identity does not match; nothing was exported.",
+    "output_error": "Could not save the complete output."
+  }
+}

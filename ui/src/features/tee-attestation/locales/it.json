@@ -1,0 +1,64 @@
+{
+  "meta": {
+    "title": "Estrazione materiale TEE",
+    "description": "Estrae keybox dalle acquisizioni e verifica identità RKP offline."
+  },
+  "scope": {
+    "title": "Elaborazione offline",
+    "description": "Elabora acquisizioni esistenti. Non include la raccolta sul dispositivo. I file restano qui e gli export contengono materiale privato."
+  },
+  "input": {
+    "path": "Inserisci il percorso sul dispositivo",
+    "choose": "Scegli {label}",
+    "clear": "Cancella {label}",
+    "limit": "Scegli un file non vuoto fino a 32 KiB. Per acquisizioni maggiori, inserisci un percorso sul dispositivo (fino a 256 KiB)."
+  },
+  "keybox": {
+    "description": "Accetta XML keybox e raccolte PEM, anche dentro acquisizioni. Verifica le chiavi private e tutte le firme dei certificati.",
+    "source": "Acquisizione keybox",
+    "run": "Estrai e verifica",
+    "count": "Keybox",
+    "certificates": "{count} certificati",
+    "validity": "Nel periodo di validità",
+    "limits": "Verifica firme e corrispondenza delle chiavi. Non verifica fiducia radice o revoca; non dimostra l’accettazione di Google.",
+    "export": "Esporta keybox",
+    "installed": "Keybox installato",
+    "install": "Installa in {target}"
+  },
+  "seed": {
+    "title": "Identità RKP",
+    "description": "Confronta 32 byte candidati con la foglia firmataria di un CSR autenticato. Scegli la derivazione del dispositivo sorgente.",
+    "source": "Acquisizione identità",
+    "csr": "File CSR",
+    "format": "Codifica di ingresso",
+    "raw": "Byte grezzi",
+    "hex": "64 cifre esadecimali",
+    "derivation": "Derivazione della chiave",
+    "scalar": "Scalare privato P-256",
+    "offset": "Offset in byte (facoltativo)",
+    "offsetHint": "Vuoto richiede esattamente 32 byte. Un offset decimale estrae 32 byte da un’acquisizione più grande.",
+    "run": "Verifica identità",
+    "matched": "Il candidato corrisponde all’identità firmataria del CSR.",
+    "mismatch": "Il candidato non corrisponde all’identità firmataria del CSR.",
+    "limits": "Verifica catena DICE e firma CSR. La corrispondenza non prova registrazione o emissione. Scalare e seed non sono intercambiabili.",
+    "export": "Esporta identità corrispondente"
+  },
+  "result": {
+    "title": "Risultato verifica",
+    "sourceHash": "SHA-256 acquisizione",
+    "publicHash": "SHA-256 chiave pubblica",
+    "csrHash": "SHA-256 CSR",
+    "yes": "Sì",
+    "no": "No",
+    "saved": "File privati salvati",
+    "material": "File del materiale",
+    "report": "Rapporto di verifica"
+  },
+  "errors": {
+    "invalid_input": "Impossibile leggere ingresso o richiesta.",
+    "invalid_keybox": "Verifica keybox non riuscita.",
+    "invalid_identity": "Verifica identità o CSR non riuscita.",
+    "identity_mismatch": "Identità diversa; nessuna esportazione.",
+    "output_error": "Impossibile salvare l’output completo."
+  }
+}

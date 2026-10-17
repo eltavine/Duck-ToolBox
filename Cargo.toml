@@ -16,6 +16,7 @@ duck-core = { path = "crates/duck-core" }
 duck-platform = { path = "crates/duck-platform" }
 duck-rkp = { path = "crates/duck-rkp" }
 duck-rkp-device = { path = "crates/duck-rkp-device" }
+duck-tee-attestation = { path = "crates/duck-tee-attestation" }
 duck-device-ids = { path = "crates/duck-device-ids" }
 duck-system = { path = "crates/duck-system" }
 duck-tricky-store = { path = "crates/duck-tricky-store" }
