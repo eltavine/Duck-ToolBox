@@ -2,20 +2,38 @@ import { z } from "zod"
 
 import { duckd } from "@/core/duckd"
 
-const deviceStatusSchema = z.object({
-  prerequisites_met: z.boolean(),
-  android_arm64: z.boolean(),
-  root: z.boolean(),
-  library_present: z.boolean(),
-  device_present: z.boolean(),
-  qualcomm_soc: z.boolean(),
-  library_path: z.string(),
-  device_path: z.string(),
-  fingerprint: z.string(),
-  soc_manufacturer: z.string(),
-  limitations: z.array(z.string()),
-  blockers: z.array(z.string()),
-})
+const deviceStatusSchema = z
+  .object({
+    prerequisites_met: z.boolean(),
+    android_arm64: z.boolean(),
+    root: z.boolean(),
+    library_present: z.boolean(),
+    device_present: z.boolean(),
+    qualcomm_soc: z.boolean(),
+    library_path: z.string(),
+    device_path: z.string(),
+    fingerprint: z.string(),
+    soc_manufacturer: z.string(),
+    soc_detection: z.object({
+      state: z.enum(["qualcomm", "other", "unknown", "conflicting"]),
+      model: z.string(),
+      evidence: z.array(
+        z.object({
+          source: z.string(),
+          value: z.string(),
+          vendor: z.enum(["qualcomm", "other"]).nullable(),
+        }),
+      ),
+    }),
+    limitations: z.array(z.string()),
+    blockers: z.array(z.string()),
+  })
+  .refine((data) => data.qualcomm_soc === (data.soc_detection.state === "qualcomm"), {
+    message: "SoC identification disagrees with the Qualcomm prerequisite",
+  })
+  .refine((data) => data.prerequisites_met === (data.blockers.length === 0), {
+    message: "Prerequisite result disagrees with the reported blockers",
+  })
 export type DeviceStatus = z.infer<typeof deviceStatusSchema>
 
 const reportSchema = z.object({

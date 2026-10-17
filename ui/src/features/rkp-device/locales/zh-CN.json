@@ -18,24 +18,33 @@
     "platform": "平台",
     "root": "Root 权限",
     "vendor": "SoC 厂商",
-    "vendorOk": "厂商受支持",
+    "vendorOk": "高通 SoC 识别",
     "library": "Keymaster 库",
     "device": "设备节点",
     "fingerprint": "构建指纹",
     "yes": "是",
     "no": "否",
-    "unknown": "未上报",
+    "unknown": "未识别",
     "prerequisitesMet": "前置条件已满足",
     "prerequisitesMissing": "前置条件不满足",
-    "blockers": "缺少什么"
+    "blockers": "缺少什么",
+    "socModel": "SoC 型号",
+    "evidence": "识别依据",
+    "detected": "已识别",
+    "otherVendor": "其他厂商",
+    "conflicting": "信息冲突",
+    "compatibility": "固件／服务兼容性",
+    "unverified": "尚未验证"
   },
   "blockers": {
     "android_arm64_required": "必须在 Android arm64 上运行。",
     "root_required": "访问 KeyMint 可信应用需要 root 权限。",
     "keymint_library_missing": "在 /vendor/lib64 中未找到 libkeymasterdeviceutils.so。",
     "smcinvoke_missing": "/dev/smcinvoke 不存在。",
-    "qualcomm_soc_required": "SoC 厂商不是高通；该命令只存在于高通 KeyMint 上。",
-    "fingerprint_missing": "缺少构建指纹，服务器无法绑定 challenge。"
+    "qualcomm_soc_required": "识别到了非高通 SoC 厂商；该操作需要高通 KeyMint。",
+    "fingerprint_missing": "缺少构建指纹，服务器无法绑定 challenge。",
+    "soc_vendor_unknown": "无法从本地属性和内核信息识别 SoC 厂商。",
+    "soc_vendor_conflict": "本地 SoC 信息互相冲突，请先核对识别依据。"
   },
   "run": {
     "provision": "签发 RKP keybox",

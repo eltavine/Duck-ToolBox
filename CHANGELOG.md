@@ -28,6 +28,11 @@
   failures (`126` or `127`).
 
 ### Device RKP Issuer
+- Cross-checks Qualcomm aliases (including QTI/QCOM), SoC part numbers, hardware properties
+  and kernel SoC information. Unknown and conflicting evidence have separate blockers;
+  empty properties no longer imply support. The WebUI shows the evidence and keeps firmware
+  and server compatibility unverified. Feature contract 2 prevents mixing older status data
+  with the updated UI.
 - Recognizes QTI as Qualcomm and gives the isolated worker vendor library search paths,
   retaining the default namespace's system dependency links for libraries such as libcrypto.
 - Preserves worker error types and accepts bare as well as field-61-wrapped CSRs.

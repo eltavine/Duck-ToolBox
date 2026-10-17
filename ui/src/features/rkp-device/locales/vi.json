@@ -18,24 +18,33 @@
     "platform": "Nền tảng",
     "root": "Quyền root",
     "vendor": "Nhà sản xuất SoC",
-    "vendorOk": "Nhà sản xuất được hỗ trợ",
+    "vendorOk": "Nhận diện SoC Qualcomm",
     "library": "Thư viện Keymaster",
     "device": "Nút thiết bị",
     "fingerprint": "Vân tay bản dựng",
     "yes": "Có",
     "no": "Không",
-    "unknown": "Không báo cáo",
+    "unknown": "Không xác định",
     "prerequisitesMet": "Đã đủ điều kiện",
     "prerequisitesMissing": "Thiếu điều kiện",
-    "blockers": "Còn thiếu gì"
+    "blockers": "Còn thiếu gì",
+    "socModel": "Mẫu SoC",
+    "evidence": "Căn cứ nhận diện",
+    "detected": "Đã nhận diện",
+    "otherVendor": "Nhà sản xuất khác",
+    "conflicting": "Thông tin mâu thuẫn",
+    "compatibility": "Tương thích firmware / máy chủ",
+    "unverified": "Chưa xác minh"
   },
   "blockers": {
     "android_arm64_required": "Bản dựng này phải chạy trên Android arm64.",
     "root_required": "Cần quyền root để tới ứng dụng tin cậy KeyMint.",
     "keymint_library_missing": "Không tìm thấy libkeymasterdeviceutils.so trong /vendor/lib64.",
     "smcinvoke_missing": "/dev/smcinvoke không tồn tại.",
-    "qualcomm_soc_required": "Nhà sản xuất SoC không phải Qualcomm; lệnh này chỉ có trên KeyMint của Qualcomm.",
-    "fingerprint_missing": "Thiếu vân tay bản dựng nên máy chủ không thể gắn challenge."
+    "qualcomm_soc_required": "Đã nhận diện nhà sản xuất SoC không phải Qualcomm; thao tác này yêu cầu Qualcomm KeyMint.",
+    "fingerprint_missing": "Thiếu vân tay bản dựng nên máy chủ không thể gắn challenge.",
+    "soc_vendor_unknown": "Không thể nhận diện nhà sản xuất SoC từ thuộc tính cục bộ hoặc thông tin kernel.",
+    "soc_vendor_conflict": "Thông tin SoC cục bộ mâu thuẫn. Hãy kiểm tra căn cứ nhận diện trước khi tiếp tục."
   },
   "run": {
     "provision": "Phát keybox RKP",

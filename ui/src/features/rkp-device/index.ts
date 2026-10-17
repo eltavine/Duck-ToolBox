@@ -7,6 +7,7 @@ import { NAMESPACE } from "./i18n"
 
 export default defineFeature({
   id: "rkp-device",
+  contract: 2,
   namespace: NAMESPACE,
   icon: Cpu,
   order: 25,

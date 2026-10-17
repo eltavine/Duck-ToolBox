@@ -18,24 +18,33 @@
     "platform": "Piattaforma",
     "root": "Accesso root",
     "vendor": "Produttore SoC",
-    "vendorOk": "Produttore supportato",
+    "vendorOk": "Identificazione SoC Qualcomm",
     "library": "Libreria Keymaster",
     "device": "Nodo del dispositivo",
     "fingerprint": "Impronta di build",
     "yes": "Sì",
     "no": "No",
-    "unknown": "Non segnalato",
+    "unknown": "Sconosciuto",
     "prerequisitesMet": "Prerequisiti soddisfatti",
     "prerequisitesMissing": "Prerequisiti mancanti",
-    "blockers": "Cosa manca"
+    "blockers": "Cosa manca",
+    "socModel": "Modello SoC",
+    "evidence": "Fonti di identificazione",
+    "detected": "Identificato",
+    "otherVendor": "Altro produttore",
+    "conflicting": "Informazioni in conflitto",
+    "compatibility": "Compatibilità firmware / server",
+    "unverified": "Non verificata"
   },
   "blockers": {
     "android_arm64_required": "Questa build deve girare su Android arm64.",
     "root_required": "Serve l'accesso root per raggiungere l'app attendibile KeyMint.",
     "keymint_library_missing": "libkeymasterdeviceutils.so non è stato trovato in /vendor/lib64.",
     "smcinvoke_missing": "/dev/smcinvoke non esiste.",
-    "qualcomm_soc_required": "Il produttore del SoC non è Qualcomm; questo comando esiste solo su KeyMint Qualcomm.",
-    "fingerprint_missing": "Manca l'impronta di build, quindi il server non può associare un challenge."
+    "qualcomm_soc_required": "È stato identificato un produttore diverso da Qualcomm; questa operazione richiede Qualcomm KeyMint.",
+    "fingerprint_missing": "Manca l'impronta di build, quindi il server non può associare un challenge.",
+    "soc_vendor_unknown": "Impossibile identificare il produttore del SoC dalle proprietà locali o dal kernel.",
+    "soc_vendor_conflict": "Le informazioni locali del SoC sono in conflitto. Verifica le fonti prima di continuare."
   },
   "run": {
     "provision": "Rilascia keybox RKP",

@@ -18,24 +18,33 @@
     "platform": "Platform",
     "root": "Root access",
     "vendor": "SoC vendor",
-    "vendorOk": "Vendor supported",
+    "vendorOk": "Qualcomm SoC identification",
     "library": "Keymaster library",
     "device": "Device node",
     "fingerprint": "Build fingerprint",
     "yes": "Yes",
     "no": "No",
-    "unknown": "Not reported",
+    "unknown": "Unknown",
     "prerequisitesMet": "Prerequisites met",
     "prerequisitesMissing": "Prerequisites missing",
-    "blockers": "What is missing"
+    "blockers": "What is missing",
+    "socModel": "SoC model",
+    "evidence": "Detection evidence",
+    "detected": "Detected",
+    "otherVendor": "Other vendor",
+    "conflicting": "Conflicting information",
+    "compatibility": "Firmware / server compatibility",
+    "unverified": "Unverified"
   },
   "blockers": {
     "android_arm64_required": "This build must run on Android arm64.",
     "root_required": "Root access is required to reach the KeyMint trusted app.",
     "keymint_library_missing": "libkeymasterdeviceutils.so was not found in /vendor/lib64.",
     "smcinvoke_missing": "/dev/smcinvoke does not exist.",
-    "qualcomm_soc_required": "The SoC vendor is not Qualcomm; this command only exists on Qualcomm KeyMint.",
-    "fingerprint_missing": "The build fingerprint is missing, so the server cannot bind a challenge."
+    "qualcomm_soc_required": "A non-Qualcomm SoC vendor was identified; this operation requires Qualcomm KeyMint.",
+    "fingerprint_missing": "The build fingerprint is missing, so the server cannot bind a challenge.",
+    "soc_vendor_unknown": "The SoC vendor could not be identified from local properties or kernel information.",
+    "soc_vendor_conflict": "Local SoC information conflicts. Review the detection evidence before continuing."
   },
   "run": {
     "provision": "Issue RKP keybox",

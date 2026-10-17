@@ -197,6 +197,13 @@ duckd system log [--limit <n>] | open-url <url> | uninstall | reboot
 
 Commands that take input read JSON from stdin with `--stdin-json`.
 
+`rkp-device status` identifies the SoC from manufacturer aliases, SoC part numbers,
+hardware properties and the kernel's [SoC family/machine attributes](https://www.kernel.org/doc/rustdoc/latest/kernel/soc/struct.Attributes.html). It reports the raw
+evidence and distinguishes Qualcomm, another vendor, unknown and conflicting information.
+Unknown or conflicting information blocks issuance rather than guessing. These local
+checks do not establish firmware ABI compatibility or server acceptance. The status format
+uses feature contract 2; update the backend and WebUI together.
+
 For offline identity checks, raw input must contain exactly 32 bytes unless `--offset`
 selects a 32-byte slice of a larger capture. Hex input must contain exactly 64 hexadecimal
 digits, with optional surrounding whitespace. The derivation is explicit: a P-256 scalar

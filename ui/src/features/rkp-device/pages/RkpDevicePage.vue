@@ -29,7 +29,11 @@ interface Row {
 
 const { t, dynamic } = useRkpDeviceI18n()
 const global = useI18n()
-const status = useQuery({ queryKey: ["rkp-device.status"], queryFn: rkpDeviceApi.status })
+const status = useQuery({
+  queryKey: ["rkp-device.status"],
+  queryFn: rkpDeviceApi.status,
+  staleTime: 0,
+})
 const result = ref<Provision | null>(null)
 const confirmOpen = ref(false)
 
@@ -80,10 +84,20 @@ const statusRows = computed<Row[]>(() => {
     { label: t("status.platform"), value: data.android_arm64 ? yes : no },
     { label: t("status.root"), value: data.root ? yes : no },
     { label: t("status.vendor"), value: data.soc_manufacturer || t("status.unknown") },
-    { label: t("status.vendorOk"), value: data.qualcomm_soc ? yes : no },
+    { label: t("status.socModel"), value: data.soc_detection.model || t("status.unknown") },
+    {
+      label: t("status.vendorOk"),
+      value: {
+        qualcomm: t("status.detected"),
+        other: t("status.otherVendor"),
+        unknown: t("status.unknown"),
+        conflicting: t("status.conflicting"),
+      }[data.soc_detection.state],
+    },
     { label: t("status.library"), value: data.library_path, mono: true },
     { label: t("status.device"), value: data.device_path, mono: true },
     { label: t("status.fingerprint"), value: data.fingerprint },
+    { label: t("status.compatibility"), value: t("status.unverified") },
   ]
 })
 
@@ -137,6 +151,7 @@ const resultRows = computed<Row[]>(() => {
               variant="ghost"
               size="icon"
               :aria-label="t('status.reload')"
+              :disabled="status.isFetching.value || run.isPending.value"
               @click="status.refetch()"
             >
               <RefreshCw />
@@ -167,12 +182,33 @@ const resultRows = computed<Row[]>(() => {
             </Alert>
 
             <KeyValueList :rows="statusRows" />
+            <details v-if="status.data.value.soc_detection.evidence.length" class="min-w-0">
+              <summary class="cursor-pointer text-sm font-medium">
+                {{ t("status.evidence") }}
+              </summary>
+              <dl class="mt-3 flex min-w-0 flex-col gap-3">
+                <div
+                  v-for="item in status.data.value.soc_detection.evidence"
+                  :key="item.source"
+                  class="min-w-0"
+                >
+                  <dt class="text-muted-foreground font-mono text-xs break-all">
+                    <bdi dir="ltr">{{ item.source }}</bdi>
+                  </dt>
+                  <dd class="mt-1 text-sm break-all">
+                    <bdi dir="ltr">{{ item.value }}</bdi>
+                  </dd>
+                </div>
+              </dl>
+            </details>
           </div>
         </SectionCard>
 
         <Button
           size="lg"
-          :disabled="run.isPending.value || !status.data.value.prerequisites_met"
+          :disabled="
+            run.isPending.value || status.isFetching.value || !status.data.value.prerequisites_met
+          "
           @click="confirmOpen = true"
         >
           <Spinner v-if="run.isPending.value" class="size-6" />

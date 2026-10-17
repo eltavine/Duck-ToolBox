@@ -18,24 +18,33 @@
     "platform": "Plataforma",
     "root": "Acceso root",
     "vendor": "Fabricante del SoC",
-    "vendorOk": "Fabricante compatible",
+    "vendorOk": "Identificación del SoC Qualcomm",
     "library": "Biblioteca Keymaster",
     "device": "Nodo de dispositivo",
     "fingerprint": "Huella de compilación",
     "yes": "Sí",
     "no": "No",
-    "unknown": "Sin datos",
+    "unknown": "Desconocido",
     "prerequisitesMet": "Requisitos cumplidos",
     "prerequisitesMissing": "Faltan requisitos",
-    "blockers": "Qué falta"
+    "blockers": "Qué falta",
+    "socModel": "Modelo de SoC",
+    "evidence": "Fuentes de identificación",
+    "detected": "Identificado",
+    "otherVendor": "Otro fabricante",
+    "conflicting": "Información contradictoria",
+    "compatibility": "Compatibilidad del firmware / servidor",
+    "unverified": "Sin verificar"
   },
   "blockers": {
     "android_arm64_required": "Esta compilación debe ejecutarse en Android arm64.",
     "root_required": "Se necesita acceso root para llegar a la app de confianza KeyMint.",
     "keymint_library_missing": "No se encontró libkeymasterdeviceutils.so en /vendor/lib64.",
     "smcinvoke_missing": "/dev/smcinvoke no existe.",
-    "qualcomm_soc_required": "El fabricante del SoC no es Qualcomm; este comando solo existe en KeyMint de Qualcomm.",
-    "fingerprint_missing": "Falta la huella de compilación, así que el servidor no puede vincular un challenge."
+    "qualcomm_soc_required": "Se identificó un fabricante distinto de Qualcomm; esta operación requiere Qualcomm KeyMint.",
+    "fingerprint_missing": "Falta la huella de compilación, así que el servidor no puede vincular un challenge.",
+    "soc_vendor_unknown": "No se pudo identificar al fabricante del SoC mediante las propiedades locales o el kernel.",
+    "soc_vendor_conflict": "La información local del SoC es contradictoria. Revisa las fuentes antes de continuar."
   },
   "run": {
     "provision": "Emitir keybox RKP",

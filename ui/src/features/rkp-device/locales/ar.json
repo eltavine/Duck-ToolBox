@@ -18,24 +18,33 @@
     "platform": "المنصة",
     "root": "صلاحية root",
     "vendor": "مصنّع SoC",
-    "vendorOk": "المصنّع مدعوم",
+    "vendorOk": "تحديد SoC من Qualcomm",
     "library": "مكتبة Keymaster",
     "device": "عقدة الجهاز",
     "fingerprint": "بصمة البناء",
     "yes": "نعم",
     "no": "لا",
-    "unknown": "غير معلوم",
+    "unknown": "غير معروف",
     "prerequisitesMet": "المتطلبات متوفرة",
     "prerequisitesMissing": "المتطلبات ناقصة",
-    "blockers": "ما الناقص"
+    "blockers": "ما الناقص",
+    "socModel": "طراز SoC",
+    "evidence": "أدلة التحديد",
+    "detected": "تم التحديد",
+    "otherVendor": "مصنّع آخر",
+    "conflicting": "معلومات متعارضة",
+    "compatibility": "توافق البرنامج الثابت / الخادم",
+    "unverified": "لم يُتحقق منه"
   },
   "blockers": {
     "android_arm64_required": "يجب تشغيل هذا البناء على Android arm64.",
     "root_required": "يلزم الوصول بصلاحية root للوصول إلى تطبيق KeyMint الموثوق.",
     "keymint_library_missing": "لم يُعثر على libkeymasterdeviceutils.so في /vendor/lib64.",
     "smcinvoke_missing": "/dev/smcinvoke غير موجود.",
-    "qualcomm_soc_required": "مصنّع SoC ليس Qualcomm؛ هذا الأمر موجود في KeyMint من Qualcomm فقط.",
-    "fingerprint_missing": "بصمة البناء مفقودة، لذا لا يمكن للخادم ربط challenge."
+    "qualcomm_soc_required": "تم تحديد مصنّع SoC غير Qualcomm؛ تتطلب هذه العملية Qualcomm KeyMint.",
+    "fingerprint_missing": "بصمة البناء مفقودة، لذا لا يمكن للخادم ربط challenge.",
+    "soc_vendor_unknown": "تعذّر تحديد مصنّع SoC من الخصائص المحلية أو معلومات النواة.",
+    "soc_vendor_conflict": "معلومات SoC المحلية متعارضة. راجع أدلة التحديد قبل المتابعة."
   },
   "run": {
     "provision": "إصدار keybox بتقنية RKP",

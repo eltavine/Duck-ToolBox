@@ -18,24 +18,33 @@
     "platform": "Платформа",
     "root": "Root-доступ",
     "vendor": "Производитель SoC",
-    "vendorOk": "Производитель поддерживается",
+    "vendorOk": "Определение SoC Qualcomm",
     "library": "Библиотека Keymaster",
     "device": "Узел устройства",
     "fingerprint": "Отпечаток сборки",
     "yes": "Да",
     "no": "Нет",
-    "unknown": "Не сообщается",
+    "unknown": "Неизвестно",
     "prerequisitesMet": "Требования выполнены",
     "prerequisitesMissing": "Требования не выполнены",
-    "blockers": "Чего не хватает"
+    "blockers": "Чего не хватает",
+    "socModel": "Модель SoC",
+    "evidence": "Источники определения",
+    "detected": "Определён",
+    "otherVendor": "Другой производитель",
+    "conflicting": "Противоречивые сведения",
+    "compatibility": "Совместимость прошивки / сервера",
+    "unverified": "Не проверена"
   },
   "blockers": {
     "android_arm64_required": "Эта сборка должна работать на Android arm64.",
     "root_required": "Для доступа к доверенному приложению KeyMint нужен root.",
     "keymint_library_missing": "libkeymasterdeviceutils.so не найдена в /vendor/lib64.",
     "smcinvoke_missing": "/dev/smcinvoke не существует.",
-    "qualcomm_soc_required": "Производитель SoC не Qualcomm; эта команда есть только в Qualcomm KeyMint.",
-    "fingerprint_missing": "Нет отпечатка сборки, поэтому сервер не может привязать challenge."
+    "qualcomm_soc_required": "Определён производитель SoC, отличный от Qualcomm; эта операция требует Qualcomm KeyMint.",
+    "fingerprint_missing": "Нет отпечатка сборки, поэтому сервер не может привязать challenge.",
+    "soc_vendor_unknown": "Не удалось определить производителя SoC по локальным свойствам и данным ядра.",
+    "soc_vendor_conflict": "Локальные сведения о SoC противоречат друг другу. Проверьте источники перед продолжением."
   },
   "run": {
     "provision": "Выпустить RKP keybox",

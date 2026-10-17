@@ -2,6 +2,8 @@ use duck_core::Context;
 use duck_platform::{exec, props};
 use serde::Serialize;
 
+use crate::soc::{self, Detection, State};
+
 pub(crate) const LIBRARY_PATH: &str = "/vendor/lib64/libkeymasterdeviceutils.so";
 pub(crate) const DEVICE_PATH: &str = "/dev/smcinvoke";
 
@@ -25,6 +27,7 @@ pub(crate) struct DeviceStatus {
     pub device_path: &'static str,
     pub fingerprint: String,
     pub soc_manufacturer: String,
+    pub soc_detection: Detection,
     pub limitations: [&'static str; 2],
     pub blockers: Vec<&'static str>,
 }
@@ -44,7 +47,8 @@ pub(crate) fn detect(ctx: &Context) -> DeviceStatus {
     let root = exec::stdout_or_empty("id", &["-u"]).trim() == "0";
     let library_present = ctx.sysroot.path(LIBRARY_PATH).is_file();
     let device_present = ctx.sysroot.path(DEVICE_PATH).exists();
-    let qualcomm_soc = is_supported_vendor(&soc_manufacturer);
+    let soc_detection = soc::detect(&properties, &ctx.sysroot);
+    let qualcomm_soc = soc_detection.state == State::Qualcomm;
 
     let mut blockers = Vec::new();
     for (passed, name) in [
@@ -52,12 +56,14 @@ pub(crate) fn detect(ctx: &Context) -> DeviceStatus {
         (root, "root_required"),
         (library_present, "keymint_library_missing"),
         (device_present, "smcinvoke_missing"),
-        (qualcomm_soc, "qualcomm_soc_required"),
         (!fingerprint.trim().is_empty(), "fingerprint_missing"),
     ] {
         if !passed {
             blockers.push(name);
         }
+    }
+    if let Some(blocker) = soc_detection.blocker() {
+        blockers.push(blocker);
     }
 
     DeviceStatus {
@@ -71,45 +77,18 @@ pub(crate) fn detect(ctx: &Context) -> DeviceStatus {
         device_path: DEVICE_PATH,
         fingerprint,
         soc_manufacturer,
+        soc_detection,
         limitations: LIMITATIONS,
         blockers,
     }
 }
 
-/// Only Qualcomm's KeyMint TA implements the command this feature drives. An unreported
-/// vendor is not blocked, because some builds simply omit the property.
-fn is_supported_vendor(manufacturer: &str) -> bool {
-    let manufacturer = manufacturer.trim();
-    manufacturer.is_empty()
-        || manufacturer.eq_ignore_ascii_case("qti")
-        || manufacturer.to_ascii_lowercase().contains("qualcomm")
-}
-
 #[cfg(test)]
 mod tests {
-    use super::{LIMITATIONS, is_supported_vendor};
+    use super::LIMITATIONS;
 
     #[test]
     fn every_limitation_has_a_stable_id() {
         assert_eq!(LIMITATIONS, ["partial_device_support", "rkp_only"]);
-    }
-
-    #[test]
-    fn only_qualcomm_or_an_unknown_vendor_is_supported() {
-        assert!(is_supported_vendor(""));
-        assert!(is_supported_vendor("   "));
-        assert!(is_supported_vendor("Qualcomm Technologies, Inc"));
-        assert!(is_supported_vendor("QUALCOMM"));
-        assert!(!is_supported_vendor("MediaTek"));
-        assert!(!is_supported_vendor("Google"));
-        assert!(!is_supported_vendor("not-qti"));
-        assert!(!is_supported_vendor("qti-other"));
-    }
-
-    #[test]
-    fn qti_alias_is_supported() {
-        for manufacturer in ["QTI", "qti", "QtI", " \tQTI\n"] {
-            assert!(is_supported_vendor(manufacturer), "{manufacturer:?}");
-        }
     }
 }

@@ -18,24 +18,33 @@
     "platform": "プラットフォーム",
     "root": "root 権限",
     "vendor": "SoC ベンダー",
-    "vendorOk": "ベンダー対応",
+    "vendorOk": "Qualcomm SoC の識別",
     "library": "Keymaster ライブラリ",
     "device": "デバイスノード",
     "fingerprint": "ビルド指紋",
     "yes": "はい",
     "no": "いいえ",
-    "unknown": "未報告",
+    "unknown": "不明",
     "prerequisitesMet": "前提条件を満たしています",
     "prerequisitesMissing": "前提条件が不足しています",
-    "blockers": "不足しているもの"
+    "blockers": "不足しているもの",
+    "socModel": "SoC モデル",
+    "evidence": "識別の根拠",
+    "detected": "識別済み",
+    "otherVendor": "他のベンダー",
+    "conflicting": "情報の矛盾",
+    "compatibility": "ファームウェア／サーバー互換性",
+    "unverified": "未検証"
   },
   "blockers": {
     "android_arm64_required": "Android arm64 上で実行する必要があります。",
     "root_required": "KeyMint トラステッドアプリに到達するには root 権限が必要です。",
     "keymint_library_missing": "/vendor/lib64 に libkeymasterdeviceutils.so がありません。",
     "smcinvoke_missing": "/dev/smcinvoke が存在しません。",
-    "qualcomm_soc_required": "SoC ベンダーが Qualcomm ではありません。このコマンドは Qualcomm KeyMint にのみ存在します。",
-    "fingerprint_missing": "ビルド指紋がないため、サーバーがチャレンジを結び付けられません。"
+    "qualcomm_soc_required": "Qualcomm 以外の SoC ベンダーを識別しました。この操作には Qualcomm KeyMint が必要です。",
+    "fingerprint_missing": "ビルド指紋がないため、サーバーがチャレンジを結び付けられません。",
+    "soc_vendor_unknown": "ローカルのプロパティとカーネル情報から SoC ベンダーを識別できません。",
+    "soc_vendor_conflict": "ローカルの SoC 情報が矛盾しています。続行前に識別の根拠を確認してください。"
   },
   "run": {
     "provision": "RKP keybox を発行",

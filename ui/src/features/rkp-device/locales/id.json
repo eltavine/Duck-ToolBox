@@ -18,24 +18,33 @@
     "platform": "Platform",
     "root": "Akses root",
     "vendor": "Vendor SoC",
-    "vendorOk": "Vendor didukung",
+    "vendorOk": "Identifikasi SoC Qualcomm",
     "library": "Pustaka Keymaster",
     "device": "Node perangkat",
     "fingerprint": "Sidik jari build",
     "yes": "Ya",
     "no": "Tidak",
-    "unknown": "Tidak dilaporkan",
+    "unknown": "Tidak diketahui",
     "prerequisitesMet": "Prasyarat terpenuhi",
     "prerequisitesMissing": "Prasyarat kurang",
-    "blockers": "Apa yang kurang"
+    "blockers": "Apa yang kurang",
+    "socModel": "Model SoC",
+    "evidence": "Bukti identifikasi",
+    "detected": "Teridentifikasi",
+    "otherVendor": "Produsen lain",
+    "conflicting": "Informasi bertentangan",
+    "compatibility": "Kompatibilitas firmware / server",
+    "unverified": "Belum diverifikasi"
   },
   "blockers": {
     "android_arm64_required": "Build ini harus berjalan di Android arm64.",
     "root_required": "Akses root diperlukan untuk mencapai aplikasi tepercaya KeyMint.",
     "keymint_library_missing": "libkeymasterdeviceutils.so tidak ditemukan di /vendor/lib64.",
     "smcinvoke_missing": "/dev/smcinvoke tidak ada.",
-    "qualcomm_soc_required": "Vendor SoC bukan Qualcomm; perintah ini hanya ada di Qualcomm KeyMint.",
-    "fingerprint_missing": "Sidik jari build tidak ada, sehingga server tidak dapat mengikat challenge."
+    "qualcomm_soc_required": "Produsen SoC selain Qualcomm teridentifikasi; operasi ini memerlukan Qualcomm KeyMint.",
+    "fingerprint_missing": "Sidik jari build tidak ada, sehingga server tidak dapat mengikat challenge.",
+    "soc_vendor_unknown": "Produsen SoC tidak dapat diidentifikasi dari properti lokal atau informasi kernel.",
+    "soc_vendor_conflict": "Informasi SoC lokal bertentangan. Periksa bukti identifikasi sebelum melanjutkan."
   },
   "run": {
     "provision": "Terbitkan keybox RKP",

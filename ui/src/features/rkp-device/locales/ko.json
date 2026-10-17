@@ -18,24 +18,33 @@
     "platform": "플랫폼",
     "root": "Root 권한",
     "vendor": "SoC 벤더",
-    "vendorOk": "벤더 지원",
+    "vendorOk": "Qualcomm SoC 식별",
     "library": "Keymaster 라이브러리",
     "device": "장치 노드",
     "fingerprint": "빌드 지문",
     "yes": "예",
     "no": "아니요",
-    "unknown": "보고되지 않음",
+    "unknown": "알 수 없음",
     "prerequisitesMet": "사전 조건 충족",
     "prerequisitesMissing": "사전 조건 부족",
-    "blockers": "무엇이 빠졌나요"
+    "blockers": "무엇이 빠졌나요",
+    "socModel": "SoC 모델",
+    "evidence": "식별 근거",
+    "detected": "식별됨",
+    "otherVendor": "다른 제조사",
+    "conflicting": "정보 충돌",
+    "compatibility": "펌웨어 / 서버 호환성",
+    "unverified": "미검증"
   },
   "blockers": {
     "android_arm64_required": "Android arm64에서 실행해야 합니다.",
     "root_required": "KeyMint 트러스트 앱에 접근하려면 root 권한이 필요합니다.",
     "keymint_library_missing": "/vendor/lib64에서 libkeymasterdeviceutils.so를 찾지 못했습니다.",
     "smcinvoke_missing": "/dev/smcinvoke가 없습니다.",
-    "qualcomm_soc_required": "SoC 벤더가 Qualcomm이 아닙니다. 이 명령은 Qualcomm KeyMint에만 있습니다.",
-    "fingerprint_missing": "빌드 지문이 없어 서버가 챌린지를 묶을 수 없습니다."
+    "qualcomm_soc_required": "Qualcomm 이외의 SoC 제조사가 식별되었습니다. 이 작업에는 Qualcomm KeyMint가 필요합니다.",
+    "fingerprint_missing": "빌드 지문이 없어 서버가 챌린지를 묶을 수 없습니다.",
+    "soc_vendor_unknown": "로컬 속성 및 커널 정보로 SoC 제조사를 식별할 수 없습니다.",
+    "soc_vendor_conflict": "로컬 SoC 정보가 충돌합니다. 계속하기 전에 식별 근거를 확인하세요."
   },
   "run": {
     "provision": "RKP keybox 발급",

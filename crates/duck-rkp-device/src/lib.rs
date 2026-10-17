@@ -9,6 +9,7 @@ mod error;
 mod keymint;
 mod protocol;
 mod service;
+mod soc;
 mod status;
 mod worker;
 

@@ -1,27 +1,78 @@
 import type { MockModule } from "@/core/mock"
+import { MockFailure } from "@/core/mock"
+
+import type { DeviceStatus } from "./api"
 
 const OUT = "/data/adb/duck-toolbox/var/outputs/rkp-device-1750000000000"
 
-const status = {
-  prerequisites_met: true,
-  android_arm64: true,
-  root: true,
-  library_present: true,
-  device_present: true,
-  qualcomm_soc: true,
-  library_path: "/vendor/lib64/libkeymasterdeviceutils.so",
-  device_path: "/dev/smcinvoke",
-  fingerprint: "google/husky/husky:15/AP3A.241005.015/1234567:user/release-keys",
-  soc_manufacturer: "Qualcomm Technologies, Inc",
-  limitations: ["partial_device_support", "rkp_only"],
-  blockers: [],
+function deviceStatus(): DeviceStatus {
+  const status: DeviceStatus = {
+    prerequisites_met: true,
+    android_arm64: true,
+    root: true,
+    library_present: true,
+    device_present: true,
+    qualcomm_soc: true,
+    library_path: "/vendor/lib64/libkeymasterdeviceutils.so",
+    device_path: "/dev/smcinvoke",
+    fingerprint: "google/husky/husky:15/AP3A.241005.015/1234567:user/release-keys",
+    soc_manufacturer: "QTI",
+    soc_detection: {
+      state: "qualcomm",
+      model: "SM8650",
+      evidence: [
+        { source: "ro.soc.manufacturer", value: "QTI", vendor: "qualcomm" },
+        { source: "ro.hardware", value: "qcom", vendor: "qualcomm" },
+      ],
+    },
+    limitations: ["partial_device_support", "rkp_only"],
+    blockers: [],
+  }
+  const scenario = new URLSearchParams(location.search).get("soc")
+  if (scenario === "unknown") {
+    status.soc_manufacturer = ""
+    status.soc_detection = { state: "unknown", model: "", evidence: [] }
+  } else if (scenario === "fallback") {
+    status.soc_manufacturer = ""
+    status.soc_detection = {
+      state: "qualcomm",
+      model: "PINEAPPLE",
+      evidence: [{ source: "/sys/devices/soc0/family", value: "Snapdragon", vendor: "qualcomm" }],
+    }
+  } else if (scenario === "other" || scenario === "conflict") {
+    status.soc_manufacturer = "MediaTek"
+    status.soc_detection = {
+      state: scenario === "other" ? "other" : "conflicting",
+      model: scenario === "other" ? "MT6989" : "SM8650",
+      evidence: [{ source: "ro.soc.manufacturer", value: "MediaTek", vendor: "other" }],
+    }
+    if (scenario === "conflict")
+      status.soc_detection.evidence.push({
+        source: "ro.hardware",
+        value: "qcom",
+        vendor: "qualcomm",
+      })
+  }
+  const blocker = {
+    qualcomm: null,
+    other: "qualcomm_soc_required",
+    unknown: "soc_vendor_unknown",
+    conflicting: "soc_vendor_conflict",
+  }[status.soc_detection.state]
+  status.qualcomm_soc = status.soc_detection.state === "qualcomm"
+  status.blockers = blocker ? [blocker] : []
+  status.prerequisites_met = status.blockers.length === 0
+  return status
 }
 
 const mock: MockModule = {
-  feature: { id: "rkp-device", contract: 1 },
+  feature: { id: "rkp-device", contract: 2 },
   handlers: {
-    "rkp-device.status": () => status,
+    "rkp-device.status": deviceStatus,
     "rkp-device.provision": (_args, flags) => {
+      const status = deviceStatus()
+      if (!status.prerequisites_met)
+        throw new MockFailure("unsupported_device", "Prerequisites are missing")
       if (flags["acknowledge-limitations"] !== true) {
         throw new Error("acknowledgement is the only way this command runs")
       }

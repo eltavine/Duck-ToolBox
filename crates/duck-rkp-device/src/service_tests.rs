@@ -26,7 +26,7 @@ const FINGERPRINT: &str = "google/husky/husky:15/AP3A/1:user/release-keys";
 struct FakeEnvironment;
 
 impl Environment for FakeEnvironment {
-    fn capabilities(&self, _ctx: &Context) -> DeviceStatus {
+    fn capabilities(&self, ctx: &Context) -> DeviceStatus {
         DeviceStatus {
             prerequisites_met: true,
             android_arm64: true,
@@ -37,7 +37,11 @@ impl Environment for FakeEnvironment {
             library_path: "/vendor/lib64/libkeymasterdeviceutils.so",
             device_path: "/dev/smcinvoke",
             fingerprint: FINGERPRINT.into(),
-            soc_manufacturer: "Google".into(),
+            soc_manufacturer: "QTI".into(),
+            soc_detection: crate::soc::detect(
+                &[("ro.soc.manufacturer".into(), "QTI".into())].into(),
+                &ctx.sysroot,
+            ),
             limitations: super::LIMITATIONS,
             blockers: Vec::new(),
         }
@@ -47,7 +51,7 @@ impl Environment for FakeEnvironment {
 struct BlockedEnvironment(Vec<&'static str>);
 
 impl Environment for BlockedEnvironment {
-    fn capabilities(&self, _ctx: &Context) -> DeviceStatus {
+    fn capabilities(&self, ctx: &Context) -> DeviceStatus {
         DeviceStatus {
             prerequisites_met: false,
             android_arm64: true,
@@ -59,6 +63,10 @@ impl Environment for BlockedEnvironment {
             device_path: "/dev/smcinvoke",
             fingerprint: FINGERPRINT.into(),
             soc_manufacturer: "Google".into(),
+            soc_detection: crate::soc::detect(
+                &[("ro.soc.manufacturer".into(), "Google".into())].into(),
+                &ctx.sysroot,
+            ),
             limitations: super::LIMITATIONS,
             blockers: self.0.clone(),
         }
@@ -378,7 +386,7 @@ async fn provision_completes_the_round_trip_and_writes_artifacts() {
         data.chain.subjects,
         ["CN=duck-test-leaf", "CN=duck-test-root"]
     );
-    assert!(data.device_id.starts_with("Google-"));
+    assert!(data.device_id.starts_with("QTI-"));
     // The whole chain reaches the keybox, and the daemon validator accepts it.
     let summary = duck_tricky_store::keybox::validate::validate(&data.keybox_xml).unwrap();
     assert_eq!(summary.chain_lengths, vec![2]);

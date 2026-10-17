@@ -239,6 +239,13 @@ fn features_manifest_lists_every_registered_tool() {
         ]
     );
     assert_eq!(payload["data"]["api"], 1);
+    let device = payload["data"]["features"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|feature| feature["id"] == "rkp-device")
+        .unwrap();
+    assert_eq!(device["contract"], 2);
 }
 
 #[test]

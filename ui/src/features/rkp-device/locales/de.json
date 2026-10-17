@@ -18,24 +18,33 @@
     "platform": "Plattform",
     "root": "Root-Zugriff",
     "vendor": "SoC-Hersteller",
-    "vendorOk": "Hersteller unterstützt",
+    "vendorOk": "Qualcomm-SoC-Erkennung",
     "library": "Keymaster-Bibliothek",
     "device": "Geräteknoten",
     "fingerprint": "Build-Fingerabdruck",
     "yes": "Ja",
     "no": "Nein",
-    "unknown": "Nicht gemeldet",
+    "unknown": "Unbekannt",
     "prerequisitesMet": "Voraussetzungen erfüllt",
     "prerequisitesMissing": "Voraussetzungen fehlen",
-    "blockers": "Was fehlt"
+    "blockers": "Was fehlt",
+    "socModel": "SoC-Modell",
+    "evidence": "Erkennungsgrundlage",
+    "detected": "Erkannt",
+    "otherVendor": "Anderer Hersteller",
+    "conflicting": "Widersprüchliche Angaben",
+    "compatibility": "Firmware-/Serverkompatibilität",
+    "unverified": "Ungeprüft"
   },
   "blockers": {
     "android_arm64_required": "Dieser Build muss auf Android arm64 laufen.",
     "root_required": "Für den Zugriff auf die KeyMint-Trusted-App ist Root-Zugriff nötig.",
     "keymint_library_missing": "libkeymasterdeviceutils.so wurde in /vendor/lib64 nicht gefunden.",
     "smcinvoke_missing": "/dev/smcinvoke existiert nicht.",
-    "qualcomm_soc_required": "Der SoC-Hersteller ist nicht Qualcomm; diesen Befehl gibt es nur bei Qualcomm KeyMint.",
-    "fingerprint_missing": "Der Build-Fingerabdruck fehlt, daher kann der Server keine Challenge binden."
+    "qualcomm_soc_required": "Ein anderer SoC-Hersteller wurde erkannt; dieser Vorgang erfordert Qualcomm KeyMint.",
+    "fingerprint_missing": "Der Build-Fingerabdruck fehlt, daher kann der Server keine Challenge binden.",
+    "soc_vendor_unknown": "Der SoC-Hersteller konnte aus lokalen Eigenschaften und Kernelangaben nicht ermittelt werden.",
+    "soc_vendor_conflict": "Lokale SoC-Angaben widersprechen sich. Prüfe vor dem Fortfahren die Erkennungsgrundlage."
   },
   "run": {
     "provision": "RKP-Keybox ausstellen",
