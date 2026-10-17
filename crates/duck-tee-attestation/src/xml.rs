@@ -102,17 +102,25 @@ fn count(node: &Node, name: &str) -> Result<usize> {
 
 pub(crate) fn find_start(bytes: &[u8]) -> Option<usize> {
     const MARKER: &[u8] = b"<AndroidAttestation";
-    bytes
-        .windows(MARKER.len())
-        .enumerate()
-        .find_map(|(index, window)| {
-            (window == MARKER
-                && matches!(
-                    bytes.get(index + MARKER.len()),
-                    Some(b'>' | b'/' | b' ' | b'\t' | b'\r' | b'\n')
-                ))
-            .then_some(index)
-        })
+    let mut offset = 0;
+    while let Some(next) = pem::find(&bytes[offset..], b"<") {
+        offset += next;
+        let remaining = &bytes[offset..];
+        if let Some(comment) = remaining.strip_prefix(b"<!--") {
+            offset += 4 + pem::find(comment, b"-->")? + 3;
+            continue;
+        }
+        if remaining.starts_with(MARKER)
+            && matches!(
+                remaining.get(MARKER.len()),
+                Some(b'>' | b'/' | b' ' | b'\t' | b'\r' | b'\n')
+            )
+        {
+            return Some(offset);
+        }
+        offset += 1;
+    }
+    None
 }
 
 fn xml_character(value: char) -> bool {

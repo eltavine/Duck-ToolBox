@@ -21,6 +21,11 @@
   headers, DICE subject keys and configuration descriptors.
 - Resolves same-name certificate issuers by signature and handles self-issued key rotation
   certificates without treating them as self-signed roots.
+- Ignores root-tag examples in XML comments outside the captured document.
+
+### Command wrapper
+- Preserves backend failure exit codes and tries fallback binaries only after execution
+  failures (`126` or `127`).
 
 ### Device RKP Issuer
 - Recognizes QTI as Qualcomm and gives the isolated worker vendor library search paths,

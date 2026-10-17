@@ -242,6 +242,25 @@ fn xml_capture_boundaries_follow_tags_instead_of_comment_text() {
 }
 
 #[test]
+fn xml_comments_outside_the_root_do_not_select_a_fake_document() {
+    let (private, leaf, root) = bundle();
+    let (xml, _) = keybox::extract(&captured_pem(&private, &[leaf, root]), Format::Pem).unwrap();
+    let commented = xml.replace(
+        "<AndroidAttestation>",
+        "<!-- Expected root: <AndroidAttestation> -->\n<AndroidAttestation>",
+    ) + "<!-- Root was <AndroidAttestation> -->";
+    let (extracted, _) = keybox::extract(commented.as_bytes(), Format::Auto).unwrap();
+    assert_eq!(*xml, *extracted);
+    assert!(
+        keybox::extract(
+            format!("{commented}{}", xml.as_str()).as_bytes(),
+            Format::Xml
+        )
+        .is_err()
+    );
+}
+
+#[test]
 fn xml_device_ids_must_contain_only_valid_xml_characters() {
     let (private, leaf, root) = bundle();
     let (xml, _) = keybox::extract(&captured_pem(&private, &[leaf, root]), Format::Pem).unwrap();

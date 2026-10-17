@@ -53,9 +53,9 @@ do
     export DUCK_TOOLBOX_DATA_ROOT="$DATA_ROOT"
     if "$candidate" "$@"; then
       exit 0
+    else
+      status=$?
     fi
-
-    status=$?
     if [ "$status" -eq 126 ] || [ "$status" -eq 127 ]; then
       continue
     fi
