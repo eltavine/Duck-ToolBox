@@ -1,4 +1,6 @@
-use anyhow::{Context, Result, bail};
+use std::io::Cursor;
+
+use anyhow::{Context, Result, bail, ensure};
 use ciborium::{
     de::from_reader,
     ser::into_writer,
@@ -13,7 +15,13 @@ pub fn encode(value: &Value) -> Result<Vec<u8>> {
 }
 
 pub fn decode(bytes: &[u8]) -> Result<Value> {
-    from_reader(bytes).context("decode CBOR")
+    let mut reader = Cursor::new(bytes);
+    let value = from_reader(&mut reader).context("decode CBOR")?;
+    ensure!(
+        reader.position() == bytes.len() as u64,
+        "trailing data after CBOR item"
+    );
+    Ok(value)
 }
 
 pub fn int(value: i128) -> Value {
@@ -128,6 +136,16 @@ fn encode_preserving_order(value: &Value) -> Result<Vec<u8>> {
 mod tests {
     use super::{decode, encode, int, text};
     use ciborium::value::Value;
+
+    #[test]
+    fn decode_requires_exactly_one_complete_cbor_item() {
+        assert!(decode(&[]).is_err());
+        assert!(decode(&[0x81]).is_err());
+        assert_eq!(decode(&[0x81, 0]).unwrap(), Value::Array(vec![int(0)]));
+        for trailing in [0, 0xff] {
+            assert!(decode(&[0x81, 0, trailing]).is_err());
+        }
+    }
 
     #[test]
     fn encode_sorts_map_keys_canonically() {

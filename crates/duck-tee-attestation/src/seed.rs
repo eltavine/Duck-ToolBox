@@ -1,10 +1,8 @@
-use std::io::Cursor;
-
 use anyhow::{Result, ensure};
 use ciborium::value::Value;
 use clap::ValueEnum;
 use duck_rkp::{
-    cbor::{as_array, as_bytes, as_map, encode, int, map_get},
+    cbor::{as_array, as_bytes, as_map, decode, encode, int, map_get},
     cose::{DICE_SUBJECT_PUB_KEY, DeviceKeys},
     profile::DiceCurve,
     verify::verify_csr,
@@ -83,7 +81,7 @@ pub(crate) fn candidate(
 
 pub(crate) fn verify(seed: &[u8; 32], csr: &[u8], derivation: Derivation) -> Result<Report> {
     let verify = || -> Result<Report> {
-        let request = decode_exact(csr)?;
+        let request = decode(csr)?;
         let report = verify_csr(csr)?;
         ensure!(report.signature_valid && report.cert_type == "keymint");
         let request = as_array(&request, "CSR")?;
@@ -95,12 +93,12 @@ pub(crate) fn verify(seed: &[u8; 32], csr: &[u8], derivation: Derivation) -> Res
             dice.last().ok_or_else(|| anyhow::anyhow!("no leaf"))?,
             "leaf",
         )?;
-        let payload = decode_exact(as_bytes(
+        let payload = decode(as_bytes(
             leaf.get(2).ok_or_else(|| anyhow::anyhow!("no payload"))?,
             "payload",
         )?)?;
         let payload = as_map(&payload, "leaf payload")?;
-        let subject = decode_exact(as_bytes(
+        let subject = decode(as_bytes(
             map_get(payload, DICE_SUBJECT_PUB_KEY)
                 .ok_or_else(|| anyhow::anyhow!("no subject key"))?,
             "subject key",
@@ -145,11 +143,4 @@ pub(crate) fn verify(seed: &[u8; 32], csr: &[u8], derivation: Derivation) -> Res
         "CSR must have a valid KeyMint signature and DICE chain; candidate derivation must be valid"
     ).into()
     })
-}
-
-fn decode_exact(bytes: &[u8]) -> Result<Value> {
-    let mut reader = Cursor::new(bytes);
-    let value = ciborium::from_reader(&mut reader)?;
-    ensure!(reader.position() == bytes.len() as u64);
-    Ok(value)
 }

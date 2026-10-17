@@ -29,16 +29,15 @@ pub(crate) fn parse(bytes: &[u8]) -> Result<Vec<Keybox>> {
 }
 
 fn parse_inner(bytes: &[u8]) -> Result<Vec<Keybox>> {
-    let start =
-        pem::find(bytes, b"<AndroidAttestation").ok_or_else(|| anyhow::anyhow!("no XML"))?;
-    let end_marker = b"</AndroidAttestation>";
-    let end = start
-        + pem::find(&bytes[start..], end_marker)
-            .ok_or_else(|| anyhow::anyhow!("incomplete XML"))?
-        + end_marker.len();
-    ensure!(pem::find(&bytes[end..], b"<AndroidAttestation").is_none());
-    let text = std::str::from_utf8(&bytes[start..end])?;
-    let root = tree(text)?;
+    let start = find_start(bytes).ok_or_else(|| anyhow::anyhow!("no XML"))?;
+    let (root, length) = tree(&bytes[start..])?;
+    let end = start + length;
+    ensure!(find_start(&bytes[end..]).is_none());
+    ensure!(
+        std::str::from_utf8(&bytes[start..end])?
+            .chars()
+            .all(xml_character)
+    );
     ensure!(root.name == "AndroidAttestation" && root.attributes.is_empty());
     ensure!(root.children.len() >= 2 && root.children.len() <= 17);
     ensure!(count(&root.children[0], "NumberOfKeyboxes")? == root.children.len() - 1);
@@ -49,7 +48,11 @@ fn parse_inner(bytes: &[u8]) -> Result<Vec<Keybox>> {
             .attributes
             .get("DeviceID")
             .ok_or_else(|| anyhow::anyhow!("no ID"))?;
-        ensure!(!device_id.trim().is_empty() && device_id.len() <= 256);
+        ensure!(
+            !device_id.trim().is_empty()
+                && device_id.len() <= 256
+                && device_id.chars().all(xml_character)
+        );
         ensure!(!entry.children.is_empty() && entry.children.len() <= 2);
         let mut keys = Vec::new();
         for key in &entry.children {
@@ -97,10 +100,29 @@ fn count(node: &Node, name: &str) -> Result<usize> {
     Ok(node.text.trim().parse()?)
 }
 
-fn tree(text: &str) -> Result<Node> {
-    let mut reader = Reader::from_str(text);
+pub(crate) fn find_start(bytes: &[u8]) -> Option<usize> {
+    const MARKER: &[u8] = b"<AndroidAttestation";
+    bytes
+        .windows(MARKER.len())
+        .enumerate()
+        .find_map(|(index, window)| {
+            (window == MARKER
+                && matches!(
+                    bytes.get(index + MARKER.len()),
+                    Some(b'>' | b'/' | b' ' | b'\t' | b'\r' | b'\n')
+                ))
+            .then_some(index)
+        })
+}
+
+fn xml_character(value: char) -> bool {
+    matches!(value, '\t' | '\n' | '\r' | '\u{20}'..='\u{d7ff}' | '\u{e000}'..='\u{fffd}' | '\u{10000}'..='\u{10ffff}')
+}
+
+fn tree(bytes: &[u8]) -> Result<(Node, usize)> {
+    let mut reader = Reader::from_reader(bytes);
+    reader.config_mut().check_comments = true;
     let mut stack: Vec<Node> = Vec::new();
-    let mut root = None;
     let mut nodes = 0;
     loop {
         match reader.read_event()? {
@@ -131,8 +153,7 @@ fn tree(text: &str) -> Result<Node> {
                 if let Some(parent) = stack.last_mut() {
                     parent.children.push(node);
                 } else {
-                    ensure!(root.is_none());
-                    root = Some(node);
+                    return Ok((node, reader.buffer_position() as usize));
                 }
             }
             Event::Text(text) => {
@@ -144,10 +165,8 @@ fn tree(text: &str) -> Result<Node> {
                 }
             }
             Event::Comment(_) => {}
-            Event::Eof => break,
+            Event::Eof => anyhow::bail!("incomplete XML"),
             _ => anyhow::bail!("unsupported XML construct"),
         }
     }
-    ensure!(stack.is_empty());
-    root.ok_or_else(|| anyhow::anyhow!("no root"))
 }

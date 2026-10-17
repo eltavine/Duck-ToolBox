@@ -15,6 +15,12 @@
   Supported private keys are EC P-256/P-384 and RSA 2048–8192; RSA-1024 is unsupported.
 - Verifies private-key PEM labels against their DER encoding. Inline inputs are limited
   to 32 KiB per file to fit shell transport; device file paths accept up to 256 KiB.
+- Finds XML document boundaries through parsed tags, accepts closing-tag whitespace,
+  and rejects illegal XML characters before exporting material.
+- Rejects trailing data in CSR CBOR items, including embedded signed payloads, protected
+  headers, DICE subject keys and configuration descriptors.
+- Resolves same-name certificate issuers by signature and handles self-issued key rotation
+  certificates without treating them as self-signed roots.
 
 ### Device RKP Issuer
 - Recognizes QTI as Qualcomm and gives the isolated worker vendor library search paths,

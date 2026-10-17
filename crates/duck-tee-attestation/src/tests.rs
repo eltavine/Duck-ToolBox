@@ -176,6 +176,32 @@ fn an_incomplete_or_ambiguous_chain_is_rejected() {
 }
 
 #[test]
+fn verifies_a_self_issued_key_rotation_certificate_in_the_chain() {
+    let root =
+        CertifiedIssuer::self_signed(params("rotating-ca"), KeyPair::generate().unwrap()).unwrap();
+    let intermediate =
+        CertifiedIssuer::signed_by(params("rotating-ca"), KeyPair::generate().unwrap(), &root)
+            .unwrap();
+    let key = KeyPair::generate().unwrap();
+    let leaf = params("offline-leaf")
+        .signed_by(&key, &intermediate)
+        .unwrap();
+    let (_, report) = keybox::extract(
+        &captured_pem(
+            &key.serialize_pem(),
+            &[
+                root.der().to_vec(),
+                intermediate.der().to_vec(),
+                leaf.der().to_vec(),
+            ],
+        ),
+        Format::Pem,
+    )
+    .unwrap();
+    assert_eq!(report.keys[0].certificates, 3);
+}
+
+#[test]
 fn xml_counts_nesting_and_multiple_documents_are_checked() {
     let (private, leaf, root) = bundle();
     let (xml, _) = keybox::extract(&captured_pem(&private, &[leaf, root]), Format::Pem).unwrap();
@@ -188,6 +214,43 @@ fn xml_counts_nesting_and_multiple_documents_are_checked() {
         xml.replace("</Keybox>", "</Key>"),
         xml.replace("<CertificateChain>", "<CertificateChain>&undefined;"),
     ] {
+        assert!(keybox::extract(bad.as_bytes(), Format::Xml).is_err());
+    }
+}
+
+#[test]
+fn xml_capture_boundaries_follow_tags_instead_of_comment_text() {
+    let (private, leaf, root) = bundle();
+    let capture = captured_pem(&private, &[leaf, root]);
+    let (xml, _) = keybox::extract(&capture, Format::Pem).unwrap();
+    let commented = xml.replace(
+        "<AndroidAttestation>",
+        "<AndroidAttestation><!-- closing marker: </AndroidAttestation> -->",
+    );
+    let mut captured = b"\xffcapture header\0\n".to_vec();
+    captured.extend_from_slice(commented.as_bytes());
+    captured.extend_from_slice(b"\0\xffcapture footer");
+    let (extracted, _) = keybox::extract(&captured, Format::Auto).unwrap();
+    assert_eq!(*xml, *extracted);
+
+    let closing_whitespace = xml.replace("</AndroidAttestation>", "</AndroidAttestation >");
+    assert!(keybox::extract(closing_whitespace.as_bytes(), Format::Xml).is_ok());
+    let mut logged_pem = b"<AndroidAttestationLog>captured PEM follows\n".to_vec();
+    logged_pem.extend_from_slice(&capture);
+    let (_, report) = keybox::extract(&logged_pem, Format::Auto).unwrap();
+    assert_eq!(report.input_format, "pem");
+}
+
+#[test]
+fn xml_device_ids_must_contain_only_valid_xml_characters() {
+    let (private, leaf, root) = bundle();
+    let (xml, _) = keybox::extract(&captured_pem(&private, &[leaf, root]), Format::Pem).unwrap();
+    for invalid in ['\0', '\u{1}', '\u{b}', '\u{fffe}', '\u{ffff}'] {
+        let bad = xml.replace("DeviceID=\"offline\"", &format!("DeviceID=\"a{invalid}b\""));
+        assert!(keybox::extract(bad.as_bytes(), Format::Xml).is_err());
+    }
+    for invalid in ["&#0;", "&#x1;", "&#xFFFE;"] {
+        let bad = xml.replace("DeviceID=\"offline\"", &format!("DeviceID=\"a{invalid}b\""));
         assert!(keybox::extract(bad.as_bytes(), Format::Xml).is_err());
     }
 }

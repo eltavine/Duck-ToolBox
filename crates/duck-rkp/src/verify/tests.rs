@@ -109,6 +109,16 @@ fn byte_string(value: &mut Value) -> &mut Vec<u8> {
     }
 }
 
+fn sign_entry(entry: &mut [Value], keys: &DeviceKeys) {
+    let input = build_sig_structure(
+        "Signature1",
+        as_bytes(&entry[0], "header").unwrap(),
+        as_bytes(&entry[2], "payload").unwrap(),
+    )
+    .unwrap();
+    entry[3] = bytes(keys.sign(&input));
+}
+
 fn encode_preserving_order(value: &Value) -> Vec<u8> {
     let mut bytes = Vec::new();
     into_writer(value, &mut bytes).unwrap();
@@ -146,6 +156,58 @@ fn verify_reports_valid_signature() {
     assert!(report.signature_valid);
     assert_eq!(report.csr_version, 3);
     assert_eq!(report.cert_type, "keymint");
+}
+
+#[test]
+fn verify_rejects_signed_payloads_and_headers_with_trailing_cbor() {
+    let keys = DeviceKeys::from_seed([0x11; 32]);
+    for (index, nested) in [(0, false), (2, false), (2, true)] {
+        let mut decoded = decode(&valid_csr()).unwrap();
+        let signed_data = array(&mut array(&mut decoded)[3]);
+        if nested {
+            let mut payload = decode(byte_string(&mut signed_data[2])).unwrap();
+            byte_string(&mut array(&mut payload)[1]).push(0);
+            signed_data[2] = bytes(encode(&payload).unwrap());
+        } else {
+            byte_string(&mut signed_data[index]).push(0);
+        }
+        sign_entry(signed_data, &keys);
+        assert!(verify_csr(&encode(&decoded).unwrap()).is_err());
+    }
+}
+
+#[test]
+fn verify_rejects_trailing_cbor_inside_signed_dice_entries() {
+    let keys = DeviceKeys::from_seed([0x11; 32]);
+    for (index, nested) in [(0, false), (2, false), (2, true)] {
+        let mut decoded = decode(&valid_csr()).unwrap();
+        let chain = array(&mut array(&mut decoded)[2]);
+        let entry = array(&mut chain[1]);
+        if nested {
+            let mut payload = decode(byte_string(&mut entry[2])).unwrap();
+            let Value::Map(fields) = &mut payload else {
+                panic!("DICE payload must be a map");
+            };
+            let (_, subject) = fields
+                .iter_mut()
+                .find(|(key, _)| *key == int(-4_670_552))
+                .unwrap();
+            byte_string(subject).push(0);
+            entry[2] = bytes(encode(&payload).unwrap());
+        } else {
+            byte_string(&mut entry[index]).push(0);
+        }
+        sign_entry(entry, &keys);
+        assert!(verify_csr(&encode(&decoded).unwrap()).is_err());
+    }
+
+    let mut configuration = encode(&Value::Map(vec![(int(-70_005), int(7))])).unwrap();
+    configuration.push(0);
+    let csr = csr_with_dice_fields(&[vec![
+        (int(-4_670_554), text("android.16")),
+        (int(-4_670_548), bytes(configuration)),
+    ]]);
+    assert!(verify_csr(&csr).is_err());
 }
 
 #[test]

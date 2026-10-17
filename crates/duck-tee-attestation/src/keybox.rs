@@ -54,7 +54,7 @@ pub(crate) struct Report {
 }
 
 pub(crate) fn extract(bytes: &[u8], format: Format) -> Result<(Zeroizing<String>, Report)> {
-    let xml_start = pem::find(bytes, b"<AndroidAttestation");
+    let xml_start = xml::find_start(bytes);
     let (mut boxes, input_format) = match format {
         Format::Xml => (xml::parse(bytes)?, "xml"),
         Format::Auto if xml_start.is_some() => (xml::parse(bytes)?, "xml"),
@@ -201,19 +201,21 @@ fn ordered_chain(pair: &KeyPair, certificates: &[Certificate]) -> Result<Vec<Cer
         loop {
             let current = chain.last().unwrap();
             let tbs = current.tbs_certificate();
-            if tbs.issuer() == tbs.subject() {
-                verify_certificate(current, current)?;
+            // Self-issued key rotation certificates share names with their issuer;
+            // only a valid self-signature terminates the path.
+            if tbs.issuer() == tbs.subject() && verify_certificate(current, current).is_ok() {
                 return Ok(chain);
             }
             let issuers = certificates
                 .iter()
-                .filter(|cert| cert.tbs_certificate().subject() == tbs.issuer())
+                .filter(|cert| {
+                    cert.tbs_certificate().subject() == tbs.issuer()
+                        && !chain.contains(cert)
+                        && verify_certificate(current, cert).is_ok()
+                })
                 .collect::<Vec<_>>();
             ensure!(issuers.len() == 1 && chain.len() < 8);
-            let issuer = issuers[0];
-            ensure!(!chain.contains(issuer));
-            verify_certificate(current, issuer)?;
-            chain.push(issuer.clone());
+            chain.push(issuers[0].clone());
         }
     };
     check().map_err(|_| {
