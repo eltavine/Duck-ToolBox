@@ -73,9 +73,9 @@ pub fn xposed_modules(ctx: &Context) -> Result<Vec<String>> {
 fn is_xposed_apk(path: &Path) -> Result<bool> {
     let file = File::open(path).with_context(|| format!("open {}", path.display()))?;
     let archive = zip::ZipArchive::new(file).with_context(|| format!("read {}", path.display()))?;
-    Ok(archive
-        .file_names()
-        .any(|name| XPOSED_MARKERS.contains(&name)))
+    Ok(XPOSED_MARKERS
+        .iter()
+        .any(|marker| archive.index_for_name(marker).is_some()))
 }
 
 #[cfg(test)]
@@ -101,6 +101,41 @@ mod tests {
     fn detects_legacy_and_modern_modules() {
         assert!(is_xposed_apk(apk_with(&["classes.dex", "assets/xposed_init"]).path()).unwrap());
         assert!(is_xposed_apk(apk_with(&["META-INF/xposed/java_init.list"]).path()).unwrap());
+        assert!(is_xposed_apk(apk_with(&["META-INF/xposed/module.prop"]).path()).unwrap());
         assert!(!is_xposed_apk(apk_with(&["classes.dex", "assets/other"]).path()).unwrap());
+    }
+
+    #[test]
+    fn ignores_unrelated_non_utf8_names() {
+        for (entry, expected) in [("assets/xposed_init", true), ("classes.dex", false)] {
+            let apk = apk_with(&["assets/other", entry]);
+            let mut bytes = std::fs::read(apk.path()).unwrap();
+            let name = b"assets/other";
+            for offset in 0..=bytes.len() - name.len() {
+                if bytes[offset..].starts_with(name) {
+                    bytes[offset + name.len() - 1] = 0xff;
+                }
+            }
+            std::fs::write(apk.path(), bytes).unwrap();
+
+            assert_eq!(is_xposed_apk(apk.path()).unwrap(), expected);
+        }
+    }
+
+    #[test]
+    fn requires_an_exact_marker_path() {
+        assert!(
+            !is_xposed_apk(
+                apk_with(&[
+                    "assets/xposed_init.bak",
+                    "META-INF/xposed/java_init.list.bak",
+                    "META-INF/xposed/module.properties",
+                    "nested/assets/xposed_init",
+                ])
+                .path()
+            )
+            .unwrap()
+        );
+        assert!(!is_xposed_apk(apk_with(&[]).path()).unwrap());
     }
 }
