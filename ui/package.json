@@ -58,7 +58,7 @@
     "eslint-plugin-boundaries": "^7.2.0",
     "eslint-plugin-vue": "^10.11.1",
     "fast-xml-parser": "^5.11.2",
-    "happy-dom": "^20.14.5",
+    "happy-dom": "^21.0.3",
     "jiti": "^2.7.0",
     "prettier": "^3.9.10",
     "tailwindcss": "^4.3.3",
