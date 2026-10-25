@@ -1,0 +1,64 @@
+{
+  "meta": {
+    "title": "TEE Attestation Extractor",
+    "description": "Wyodrębniaj pliki keybox ze zrzutów (captures) i weryfikuj materiał tożsamości RKP w trybie offline."
+  },
+  "scope": {
+    "title": "Przetwarzanie offline",
+    "description": "Używa istniejących plików zrzutów. Pobieranie danych z urządzenia nie jest częścią tego procesu. Pliki pozostają na tym urządzeniu; wyeksportowane dane zawierają materiały prywatne."
+  },
+  "input": {
+    "path": "Wprowadź ścieżkę do pliku na urządzeniu",
+    "choose": "Wybierz {label}",
+    "clear": "Wyczyść {label}",
+    "limit": "Wybierz niepusty plik o rozmiarze maksymalnie 32 KiB. W przypadku większych zrzutów wprowadź ścieżkę do pliku na urządzeniu (do 256 KiB)."
+  },
+  "keybox": {
+    "description": "Akceptuje pakiety keybox w formacie XML lub PEM, w tym materiały osadzone w zrzutach. Sprawdza zgodność klucza prywatnego oraz każdy podpis certyfikatu.",
+    "source": "Zrzut pliku keybox",
+    "run": "Wyodrębnij i zweryfikuj",
+    "count": "Pliki keybox",
+    "certificates": "Certyfikaty: {count}",
+    "validity": "W okresie ważności",
+    "limits": "Sprawdzane są podpisy oraz zgodność klucza. Zaufanie do certyfikatu głównego (root) oraz odwołania nie są weryfikowane; nie stanowi to dowodu akceptacji przez Google.",
+    "export": "Eksportuj keybox",
+    "installed": "Keybox zainstalowany",
+    "install": "Zainstaluj w {target}"
+  },
+  "seed": {
+    "title": "Tożsamość RKP",
+    "description": "Porównaj 32-bajtowego kandydata z liściem podpisującym (signing leaf) uwierzytelnionego żądania CSR. Wybierz derywację używaną przez urządzenie źródłowe.",
+    "source": "Zrzut tożsamości",
+    "csr": "Plik CSR",
+    "format": "Kodowanie wejściowe",
+    "raw": "Surowe bajty",
+    "hex": "64 znaki szesnastkowe",
+    "derivation": "Derywacja klucza",
+    "scalar": "Skalar prywatny P-256",
+    "offset": "Przesunięcie w bajtach (offset, opcjonalnie)",
+    "offsetHint": "Pozostaw puste dla dokładnie 32-bajtowych danych wejściowych. Podaj dziesiętne przesunięcie, aby wyodrębnić 32 bajty z większego, surowego zrzutu.",
+    "run": "Zweryfikuj tożsamość",
+    "matched": "Kandydat jest zgodny z tożsamością podpisującą CSR.",
+    "mismatch": "Kandydat nie jest zgodny z tożsamością podpisującą CSR.",
+    "limits": "Weryfikuje łańcuch DICE oraz podpis CSR. Zgodność nie dowodzi rejestracji na serwerze ani wydania certyfikatu. Skalar nie jest zamienny z seedem.",
+    "export": "Eksportuj dopasowaną tożsamość"
+  },
+  "result": {
+    "title": "Wynik weryfikacji",
+    "sourceHash": "SHA-256 zrzutu",
+    "publicHash": "SHA-256 klucza publicznego",
+    "csrHash": "SHA-256 CSR",
+    "yes": "Tak",
+    "no": "Nie",
+    "saved": "Prywatne pliki zostały zapisane",
+    "material": "Plik materiału",
+    "report": "Raport z weryfikacji"
+  },
+  "errors": {
+    "invalid_input": "Nie można odczytać danych wejściowych lub żądania.",
+    "invalid_keybox": "Weryfikacja pliku keybox nie powiodła się.",
+    "invalid_identity": "Weryfikacja tożsamości lub CSR nie powiodła się.",
+    "identity_mismatch": "Tożsamość nie jest zgodna; nic nie wyeksportowano.",
+    "output_error": "Nie udało się zapisać kompletnych danych wyjściowych."
+  }
+}

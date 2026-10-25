@@ -1,0 +1,102 @@
+{
+  "meta": {
+    "title": "Device RKP Issuer",
+    "description": "Podpisz klucz P-256 za pomocą aplikacji KeyMint TA tego urządzenia i uzyskaj łańcuch certyfikatów RKP od Google, wyeksportowany jako keybox.xml.",
+    "warning": "Działa to tylko na niektórych urządzeniach i wydaje wyłącznie certyfikaty RKP. Metody natywne korzystają z prywatnego ABI Qualcomm KeyMint, które może różnić się w zależności od oprogramowania układowego (firmware). Urządzenia MediaTek używają wyłącznie mostka V1 AIDL; zgodność firmware'u oraz akceptacja przez serwer pozostają niezweryfikowane. Niezgodne ABI może spowodować awarię procesu roboczego lub zaufanej aplikacji. Wyeksportowany keybox zawiera klucz prywatny wygenerowany programowo; chroń te pliki. Przeczytaj wymagania wstępne przed kontynuowaniem."
+  },
+  "warning": {
+    "title": "Zanim przejdziesz dalej"
+  },
+  "limitations": {
+    "partial_device_support": "Obsługiwane są tylko niektóre urządzenia. V1 AIDL wymaga app_process oraz pliku APK RKP AIDL urządzenia. V2 wymaga /dev/smcinvoke oraz libkeymasterdeviceutils.so. V1 AIDL: PureSoft HBK=0. Po niepowodzeniu pozostałych dostępnych metod tryb automatyczny próbuje również metody Native V1.",
+    "rkp_only": "Można wydawać wyłącznie certyfikaty RKP. Do uzyskania podpisanego żądania CSR wymagane jest kompatybilne urządzenie. Wyeksportowany klucz prywatny jest generowany programowo; żaden klucz prywatny nie jest wyodrębniany ze środowiska TEE."
+  },
+  "status": {
+    "title": "Wymagania wstępne",
+    "description": "Sprawdzono lokalnie bez wysyłania jakichkolwiek danych do KeyMint ani do serwera.",
+    "reload": "Sprawdź ponownie",
+    "platform": "Platforma",
+    "root": "Dostęp root",
+    "vendor": "Producent SoC",
+    "vendorOk": "Identyfikacja SoC",
+    "library": "Biblioteka Keymaster",
+    "device": "Węzeł urządzenia",
+    "fingerprint": "Odcisk palca kompilacji (fingerprint)",
+    "yes": "Tak",
+    "no": "Nie",
+    "unknown": "Nieznane",
+    "prerequisitesMet": "Wymagania wstępne spełnione",
+    "prerequisitesMissing": "Brakujące wymagania wstępne",
+    "blockers": "Czego brakuje",
+    "socModel": "Model SoC",
+    "evidence": "Dowody detekcji",
+    "detected": "Wykryto",
+    "otherVendor": "Inny producent",
+    "conflicting": "Sprzeczne informacje",
+    "compatibility": "Zgodność firmware'u / serwera",
+    "unverified": "Niezweryfikowano"
+  },
+  "blockers": {
+    "android_arm64_required": "Ta kompilacja musi być uruchomiona na Androidzie arm64.",
+    "root_required": "Dostęp root jest wymagany, aby połączyć się z zaufaną aplikacją KeyMint.",
+    "keymint_library_missing": "Nie znaleziono pliku libkeymasterdeviceutils.so w katalogu /vendor/lib64.",
+    "smcinvoke_missing": "Plik /dev/smcinvoke nie istnieje.",
+    "qualcomm_soc_required": "Zidentyfikowano nieobsługiwanego producenta SoC; ta operacja wymaga KeyMint firmy Qualcomm lub MediaTek.",
+    "fingerprint_missing": "Brak odcisku palca kompilacji, przez co serwer nie może powiązać żądania challenge.",
+    "soc_vendor_unknown": "Nie udało się zidentyfikować producenta SoC na podstawie właściwości lokalnych ani informacji o jądrze.",
+    "soc_vendor_conflict": "Lokalne informacje o SoC są sprzeczne. Przejrzyj dowody detekcji przed kontynuowaniem.",
+    "v1_unavailable": "Metoda V1 wymaga app_process oraz pliku APK RKP AIDL urządzenia.",
+    "v2_unavailable": "Metoda V2 wymaga /dev/smcinvoke oraz libkeymasterdeviceutils.so.",
+    "v1_native_unavailable": "Metoda V1 Native wymaga /dev/smcinvoke oraz libkeymasterdeviceutils.so."
+  },
+  "run": {
+    "provision": "Wydaj keybox RKP",
+    "done": "Keybox RKP został wydany",
+    "blocked": "Rozwiąż problem z brakującymi wymaganiami wstępnymi powyżej przed wydaniem.",
+    "title": "Wynik",
+    "mode": "Tryb",
+    "fingerprint": "Odcisk palca (fingerprint)",
+    "challenge": "Challenge",
+    "csr": "CSR",
+    "localVerify": "Weryfikacja lokalna",
+    "valid": "Prawidłowy",
+    "invalid": "Nieprawidłowy",
+    "certificates": "Certyfikaty",
+    "deviceId": "Identyfikator urządzenia",
+    "keybox": "Plik keybox",
+    "privateKey": "Klucz prywatny",
+    "certChain": "Łańcuch certyfikatów",
+    "install": "Zainstaluj w {target}",
+    "installed": "Keybox zainstalowany w {target}",
+    "backup": "Kopia zapasowa poprzedniego pliku została zapisana w {path}.",
+    "onlyRkp": "Certyfikat RKP",
+    "onlyRkpHint": "Łańcuch został podpisany przez Google dla klucza znajdującego się w pliku keybox. Zachowaj plik klucza prywatnego: bez niego plik keybox jest bezużyteczny.",
+    "protocol": "Protokół",
+    "auto": "Automatyczny (wypróbuj wszystkie metody)",
+    "structureOnly": "Sprawdzono strukturę; zaszyfrowane dane potwierdzające są weryfikowane przez serwer",
+    "backend": "Backend",
+    "attempts": "Próby",
+    "succeeded": "Zakończono pomyślnie"
+  },
+  "confirm": {
+    "title": "Wysłać żądanie do KeyMint TA?",
+    "body": "Ta operacja uruchamia mechanizm RKP (V1 / V2) w zaufanej aplikacji KeyMint urządzenia i przesyła wynik do Google. Działa to tylko na niektórych urządzeniach i wydaje wyłącznie certyfikaty RKP. Wyeksportowane pliki zawierają klucz prywatny; chroń je. Kontynuować?"
+  },
+  "errors": {
+    "acknowledgement_required": "Ograniczenia nie zostały zaakceptowane.",
+    "unsupported_device": "To urządzenie nie spełnia wymagań wstępnych.",
+    "ta_timeout": "Zaufana aplikacja KeyMint nie odpowiedziała na czas.",
+    "ta_transport_error": "Komunikacja z zaufaną aplikacją KeyMint nie powiodła się; ABI oprogramowania układowego może być niezgodne.",
+    "ta_rejected": "Zaufana aplikacja KeyMint odrzuciła żądanie.",
+    "invalid_ta_response": "Zaufana aplikacja KeyMint zwróciła nieprawidłowo sformatowaną odpowiedź.",
+    "invalid_device_csr": "CSR zwrócony przez urządzenie nie przeszedł walidacji.",
+    "certificate_key_mismatch": "Wydany certyfikat nie pasuje do wygenerowanego klucza.",
+    "invalid_server_url": "Adres URL serwera prowizjonowania jest nieprawidłowy.",
+    "unsupported_eek_curve": "Serwer zwrócił nieobsługiwaną krzywą EEK.",
+    "invalid_rkp_response": "Odpowiedź serwera RKP jest nieprawidłowa.",
+    "device_not_registered": "Serwer RKP nie rozpoznaje tego urządzenia.",
+    "rkp_client_error": "Serwer RKP odrzucił żądanie.",
+    "rkp_server_error": "Błąd serwera RKP.",
+    "all_methods_failed": "Wszystkie dostępne metody wydawania nie powiodły się. Przejrzyj błędy dla poszczególnych prób."
+  }
+}

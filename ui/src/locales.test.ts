@@ -21,6 +21,7 @@ const complete = [
   "vi",
   "id",
   "uk",
+  "pl",
 ]
 const directories = [
   "core/i18n/locales",

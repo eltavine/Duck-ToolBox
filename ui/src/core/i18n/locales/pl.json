@@ -1,0 +1,85 @@
+{
+  "app": {
+    "name": "Duck ToolBox",
+    "tagline": "Narzędzia bezpieczeństwa dla KernelSU, APatch i Magisk"
+  },
+  "nav": {
+    "home": "Główna",
+    "settings": "Ustawienia",
+    "back": "Wstecz",
+    "more": "Więcej opcji",
+    "notFound": "Ta strona nie istnieje."
+  },
+  "actions": {
+    "save": "Zapisz",
+    "cancel": "Anuluj",
+    "close": "Zamknij",
+    "confirm": "Zatwierdź",
+    "copy": "Kopiuj",
+    "copied": "Skopiowano do schowka",
+    "copyFailed": "Kopiowanie nie jest tutaj dostępne",
+    "retry": "Ponów",
+    "refresh": "Odśwież",
+    "reset": "Zresetuj",
+    "remove": "Usuń",
+    "edit": "Edytuj",
+    "add": "Dodaj",
+    "open": "Otwórz",
+    "continue": "Kontynuuj",
+    "details": "Szczegóły",
+    "browse": "Przeglądaj",
+    "import": "Importuj",
+    "export": "Eksportuj",
+    "install": "Zainstaluj",
+    "search": "Szukaj",
+    "clear": "Wyczyść",
+    "done": "Gotowe"
+  },
+  "home": {
+    "tools": "Narzędzia",
+    "system": "System",
+    "missing": "Brak w tej kompilacji",
+    "outdated": "Zaktualizuj moduł",
+    "checking": "Sprawdzanie…",
+    "noHost": "Otwórz Duck ToolBox z poziomu KernelSU, APatch lub aplikacji WebUI, aby uruchomić narzędzia.",
+    "confirmTitle": "Zanim przejdziesz dalej"
+  },
+  "settings": {
+    "appearance": "Wygląd",
+    "theme": "Motyw",
+    "themeSystem": "Systemowy",
+    "themeLight": "Jasny",
+    "themeDark": "Ciemny",
+    "language": "Język",
+    "languageSystem": "Domyślny systemu",
+    "about": "O programie",
+    "version": "Wersja",
+    "authors": "Autorzy",
+    "repository": "Kod źródłowy",
+    "license": "Licencja",
+    "acknowledgements": "Podziękowania",
+    "trickyAddon": "Menedżer Tricky Store to port Tricky Addon autorstwa KOWX712.",
+    "aospKeybox": "Dołączony AOSP keybox to referencyjny klucz atestacji z AOSP system/keymaster."
+  },
+  "files": {
+    "title": "Wybierz plik",
+    "empty": "Brak pasujących plików w tym folderze.",
+    "up": "Poziom wyżej",
+    "system": "Systemowy selektor plików",
+    "loadFailed": "Nie można odczytać tego folderu."
+  },
+  "errors": {
+    "title": "Coś poszło nie tak",
+    "command": "Polecenie",
+    "code": "Kod",
+    "message": "Komunikat",
+    "details": "Szczegóły",
+    "host_unavailable": "Brak dostępnego hosta root WebUI w tym miejscu.",
+    "api_mismatch": "Zainstalowany backend obsługuje inny protokół. Zainstaluj moduł ponownie.",
+    "contract_mismatch": "Backend zwrócił dane, których ten interfejs WebUI nie rozumie. Zainstaluj moduł ponownie.",
+    "no_envelope": "Backend nie odpowiedział.",
+    "binary_not_found": "W module brakuje pliku binarnego backendu.",
+    "usage_error": "Backend odrzucił żądanie.",
+    "internal_error": "Backend zgłosił błąd."
+  }
+}

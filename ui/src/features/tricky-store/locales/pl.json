@@ -1,4 +1,137 @@
 {
+  "meta": {
+    "title": "Tricky Store",
+    "description": "Lista celów, keybox i zasady dla Tricky Store, TEESimulator oraz OhMyKeymint."
+  },
+  "backend": {
+    "none": "Nie znaleziono modułu keystore",
+    "noneHint": "Zainstaluj Tricky Store, TEESimulator lub OhMyKeymint, a następnie uruchom urządzenie ponownie. Ta strona zarządza aktualnie aktywnym modułem.",
+    "title": "Moduły keystore",
+    "active": "Aktywny",
+    "inactive": "Wyłączony",
+    "disabled": "Moduł {name} jest wyłączony w Twoim menedżerze roota. Zmiany zostały zapisane i zaczną obowiązywać po jego włączeniu i ponownym uruchomieniu urządzenia.",
+    "configError": "Nie udało się odczytać bieżącej konfiguracji; zapisywanie zostało zablokowane: {error}",
+    "names": {
+      "tricky-store": "Tricky Store",
+      "tricky-store-legacy": "Tricky Store (starsza wersja)",
+      "tee-simulator": "TEESimulator",
+      "oh-my-keymint": "OhMyKeymint"
+    }
+  },
+  "list": {
+    "selected": "Wybrano: {count}",
+    "empty": "Brak aplikacji pasujących do wyszukiwania.",
+    "system": "Systemowe",
+    "tune": "Tryb i zasady dla {name}",
+    "customPolicy": "Niestandardowa zasada",
+    "unsaved": "Niezapisane zmiany",
+    "discard": "Odrzuć",
+    "discarded": "Odrzucono zmiany",
+    "refresh": "Odśwież",
+    "selectAll": "Zaznacz wszystko",
+    "deselectAll": "Odznacz wszystko",
+    "selectedCount": "Zaznaczono aplikacji: {count}",
+    "deselectedCount": "Odznaczono aplikacji: {count}",
+    "nothingChanged": "Brak zmian",
+    "more": "Więcej",
+    "autoAdd": "Automatycznie dodawaj nowe aplikacje",
+    "autoAddHint": "Nowo zainstalowane aplikacje będą dodawane do listy celów podczas uruchamiania systemu.",
+    "shortcuts": "Ctrl+A zaznacz wszystko, Ctrl+D odznacz wszystko, Ctrl+F szukaj, Ctrl+S zapisz"
+  },
+  "keybox": {
+    "status": "Zainstalowany keybox",
+    "missing": "Brak zainstalowanego pliku keybox",
+    "modified": "Zmodyfikowano",
+    "size": "Rozmiar",
+    "path": "Ścieżka",
+    "sources": "Zainstaluj keybox",
+    "aospHint": "Programowy keybox z AOSP.",
+    "unknownHint": "Samopodpisany keybox wygenerowany na tym urządzeniu.",
+    "localHint": "Plik keybox.xml z pamięci urządzenia.",
+    "repoHint": "Przeglądaj repozytorium keyboxów społeczności.",
+    "custom": "Niestandardowi dostawcy",
+    "customEmpty": "Brak niestandardowych dostawców.",
+    "addProvider": "Dodaj dostawcę",
+    "editProvider": "Edytuj dostawcę",
+    "url": "URL",
+    "decodeHint": "Dozwolone polecenia: cat, base64 -d, xxd -r -p, połączone znakiem {'|'}",
+    "import": "Importuj",
+    "export": "Eksportuj",
+    "resetProviders": "Przywróć domyślne",
+    "installedDetail": "Liczba kluczy: {count} w {path}",
+    "backup": "Poprzedni keybox zapisano w {path}",
+    "systemPicker": "Wybierz za pomocą menedżera plików",
+    "repoLoading": "Łączenie z repozytorium keyboxów…",
+    "repoTitle": "Repozytorium keyboxów",
+    "omkCompatibilityTitle": "Zgodność keyboxa z OMK",
+    "omkCompatibilityDescription": "Starsze kompilacje OMK wymagają w pliku keybox zarówno kluczy EC, jak i RSA. Pliki zawierające wyłącznie EC (w tym eksporty RKP) wymagają wsparcia dodanego w commicie b12557c; brakujące RSA korzysta wtedy z dołączonego łańcucha AOSP RSA. Nie można automatycznie zweryfikować wsparcia dla zainstalowanej kompilacji. Kontynuować instalację?",
+    "continueInstall": "Kontynuuj instalację"
+  },
+  "policy": {
+    "none": "Aktywny moduł nie ma domyślnej zasady.",
+    "hint": "Pozostaw pole puste, aby zachować wartość domyślną modułu.",
+    "saved": "Zapisano domyślną zasadę",
+    "restart": "Uruchom ponownie urządzenie, aby zastosować zmienione ustawienia Verified Boot i systemu.",
+    "custom": "Niestandardowa zasada dla tej aplikacji",
+    "fields": {
+      "os_patch": "Poprawka systemu",
+      "vendor_patch": "Poprawka dostawcy (vendor)",
+      "boot_patch": "Poprawka rozruchu (boot)",
+      "os_version": "Wersja systemu",
+      "security_patch": "Poprawka zabezpieczeń",
+      "os_patchlevel": "Poziom poprawki systemu",
+      "vendor_patchlevel": "Poziom poprawki dostawcy",
+      "boot_patchlevel": "Poziom poprawki rozruchu",
+      "vb_key": "Klucz Verified Boot",
+      "vb_hash": "Skrót (hash) Verified Boot",
+      "verified_boot_state": "Stan Verified Boot: zielony (green)",
+      "device_locked": "Zablokowany bootloader",
+      "mode": "Tryb działania",
+      "brand": "Marka",
+      "device": "Urządzenie",
+      "product": "Produkt",
+      "manufacturer": "Producent",
+      "model": "Model",
+      "serial": "Numer seryjny",
+      "imei": "IMEI",
+      "imei2": "IMEI 2",
+      "meid": "MEID",
+      "autoIncludeNewApps": "Automatycznie dołączaj nowe aplikacje"
+    }
+  },
+  "props": {
+    "handlerHint": "Resetuje właściwości bootloadera, Verified Boot i debugowania podczas rozruchu, aby urządzenie wyglądało na zablokowane.",
+    "bootHashHint": "Wartość verifiedBootHash z aplikacji Key Attestation. Pozostaw puste, aby przestać nadpisywać ro.boot.vbmeta.digest.",
+    "invalidHash": "Wprowadź 64 lub 128 znaków szesnastkowych",
+    "synced": "Zapisano również do zasady vb_hash modułu"
+  },
+  "entry": {
+    "title": "Wpis modułu keystore",
+    "description": "Otwórz tę stronę z poziomu WebUI (lub przycisku akcji) modułu {module} w swoim menedżerze roota.",
+    "ownWebui": "Moduł {module} posiada własny interfejs WebUI, więc żaden wpis nie został dodany.",
+    "noModule": "Zainstaluj moduł keystore, aby dodać do niego wpis."
+  },
+  "translations": {
+    "title": "Tłumaczenia Tricky Addon",
+    "version": "Pakiet {version}",
+    "help": "Pomóż w tłumaczeniu",
+    "telegram": "Tricky Addon na Telegramie",
+    "guide": "Menedżer Tricky Store korzysta z tłumaczeń Tricky Addon. Możesz je ulepszyć na platformie [Crowdin](https://crowdin.com/project/TA_utl); opcja *Zaktualizuj pakiet tłumaczeń* pobiera najnowsze wersje bez konieczności aktualizacji modułu.\n\nWszystkie pozostałe teksty tłumaczone są w plikach `locales/*.json` projektu Duck ToolBox. Otwórz Pull Request na [GitHubie]({repository}), aby dodać lub poprawić język."
+  },
+  "help": {
+    "modes": "Tryby",
+    "modesDescription": "Przytrzymaj dłużej wybraną aplikację (lub stuknij jej przycisk konfiguracji), aby wymusić generowanie certyfikatu (`!`), hack liścia/leaf hack (`?`) lub nadać jej własną zasadę. Obsługuje to wyłącznie Tricky Store.",
+    "backends": "Obsługiwane moduły",
+    "backendsDescription": "Tricky Store (config.ini oraz starszy target.txt), TEESimulator (config.json) i OhMyKeymint (injector.toml oraz config.toml). Duck ToolBox zapisuje konfigurację w formacie właściwym dla aktywnego modułu."
+  },
+  "errors": {
+    "no_backend": "Brak zainstalowanego modułu keystore",
+    "invalid_keybox": "Nieprawidłowy keybox",
+    "unsupported_decoder": "Niedozwolony krok dekodowania",
+    "invalid_policy": "Nieprawidłowa wartość zasady",
+    "backend_rule": "Odrzucono przez reguły modułu keystore",
+    "download_failed": "Pobieranie nie powiodło się"
+  },
   "ta": {
     "help_help_instructions": "Instrukcje",
     "help_save_and_update_description": "Zapisz bieżącą konfigurację.",

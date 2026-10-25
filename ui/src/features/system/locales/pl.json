@@ -1,0 +1,77 @@
+{
+  "meta": {
+    "title": "Moduł i aktualizacje",
+    "description": "Wersje, aktualizacje, pliki wyjściowe, historia poleceń i konserwacja."
+  },
+  "device": {
+    "title": "To urządzenie",
+    "android": "Android {release} · API {sdk}",
+    "patch": "Poprawka zabezpieczeń",
+    "kernel": "Jądro (kernel)",
+    "selinux": "SELinux",
+    "rootManager": "Menedżer roota",
+    "module": "Duck ToolBox",
+    "notDetected": "Nie wykryto"
+  },
+  "rootManagers": {
+    "kernel-su": "KernelSU",
+    "apatch": "APatch",
+    "magisk": "Magisk"
+  },
+  "selinux": {
+    "enforcing": "Enforcing",
+    "permissive": "Permissive"
+  },
+  "module": {
+    "title": "Moduł",
+    "id": "Identyfikator modułu",
+    "version": "Wersja modułu",
+    "binary": "Wersja backendu",
+    "author": "Autor"
+  },
+  "update": {
+    "title": "Aktualizacje",
+    "channel": "Kanał aktualizacji",
+    "stable": "Stabilny",
+    "canary": "Canary (kompilacje CI)",
+    "off": "Wyłączony",
+    "check": "Sprawdź aktualizacje",
+    "upToDate": "Masz najnowszą wersję.",
+    "available": "Wersja {version} jest dostępna",
+    "install": "Zainstaluj aktualizację",
+    "installed": "Aktualizacja zainstalowana. Uruchom ponownie urządzenie, aby ją zastosować.",
+    "reboot": "Uruchom ponownie teraz",
+    "changelog": "Co nowego",
+    "banner": "Dostępna jest wersja Duck ToolBox {version}",
+    "view": "Pokaż"
+  },
+  "files": {
+    "title": "Pliki wyjściowe",
+    "empty": "Narzędzia nie zapisały jeszcze żadnych plików.",
+    "folder": "Zapisano w {path}"
+  },
+  "activity": {
+    "title": "Historia poleceń",
+    "empty": "Nie wykonano jeszcze żadnych poleceń.",
+    "all": "Pokaż wszystko",
+    "loadMore": "Wczytaj więcej",
+    "loadingMore": "Wczytywanie…",
+    "retryMore": "Ponów wczytywanie",
+    "failed": "Niepowodzenie"
+  },
+  "maintenance": {
+    "title": "Konserwacja",
+    "reboot": "Uruchom ponownie urządzenie",
+    "rebootConfirm": "Uruchomić urządzenie ponownie teraz?",
+    "uninstall": "Odinstaluj Duck ToolBox",
+    "uninstallConfirm": "Duck ToolBox zostanie usunięty przy następnym restarcie. Zapisane profile oraz pliki wyjściowe w /data/adb/duck-toolbox pozostaną nienaruszone.",
+    "uninstalled": "Duck ToolBox zostanie usunięty po następnym ponownym uruchomieniu."
+  },
+  "errors": {
+    "no_root_manager": "Nie znaleziono obsługiwanego menedżera roota.",
+    "invalid_url": "Można otwierać wyłącznie linki http(s).",
+    "no_update": "Brak dostępnych aktualizacji.",
+    "invalid_package": "Pobrany plik nie jest modułem Duck ToolBox.",
+    "download_failed": "Pobieranie nie powiodło się."
+  }
+}

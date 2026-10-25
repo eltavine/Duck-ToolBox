@@ -1,0 +1,52 @@
+{
+  "meta": {
+    "title": "Device ID Provisioner",
+    "description": "Zapisuj identyfikatory urządzeń do atestacji za pośrednictwem Qualcomm QSEECom lub MediaTek TrustKernel.",
+    "warning": "Zostało to przetestowane wyłącznie na niektórych urządzeniach OnePlus z procesorami Qualcomm. Działanie na innych urządzeniach nie jest gwarantowane, a bezpośredni zapis zmienia identyfikatory poświadczane przez Keymaster TA. Prowizjonowanie w TrustKernel jest eksperymentalne. Zapisuje ono rkp_flag oraz attestation_ids oddzielnie; niepowodzenie może skutkować zapisem częściowym. Weryfikacja sprawdza jedynie istnienie obiektów. Lokalizacje MEID oraz QSEECom TA nie mają tutaj zastosowania."
+  },
+  "form": {
+    "main": "Identyfikatory",
+    "mainHint": "Wypełniono na podstawie tego urządzenia. Zmień je tylko wtedy, gdy chcesz je dopasować do urządzenia docelowego.",
+    "advanced": "Zaawansowane",
+    "advancedHint": "IMEI, MEID oraz lokalizacja zaufanej aplikacji (TA).",
+    "brand": "Marka",
+    "device": "Kod urządzenia",
+    "product": "Produkt",
+    "serial": "Numer seryjny",
+    "manufacturer": "Producent",
+    "model": "Model",
+    "imei": "IMEI",
+    "imei2": "IMEI 2",
+    "meid": "MEID",
+    "meid2": "MEID 2",
+    "taName": "Nazwa TA",
+    "taPath": "Ścieżka do TA",
+    "dryRun": "Uruchomienie testowe (dry run)",
+    "dryRunHint": "Zbuduj i zweryfikuj polecenie bez wysyłania go do Keymastera.",
+    "reload": "Wczytaj ponownie z urządzenia",
+    "provision": "Zainicjuj identyfikatory urządzenia",
+    "provisionDry": "Wykonaj uruchomienie testowe",
+    "confirm": "Zapisać te identyfikatory w Keymasterze teraz? Tej operacji nie można cofnąć z poziomu Duck ToolBox.",
+    "trustkernelHint": "Prowizjonowanie w TrustKernel jest eksperymentalne. Zapisuje ono rkp_flag oraz attestation_ids oddzielnie; niepowodzenie może skutkować zapisem częściowym. Weryfikacja sprawdza jedynie istnienie obiektów. Lokalizacje MEID oraz QSEECom TA nie mają tutaj zastosowania."
+  },
+  "result": {
+    "title": "Wynik",
+    "done": "Prowizjonowanie identyfikatorów urządzenia zakończone",
+    "mode": "Tryb",
+    "dry": "Uruchomienie testowe (dry run)",
+    "live": "Zapis bezpośredni",
+    "count": "Zapisane wpisy",
+    "taVersion": "Wersja TA",
+    "library": "Biblioteka",
+    "report": "Raport",
+    "notAvailable": "Niedostępne",
+    "backend": "Backend",
+    "verification": "Weryfikacja",
+    "existenceOnly": "Tylko istnienie obiektów",
+    "taAcknowledgement": "Potwierdzenie TA",
+    "omitted": "Niezapisane"
+  },
+  "errors": {
+    "missing_device_field": "Wymagany identyfikator jest pusty."
+  }
+}
