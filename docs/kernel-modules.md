@@ -14,6 +14,7 @@ compatibility with a particular vendor kernel or security policy.
 | --- | --- |
 | Loaded module rows, missing reference counts, permanent markers and states | [ACK procfs.c](https://android.googlesource.com/kernel/common/+/2bdbbebc3bff5804c139a0806aeb96187b3cbb24/kernel/module/procfs.c) |
 | Module permission, image validation, loading and removal checks | [ACK main.c](https://android.googlesource.com/kernel/common/+/2bdbbebc3bff5804c139a0806aeb96187b3cbb24/kernel/module/main.c) |
+| ELF section-table layout, offsets and sizes | [System V ELF sections](https://gabi.xinuos.com/elf/03-sheader.html) |
 | Release-prefix comparison when symbol CRCs exist | [ACK version.c](https://android.googlesource.com/kernel/common/+/2bdbbebc3bff5804c139a0806aeb96187b3cbb24/kernel/module/version.c) |
 | Parameter getter output and appended newline | [ACK params.c](https://android.googlesource.com/kernel/common/+/2bdbbebc3bff5804c139a0806aeb96187b3cbb24/kernel/params.c) |
 | Module holder links and per-module taint flags | [ACK sysfs.c](https://android.googlesource.com/kernel/common/+/2bdbbebc3bff5804c139a0806aeb96187b3cbb24/kernel/module/sysfs.c) and [main.c](https://android.googlesource.com/kernel/common/+/2bdbbebc3bff5804c139a0806aeb96187b3cbb24/kernel/module/main.c) |
@@ -48,6 +49,11 @@ Preflight requires a little-endian ARM64 ELF64 image and one nonempty vermagic e
 The release-prefix comparison is advisory: the kernel can ignore this prefix when
 symbol CRCs are available. A matching prefix does not establish ABI, symbol or
 signature compatibility. ELF metadata is descriptive, not proof of trusted code.
+The displayed name uses the first `name` metadata entry. Without one it is a
+filename estimate, replacing hyphens and commas with underscores as in Kbuild.
+The interface marks inferred names and repeated name entries explicitly. The
+kernel's embedded module structure ultimately determines its runtime name;
+neither the filename nor descriptive metadata attests to that identity.
 
 Removal requests use `O_NONBLOCK`; `O_TRUNC` is never passed. Live state, zero
 references and absence of dependents/holders are preliminary checks. The kernel
@@ -106,6 +112,15 @@ Metadata is limited to 1 MiB, 8192 entries and 128 distinct keys of at most 128
 bytes each. These are application resource budgets, not ELF or kernel limits;
 over-budget input is rejected rather than silently truncated. The metadata view
 mounts its contents only when expanded.
+Inspection requires one `.modinfo` section and rejects duplicate sections instead
+of silently selecting one. Invalid metadata offsets report `invalid_input` rather
+than a generic operation failure. These checks do not implement the kernel's full
+ELF, symbol, signature or ABI validation.
+
+Load parameters have an application budget of 4096 UTF-8 bytes, separate from
+JavaScript string length and from kernel argument limits. Both backend and WebUI
+reject Unicode control characters (U+0000–U+001F and U+007F–U+009F). The UI reports
+invalid parameters before confirmation and preserves the input for correction.
 
 ## Interface and localization
 
@@ -135,6 +150,9 @@ metadata labels are translated; numbers follow the selected locale. Paths, modul
 names and hashes retain their character direction without forcing the whole row
 to left alignment. Message keys, nonempty translations and named placeholders are
 checked across locales. File inspection supports Enter from the path field.
+Inspection progress is announced, and errors remain visible with a details action.
+Changing the path clears errors for the previous input revision. Invalid path and
+parameter fields link their accessible descriptions to the corresponding error.
 Cancel restores the initiating control's focus; accepted operations move focus to
 the active tab because mutations can disable or remove the initiating control.
 

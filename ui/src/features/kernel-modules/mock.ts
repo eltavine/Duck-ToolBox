@@ -78,9 +78,14 @@ const mock: MockModule = {
     "kernel-modules.inspect": (args) => {
       const path = args[0] ?? samplePath
       if (path.includes("invalid")) throw new MockFailure("invalid_input", "Invalid ELF module")
+      const name = path.includes("long-name")
+        ? "a".repeat(56)
+        : path.includes("no-name")
+          ? "no_name"
+          : "sample"
       return {
         path,
-        name: path.includes("long-name") ? "a".repeat(56) : "sample",
+        name,
         size: 65536,
         sha256: "ab".repeat(32),
         architecture: path.includes("arm32") ? "arm" : "aarch64",
@@ -89,6 +94,9 @@ const mock: MockModule = {
         versioned_symbols: true,
         warnings: [],
         metadata: {
+          ...(path.includes("no-name")
+            ? {}
+            : { name: path.includes("repeated-name") ? [name, "other"] : [name] }),
           license: ["GPL"],
           description: ["Example kernel module"],
           vermagic: [

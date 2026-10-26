@@ -119,17 +119,26 @@ fn parse(sysroot: &Sysroot, path: &str, bytes: &[u8]) -> Result<FileInfo> {
             && object.kind() == object::ObjectKind::Relocatable,
         ModuleError::InvalidInput("expected a relocatable ELF kernel module".into())
     );
-    let section = object
-        .section_by_name(".modinfo")
+    let mut metadata_sections = object
+        .sections()
+        .filter(|section| section.name_bytes().is_ok_and(|name| name == b".modinfo"));
+    let section = metadata_sections
+        .next()
         .ok_or_else(|| ModuleError::InvalidInput("ELF has no .modinfo section".into()))?;
+    ensure!(
+        metadata_sections.next().is_none(),
+        ModuleError::InvalidInput("ELF has multiple .modinfo sections".into())
+    );
     ensure!(
         section.size() <= 1024 * 1024,
         ModuleError::InvalidInput("module metadata exceeds 1 MiB".into())
     );
     let mut metadata: BTreeMap<String, Vec<String>> = BTreeMap::new();
     let mut warnings = Vec::new();
-    for (index, entry) in section
-        .data()?
+    let metadata_bytes = section
+        .data()
+        .map_err(|error| ModuleError::InvalidInput(format!("invalid .modinfo data: {error}")))?;
+    for (index, entry) in metadata_bytes
         .split(|b| *b == 0)
         .filter(|entry| !entry.is_empty())
         .enumerate()
@@ -164,7 +173,7 @@ fn parse(sysroot: &Sysroot, path: &str, bytes: &[u8]) -> Result<FileInfo> {
             .file_stem()
             .unwrap_or_default()
             .to_string_lossy()
-            .replace('-', "_")
+            .replace(['-', ','], "_")
     });
     ensure!(
         inventory::valid_name(&name),

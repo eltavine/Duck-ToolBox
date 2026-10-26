@@ -258,6 +258,24 @@ for (const locale of ["en", "zh-CN", "ar"] as const) {
     await page.getByRole("button", { name: labels.inspect, exact: true }).click()
     const load = page.getByRole("button", { name: labels.load, exact: true })
     await expect(load).toBeVisible()
+    const parameters = page.locator("#kernel-module-parameters")
+    await parameters.fill("字".repeat(1366))
+    await expect(parameters).toHaveAttribute("aria-invalid", "true")
+    await expect(page.locator("#kernel-module-parameters-error")).toBeVisible()
+    await expect(load).toBeDisabled()
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= document.documentElement.clientWidth,
+      ),
+    ).toBe(true)
+    await page.evaluate(() => window.scrollTo(0, 0))
+    await page.screenshot({
+      path: `test-results/screenshots/kernel-review-${locale}-parameter-error.png`,
+      fullPage: true,
+      animations: "disabled",
+    })
+    await parameters.fill("")
+    await expect(load).toBeEnabled()
     await page.evaluate(() => window.scrollTo(0, 0))
     await page.screenshot({
       path: `test-results/screenshots/kernel-review-${locale}-file.png`,
@@ -406,5 +424,71 @@ for (const [scenario, value] of [
     const dialog = page.getByRole("dialog")
     await expect(dialog.getByText("Module taint flags", { exact: true })).toBeVisible()
     await expect(dialog.getByText(value, { exact: true })).toBeVisible()
+  })
+}
+
+test("keeps inspection errors visible and clears them for a new path", async ({ page, open }) => {
+  await open("/kernel-modules", { query: { latency: "600" } })
+  await page.getByRole("tab", { name: "Module files", exact: true }).click()
+  const path = page.locator("#kernel-module-path")
+  await path.fill("/data/local/tmp/invalid.ko")
+  await path.press("Enter")
+  await expect(page.getByTestId("kernel-inspection-pending")).toContainText(
+    "Inspecting module file…",
+  )
+  const error = page.getByTestId("kernel-inspection-error")
+  await expect(error).toContainText("Invalid module input.")
+  await expect(path).toHaveAttribute("aria-invalid", "true")
+  await page.getByRole("tab", { name: "Runtime", exact: true }).click()
+  await page.getByRole("tab", { name: "Module files", exact: true }).click()
+  await expect(error).toBeVisible()
+  await error.getByRole("button", { name: "Error details", exact: true }).click()
+  await expect(page.getByRole("dialog")).toBeVisible()
+  await page.keyboard.press("Escape")
+  await path.fill("/data/local/tmp/sample.ko")
+  await expect(error).toHaveCount(0)
+  await expect(path).not.toHaveAttribute("aria-invalid", "true")
+  await path.press("Enter")
+  await expect(page.getByText("Kernel release matches.", { exact: true })).toBeVisible()
+})
+
+test("checks UTF-8 parameter bytes and control characters before confirmation", async ({
+  page,
+  open,
+}) => {
+  await open("/kernel-modules")
+  await page.getByRole("tab", { name: "Module files", exact: true }).click()
+  await page.locator("#kernel-module-path").fill("/data/local/tmp/sample.ko")
+  await page.locator("#kernel-module-path").press("Enter")
+  const input = page.locator("#kernel-module-parameters")
+  const load = page.getByRole("button", { name: "Load module", exact: true })
+  await input.fill("字".repeat(1366))
+  await expect(
+    page.getByText("Load parameters must fit within 4,096 UTF-8 bytes.", { exact: true }),
+  ).toBeVisible()
+  await expect(input).toHaveAttribute("aria-invalid", "true")
+  await expect(load).toBeDisabled()
+  await input.fill("字".repeat(1365))
+  await expect(load).toBeEnabled()
+  await input.fill("label=\u0085")
+  await expect(
+    page.getByText("Load parameters cannot contain control characters.", { exact: true }),
+  ).toBeVisible()
+  await expect(load).toBeDisabled()
+  await input.fill("debug=1")
+  await expect(load).toBeEnabled()
+  await expect(input).not.toHaveAttribute("aria-invalid", "true")
+})
+
+for (const [file, message] of [
+  ["no-name", "This name is estimated from the filename. The kernel determines the runtime name."],
+  ["repeated-name", "Multiple name entries exist. The first metadata entry is shown."],
+] as const) {
+  test(`explains module name provenance in ${file}`, async ({ page, open }) => {
+    await open("/kernel-modules")
+    await page.getByRole("tab", { name: "Module files", exact: true }).click()
+    await page.locator("#kernel-module-path").fill(`/data/local/tmp/${file}.ko`)
+    await page.locator("#kernel-module-path").press("Enter")
+    await expect(page.getByText(message, { exact: true })).toBeVisible()
   })
 }

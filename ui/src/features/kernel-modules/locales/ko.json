@@ -54,7 +54,12 @@
     "formatUnsupported": "리틀 엔디언 ARM64 ELF64 모듈만 로드할 수 있습니다.",
     "vermagicRequired": "로드하려면 비어 있지 않은 vermagic 항목이 하나 필요합니다.",
     "alreadyLoaded": "동일한 이름의 모듈이 이미 커널에 있습니다.",
-    "nameTooLong": "ARM64 모듈 이름은 55바이트 이하여야 합니다."
+    "nameTooLong": "ARM64 모듈 이름은 55바이트 이하여야 합니다.",
+    "parametersTooLong": "로드 매개변수는 UTF-8 기준 {limit}바이트 이하여야 합니다.",
+    "parametersControl": "로드 매개변수에 제어 문자를 포함할 수 없습니다.",
+    "inspecting": "모듈 파일 분석 중…",
+    "nameEstimated": "파일 이름에서 추정한 이름입니다. 실행 중 이름은 커널이 결정합니다.",
+    "nameRepeated": "이름 항목이 여러 개 있습니다. 첫 번째 메타데이터 항목을 표시합니다."
   },
   "operation": {
     "accepted": "커널이 작업을 수락했습니다.",

@@ -54,7 +54,12 @@
     "formatUnsupported": "Cần mô-đun ARM64 ELF64 little-endian để nạp.",
     "vermagicRequired": "Cần đúng một mục vermagic không rỗng để nạp.",
     "alreadyLoaded": "Một mô-đun cùng tên đã hiện diện trong nhân.",
-    "nameTooLong": "Tên mô-đun ARM64 không được vượt quá 55 byte."
+    "nameTooLong": "Tên mô-đun ARM64 không được vượt quá 55 byte.",
+    "parametersTooLong": "Tham số tải không được vượt quá {limit} byte UTF-8.",
+    "parametersControl": "Tham số tải không được chứa ký tự điều khiển.",
+    "inspecting": "Đang phân tích tệp mô-đun…",
+    "nameEstimated": "Tên này được suy ra từ tên tệp. Nhân xác định tên khi chạy.",
+    "nameRepeated": "Có nhiều mục tên. Mục siêu dữ liệu đầu tiên được hiển thị."
   },
   "operation": {
     "accepted": "Nhân đã chấp nhận thao tác.",

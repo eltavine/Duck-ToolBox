@@ -54,7 +54,12 @@
     "formatUnsupported": "Un module ARM64 ELF64 petit-boutiste est requis.",
     "vermagicRequired": "Une seule entrée vermagic non vide est requise.",
     "alreadyLoaded": "Un module de ce nom est déjà visible dans le noyau.",
-    "nameTooLong": "Les noms de modules ARM64 sont limités à 55 octets."
+    "nameTooLong": "Les noms de modules ARM64 sont limités à 55 octets.",
+    "parametersTooLong": "Les paramètres de chargement sont limités à {limit} octets UTF-8.",
+    "parametersControl": "Les paramètres de chargement ne peuvent pas contenir de caractères de contrôle.",
+    "inspecting": "Analyse du fichier du module…",
+    "nameEstimated": "Ce nom est déduit du nom de fichier. Le noyau détermine le nom à l’exécution.",
+    "nameRepeated": "Plusieurs entrées de nom existent. La première entrée de métadonnées est affichée."
   },
   "operation": {
     "accepted": "Le noyau a accepté l’opération.",

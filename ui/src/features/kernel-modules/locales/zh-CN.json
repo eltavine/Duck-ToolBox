@@ -54,7 +54,12 @@
     "formatUnsupported": "只能加载小端 ARM64 ELF64 模块。",
     "vermagicRequired": "加载需要唯一且非空的 vermagic 条目。",
     "alreadyLoaded": "内核中已存在同名模块。",
-    "nameTooLong": "ARM64 模块名最多可包含 55 字节。"
+    "nameTooLong": "ARM64 模块名最多可包含 55 字节。",
+    "parametersTooLong": "加载参数的 UTF-8 编码不得超过 {limit} 字节。",
+    "parametersControl": "加载参数不能包含控制字符。",
+    "inspecting": "正在解析模块文件…",
+    "nameEstimated": "此名称根据文件名推测，运行时名称由内核确定。",
+    "nameRepeated": "存在多个 name 元数据条目，此处显示第一个条目的名称。"
   },
   "operation": {
     "accepted": "内核已接受操作。",

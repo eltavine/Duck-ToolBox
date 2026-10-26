@@ -4,6 +4,10 @@
 
 ### Kernel modules
 
+- Reject duplicate or unreadable ELF metadata sections, and mark inferred or repeated
+  module names explicitly during inspection.
+- Validate load parameters by UTF-8 bytes before confirmation, with localized field errors
+  and persistent inspection progress/error feedback across 16 locales.
 - Protect the `kernelsu` root core from unloading, reject unknown holder state, and
   expose protection reasons consistently in the backend and all 16 interface locales.
 - Use explicit confirmation action labels and isolate module names in RTL sentences;

@@ -54,7 +54,12 @@
     "formatUnsupported": "Loading requires a little-endian ARM64 ELF64 module.",
     "vermagicRequired": "Loading requires one nonempty vermagic entry.",
     "alreadyLoaded": "A module with this name is already visible in the kernel.",
-    "nameTooLong": "ARM64 module names must fit in 55 bytes."
+    "nameTooLong": "ARM64 module names must fit in 55 bytes.",
+    "parametersTooLong": "Load parameters must fit within {limit} UTF-8 bytes.",
+    "parametersControl": "Load parameters cannot contain control characters.",
+    "inspecting": "Inspecting module file…",
+    "nameEstimated": "This name is estimated from the filename. The kernel determines the runtime name.",
+    "nameRepeated": "Multiple name entries exist. The first metadata entry is shown."
   },
   "operation": {
     "accepted": "The kernel accepted the operation.",

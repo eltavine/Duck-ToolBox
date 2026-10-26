@@ -54,7 +54,12 @@
     "formatUnsupported": "僅可載入小端 ARM64 ELF64 模組。",
     "vermagicRequired": "載入需要唯一且非空的 vermagic 項目。",
     "alreadyLoaded": "核心中已存在同名模組。",
-    "nameTooLong": "ARM64 模組名稱最多可包含 55 位元組。"
+    "nameTooLong": "ARM64 模組名稱最多可包含 55 位元組。",
+    "parametersTooLong": "載入參數的 UTF-8 編碼不得超過 {limit} 位元組。",
+    "parametersControl": "載入參數不能包含控制字元。",
+    "inspecting": "正在解析模組檔案…",
+    "nameEstimated": "此名稱依檔名推測，執行時名稱由核心決定。",
+    "nameRepeated": "存在多個 name 中繼資料項目，此處顯示第一個項目的名稱。"
   },
   "operation": {
     "accepted": "核心已接受操作。",

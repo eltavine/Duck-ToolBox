@@ -179,6 +179,57 @@ fn inspection_bounds_metadata_entries_and_distinct_keys_before_expanding_them() 
 }
 
 #[test]
+fn inspection_rejects_duplicate_metadata_sections_instead_of_displaying_only_one() {
+    let (_directory, ctx) = fixture();
+    let mut object = object::write::Object::new(
+        object::BinaryFormat::Elf,
+        object::Architecture::Aarch64,
+        object::Endianness::Little,
+    );
+    for name in ["first", "second"] {
+        let section = object.add_section(
+            vec![],
+            b".modinfo".to_vec(),
+            object::SectionKind::ReadOnlyData,
+        );
+        object.append_section_data(
+            section,
+            format!("name={name}\0vermagic=6.6.30-android15\0").as_bytes(),
+            1,
+        );
+    }
+    put(&ctx, "/tmp/duplicate.ko", object.write().unwrap());
+    assert_eq!(
+        code_of(&files::inspect(&ctx.sysroot, "/tmp/duplicate.ko").unwrap_err()),
+        "invalid_input"
+    );
+}
+
+#[test]
+fn invalid_metadata_offsets_are_reported_as_invalid_elf_input() {
+    use object::{Object as _, ObjectSection as _};
+    let (_directory, ctx) = fixture();
+    let mut bytes = files::fixture("6.6.30-android15");
+    let index = object::File::parse(bytes.as_slice())
+        .unwrap()
+        .section_by_name(".modinfo")
+        .unwrap()
+        .index()
+        .0;
+    // ELF64 e_shoff, e_shentsize and sh_offset from the ELF file-format contract.
+    let table = u64::from_le_bytes(bytes[40..48].try_into().unwrap()) as usize;
+    let stride = u16::from_le_bytes(bytes[58..60].try_into().unwrap()) as usize;
+    let field = table + index * stride + 24;
+    let offset = bytes.len() as u64 + 128;
+    bytes[field..field + 8].copy_from_slice(&offset.to_le_bytes());
+    put(&ctx, "/tmp/offset.ko", bytes);
+    assert_eq!(
+        code_of(&files::inspect(&ctx.sysroot, "/tmp/offset.ko").unwrap_err()),
+        "invalid_input"
+    );
+}
+
+#[test]
 fn loading_refuses_wrong_elf_byte_order_class_and_missing_vermagic() {
     let (_directory, ctx) = fixture();
     put(&ctx, "/proc/modules", "");
@@ -429,4 +480,54 @@ fn unreadable_or_missing_holders_are_unknown_and_prevent_removal() {
             "state_unavailable"
         );
     }
+}
+
+#[test]
+fn load_parameters_enforce_utf8_bytes_and_control_characters() {
+    let (_directory, ctx) = fixture();
+    put(&ctx, "/proc/modules", "");
+    fs::remove_dir_all(ctx.sysroot.path("/sys/module/sample")).unwrap();
+    put(&ctx, "/tmp/sample.ko", files::fixture("6.6.30-android15"));
+    let info = files::inspect(&ctx.sysroot, "/tmp/sample.ko").unwrap().0;
+    let mut request = LoadRequest {
+        path: info.path,
+        sha256: info.sha256,
+        parameters: String::new(),
+        confirmed: true,
+    };
+    for (unit, count) in [("a", 4096), ("字", 1365), ("😀", 1024)] {
+        request.parameters = unit.repeat(count);
+        assert!(mutation::validate_load(&ctx, &request).is_ok());
+        request.parameters.push_str(unit);
+        assert_eq!(
+            code_of(&mutation::validate_load(&ctx, &request).unwrap_err()),
+            "invalid_input"
+        );
+    }
+    for control in ['\0', '\n', '\t', '\u{7f}', '\u{85}', '\u{9f}'] {
+        request.parameters = format!("label={control}");
+        assert_eq!(
+            code_of(&mutation::validate_load(&ctx, &request).unwrap_err()),
+            "invalid_input"
+        );
+    }
+}
+
+#[test]
+fn missing_name_metadata_keeps_the_kbuild_filename_estimate_distinct() {
+    let (_directory, ctx) = fixture();
+    put(
+        &ctx,
+        "/tmp/test,-name.ko",
+        files::fixture_elf(
+            object::Architecture::Aarch64,
+            object::Endianness::Little,
+            b"license=GPL\0vermagic=6.6.30-android15\0",
+        ),
+    );
+    let file = files::inspect(&ctx.sysroot, "/tmp/test,-name.ko")
+        .unwrap()
+        .0;
+    assert_eq!(file.name, "test__name");
+    assert!(!file.metadata.contains_key("name"));
 }

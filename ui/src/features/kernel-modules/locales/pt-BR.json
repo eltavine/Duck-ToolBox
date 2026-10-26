@@ -54,7 +54,12 @@
     "formatUnsupported": "É necessário um módulo ARM64 ELF64 little-endian.",
     "vermagicRequired": "É necessária uma única entrada vermagic não vazia.",
     "alreadyLoaded": "Um módulo com este nome já está visível no kernel.",
-    "nameTooLong": "Os nomes de módulos ARM64 não podem exceder 55 bytes."
+    "nameTooLong": "Os nomes de módulos ARM64 não podem exceder 55 bytes.",
+    "parametersTooLong": "Os parâmetros de carregamento não podem exceder {limit} bytes UTF-8.",
+    "parametersControl": "Os parâmetros de carregamento não podem conter caracteres de controle.",
+    "inspecting": "Inspecionando o arquivo do módulo…",
+    "nameEstimated": "Este nome é estimado a partir do nome do arquivo. O kernel determina o nome em execução.",
+    "nameRepeated": "Existem várias entradas de nome. A primeira entrada dos metadados é exibida."
   },
   "operation": {
     "accepted": "O kernel aceitou a operação.",

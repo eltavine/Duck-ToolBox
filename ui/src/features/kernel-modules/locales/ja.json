@@ -54,7 +54,12 @@
     "formatUnsupported": "ロードにはリトルエンディアンの ARM64 ELF64 モジュールが必要です。",
     "vermagicRequired": "ロードには空でない vermagic 項目が一つ必要です。",
     "alreadyLoaded": "同名のモジュールがカーネルに存在します。",
-    "nameTooLong": "ARM64 モジュール名は 55 バイト以内である必要があります。"
+    "nameTooLong": "ARM64 モジュール名は 55 バイト以内である必要があります。",
+    "parametersTooLong": "読み込みパラメーターは UTF-8 で {limit} バイト以内にしてください。",
+    "parametersControl": "読み込みパラメーターに制御文字は使用できません。",
+    "inspecting": "モジュールファイルを解析中…",
+    "nameEstimated": "この名前はファイル名から推測しています。実行時の名前はカーネルが決定します。",
+    "nameRepeated": "名前のエントリーが複数あります。最初のメタデータを表示しています。"
   },
   "operation": {
     "accepted": "カーネルが操作を受け付けました。",

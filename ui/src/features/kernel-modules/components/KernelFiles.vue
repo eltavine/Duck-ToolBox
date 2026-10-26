@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useMutation, useQuery } from "@tanstack/vue-query"
-import { ChevronDown } from "@lucide/vue"
+import { ChevronDown, LoaderCircle } from "@lucide/vue"
 import { computed, ref, watch } from "vue"
 
 import { Button } from "@/components/ui/button"
@@ -11,10 +11,12 @@ import KeyValueList from "@/core/components/KeyValueList.vue"
 import QueryState from "@/core/components/QueryState.vue"
 import SectionCard from "@/core/components/SectionCard.vue"
 import { formatBytes } from "@/core/format"
+import { errorTitle, showErrorDetails } from "@/core/notify"
 
 import type { ModuleFile } from "../api"
 import { kernelModulesApi } from "../api"
-import { useKernelModulesI18n } from "../i18n"
+import { MAX_PARAMETER_BYTES, parameterIssue } from "../load-input"
+import { useModulePresentation } from "../presentation"
 
 const props = defineProps<{
   writable: boolean
@@ -23,10 +25,11 @@ const props = defineProps<{
   active: boolean
 }>()
 const emit = defineEmits<{ load: [file: ModuleFile, parameters: string] }>()
-const { t } = useKernelModulesI18n()
+const { t, number } = useModulePresentation()
 const path = ref("")
 const search = ref("")
 const parameters = ref("")
+const parameterError = computed(() => parameterIssue(parameters.value))
 const picker = ref(false)
 const inspected = ref<ModuleFile | null>(null)
 const metadataOpen = ref(false)
@@ -41,11 +44,11 @@ const files = computed(
       file.path.toLowerCase().includes(search.value.toLowerCase()),
     ) ?? [],
 )
-let revision = 0
+const revision = ref(0)
 watch(
   path,
   () => {
-    revision++
+    revision.value++
     inspected.value = null
     metadataOpen.value = false
     parameters.value = ""
@@ -56,9 +59,13 @@ const inspection = useMutation({
   mutationFn: (request: { path: string; revision: number }) =>
     kernelModulesApi.inspect(request.path),
   onSuccess: (file, request) => {
-    if (request.revision === revision) inspected.value = file
+    if (request.revision === revision.value) inspected.value = file
   },
+  onError: () => undefined,
 })
+const inspectionError = computed(() =>
+  inspection.variables.value?.revision === revision.value ? inspection.error.value : null,
+)
 const blocked = computed(() => {
   const file = inspected.value
   if (!file) return null
@@ -89,6 +96,7 @@ const canLoad = computed(
     props.writable &&
     !props.busy &&
     !inspection.isPending.value &&
+    parameterError.value === null &&
     blocked.value === null,
 )
 
@@ -96,7 +104,7 @@ function inspect(candidate = path.value) {
   path.value = candidate
   inspected.value = null
   metadataOpen.value = false
-  inspection.mutate({ path: candidate, revision })
+  inspection.mutate({ path: candidate, revision: revision.value })
 }
 function picked(file: PickedFile) {
   if ("path" in file) inspect(file.path)
@@ -116,6 +124,8 @@ function picked(file: PickedFile) {
         autocapitalize="off"
         placeholder="/data/local/tmp/example.ko"
         :disabled="busy || inspection.isPending.value"
+        :aria-invalid="inspectionError ? true : undefined"
+        :aria-describedby="inspectionError ? 'kernel-file-inspection-error' : undefined"
         @keydown.enter.prevent="path.trim() && !busy && !inspection.isPending.value && inspect()"
       />
       <div class="mt-3 flex flex-wrap gap-2">
@@ -127,6 +137,28 @@ function picked(file: PickedFile) {
         >
         <Button :disabled="!path.trim() || busy || inspection.isPending.value" @click="inspect()">{{
           t("files.inspect")
+        }}</Button>
+      </div>
+      <div
+        v-if="inspection.isPending.value"
+        class="text-muted-foreground mt-4 flex items-center gap-2 text-sm"
+        role="status"
+        data-testid="kernel-inspection-pending"
+      >
+        <LoaderCircle aria-hidden="true" class="size-5 shrink-0 motion-safe:animate-spin" />
+        {{ t("files.inspecting") }}
+      </div>
+      <div
+        v-if="inspectionError"
+        class="mt-4 flex flex-col items-start gap-3"
+        role="alert"
+        data-testid="kernel-inspection-error"
+      >
+        <p id="kernel-file-inspection-error" class="text-destructive text-sm">
+          {{ errorTitle(inspectionError) }}
+        </p>
+        <Button variant="outline" @click="showErrorDetails(inspectionError)">{{
+          t("operation.details")
         }}</Button>
       </div>
       <div v-if="inspected" class="mt-4 flex min-w-0 flex-col gap-4">
@@ -142,6 +174,12 @@ function picked(file: PickedFile) {
             { label: 'SHA-256', value: inspected.sha256, mono: true, copy: true },
           ]"
         />
+        <p v-if="!inspected.metadata.name?.length" class="text-muted-foreground text-sm">
+          {{ t("files.nameEstimated") }}
+        </p>
+        <p v-else-if="inspected.metadata.name.length > 1" class="text-muted-foreground text-sm">
+          {{ t("files.nameRepeated") }}
+        </p>
         <details
           :open="metadataOpen"
           class="group rounded-md border p-3"
@@ -204,8 +242,18 @@ function picked(file: PickedFile) {
           autocapitalize="off"
           placeholder="debug=1"
           :disabled="busy"
-          :maxlength="4096"
+          :maxlength="MAX_PARAMETER_BYTES"
+          :aria-invalid="parameterError ? true : undefined"
+          :aria-describedby="parameterError ? 'kernel-module-parameters-error' : undefined"
         />
+        <p
+          v-if="parameterError"
+          id="kernel-module-parameters-error"
+          class="text-destructive text-sm"
+          role="status"
+        >
+          {{ t(`files.${parameterError}`, { limit: number(MAX_PARAMETER_BYTES) }) }}
+        </p>
         <Button :disabled="!canLoad" @click="emit('load', inspected, parameters)">{{
           t("files.load")
         }}</Button>

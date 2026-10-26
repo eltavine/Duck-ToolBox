@@ -54,7 +54,12 @@
     "formatUnsupported": "Pemuatan memerlukan modul ARM64 ELF64 little-endian.",
     "vermagicRequired": "Pemuatan memerlukan tepat satu entri vermagic yang tidak kosong.",
     "alreadyLoaded": "Modul dengan nama ini sudah terlihat di kernel.",
-    "nameTooLong": "Nama modul ARM64 tidak boleh melebihi 55 byte."
+    "nameTooLong": "Nama modul ARM64 tidak boleh melebihi 55 byte.",
+    "parametersTooLong": "Parameter pemuatan tidak boleh melebihi {limit} byte UTF-8.",
+    "parametersControl": "Parameter pemuatan tidak boleh berisi karakter kontrol.",
+    "inspecting": "Memeriksa berkas modul…",
+    "nameEstimated": "Nama ini diperkirakan dari nama berkas. Kernel menentukan nama saat berjalan.",
+    "nameRepeated": "Terdapat beberapa entri nama. Entri metadata pertama ditampilkan."
   },
   "operation": {
     "accepted": "Kernel menerima operasi.",

@@ -54,7 +54,12 @@
     "formatUnsupported": "Wymagany jest moduł ARM64 ELF64 little-endian.",
     "vermagicRequired": "Wymagany jest jeden niepusty wpis vermagic.",
     "alreadyLoaded": "Moduł o tej nazwie jest już widoczny w jądrze.",
-    "nameTooLong": "Nazwy modułów ARM64 mogą mieć najwyżej 55 bajtów."
+    "nameTooLong": "Nazwy modułów ARM64 mogą mieć najwyżej 55 bajtów.",
+    "parametersTooLong": "Parametry ładowania mogą zajmować najwyżej {limit} bajtów UTF-8.",
+    "parametersControl": "Parametry ładowania nie mogą zawierać znaków sterujących.",
+    "inspecting": "Sprawdzanie pliku modułu…",
+    "nameEstimated": "Nazwa jest szacowana na podstawie nazwy pliku. Nazwę w czasie działania określa jądro.",
+    "nameRepeated": "Istnieje kilka wpisów nazwy. Wyświetlany jest pierwszy wpis metadanych."
   },
   "operation": {
     "accepted": "Jądro zaakceptowało operację.",

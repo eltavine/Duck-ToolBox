@@ -54,7 +54,12 @@
     "formatUnsupported": "Erforderlich ist ein Little-Endian-ARM64-ELF64-Modul.",
     "vermagicRequired": "Erforderlich ist genau ein nicht leerer vermagic-Eintrag.",
     "alreadyLoaded": "Ein Modul dieses Namens ist bereits im Kernel sichtbar.",
-    "nameTooLong": "ARM64-Modulnamen dürfen höchstens 55 Byte lang sein."
+    "nameTooLong": "ARM64-Modulnamen dürfen höchstens 55 Byte lang sein.",
+    "parametersTooLong": "Ladeparameter dürfen höchstens {limit} UTF-8-Byte belegen.",
+    "parametersControl": "Ladeparameter dürfen keine Steuerzeichen enthalten.",
+    "inspecting": "Moduldatei wird geprüft…",
+    "nameEstimated": "Dieser Name wird aus dem Dateinamen abgeleitet. Den Laufzeitnamen bestimmt der Kernel.",
+    "nameRepeated": "Es gibt mehrere Namenseinträge. Der erste Metadateneintrag wird angezeigt."
   },
   "operation": {
     "accepted": "Der Kernel hat die Aktion angenommen.",
