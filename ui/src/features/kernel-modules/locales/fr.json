@@ -30,7 +30,9 @@
     "stateLoading": "Chargement",
     "stateUnloading": "Déchargement",
     "stateUnknown": "État inconnu",
-    "parametersEmpty": "Aucun paramètre lisible n’est exposé."
+    "parametersEmpty": "Aucun paramètre lisible n’est exposé.",
+    "protected": "Module root protégé. Cette application bloque son déchargement.",
+    "holdersUnavailable": "L’état des modules dépendants est inaccessible. Le déchargement est bloqué tant qu’il ne peut pas être lu."
   },
   "files": {
     "description": "Inspecter les fichiers .ko non compressés sans les charger.",
@@ -74,7 +76,8 @@
     "operation_timeout": "Délai dépassé ; résultat inconnu. Actualisez avant de continuer.",
     "kernel_rejected": "Le noyau a refusé l’opération.",
     "kernel_modules_error": "Échec de l’opération du module.",
-    "operation_unknown": "Le processus s’est arrêté sans résultat fiable. Résultat inconnu ; actualisez avant de continuer."
+    "operation_unknown": "Le processus s’est arrêté sans résultat fiable. Résultat inconnu ; actualisez avant de continuer.",
+    "module_protected": "Ce module root est protégé contre le déchargement."
   },
   "overview": {
     "title": "Environnement du noyau",
@@ -84,10 +87,11 @@
   "metadata": {
     "version": "Version du module",
     "srcversion": "Version du code source",
-    "taint": "Marques d’altération du noyau",
+    "taint": "Indicateurs taint du module",
     "name": "Nom du module",
     "architecture": "Architecture ELF",
     "size": "Taille du fichier",
-    "other": "Autre architecture"
+    "other": "Autre architecture",
+    "noTaint": "Aucun indicateur taint"
   }
 }

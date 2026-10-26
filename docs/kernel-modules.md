@@ -16,6 +16,8 @@ compatibility with a particular vendor kernel or security policy.
 | Module permission, image validation, loading and removal checks | [ACK main.c](https://android.googlesource.com/kernel/common/+/2bdbbebc3bff5804c139a0806aeb96187b3cbb24/kernel/module/main.c) |
 | Release-prefix comparison when symbol CRCs exist | [ACK version.c](https://android.googlesource.com/kernel/common/+/2bdbbebc3bff5804c139a0806aeb96187b3cbb24/kernel/module/version.c) |
 | Parameter getter output and appended newline | [ACK params.c](https://android.googlesource.com/kernel/common/+/2bdbbebc3bff5804c139a0806aeb96187b3cbb24/kernel/params.c) |
+| Module holder links and per-module taint flags | [ACK sysfs.c](https://android.googlesource.com/kernel/common/+/2bdbbebc3bff5804c139a0806aeb96187b3cbb24/kernel/module/sysfs.c) and [main.c](https://android.googlesource.com/kernel/common/+/2bdbbebc3bff5804c139a0806aeb96187b3cbb24/kernel/module/main.c) |
+| KernelSU module target name used by the application protection list | [KernelSU Kbuild](https://github.com/tiann/KernelSU/blob/75e179d378d7aaa0de8946358a3384444c3e36b0/kernel/Kbuild) |
 | Module name buffer, including its terminating NUL | [ACK module.h](https://android.googlesource.com/kernel/common/+/2bdbbebc3bff5804c139a0806aeb96187b3cbb24/include/linux/module.h) and [moduleparam.h](https://android.googlesource.com/kernel/common/+/2bdbbebc3bff5804c139a0806aeb96187b3cbb24/include/linux/moduleparam.h) |
 | Kbuild replacement of hyphens and commas in module names | [ACK Makefile.lib](https://android.googlesource.com/kernel/common/+/2bdbbebc3bff5804c139a0806aeb96187b3cbb24/scripts/Makefile.lib) |
 | ARM64 UAPI syscall numbers | [ACK asm-generic/unistd.h](https://android.googlesource.com/kernel/common/+/2bdbbebc3bff5804c139a0806aeb96187b3cbb24/include/uapi/asm-generic/unistd.h) and [ARM64 inclusion](https://android.googlesource.com/kernel/common/+/2bdbbebc3bff5804c139a0806aeb96187b3cbb24/arch/arm64/include/uapi/asm/unistd.h) |
@@ -25,8 +27,8 @@ compatibility with a particular vendor kernel or security policy.
 
 ## Runtime operations
 
-The feature contract is version 2. Backend and WebUI must be updated together;
-the feature registry rejects a version-1 backend before exposing operations.
+The feature contract is version 3. Backend and WebUI must be updated together;
+the feature registry rejects mismatched contracts before exposing operations.
 The shared command-envelope API remains version 1.
 
 Execution is restricted to Android AArch64 root processes using the real `/`
@@ -52,6 +54,22 @@ references and absence of dependents/holders are preliminary checks. The kernel
 still checks permissions, references and exit support at the actual syscall.
 Missing reference counts (`-`) remain unknown and prevent an unload offer.
 Entries visible only in sysfs are not classified as unloadable modules.
+Missing or partially unreadable holder listings remain unknown and prevent removal;
+an empty successfully read directory is a distinct state. The details view retains
+known dependents and reports incomplete holder state. Its taint field comes from
+the individual module, not the global `/proc/sys/kernel/tainted` bitmask. An empty
+readable taint attribute means no module taint flags; an unreadable one is unknown.
+
+Application policy blocks removal of `kernelsu`, including when it reports zero
+references. The backend applies this rule to direct CLI/worker requests as well as
+WebUI requests, with no override field. `unload_protected` is supplied by the backend
+so the UI does not maintain a second name list. The list currently contains only
+the official KernelSU target; it does not discover every root fork or critical
+vendor driver. An unlisted name or zero reference count does not establish safety.
+
+The WebUI requires a confirmation dialog for each mutation. The request's
+`confirmed` flag expresses caller intent; a root CLI caller can set it directly,
+so it does not attest that a person saw the dialog.
 
 The ARM64 name buffer holds 56 bytes including NUL, so mutations require names of
 at most 55 bytes. Browsing permits up to 128 bytes for sysfs entries. Supported
@@ -65,6 +83,9 @@ Mutations run in an isolated worker with a private input file and private output
 file. A file lock serializes operations. Lock contention is distinguished from
 other I/O failures. The parent validates envelope version, command, action and the
 typed result, rather than accepting an arbitrary success object.
+Failure envelopes must accompany an unsuccessful process exit; a contradictory
+exit/envelope pair reports an unknown outcome. Result names must fit the ARM64
+kernel buffer, including when a worker reports success.
 Successful removal results must identify the requested module. Directory permission
 changes operate on an opened directory descriptor; the final directory and lock
 components reject symlinks, and the lock must be a regular file. Ancestor directories
@@ -101,6 +122,10 @@ its logical spacing, rounded surfaces and state layers. Applicable guidance:
   legibility, focus, feedback, adaptation to larger text and reachable controls.
 - [Apple right-to-left guidance](https://developer.apple.com/design/human-interface-guidelines/right-to-left):
   logical row alignment with separately isolated technical strings.
+- [Apple alerts](https://developer.apple.com/design/human-interface-guidelines/alerts):
+  mutation confirmation buttons name the actual action, retain cancellation and
+  preserve their target text through the closing transition. Module names in
+  confirmation sentences have independent left-to-right isolation.
 - [WCAG text contrast](https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html):
   at least 4.5:1 for ordinary text, including active destructive labels and
   confirmation controls in both themes.

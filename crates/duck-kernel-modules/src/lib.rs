@@ -6,6 +6,7 @@ mod inventory;
 #[allow(unsafe_code)]
 mod kernel;
 mod mutation;
+mod unload_policy;
 mod worker;
 
 pub use cli::{Command, FEATURE};
@@ -28,6 +29,8 @@ enum ModuleError {
     Disabled,
     #[error("module cannot be unloaded: {0}")]
     Busy(String),
+    #[error("module {0} is protected from unloading by application policy")]
+    Protected(String),
     #[error("a kernel module operation is already running")]
     OperationBusy,
     #[error(
@@ -57,6 +60,7 @@ fn code_of(error: &anyhow::Error) -> &'static str {
         Some(ModuleError::FileChanged) => "file_changed",
         Some(ModuleError::Disabled) => "modules_disabled",
         Some(ModuleError::Busy(_)) => "module_busy",
+        Some(ModuleError::Protected(_)) => "module_protected",
         Some(ModuleError::OperationBusy) => "operation_busy",
         Some(ModuleError::Timeout) => "operation_timeout",
         Some(ModuleError::OutcomeUnknown(_)) => "operation_unknown",
@@ -69,6 +73,7 @@ fn code_of(error: &anyhow::Error) -> &'static str {
             "file_changed" => "file_changed",
             "modules_disabled" => "modules_disabled",
             "module_busy" => "module_busy",
+            "module_protected" => "module_protected",
             "operation_busy" => "operation_busy",
             "kernel_rejected" => "kernel_rejected",
             _ => "kernel_modules_error",

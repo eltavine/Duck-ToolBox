@@ -28,7 +28,7 @@ describe.skipIf(!hasDuckd)("kernel modules API against the real duckd", CONTRACT
     expect(
       (await featureManifest()).features.find((feature) => feature.id === "kernel-modules")
         ?.contract,
-    ).toBe(2)
+    ).toBe(3)
     expect(status.modules.map((item) => [item.name, item.source])).toEqual([
       ["builtin", "sysfs_only"],
       ["sample", "loaded"],
@@ -67,5 +67,18 @@ describe.skipIf(!hasDuckd)("kernel modules API against the real duckd", CONTRACT
     await expect(kernelModulesApi.unload("sample")).rejects.toMatchObject({
       code: "unsupported_environment",
     })
+  })
+
+  it("exposes root protection and distinguishes missing holder state from an empty list", async () => {
+    host = installHost({
+      files: { "/proc/modules": "kernelsu 4096 0 - Live 0x0\nsample 4096 0 - Live 0x0\n" },
+    })
+    const status = await kernelModulesApi.status()
+    expect(status.modules.find((module) => module.name === "kernelsu")?.unload_protected).toBe(true)
+    expect(status.modules.find((module) => module.name === "sample")?.unload_protected).toBe(false)
+    const details = await kernelModulesApi.details("sample")
+    expect(details.holders).toEqual([])
+    expect(details.holders_available).toBe(false)
+    expect(details.warnings).not.toEqual([])
   })
 })

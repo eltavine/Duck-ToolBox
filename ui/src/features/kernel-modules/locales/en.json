@@ -30,7 +30,9 @@
     "stateLoading": "Loading",
     "stateUnloading": "Unloading",
     "stateUnknown": "Unknown state",
-    "parametersEmpty": "No readable parameters are exposed."
+    "parametersEmpty": "No readable parameters are exposed.",
+    "protected": "Protected root module. Unloading is blocked by this app.",
+    "holdersUnavailable": "Holder state is unavailable. Unloading is blocked until it can be read."
   },
   "files": {
     "description": "Inspect uncompressed .ko files on this device without loading them.",
@@ -74,7 +76,8 @@
     "operation_timeout": "Operation timed out; outcome unknown. Refresh before proceeding.",
     "kernel_rejected": "The kernel rejected the operation.",
     "kernel_modules_error": "Kernel module operation failed.",
-    "operation_unknown": "The worker stopped without a reliable result. Outcome unknown; refresh before proceeding."
+    "operation_unknown": "The worker stopped without a reliable result. Outcome unknown; refresh before proceeding.",
+    "module_protected": "This root module is protected from unloading."
   },
   "overview": {
     "title": "Kernel environment",
@@ -84,10 +87,11 @@
   "metadata": {
     "version": "Module version",
     "srcversion": "Source version",
-    "taint": "Kernel taint",
+    "taint": "Module taint flags",
     "name": "Module name",
     "architecture": "ELF architecture",
     "size": "File size",
-    "other": "Other architecture"
+    "other": "Other architecture",
+    "noTaint": "No taint flags"
   }
 }

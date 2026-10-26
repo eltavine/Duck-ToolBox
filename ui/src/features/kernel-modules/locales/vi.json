@@ -30,7 +30,9 @@
     "stateLoading": "Đang nạp",
     "stateUnloading": "Đang gỡ",
     "stateUnknown": "Không rõ trạng thái",
-    "parametersEmpty": "Không có tham số đọc được công khai."
+    "parametersEmpty": "Không có tham số đọc được công khai.",
+    "protected": "Mô-đun root được bảo vệ. Ứng dụng này chặn việc gỡ mô-đun.",
+    "holdersUnavailable": "Không đọc được trạng thái mô-đun phụ thuộc. Việc gỡ bị chặn cho đến khi đọc được trạng thái."
   },
   "files": {
     "description": "Phân tích tệp .ko không nén trên thiết bị mà không nạp.",
@@ -74,7 +76,8 @@
     "operation_timeout": "Hết thời gian; chưa rõ kết quả. Làm mới trước khi tiếp tục.",
     "kernel_rejected": "Nhân đã từ chối thao tác.",
     "kernel_modules_error": "Thao tác mô-đun nhân thất bại.",
-    "operation_unknown": "Tiến trình dừng mà không có kết quả đáng tin cậy. Chưa rõ kết quả; làm mới trước khi tiếp tục."
+    "operation_unknown": "Tiến trình dừng mà không có kết quả đáng tin cậy. Chưa rõ kết quả; làm mới trước khi tiếp tục.",
+    "module_protected": "Mô-đun root này được bảo vệ khỏi việc gỡ bỏ."
   },
   "overview": {
     "title": "Môi trường nhân",
@@ -84,10 +87,11 @@
   "metadata": {
     "version": "Phiên bản mô-đun",
     "srcversion": "Phiên bản mã nguồn",
-    "taint": "Cờ thay đổi nhân",
+    "taint": "Cờ taint của mô-đun",
     "name": "Tên mô-đun",
     "architecture": "Kiến trúc ELF",
     "size": "Kích thước tệp",
-    "other": "Kiến trúc khác"
+    "other": "Kiến trúc khác",
+    "noTaint": "Không có cờ taint"
   }
 }

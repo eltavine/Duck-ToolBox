@@ -30,7 +30,9 @@
     "stateLoading": "載入中",
     "stateUnloading": "卸載中",
     "stateUnknown": "狀態未知",
-    "parametersEmpty": "沒有公開可讀的參數。"
+    "parametersEmpty": "沒有公開可讀的參數。",
+    "protected": "ROOT 核心模組，本應用程式禁止卸載。",
+    "holdersUnavailable": "無法讀取模組相依狀態，恢復讀取前禁止卸載。"
   },
   "files": {
     "description": "解析本機未壓縮的 .ko 檔案，不執行載入。",
@@ -74,7 +76,8 @@
     "operation_timeout": "操作逾時，結果未知；繼續操作前請重新整理。",
     "kernel_rejected": "核心拒絕了操作。",
     "kernel_modules_error": "核心模組操作失敗。",
-    "operation_unknown": "工作程序未傳回可靠結果，操作結果未知；繼續操作前請重新整理。"
+    "operation_unknown": "工作程序未傳回可靠結果，操作結果未知；繼續操作前請重新整理。",
+    "module_protected": "此 ROOT 核心模組禁止卸載。"
   },
   "overview": {
     "title": "核心執行環境",
@@ -84,10 +87,11 @@
   "metadata": {
     "version": "模組版本",
     "srcversion": "原始碼版本",
-    "taint": "核心污染標記",
+    "taint": "模組污染標記",
     "name": "模組名稱",
     "architecture": "ELF 架構",
     "size": "檔案大小",
-    "other": "其他架構"
+    "other": "其他架構",
+    "noTaint": "無污染標記"
   }
 }

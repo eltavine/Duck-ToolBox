@@ -5,7 +5,15 @@ import type { KernelModule } from "./api"
 
 const scenario = new URLSearchParams(location.search).get("kernelModules")
 let modules: KernelModule[] = [
-  { name: "kernelsu", source: "loaded", size: 196608, references: 1, used_by: [], state: "Live" },
+  {
+    name: "kernelsu",
+    source: "loaded",
+    size: 196608,
+    references: 0,
+    used_by: [],
+    state: "Live",
+    unload_protected: true,
+  },
   {
     name: "usb_f_mass_storage",
     source: "loaded",
@@ -13,6 +21,7 @@ let modules: KernelModule[] = [
     references: 0,
     used_by: [],
     state: "Live",
+    unload_protected: false,
   },
   {
     name: "cfg80211",
@@ -21,12 +30,21 @@ let modules: KernelModule[] = [
     references: 3,
     used_by: ["wlan"],
     state: "Live",
+    unload_protected: false,
   },
-  { name: "binder", source: "sysfs_only", size: null, references: null, used_by: [], state: null },
+  {
+    name: "binder",
+    source: "sysfs_only",
+    size: null,
+    references: null,
+    used_by: [],
+    state: null,
+    unload_protected: false,
+  },
 ]
 const samplePath = "/data/local/tmp/sample.ko"
 const mock: MockModule = {
-  feature: { id: "kernel-modules", contract: 2 },
+  feature: { id: "kernel-modules", contract: 3 },
   handlers: {
     "kernel-modules.status": () => ({
       kernel_release: "6.6.30-android15",
@@ -44,8 +62,9 @@ const mock: MockModule = {
         module,
         version: "1.0",
         srcversion: "D8A9CC",
-        taint: "O",
+        taint: scenario === "untainted" ? "" : scenario === "taint-unavailable" ? null : "O",
         holders: module.used_by,
+        holders_available: scenario !== "holders-unavailable",
         parameters: [{ name: "debug", value: "N", error: null }],
         warnings: [],
       }
@@ -96,6 +115,7 @@ const mock: MockModule = {
           references: 0,
           used_by: [],
           state: "Live",
+          unload_protected: false,
         },
       ]
       return { name: "sample", action: "load", observed_loaded: true }
@@ -103,6 +123,10 @@ const mock: MockModule = {
     "kernel-modules.unload": (_args, _flags, input) => {
       const request = input as { name: string; confirmed: boolean }
       if (!request.confirmed) throw new MockFailure("confirmation_required", "Confirm first")
+      if (request.name === "kernelsu")
+        throw new MockFailure("module_protected", "Protected root core")
+      if (scenario === "holders-unavailable")
+        throw new MockFailure("state_unavailable", "Cannot read module holders")
       modules = modules.filter((module) => module.name !== request.name)
       return { name: request.name, action: "unload", observed_loaded: false }
     },

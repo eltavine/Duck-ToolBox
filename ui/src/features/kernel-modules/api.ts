@@ -9,6 +9,7 @@ const moduleSchema = z.object({
   references: z.number().nullable(),
   used_by: z.array(z.string()),
   state: z.string().nullable(),
+  unload_protected: z.boolean(),
 })
 export type KernelModule = z.infer<typeof moduleSchema>
 
@@ -28,6 +29,7 @@ const detailsSchema = z.object({
   srcversion: z.string().nullable(),
   taint: z.string().nullable(),
   holders: z.array(z.string()),
+  holders_available: z.boolean(),
   parameters: z.array(
     z.object({ name: z.string(), value: z.string().nullable(), error: z.string().nullable() }),
   ),

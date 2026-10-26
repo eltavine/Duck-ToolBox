@@ -121,7 +121,10 @@ fn decode_response(
             .error
             .ok_or_else(|| ModuleError::OutcomeUnknown("missing failure details".into()))?;
         ensure!(
-            reply.data.is_none() && !error.code.is_empty() && !error.message.is_empty(),
+            !exited_successfully
+                && reply.data.is_none()
+                && !error.code.is_empty()
+                && !error.message.is_empty(),
             ModuleError::OutcomeUnknown("inconsistent failure response".into())
         );
         return Err(ModuleError::WorkerFailure {
@@ -141,7 +144,8 @@ fn decode_response(
                 Request::Unload(request) => data.name == request.name,
                 Request::Load(_) => true,
             }
-            && inventory::valid_name(&data.name),
+            && inventory::valid_name(&data.name)
+            && data.name.len() <= crate::kernel::MAX_NAME_BYTES,
         ModuleError::OutcomeUnknown("inconsistent operation result or abnormal worker exit".into())
     );
     Ok(data)
@@ -222,6 +226,27 @@ mod tests {
         let error = decode_response(reply, false, &load_request()).unwrap_err();
         assert_eq!(code_of(&error), "file_changed");
         assert_eq!(error.to_string(), "module file changed");
+        assert_eq!(
+            code_of(&decode_response(reply, true, &load_request()).unwrap_err()),
+            "operation_unknown"
+        );
+    }
+
+    #[test]
+    fn worker_rejections_preserve_application_protection() {
+        let reply = r#"{"command":"kernel-modules.worker","api":1,"ok":false,"error":{"code":"module_protected","message":"protected module"}}"#;
+        assert_eq!(
+            code_of(&decode_response(reply, false, &unload_request("kernelsu")).unwrap_err()),
+            "module_protected"
+        );
+        let name = "a".repeat(56);
+        let reply = serde_json::json!({"command":"kernel-modules.worker","api":1,"ok":true,"data":{"name":name,"action":"unload","observed_loaded":false}});
+        assert_eq!(
+            code_of(
+                &decode_response(&reply.to_string(), true, &unload_request(&name)).unwrap_err()
+            ),
+            "operation_unknown"
+        );
     }
 
     #[test]

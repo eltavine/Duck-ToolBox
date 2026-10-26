@@ -136,6 +136,8 @@ changed, removed or added on its own.
     policy checks remain authoritative. Loading requires a little-endian ARM64 ELF64 image.
   - Unloading is limited to live modules reporting zero references and no dependents or holders.
     The kernel makes the final decision. No forced unloading or startup-rule edits are exposed.
+    The backend blocks unloading `kernelsu` by name and rejects unreadable holder state.
+    This protection list does not identify every root fork or critical device driver.
   - Mutations are serialized in an isolated worker and require Android ARM64 root outside a test sysroot.
     A 30-second worker timeout reports an unknown outcome: terminating userspace cannot undo
     or reliably cancel a kernel init/exit routine. Missing or abnormal worker results also

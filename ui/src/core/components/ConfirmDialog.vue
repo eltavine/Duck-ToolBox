@@ -35,8 +35,11 @@ function accept() {
     <AlertDialogContent @close-auto-focus="emit('closeAutoFocus', $event)">
       <AlertDialogHeader>
         <AlertDialogTitle>{{ title }}</AlertDialogTitle>
-        <AlertDialogDescription v-if="description" class="whitespace-pre-line">
-          {{ description }}
+        <AlertDialogDescription
+          v-if="description || $slots.description"
+          class="whitespace-pre-line"
+        >
+          <slot name="description">{{ description }}</slot>
         </AlertDialogDescription>
         <slot />
       </AlertDialogHeader>

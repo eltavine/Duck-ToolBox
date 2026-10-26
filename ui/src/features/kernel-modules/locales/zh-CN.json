@@ -30,7 +30,9 @@
     "stateLoading": "加载中",
     "stateUnloading": "卸载中",
     "stateUnknown": "状态未知",
-    "parametersEmpty": "没有公开可读的参数。"
+    "parametersEmpty": "没有公开可读的参数。",
+    "protected": "ROOT 核心模块，本应用禁止卸载。",
+    "holdersUnavailable": "无法读取模块依赖状态，在恢复读取前禁止卸载。"
   },
   "files": {
     "description": "解析本机未压缩的 .ko 文件，不执行加载。",
@@ -74,7 +76,8 @@
     "operation_timeout": "操作超时，结果未知；继续操作前请刷新状态。",
     "kernel_rejected": "内核拒绝了操作。",
     "kernel_modules_error": "内核模块操作失败。",
-    "operation_unknown": "工作进程未返回可靠结果，操作结果未知；继续操作前请刷新状态。"
+    "operation_unknown": "工作进程未返回可靠结果，操作结果未知；继续操作前请刷新状态。",
+    "module_protected": "此 ROOT 核心模块禁止卸载。"
   },
   "overview": {
     "title": "内核运行环境",
@@ -84,10 +87,11 @@
   "metadata": {
     "version": "模块版本",
     "srcversion": "源码版本",
-    "taint": "内核污染标记",
+    "taint": "模块污染标记",
     "name": "模块名称",
     "architecture": "ELF 架构",
     "size": "文件大小",
-    "other": "其他架构"
+    "other": "其他架构",
+    "noTaint": "无污染标记"
   }
 }

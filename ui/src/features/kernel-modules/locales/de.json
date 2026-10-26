@@ -30,7 +30,9 @@
     "stateLoading": "Wird geladen",
     "stateUnloading": "Wird entladen",
     "stateUnknown": "Zustand unbekannt",
-    "parametersEmpty": "Keine lesbaren Parameter verfügbar."
+    "parametersEmpty": "Keine lesbaren Parameter verfügbar.",
+    "protected": "Geschütztes Root-Modul. Diese App blockiert das Entladen.",
+    "holdersUnavailable": "Der Zustand abhängiger Module ist nicht lesbar. Das Entladen bleibt bis dahin gesperrt."
   },
   "files": {
     "description": "Unkomprimierte .ko-Dateien auf diesem Gerät prüfen, ohne sie zu laden.",
@@ -74,7 +76,8 @@
     "operation_timeout": "Zeitüberschreitung; Ergebnis unbekannt. Vor dem Fortfahren aktualisieren.",
     "kernel_rejected": "Der Kernel hat die Aktion abgelehnt.",
     "kernel_modules_error": "Kernelmodulaktion fehlgeschlagen.",
-    "operation_unknown": "Der Prozess endete ohne verlässliches Ergebnis. Ausgang unbekannt; vor dem Fortfahren aktualisieren."
+    "operation_unknown": "Der Prozess endete ohne verlässliches Ergebnis. Ausgang unbekannt; vor dem Fortfahren aktualisieren.",
+    "module_protected": "Dieses Root-Modul ist vor dem Entladen geschützt."
   },
   "overview": {
     "title": "Kernelumgebung",
@@ -84,10 +87,11 @@
   "metadata": {
     "version": "Modulversion",
     "srcversion": "Quellversion",
-    "taint": "Kernel-Taint",
+    "taint": "Taint-Markierungen des Moduls",
     "name": "Modulname",
     "architecture": "ELF-Architektur",
     "size": "Dateigröße",
-    "other": "Andere Architektur"
+    "other": "Andere Architektur",
+    "noTaint": "Keine Taint-Markierungen"
   }
 }

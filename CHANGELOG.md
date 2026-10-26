@@ -4,6 +4,10 @@
 
 ### Kernel modules
 
+- Protect the `kernelsu` root core from unloading, reject unknown holder state, and
+  expose protection reasons consistently in the backend and all 16 interface locales.
+- Use explicit confirmation action labels and isolate module names in RTL sentences;
+  preserve confirmation content through close transitions and label module taint accurately.
 - Add a separate Linux kernel module browser with loaded/sysfs-only state, references,
   dependents, runtime metadata and read-only parameters.
 - Browse standard Android module directories and inspect uncompressed `.ko` ELF metadata.

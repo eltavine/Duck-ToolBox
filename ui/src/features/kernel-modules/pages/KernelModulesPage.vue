@@ -67,23 +67,12 @@ const loadedCount = computed(
   () => status.data.value?.modules.filter((m) => m.source === "loaded").length ?? 0,
 )
 const pending = ref<Operation | null>(null)
-const confirmOpen = computed({
-  get: () => pending.value !== null,
-  set: (open) => {
-    if (!open) pending.value = null
-  },
-})
-const confirmation = computed(() =>
-  pending.value?.action === "load"
-    ? t("files.loadConfirm", { name: pending.value.file.name })
-    : pending.value
-      ? t("runtime.unloadConfirm", { name: pending.value.name })
-      : "",
-)
+const confirmOpen = ref(false)
 
 function canUnload(item: KernelModule) {
   return (
     writable.value &&
+    !item.unload_protected &&
     item.source === "loaded" &&
     item.state === "Live" &&
     item.references === 0 &&
@@ -94,21 +83,24 @@ function canUnload(item: KernelModule) {
 function unload(item: KernelModule) {
   if (!canUnload(item) || operation.isPending.value) return
   pending.value = { action: "unload", name: item.name }
+  confirmOpen.value = true
 }
 
 function load(file: ModuleFile, parameters: string) {
   if (!writable.value || operation.isPending.value) return
   pending.value = { action: "load", file, parameters }
+  confirmOpen.value = true
 }
 
 function acceptOperation() {
-  if (pending.value && writable.value && !operation.isPending.value) {
+  if (confirmOpen.value && pending.value && writable.value && !operation.isPending.value) {
     accepted = true
     operation.mutate(pending.value)
   }
 }
 
 function restoreOperationFocus(event: Event) {
+  pending.value = null
   if (!accepted) return
   accepted = false
   // The mutation can disable or remove its trigger before the dialog closes.
@@ -241,7 +233,7 @@ function restoreOperationFocus(event: Event) {
             >
               <button
                 class="state-layer focus-visible:ring-ring/50 relative min-h-12 w-full min-w-0 flex-1 rounded-md text-start outline-none focus-visible:ring-3 @min-[18rem]:w-auto"
-                :aria-describedby="`kernel-meta-${item.name}`"
+                :aria-describedby="`kernel-meta-${item.name}${item.unload_protected ? ` kernel-blocked-${item.name}` : ''}`"
                 :aria-label="t('runtime.details', { name: item.name })"
                 @click="selected = item.name"
               >
@@ -275,6 +267,13 @@ function restoreOperationFocus(event: Event) {
                     item.used_by.filter((name) => name !== "[permanent]").join(", ")
                   }}</bdi></span
                 >
+                <span
+                  v-if="item.unload_protected"
+                  :id="`kernel-blocked-${item.name}`"
+                  class="text-muted-foreground mt-2 block text-xs"
+                >
+                  {{ t("runtime.protected") }}
+                </span>
               </button>
               <Button
                 v-if="item.source === 'loaded'"
@@ -286,9 +285,12 @@ function restoreOperationFocus(event: Event) {
                 @click="unload(item)"
                 >{{ t("runtime.unload") }}</Button
               >
-              <span v-if="!canUnload(item)" :id="`kernel-blocked-${item.name}`" class="sr-only">{{
-                t("runtime.unloadBlocked")
-              }}</span>
+              <span
+                v-if="!canUnload(item) && !item.unload_protected"
+                :id="`kernel-blocked-${item.name}`"
+                class="sr-only"
+                >{{ t("runtime.unloadBlocked") }}</span
+              >
             </div>
           </div>
         </QueryState>
@@ -307,11 +309,29 @@ function restoreOperationFocus(event: Event) {
     <ConfirmDialog
       v-model:open="confirmOpen"
       :title="t(pending?.action === 'load' ? 'files.load' : 'runtime.unload')"
-      :description="confirmation"
+      :confirm-label="t(pending?.action === 'load' ? 'files.load' : 'runtime.unload')"
       destructive
       @confirm="acceptOperation"
       @close-auto-focus="restoreOperationFocus"
     >
+      <template #description>
+        <I18nT
+          v-if="pending"
+          :keypath="
+            pending.action === 'load'
+              ? 'kernelModules.files.loadConfirm'
+              : 'kernelModules.runtime.unloadConfirm'
+          "
+          tag="span"
+          scope="global"
+        >
+          <template #name
+            ><bdi dir="ltr">{{
+              pending.action === "load" ? pending.file.name : pending.name
+            }}</bdi></template
+          >
+        </I18nT>
+      </template>
       <KeyValueList
         v-if="pending"
         :rows="

@@ -34,7 +34,10 @@ test("confirms removal and refreshes the runtime inventory", async ({ page, open
     .locator('[data-module="usb_f_mass_storage"]')
     .getByRole("button", { name: /^Unload / })
     .click()
-  await page.getByRole("alertdialog").getByRole("button", { name: "Confirm", exact: true }).click()
+  await page
+    .getByRole("alertdialog")
+    .getByRole("button", { name: /^(Unload|Load module)$/, exact: true })
+    .click()
   await expect(page.locator('[data-module="usb_f_mass_storage"]')).toHaveCount(0)
   await expect(page.getByRole("tab", { name: "Runtime", exact: true })).toBeFocused()
 })
@@ -53,7 +56,10 @@ test("inspects a module, loads it after confirmation and clears stale inspection
   await page.getByRole("tab", { name: "Runtime", exact: true }).click()
   await page.getByRole("tab", { name: "Module files", exact: true }).click()
   await page.getByRole("button", { name: "Load module", exact: true }).click()
-  await page.getByRole("alertdialog").getByRole("button", { name: "Confirm", exact: true }).click()
+  await page
+    .getByRole("alertdialog")
+    .getByRole("button", { name: /^(Unload|Load module)$/, exact: true })
+    .click()
   await expect(page.getByRole("button", { name: "Load module", exact: true })).toBeDisabled()
   await page.getByRole("tab", { name: "Runtime", exact: true }).click()
   await expect(page.locator('[data-module="sample"]')).toBeVisible()
@@ -92,7 +98,10 @@ test("shows kernel rejection without adding the module", async ({ page, open }) 
     .fill("/data/local/tmp/sample.ko")
   await page.getByRole("button", { name: "Inspect file", exact: true }).click()
   await page.getByRole("button", { name: "Load module", exact: true }).click()
-  await page.getByRole("alertdialog").getByRole("button", { name: "Confirm", exact: true }).click()
+  await page
+    .getByRole("alertdialog")
+    .getByRole("button", { name: /^(Unload|Load module)$/, exact: true })
+    .click()
   await expect(page.getByText("The kernel rejected the operation.", { exact: true })).toBeVisible()
   await page.getByRole("tab", { name: "Runtime", exact: true }).click()
   await expect(page.locator('[data-module="sample"]')).toHaveCount(0)
@@ -137,7 +146,10 @@ test("announces a pending operation and keeps draft parameters across tabs", asy
   await page.getByRole("tab", { name: "Module files", exact: true }).click()
   await expect(parameters).toHaveValue("debug=1")
   await page.getByRole("button", { name: "Load module", exact: true }).click()
-  await page.getByRole("alertdialog").getByRole("button", { name: "Confirm", exact: true }).click()
+  await page
+    .getByRole("alertdialog")
+    .getByRole("button", { name: /^(Unload|Load module)$/, exact: true })
+    .click()
   await expect(page.getByTestId("kernel-operation-pending")).toBeVisible()
   await expect(page.getByRole("button", { name: "Load module", exact: true })).toBeDisabled()
   await expect(page.getByTestId("kernel-operation-pending")).toHaveCount(0)
@@ -174,6 +186,17 @@ test("supports keyboard focus and reachable controls at 200 percent text", async
       () => document.documentElement.scrollWidth <= document.documentElement.clientWidth,
     ),
   ).toBe(true)
+  const unload = page.getByRole("button", { name: "Unload usb_f_mass_storage", exact: true })
+  await unload.click()
+  const confirm = page.getByRole("alertdialog").getByRole("button", { name: "Unload", exact: true })
+  await confirm.scrollIntoViewIfNeeded()
+  await expect(confirm).toBeInViewport()
+  const bounds = await confirm.boundingBox()
+  expect(bounds!.height).toBeGreaterThanOrEqual(48)
+  expect(bounds!.x).toBeGreaterThanOrEqual(0)
+  expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(320)
+  await page.getByRole("alertdialog").getByRole("button", { name: "Cancel", exact: true }).click()
+  await expect(unload).toBeFocused()
 })
 
 test("explains why an ARM32 module cannot be loaded by the ARM64 manager", async ({
@@ -249,6 +272,8 @@ for (const locale of ["en", "zh-CN", "ar"] as const) {
         element.getAnimations().map((animation) => animation.finished.catch(() => undefined)),
       )
     })
+    await expect(dialog.getByRole("button", { name: labels.load, exact: true })).toBeVisible()
+    await expect(dialog.locator('bdi[dir="ltr"]').first()).toHaveText("sample")
     const bounds = await dialog.boundingBox()
     expect(bounds!.x).toBeGreaterThanOrEqual(0)
     expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(320)
@@ -272,7 +297,7 @@ for (const theme of ["light", "dark"] as const) {
     await unload.click()
     const confirm = page
       .getByRole("alertdialog")
-      .getByRole("button", { name: "Confirm", exact: true })
+      .getByRole("button", { name: /^(Unload|Load module)$/, exact: true })
     const ratios = await confirm.evaluate((button) => {
       const canvas = document.createElement("canvas")
       canvas.width = canvas.height = 1
@@ -328,3 +353,58 @@ test("explains the ARM64 module name limit before loading", async ({ page, open 
   ).toBeVisible()
   await expect(page.getByRole("button", { name: "Load module", exact: true })).toBeDisabled()
 })
+
+test("protects the root core even with zero references and shows the reason", async ({
+  page,
+  open,
+}) => {
+  await open("/kernel-modules")
+  const row = page.locator('[data-module="kernelsu"]')
+  await expect(
+    row.getByText("Protected root module. Unloading is blocked by this app.", { exact: true }),
+  ).toBeVisible()
+  await expect(row.getByRole("button", { name: "Unload kernelsu", exact: true })).toBeDisabled()
+  await row.getByRole("button", { name: "View details of kernelsu", exact: true }).click()
+  await expect(
+    page
+      .getByRole("dialog")
+      .getByText("Protected root module. Unloading is blocked by this app.", { exact: true }),
+  ).toBeVisible()
+})
+
+test("distinguishes an unreadable holder list from no dependents", async ({ page, open }) => {
+  await open("/kernel-modules", { query: { kernelModules: "holders-unavailable" } })
+  await page
+    .getByRole("button", { name: "View details of usb_f_mass_storage", exact: true })
+    .click()
+  await expect(
+    page.getByText("Holder state is unavailable. Unloading is blocked until it can be read.", {
+      exact: true,
+    }),
+  ).toBeVisible()
+})
+
+test("refuses removal when holder state cannot be established", async ({ page, open }) => {
+  await open("/kernel-modules", { query: { kernelModules: "holders-unavailable" } })
+  await page.getByRole("button", { name: "Unload usb_f_mass_storage", exact: true }).click()
+  await page.getByRole("alertdialog").getByRole("button", { name: "Unload", exact: true }).click()
+  await expect(page.getByTestId("kernel-operation-error")).toContainText(
+    "Kernel state could not be read.",
+  )
+  await expect(page.locator('[data-module="usb_f_mass_storage"]')).toBeVisible()
+})
+
+for (const [scenario, value] of [
+  ["untainted", "No taint flags"],
+  ["taint-unavailable", "Unreadable"],
+] as const) {
+  test(`distinguishes module taint state in ${scenario}`, async ({ page, open }) => {
+    await open("/kernel-modules", { query: { kernelModules: scenario } })
+    await page
+      .getByRole("button", { name: "View details of usb_f_mass_storage", exact: true })
+      .click()
+    const dialog = page.getByRole("dialog")
+    await expect(dialog.getByText("Module taint flags", { exact: true })).toBeVisible()
+    await expect(dialog.getByText(value, { exact: true })).toBeVisible()
+  })
+}

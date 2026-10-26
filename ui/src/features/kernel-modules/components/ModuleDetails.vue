@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useQuery } from "@tanstack/vue-query"
+import { computed } from "vue"
 
 import {
   Dialog,
@@ -22,6 +23,16 @@ const details = useQuery({
   queryFn: () => kernelModulesApi.details(props.name!),
   enabled: () => props.name !== null,
   staleTime: 0,
+})
+const dependents = computed(() => {
+  const data = details.data.value
+  const names = [...new Set([...(data?.module.used_by ?? []), ...(data?.holders ?? [])])].filter(
+    (name) => name !== "[permanent]",
+  )
+  return {
+    value: names.join(", ") || (data?.holders_available ? "—" : t("runtime.unreadable")),
+    mono: names.length > 0,
+  }
 })
 </script>
 
@@ -47,6 +58,17 @@ const details = useQuery({
         @retry="details.refetch()"
       >
         <template v-if="details.data.value">
+          <p v-if="details.data.value.module.unload_protected" class="mb-3 text-sm">
+            {{ t("runtime.protected") }}
+          </p>
+          <p
+            v-if="
+              details.data.value.module.source === 'loaded' && !details.data.value.holders_available
+            "
+            class="text-destructive mb-3 text-sm"
+          >
+            {{ t("runtime.holdersUnavailable") }}
+          </p>
           <KeyValueList
             :rows="[
               {
@@ -59,19 +81,17 @@ const details = useQuery({
                 value: details.data.value.srcversion ?? '—',
                 mono: true,
               },
-              { label: t('metadata.taint'), value: details.data.value.taint || '—', mono: true },
+              {
+                label: t('metadata.taint'),
+                value:
+                  details.data.value.taint === null
+                    ? t('runtime.unreadable')
+                    : details.data.value.taint || t('metadata.noTaint'),
+                mono: !!details.data.value.taint,
+              },
               {
                 label: t('runtime.usedBy'),
-                value:
-                  [
-                    ...new Set([
-                      ...details.data.value.module.used_by,
-                      ...details.data.value.holders,
-                    ]),
-                  ]
-                    .filter((name) => name !== '[permanent]')
-                    .join(', ') || '—',
-                mono: true,
+                ...dependents,
               },
             ]"
           />

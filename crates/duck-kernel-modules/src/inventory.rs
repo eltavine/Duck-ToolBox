@@ -14,6 +14,7 @@ pub struct Module {
     pub references: Option<i64>,
     pub used_by: Vec<String>,
     pub state: Option<String>,
+    pub unload_protected: bool,
 }
 
 #[derive(Debug, Serialize)]
@@ -65,6 +66,7 @@ pub fn parse_proc(raw: &str) -> Result<Vec<Module>> {
             );
             Ok(Module {
                 name: fields[0].into(),
+                unload_protected: crate::unload_policy::protected(fields[0]),
                 source: "loaded",
                 size: Some(fields[1].parse().context("module size")?),
                 // CONFIG_MODULE_UNLOAD=n emits '-' for both reference count and users.
@@ -113,6 +115,7 @@ pub fn status(sysroot: &Sysroot) -> Result<Status> {
                 if valid_name(&name) && entry.path().is_dir() {
                     modules.entry(name.clone()).or_insert_with(|| Module {
                         state: optional_text(sysroot, &format!("/sys/module/{name}/initstate")),
+                        unload_protected: crate::unload_policy::protected(&name),
                         name,
                         source: "sysfs_only",
                         size: None,
@@ -159,6 +162,7 @@ pub struct Details {
     pub srcversion: Option<String>,
     pub taint: Option<String>,
     pub holders: Vec<String>,
+    pub holders_available: bool,
     pub parameters: Vec<Parameter>,
     pub warnings: Vec<String>,
 }
@@ -177,17 +181,25 @@ pub fn details(sysroot: &Sysroot, name: &str) -> Result<Details> {
     let base = format!("/sys/module/{name}");
     let mut warnings = inventory.warnings;
     let mut holders = vec![];
+    let mut holders_available = true;
     match fs::read_dir(sysroot.path(format!("{base}/holders"))) {
         Ok(entries) => {
             for entry in entries {
                 match entry {
                     Ok(entry) => holders.push(entry.file_name().to_string_lossy().into_owned()),
-                    Err(error) => warnings.push(format!("holders: {error}")),
+                    Err(error) => {
+                        holders_available = false;
+                        warnings.push(format!("holders: {error}"));
+                    }
                 }
             }
         }
-        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
-        Err(error) => warnings.push(format!("holders: {error}")),
+        Err(error) => {
+            holders_available = false;
+            if module.source == "loaded" {
+                warnings.push(format!("holders: {error}"));
+            }
+        }
     }
     holders.sort();
     let mut parameters = vec![];
@@ -230,6 +242,7 @@ pub fn details(sysroot: &Sysroot, name: &str) -> Result<Details> {
         taint: optional_text(sysroot, &format!("{base}/taint")),
         module,
         holders,
+        holders_available,
         parameters,
         warnings,
     })

@@ -30,7 +30,9 @@
     "stateLoading": "Cargando",
     "stateUnloading": "Descargando",
     "stateUnknown": "Estado desconocido",
-    "parametersEmpty": "No se exponen parámetros legibles."
+    "parametersEmpty": "No se exponen parámetros legibles.",
+    "protected": "Módulo root protegido. Esta aplicación bloquea su descarga.",
+    "holdersUnavailable": "No se puede leer el estado de los módulos dependientes. La descarga queda bloqueada hasta poder leerlo."
   },
   "files": {
     "description": "Inspecciona archivos .ko sin comprimir sin cargarlos.",
@@ -74,7 +76,8 @@
     "operation_timeout": "Tiempo agotado; resultado desconocido. Actualiza antes de continuar.",
     "kernel_rejected": "El kernel rechazó la operación.",
     "kernel_modules_error": "Falló la operación del módulo.",
-    "operation_unknown": "El proceso terminó sin un resultado fiable. Resultado desconocido; actualiza antes de continuar."
+    "operation_unknown": "El proceso terminó sin un resultado fiable. Resultado desconocido; actualiza antes de continuar.",
+    "module_protected": "Este módulo root está protegido contra la descarga."
   },
   "overview": {
     "title": "Entorno del kernel",
@@ -84,10 +87,11 @@
   "metadata": {
     "version": "Versión del módulo",
     "srcversion": "Versión del código fuente",
-    "taint": "Marcas de alteración del kernel",
+    "taint": "Marcas taint del módulo",
     "name": "Nombre del módulo",
     "architecture": "Arquitectura ELF",
     "size": "Tamaño del archivo",
-    "other": "Otra arquitectura"
+    "other": "Otra arquitectura",
+    "noTaint": "Sin marcas taint"
   }
 }

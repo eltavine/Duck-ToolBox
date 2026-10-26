@@ -8,7 +8,7 @@ import { NAMESPACE } from "./i18n"
 export default defineFeature({
   id: "kernel-modules",
   namespace: NAMESPACE,
-  contract: 2,
+  contract: 3,
   icon: Cpu,
   order: 60,
   routes: [

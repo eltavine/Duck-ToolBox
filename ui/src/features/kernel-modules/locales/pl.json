@@ -30,7 +30,9 @@
     "stateLoading": "Ładowanie",
     "stateUnloading": "Usuwanie",
     "stateUnknown": "Stan nieznany",
-    "parametersEmpty": "Brak udostępnionych parametrów do odczytu."
+    "parametersEmpty": "Brak udostępnionych parametrów do odczytu.",
+    "protected": "Chroniony moduł root. Ta aplikacja blokuje jego wyładowanie.",
+    "holdersUnavailable": "Nie można odczytać stanu modułów zależnych. Wyładowanie jest zablokowane do czasu odczytu."
   },
   "files": {
     "description": "Sprawdź nieskompresowane pliki .ko bez ich ładowania.",
@@ -74,7 +76,8 @@
     "operation_timeout": "Przekroczono czas; wynik nieznany. Odśwież przed kontynuowaniem.",
     "kernel_rejected": "Jądro odrzuciło operację.",
     "kernel_modules_error": "Operacja na module jądra nie powiodła się.",
-    "operation_unknown": "Proces zakończył się bez wiarygodnego wyniku. Wynik nieznany; odśwież przed kontynuowaniem."
+    "operation_unknown": "Proces zakończył się bez wiarygodnego wyniku. Wynik nieznany; odśwież przed kontynuowaniem.",
+    "module_protected": "Ten moduł root jest chroniony przed wyładowaniem."
   },
   "overview": {
     "title": "Środowisko jądra",
@@ -84,10 +87,11 @@
   "metadata": {
     "version": "Wersja modułu",
     "srcversion": "Wersja źródeł",
-    "taint": "Znaczniki zmian jądra",
+    "taint": "Flagi taint modułu",
     "name": "Nazwa modułu",
     "architecture": "Architektura ELF",
     "size": "Rozmiar pliku",
-    "other": "Inna architektura"
+    "other": "Inna architektura",
+    "noTaint": "Brak flag taint"
   }
 }

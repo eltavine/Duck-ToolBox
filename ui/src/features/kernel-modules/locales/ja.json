@@ -30,7 +30,9 @@
     "stateLoading": "ロード中",
     "stateUnloading": "アンロード中",
     "stateUnknown": "状態不明",
-    "parametersEmpty": "読み取り可能な公開パラメーターはありません。"
+    "parametersEmpty": "読み取り可能な公開パラメーターはありません。",
+    "protected": "root モジュールを保護しています。このアプリからはアンロードできません。",
+    "holdersUnavailable": "依存モジュールの状態を読み取れません。読み取れるまでアンロードできません。"
   },
   "files": {
     "description": "端末上の非圧縮 .ko ファイルをロードせずに解析します。",
@@ -74,7 +76,8 @@
     "operation_timeout": "時間切れで結果は不明です。続行前に更新してください。",
     "kernel_rejected": "カーネルが操作を拒否しました。",
     "kernel_modules_error": "カーネルモジュールの操作に失敗しました。",
-    "operation_unknown": "ワーカーから確実な結果を取得できませんでした。続行前に状態を更新してください。"
+    "operation_unknown": "ワーカーから確実な結果を取得できませんでした。続行前に状態を更新してください。",
+    "module_protected": "この root モジュールはアンロードから保護されています。"
   },
   "overview": {
     "title": "カーネル環境",
@@ -84,10 +87,11 @@
   "metadata": {
     "version": "モジュールのバージョン",
     "srcversion": "ソースのバージョン",
-    "taint": "カーネル汚染フラグ",
+    "taint": "モジュールの taint フラグ",
     "name": "モジュール名",
     "architecture": "ELF アーキテクチャ",
     "size": "ファイルサイズ",
-    "other": "その他のアーキテクチャ"
+    "other": "その他のアーキテクチャ",
+    "noTaint": "taint フラグなし"
   }
 }

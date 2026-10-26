@@ -134,6 +134,10 @@ pub fn validate_load(ctx: &Context, request: &LoadRequest) -> Result<(files::Fil
 
 pub fn validate_unload(ctx: &Context, name: &str) -> Result<()> {
     validate_kernel_name(name)?;
+    ensure!(
+        !crate::unload_policy::protected(name),
+        ModuleError::Protected(name.into())
+    );
     let details = inventory::details(&ctx.sysroot, name)?;
     ensure!(
         details.module.source == "loaded",
@@ -142,6 +146,10 @@ pub fn validate_unload(ctx: &Context, name: &str) -> Result<()> {
     ensure!(
         details.module.state.as_deref() == Some("Live"),
         ModuleError::Busy("module is not in Live state".into())
+    );
+    ensure!(
+        details.holders_available,
+        ModuleError::Unavailable("cannot establish module holder state".into())
     );
     ensure!(
         details.module.references == Some(0)

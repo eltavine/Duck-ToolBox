@@ -30,7 +30,9 @@
     "stateLoading": "Caricamento",
     "stateUnloading": "Scaricamento",
     "stateUnknown": "Stato sconosciuto",
-    "parametersEmpty": "Nessun parametro leggibile esposto."
+    "parametersEmpty": "Nessun parametro leggibile esposto.",
+    "protected": "Modulo root protetto. Questa app ne blocca la rimozione.",
+    "holdersUnavailable": "Lo stato dei moduli dipendenti non è leggibile. La rimozione resta bloccata finché non può essere letto."
   },
   "files": {
     "description": "Esamina i file .ko non compressi senza caricarli.",
@@ -74,7 +76,8 @@
     "operation_timeout": "Tempo scaduto; esito sconosciuto. Aggiorna prima di procedere.",
     "kernel_rejected": "Il kernel ha rifiutato l’operazione.",
     "kernel_modules_error": "Operazione sul modulo non riuscita.",
-    "operation_unknown": "Il processo si è interrotto senza un risultato affidabile. Esito sconosciuto; aggiorna prima di procedere."
+    "operation_unknown": "Il processo si è interrotto senza un risultato affidabile. Esito sconosciuto; aggiorna prima di procedere.",
+    "module_protected": "Questo modulo root è protetto dalla rimozione."
   },
   "overview": {
     "title": "Ambiente del kernel",
@@ -84,10 +87,11 @@
   "metadata": {
     "version": "Versione del modulo",
     "srcversion": "Versione del sorgente",
-    "taint": "Indicatori di alterazione del kernel",
+    "taint": "Flag taint del modulo",
     "name": "Nome del modulo",
     "architecture": "Architettura ELF",
     "size": "Dimensione del file",
-    "other": "Altra architettura"
+    "other": "Altra architettura",
+    "noTaint": "Nessun flag taint"
   }
 }

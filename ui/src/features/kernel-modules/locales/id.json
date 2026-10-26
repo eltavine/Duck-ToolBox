@@ -30,7 +30,9 @@
     "stateLoading": "Memuat",
     "stateUnloading": "Melepas",
     "stateUnknown": "Status tidak diketahui",
-    "parametersEmpty": "Tidak ada parameter terbuka yang dapat dibaca."
+    "parametersEmpty": "Tidak ada parameter terbuka yang dapat dibaca.",
+    "protected": "Modul root dilindungi. Aplikasi ini memblokir pembongkarannya.",
+    "holdersUnavailable": "Status modul yang bergantung tidak dapat dibaca. Pembongkaran diblokir hingga status dapat dibaca."
   },
   "files": {
     "description": "Periksa berkas .ko tanpa kompresi di perangkat tanpa memuatnya.",
@@ -74,7 +76,8 @@
     "operation_timeout": "Waktu habis; hasil tidak diketahui. Segarkan sebelum melanjutkan.",
     "kernel_rejected": "Kernel menolak operasi.",
     "kernel_modules_error": "Operasi modul kernel gagal.",
-    "operation_unknown": "Proses berhenti tanpa hasil yang dapat diandalkan. Hasil tidak diketahui; segarkan sebelum melanjutkan."
+    "operation_unknown": "Proses berhenti tanpa hasil yang dapat diandalkan. Hasil tidak diketahui; segarkan sebelum melanjutkan.",
+    "module_protected": "Modul root ini dilindungi dari pembongkaran."
   },
   "overview": {
     "title": "Lingkungan kernel",
@@ -84,10 +87,11 @@
   "metadata": {
     "version": "Versi modul",
     "srcversion": "Versi sumber",
-    "taint": "Penanda perubahan kernel",
+    "taint": "Flag taint modul",
     "name": "Nama modul",
     "architecture": "Arsitektur ELF",
     "size": "Ukuran berkas",
-    "other": "Arsitektur lain"
+    "other": "Arsitektur lain",
+    "noTaint": "Tidak ada flag taint"
   }
 }

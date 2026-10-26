@@ -11,7 +11,7 @@ pub static FEATURE: ClapFeature<Command> = ClapFeature::new(
     FeatureInfo {
         id: "kernel-modules",
         summary: "Linux kernel module inventory, .ko inspection and runtime loading/unloading",
-        contract: 2,
+        contract: 3,
     },
     dispatch,
 );

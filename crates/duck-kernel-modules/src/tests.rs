@@ -305,6 +305,7 @@ fn unloading_requires_live_unused_module_with_no_holders() {
 fn dotted_module_names_are_visible_but_arm64_mutations_enforce_the_name_buffer() {
     let (_directory, ctx) = fixture();
     put(&ctx, "/proc/modules", "driver.test+1 4096 0 - Live 0x0\n");
+    fs::create_dir_all(ctx.sysroot.path("/sys/module/driver.test+1/holders")).unwrap();
     assert!(inventory::details(&ctx.sysroot, "driver.test+1").is_ok());
     assert!(mutation::validate_unload(&ctx, "driver.test+1").is_ok());
     for name in [".", "..", "../sample", "a/b", "a\0b"] {
@@ -312,8 +313,10 @@ fn dotted_module_names_are_visible_but_arm64_mutations_enforce_the_name_buffer()
     }
     for (length, valid) in [(55, true), (56, false)] {
         let name = "a".repeat(length);
+        fs::create_dir_all(ctx.sysroot.path(format!("/sys/module/{name}/holders"))).unwrap();
         put(&ctx, "/proc/modules", format!("{name} 4096 0 - Live 0x0\n"));
         assert_eq!(mutation::validate_unload(&ctx, &name).is_ok(), valid);
+        fs::remove_dir_all(ctx.sysroot.path(format!("/sys/module/{name}"))).unwrap();
         put(&ctx, "/proc/modules", "");
         put(
             &ctx,
@@ -389,4 +392,41 @@ fn mutations_require_confirmation_and_never_execute_against_a_test_sysroot() {
         ))),
         "kernel_rejected"
     );
+}
+
+#[test]
+fn root_core_is_protected_even_when_it_reports_no_references() {
+    let (_directory, ctx) = fixture();
+    put(&ctx, "/proc/modules", "kernelsu 4096 0 - Live 0x0\n");
+    let module = inventory::status(&ctx.sysroot)
+        .unwrap()
+        .modules
+        .into_iter()
+        .find(|m| m.name == "kernelsu")
+        .unwrap();
+    assert!(module.unload_protected);
+    assert_eq!(
+        code_of(&mutation::validate_unload(&ctx, "kernelsu").unwrap_err()),
+        "module_protected"
+    );
+}
+
+#[test]
+fn unreadable_or_missing_holders_are_unknown_and_prevent_removal() {
+    let (_directory, ctx) = fixture();
+    let path = ctx.sysroot.path("/sys/module/sample/holders");
+    assert!(mutation::validate_unload(&ctx, "sample").is_ok());
+    fs::remove_dir(&path).unwrap();
+    for unreadable in [false, true] {
+        if unreadable {
+            fs::write(&path, "not a directory").unwrap();
+        }
+        let details = inventory::details(&ctx.sysroot, "sample").unwrap();
+        assert!(!details.holders_available);
+        assert!(!details.warnings.is_empty());
+        assert_eq!(
+            code_of(&mutation::validate_unload(&ctx, "sample").unwrap_err()),
+            "state_unavailable"
+        );
+    }
 }
