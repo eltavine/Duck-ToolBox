@@ -1,0 +1,93 @@
+{
+  "meta": {
+    "title": "Módulos do kernel",
+    "description": "Explore módulos Linux e arquivos .ko; carregue e descarregue módulos."
+  },
+  "tabs": {
+    "runtime": "Em execução",
+    "files": "Arquivos de módulos"
+  },
+  "search": "Pesquisar módulos",
+  "refresh": "Atualizar",
+  "runtime": {
+    "description": "Entradas visíveis apenas no sysfs podem estar integradas ao kernel. A presença delas não comprova suporte ao descarregamento.",
+    "empty": "Nenhuma entrada correspondente.",
+    "loaded": "Carregado",
+    "sysfsOnly": "Apenas sysfs",
+    "references": "Referências: {count}",
+    "usedBy": "Usado por",
+    "parameters": "Parâmetros (somente leitura)",
+    "unavailable": "A consulta está disponível. As operações exigem root no Android ARM64 e leitura de /proc/modules.",
+    "unreadable": "Não foi possível ler",
+    "unload": "Descarregar",
+    "unloadConfirm": "Descarregar {name}? Remover código do kernel pode travar ou reiniciar o dispositivo.",
+    "details": "Ver detalhes de {name}",
+    "unloadNamed": "Descarregar {name}",
+    "unloadBlocked": "Indisponível se o módulo estiver em uso, em transição ou sem um estado de referências que permita descarregá-lo.",
+    "referencesUnknown": "Contagem de referências indisponível",
+    "permanent": "Permanente",
+    "stateLive": "Ativo",
+    "stateLoading": "Carregando",
+    "stateUnloading": "Descarregando",
+    "stateUnknown": "Estado desconhecido",
+    "parametersEmpty": "Nenhum parâmetro legível está exposto."
+  },
+  "files": {
+    "description": "Inspecione arquivos .ko não compactados sem carregá-los.",
+    "empty": "Nenhum arquivo .ko encontrado. Você pode inserir um caminho acima.",
+    "truncated": "Limite de busca atingido. Selecione um arquivo específico.",
+    "path": "Caminho .ko no dispositivo",
+    "browse": "Explorar arquivos",
+    "inspect": "Inspecionar arquivo",
+    "parameters": "Parâmetros de carga (opcional)",
+    "load": "Carregar módulo",
+    "loadConfirm": "Carregar {name}? O código pode travar ou reiniciar o dispositivo. As dependências devem estar carregadas.",
+    "matches": "A versão do kernel corresponde.",
+    "mismatch": "A versão do kernel não corresponde.",
+    "unknown": "Não foi possível comparar a versão do kernel.",
+    "compatibility": "A comparação de versões é informativa. Com CRCs de símbolos, outro prefixo pode ser aceito. O kernel verifica ABI, símbolos, assinatura e políticas.",
+    "metadataReplaced": "Alguns metadados não são UTF-8 válidos e usam caracteres de substituição. O resumo continua usando os bytes originais.",
+    "metadata": "Metadados do módulo",
+    "noParameters": "Nenhum",
+    "formatUnsupported": "É necessário um módulo ARM64 ELF64 little-endian.",
+    "vermagicRequired": "É necessária uma única entrada vermagic não vazia.",
+    "alreadyLoaded": "Um módulo com este nome já está visível no kernel.",
+    "nameTooLong": "Os nomes de módulos ARM64 não podem exceder 55 bytes."
+  },
+  "operation": {
+    "accepted": "O kernel aceitou a operação.",
+    "currentBoot": "Operações manuais afetam esta inicialização. As regras de início não são alteradas.",
+    "loading": "Carregando {name}…",
+    "unloading": "Descarregando {name}…",
+    "details": "Detalhes do erro",
+    "refresh": "Atualizar estado"
+  },
+  "errors": {
+    "invalid_input": "Entrada de módulo inválida.",
+    "state_unavailable": "Não foi possível ler o estado do kernel.",
+    "unsupported_environment": "É necessário um processo root no Android ARM64.",
+    "confirmation_required": "Confirme a operação primeiro.",
+    "file_changed": "O arquivo mudou. Inspecione novamente.",
+    "modules_disabled": "O kernel desativou a carga e descarga de módulos.",
+    "module_busy": "O módulo está em uso, em transição ou não pode ser descarregado.",
+    "operation_busy": "Outra operação de módulo está em andamento.",
+    "operation_timeout": "Tempo esgotado; resultado desconhecido. Atualize antes de continuar.",
+    "kernel_rejected": "O kernel rejeitou a operação.",
+    "kernel_modules_error": "Falha na operação do módulo.",
+    "operation_unknown": "O processo parou sem um resultado confiável. Resultado desconhecido; atualize antes de continuar."
+  },
+  "overview": {
+    "title": "Ambiente do kernel",
+    "kernel": "Versão do kernel",
+    "counts": "{loaded} carregados · {sysfs} apenas no sysfs"
+  },
+  "metadata": {
+    "version": "Versão do módulo",
+    "srcversion": "Versão do código-fonte",
+    "taint": "Marcas de alteração do kernel",
+    "name": "Nome do módulo",
+    "architecture": "Arquitetura ELF",
+    "size": "Tamanho do arquivo",
+    "other": "Outra arquitetura"
+  }
+}

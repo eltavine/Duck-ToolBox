@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { DialogContentEmits, DialogContentProps } from "reka-ui"
 import type { HTMLAttributes } from "vue"
+import { useI18n } from "vue-i18n"
 import { X } from "@lucide/vue"
 import { reactiveOmit } from "@vueuse/core"
 import {
@@ -21,6 +22,7 @@ const props = withDefaults(defineProps<DialogContentProps & { class?: HTMLAttrib
   showCloseButton: true,
 })
 const emits = defineEmits<DialogContentEmits>()
+const { t } = useI18n()
 
 const delegatedProps = reactiveOmit(props, "class")
 
@@ -47,7 +49,7 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits)
         :class="cn(buttonVariants({ variant: 'ghost', size: 'icon' }), 'text-muted-foreground absolute end-3 top-3')"
       >
         <X />
-        <span class="sr-only">Close</span>
+        <span class="sr-only">{{ t('core.actions.close') }}</span>
       </DialogClose>
     </DialogContent>
   </DialogPortal>

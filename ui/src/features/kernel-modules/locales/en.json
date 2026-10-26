@@ -1,0 +1,93 @@
+{
+  "meta": {
+    "title": "Kernel modules",
+    "description": "Browse Linux kernel modules and .ko files; load and unload modules at runtime."
+  },
+  "tabs": {
+    "runtime": "Runtime",
+    "files": "Module files"
+  },
+  "search": "Search modules",
+  "refresh": "Refresh",
+  "runtime": {
+    "description": "Entries visible only in sysfs may be built into the kernel. Their presence does not establish unload support.",
+    "empty": "No matching entries.",
+    "loaded": "Loaded",
+    "sysfsOnly": "Sysfs only",
+    "references": "References: {count}",
+    "usedBy": "Used by",
+    "parameters": "Parameters (read only)",
+    "unavailable": "Browsing is available. Operations require Android ARM64 root and readable /proc/modules.",
+    "unreadable": "Unreadable",
+    "unload": "Unload",
+    "unloadConfirm": "Unload {name}? Removing kernel code can freeze or restart the device.",
+    "details": "View details of {name}",
+    "unloadNamed": "Unload {name}",
+    "unloadBlocked": "Unavailable while the module is in use, transitioning, or lacks an unloadable reference state.",
+    "referencesUnknown": "Reference count unavailable",
+    "permanent": "Permanent",
+    "stateLive": "Live",
+    "stateLoading": "Loading",
+    "stateUnloading": "Unloading",
+    "stateUnknown": "Unknown state",
+    "parametersEmpty": "No readable parameters are exposed."
+  },
+  "files": {
+    "description": "Inspect uncompressed .ko files on this device without loading them.",
+    "empty": "No .ko files found. You can enter a device file path above.",
+    "truncated": "Scan limit reached. Browse a specific file to inspect it.",
+    "path": "Device .ko path",
+    "browse": "Browse files",
+    "inspect": "Inspect file",
+    "parameters": "Load parameters (optional)",
+    "load": "Load module",
+    "loadConfirm": "Load {name}? Kernel code can freeze or restart the device. Dependencies must already be loaded.",
+    "matches": "Kernel release matches.",
+    "mismatch": "Kernel release does not match.",
+    "unknown": "Kernel release could not be compared.",
+    "compatibility": "Release matching is informational. With symbol CRCs the kernel may accept a different release prefix; ABI, symbols, signature and policy checks remain authoritative.",
+    "metadataReplaced": "Some metadata bytes are not valid UTF-8. Replacement characters are shown; the file digest still covers the original bytes.",
+    "metadata": "Module metadata",
+    "noParameters": "None",
+    "formatUnsupported": "Loading requires a little-endian ARM64 ELF64 module.",
+    "vermagicRequired": "Loading requires one nonempty vermagic entry.",
+    "alreadyLoaded": "A module with this name is already visible in the kernel.",
+    "nameTooLong": "ARM64 module names must fit in 55 bytes."
+  },
+  "operation": {
+    "accepted": "The kernel accepted the operation.",
+    "currentBoot": "Manual operations affect this boot. System startup rules are not changed.",
+    "loading": "Loading {name}…",
+    "unloading": "Unloading {name}…",
+    "details": "Error details",
+    "refresh": "Refresh state"
+  },
+  "errors": {
+    "invalid_input": "Invalid module input.",
+    "state_unavailable": "Kernel state could not be read.",
+    "unsupported_environment": "Operations require an Android ARM64 root process.",
+    "confirmation_required": "Confirm the operation first.",
+    "file_changed": "The file changed. Inspect it again.",
+    "modules_disabled": "The kernel has disabled module loading and unloading.",
+    "module_busy": "The module is in use, transitioning or not unloadable.",
+    "operation_busy": "Another module operation is running.",
+    "operation_timeout": "Operation timed out; outcome unknown. Refresh before proceeding.",
+    "kernel_rejected": "The kernel rejected the operation.",
+    "kernel_modules_error": "Kernel module operation failed.",
+    "operation_unknown": "The worker stopped without a reliable result. Outcome unknown; refresh before proceeding."
+  },
+  "overview": {
+    "title": "Kernel environment",
+    "kernel": "Kernel release",
+    "counts": "{loaded} loaded · {sysfs} sysfs only"
+  },
+  "metadata": {
+    "version": "Module version",
+    "srcversion": "Source version",
+    "taint": "Kernel taint",
+    "name": "Module name",
+    "architecture": "ELF architecture",
+    "size": "File size",
+    "other": "Other architecture"
+  }
+}

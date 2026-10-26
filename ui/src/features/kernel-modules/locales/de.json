@@ -1,0 +1,93 @@
+{
+  "meta": {
+    "title": "Kernelmodule",
+    "description": "Linux-Kernelmodule und .ko-Dateien ansehen sowie Module laden und entladen."
+  },
+  "tabs": {
+    "runtime": "Laufzeit",
+    "files": "Moduldateien"
+  },
+  "search": "Module suchen",
+  "refresh": "Aktualisieren",
+  "runtime": {
+    "description": "Nur in sysfs sichtbare Einträge können fest eingebaut sein. Ihre Sichtbarkeit belegt keine Entladbarkeit.",
+    "empty": "Keine passenden Einträge.",
+    "loaded": "Geladen",
+    "sysfsOnly": "Nur sysfs",
+    "references": "Referenzen: {count}",
+    "usedBy": "Verwendet von",
+    "parameters": "Parameter (nur lesen)",
+    "unavailable": "Ansehen ist möglich. Aktionen erfordern Android ARM64-Root und lesbares /proc/modules.",
+    "unreadable": "Nicht lesbar",
+    "unload": "Entladen",
+    "unloadConfirm": "{name} entladen? Das Entfernen von Kernelcode kann das Gerät blockieren oder neu starten.",
+    "details": "Details zu {name} anzeigen",
+    "unloadNamed": "{name} entladen",
+    "unloadBlocked": "Nicht verfügbar, wenn das Modul verwendet wird, den Zustand wechselt oder kein entladbarer Referenzzustand vorliegt.",
+    "referencesUnknown": "Referenzanzahl nicht verfügbar",
+    "permanent": "Nicht entladbar",
+    "stateLive": "Aktiv",
+    "stateLoading": "Wird geladen",
+    "stateUnloading": "Wird entladen",
+    "stateUnknown": "Zustand unbekannt",
+    "parametersEmpty": "Keine lesbaren Parameter verfügbar."
+  },
+  "files": {
+    "description": "Unkomprimierte .ko-Dateien auf diesem Gerät prüfen, ohne sie zu laden.",
+    "empty": "Keine .ko-Dateien gefunden. Oben kann ein Dateipfad eingegeben werden.",
+    "truncated": "Suchlimit erreicht. Bitte eine bestimmte Datei auswählen.",
+    "path": ".ko-Pfad auf dem Gerät",
+    "browse": "Dateien durchsuchen",
+    "inspect": "Datei prüfen",
+    "parameters": "Ladeparameter (optional)",
+    "load": "Modul laden",
+    "loadConfirm": "{name} laden? Kernelcode kann das Gerät blockieren oder neu starten. Abhängigkeiten müssen bereits geladen sein.",
+    "matches": "Kernelversion stimmt überein.",
+    "mismatch": "Kernelversion stimmt nicht überein.",
+    "unknown": "Kernelversion konnte nicht verglichen werden.",
+    "compatibility": "Der Versionsvergleich dient nur als Hinweis. Mit Symbol-CRCs kann der Kernel andere Präfixe akzeptieren. ABI, Symbole, Signatur und Richtlinien prüft der Kernel.",
+    "metadataReplaced": "Einige Metadaten sind kein gültiges UTF-8 und werden mit Ersatzzeichen angezeigt. Der Hash verwendet weiterhin die ursprünglichen Bytes.",
+    "metadata": "Modulmetadaten",
+    "noParameters": "Keine",
+    "formatUnsupported": "Erforderlich ist ein Little-Endian-ARM64-ELF64-Modul.",
+    "vermagicRequired": "Erforderlich ist genau ein nicht leerer vermagic-Eintrag.",
+    "alreadyLoaded": "Ein Modul dieses Namens ist bereits im Kernel sichtbar.",
+    "nameTooLong": "ARM64-Modulnamen dürfen höchstens 55 Byte lang sein."
+  },
+  "operation": {
+    "accepted": "Der Kernel hat die Aktion angenommen.",
+    "currentBoot": "Manuelle Aktionen gelten für diesen Start. Systemstartregeln werden nicht geändert.",
+    "loading": "{name} wird geladen…",
+    "unloading": "{name} wird entladen…",
+    "details": "Fehlerdetails",
+    "refresh": "Status aktualisieren"
+  },
+  "errors": {
+    "invalid_input": "Ungültige Moduleingabe.",
+    "state_unavailable": "Kernelstatus konnte nicht gelesen werden.",
+    "unsupported_environment": "Ein Android ARM64-Root-Prozess ist erforderlich.",
+    "confirmation_required": "Aktion zuerst bestätigen.",
+    "file_changed": "Datei wurde geändert. Erneut prüfen.",
+    "modules_disabled": "Der Kernel hat das Laden und Entladen deaktiviert.",
+    "module_busy": "Das Modul wird verwendet, wechselt den Zustand oder ist nicht entladbar.",
+    "operation_busy": "Eine andere Modulaktion läuft bereits.",
+    "operation_timeout": "Zeitüberschreitung; Ergebnis unbekannt. Vor dem Fortfahren aktualisieren.",
+    "kernel_rejected": "Der Kernel hat die Aktion abgelehnt.",
+    "kernel_modules_error": "Kernelmodulaktion fehlgeschlagen.",
+    "operation_unknown": "Der Prozess endete ohne verlässliches Ergebnis. Ausgang unbekannt; vor dem Fortfahren aktualisieren."
+  },
+  "overview": {
+    "title": "Kernelumgebung",
+    "kernel": "Kernelversion",
+    "counts": "{loaded} geladen · {sysfs} nur in sysfs"
+  },
+  "metadata": {
+    "version": "Modulversion",
+    "srcversion": "Quellversion",
+    "taint": "Kernel-Taint",
+    "name": "Modulname",
+    "architecture": "ELF-Architektur",
+    "size": "Dateigröße",
+    "other": "Andere Architektur"
+  }
+}

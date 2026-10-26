@@ -9,6 +9,7 @@ const pages = [
   { name: "rkp", route: "/rkp", ready: "Device" },
   { name: "rkp-device", route: "/rkp-device", ready: "Prerequisites" },
   { name: "tee-attestation", route: "/tee-attestation", ready: "Offline processing" },
+  { name: "kernel-modules", route: "/kernel-modules", ready: "6.6.30-android15" },
   { name: "system", route: "/system", ready: "Duck ToolBox" },
   { name: "settings", route: "/settings", ready: "Language" },
 ]

@@ -1,0 +1,93 @@
+{
+  "meta": {
+    "title": "커널 모듈",
+    "description": "Linux 커널 모듈과 .ko 파일을 살펴보고 수동으로 로드하거나 언로드합니다."
+  },
+  "tabs": {
+    "runtime": "실행 중",
+    "files": "모듈 파일"
+  },
+  "search": "모듈 검색",
+  "refresh": "새로 고침",
+  "runtime": {
+    "description": "sysfs에만 보이는 항목은 커널에 내장되었을 수 있으며 언로드 가능 여부를 보장하지 않습니다.",
+    "empty": "일치하는 항목이 없습니다.",
+    "loaded": "로드됨",
+    "sysfsOnly": "sysfs에만 표시",
+    "references": "참조: {count}",
+    "usedBy": "참조하는 모듈",
+    "parameters": "매개변수 (읽기 전용)",
+    "unavailable": "열람할 수 있습니다. 작업에는 Android ARM64 root와 /proc/modules 읽기 권한이 필요합니다.",
+    "unreadable": "읽을 수 없음",
+    "unload": "언로드",
+    "unloadConfirm": "{name} 모듈을 언로드할까요? 커널 코드 제거로 기기가 멈추거나 재시작될 수 있습니다.",
+    "details": "{name} 세부 정보 보기",
+    "unloadNamed": "{name} 언로드",
+    "unloadBlocked": "모듈이 사용 중이거나 상태 전환 중이거나 언로드 가능한 참조 상태가 없으면 사용할 수 없습니다.",
+    "referencesUnknown": "참조 수를 알 수 없음",
+    "permanent": "언로드 불가",
+    "stateLive": "실행 중",
+    "stateLoading": "로드 중",
+    "stateUnloading": "언로드 중",
+    "stateUnknown": "상태 알 수 없음",
+    "parametersEmpty": "공개된 읽기 가능한 매개변수가 없습니다."
+  },
+  "files": {
+    "description": "기기의 압축되지 않은 .ko 파일을 로드하지 않고 분석합니다.",
+    "empty": ".ko 파일이 없습니다. 위에 기기 파일 경로를 입력할 수 있습니다.",
+    "truncated": "검색 한도에 도달했습니다. 특정 파일을 선택하세요.",
+    "path": "기기의 .ko 경로",
+    "browse": "파일 찾아보기",
+    "inspect": "파일 분석",
+    "parameters": "로드 매개변수 (선택)",
+    "load": "모듈 로드",
+    "loadConfirm": "{name} 모듈을 로드할까요? 기기가 멈추거나 재시작될 수 있습니다. 의존 모듈을 미리 로드해야 합니다.",
+    "matches": "커널 릴리스가 일치합니다.",
+    "mismatch": "커널 릴리스가 일치하지 않습니다.",
+    "unknown": "커널 릴리스를 비교할 수 없습니다.",
+    "compatibility": "릴리스 비교는 참고용입니다. 심볼 CRC가 있으면 다른 릴리스 접두사도 허용될 수 있습니다. ABI, 심볼, 서명, 정책은 커널이 검사합니다.",
+    "metadataReplaced": "일부 메타데이터가 올바른 UTF-8이 아니므로 대체 문자로 표시됩니다. 파일 해시는 원본 바이트를 기준으로 합니다.",
+    "metadata": "모듈 메타데이터",
+    "noParameters": "없음",
+    "formatUnsupported": "리틀 엔디언 ARM64 ELF64 모듈만 로드할 수 있습니다.",
+    "vermagicRequired": "로드하려면 비어 있지 않은 vermagic 항목이 하나 필요합니다.",
+    "alreadyLoaded": "동일한 이름의 모듈이 이미 커널에 있습니다.",
+    "nameTooLong": "ARM64 모듈 이름은 55바이트 이하여야 합니다."
+  },
+  "operation": {
+    "accepted": "커널이 작업을 수락했습니다.",
+    "currentBoot": "수동 작업은 이번 부팅에만 적용됩니다. 시스템 시작 규칙은 변경하지 않습니다.",
+    "loading": "{name} 로드 중…",
+    "unloading": "{name} 언로드 중…",
+    "details": "오류 세부 정보",
+    "refresh": "상태 새로 고침"
+  },
+  "errors": {
+    "invalid_input": "모듈 입력이 잘못되었습니다.",
+    "state_unavailable": "커널 상태를 읽을 수 없습니다.",
+    "unsupported_environment": "Android ARM64 root 프로세스가 필요합니다.",
+    "confirmation_required": "먼저 작업을 확인하세요.",
+    "file_changed": "파일이 변경되었습니다. 다시 분석하세요.",
+    "modules_disabled": "커널이 모듈 로드와 언로드를 금지했습니다.",
+    "module_busy": "모듈이 사용 중이거나 상태 전환 중이거나 언로드할 수 없습니다.",
+    "operation_busy": "다른 모듈 작업이 실행 중입니다.",
+    "operation_timeout": "작업 시간이 초과되어 결과를 알 수 없습니다. 계속하기 전에 새로 고치세요.",
+    "kernel_rejected": "커널이 작업을 거부했습니다.",
+    "kernel_modules_error": "커널 모듈 작업에 실패했습니다.",
+    "operation_unknown": "작업 프로세스의 결과를 확인할 수 없습니다. 계속하기 전에 상태를 새로 고치세요."
+  },
+  "overview": {
+    "title": "커널 실행 환경",
+    "kernel": "커널 릴리스",
+    "counts": "로드됨 {loaded}개 · sysfs에만 표시 {sysfs}개"
+  },
+  "metadata": {
+    "version": "모듈 버전",
+    "srcversion": "소스 버전",
+    "taint": "커널 오염 플래그",
+    "name": "모듈 이름",
+    "architecture": "ELF 아키텍처",
+    "size": "파일 크기",
+    "other": "기타 아키텍처"
+  }
+}

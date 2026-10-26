@@ -23,6 +23,10 @@ for as long as object code is distributed.
 Existing third-party notices, including `module/licenses/rkp-v1-oracle.txt`, remain
 applicable to their respective components.
 
+Kernel module ELF inspection links the `object` crate (version locked in `Cargo.lock`)
+with only its ELF reader enabled in production. It is used under its MIT license;
+the copyright and license are included in `module/licenses/object-MIT.txt`.
+
 TrustKernel provisioning loads the device's existing `libkphproxy.so` at runtime in
 an isolated worker. No KPH vendor executable or library is distributed by this module.
 The root MIT license covers the independently written adapter, not the device's vendor

@@ -1,0 +1,93 @@
+{
+  "meta": {
+    "title": "Modules du noyau",
+    "description": "Parcourir les modules Linux et fichiers .ko ; charger et décharger des modules."
+  },
+  "tabs": {
+    "runtime": "En cours",
+    "files": "Fichiers de modules"
+  },
+  "search": "Rechercher des modules",
+  "refresh": "Actualiser",
+  "runtime": {
+    "description": "Les entrées visibles uniquement dans sysfs peuvent être intégrées au noyau. Leur présence ne garantit pas le déchargement.",
+    "empty": "Aucune entrée correspondante.",
+    "loaded": "Chargé",
+    "sysfsOnly": "Sysfs uniquement",
+    "references": "Références : {count}",
+    "usedBy": "Utilisé par",
+    "parameters": "Paramètres (lecture seule)",
+    "unavailable": "La consultation reste possible. Les opérations nécessitent root sous Android ARM64 et la lecture de /proc/modules.",
+    "unreadable": "Illisible",
+    "unload": "Décharger",
+    "unloadConfirm": "Décharger {name} ? Le retrait de code du noyau peut bloquer ou redémarrer l’appareil.",
+    "details": "Voir les détails de {name}",
+    "unloadNamed": "Décharger {name}",
+    "unloadBlocked": "Indisponible si le module est utilisé, en transition ou sans état de référence permettant son déchargement.",
+    "referencesUnknown": "Nombre de références indisponible",
+    "permanent": "Permanent",
+    "stateLive": "Actif",
+    "stateLoading": "Chargement",
+    "stateUnloading": "Déchargement",
+    "stateUnknown": "État inconnu",
+    "parametersEmpty": "Aucun paramètre lisible n’est exposé."
+  },
+  "files": {
+    "description": "Inspecter les fichiers .ko non compressés sans les charger.",
+    "empty": "Aucun fichier .ko trouvé. Vous pouvez saisir un chemin ci-dessus.",
+    "truncated": "Limite de recherche atteinte. Sélectionnez un fichier précis.",
+    "path": "Chemin du fichier .ko",
+    "browse": "Parcourir les fichiers",
+    "inspect": "Inspecter le fichier",
+    "parameters": "Paramètres de chargement (facultatif)",
+    "load": "Charger le module",
+    "loadConfirm": "Charger {name} ? Ce code peut bloquer ou redémarrer l’appareil. Les dépendances doivent déjà être chargées.",
+    "matches": "La version du noyau correspond.",
+    "mismatch": "La version du noyau ne correspond pas.",
+    "unknown": "Impossible de comparer les versions du noyau.",
+    "compatibility": "La comparaison des versions est indicative. Avec des CRC de symboles, un autre préfixe peut être accepté. Le noyau vérifie ABI, symboles, signature et politique.",
+    "metadataReplaced": "Certaines métadonnées ne sont pas en UTF-8 valide et affichent des caractères de remplacement. L’empreinte utilise toujours les octets d’origine.",
+    "metadata": "Métadonnées du module",
+    "noParameters": "Aucun",
+    "formatUnsupported": "Un module ARM64 ELF64 petit-boutiste est requis.",
+    "vermagicRequired": "Une seule entrée vermagic non vide est requise.",
+    "alreadyLoaded": "Un module de ce nom est déjà visible dans le noyau.",
+    "nameTooLong": "Les noms de modules ARM64 sont limités à 55 octets."
+  },
+  "operation": {
+    "accepted": "Le noyau a accepté l’opération.",
+    "currentBoot": "Les opérations manuelles concernent ce démarrage. Les règles de démarrage restent inchangées.",
+    "loading": "Chargement de {name}…",
+    "unloading": "Déchargement de {name}…",
+    "details": "Détails de l’erreur",
+    "refresh": "Actualiser l’état"
+  },
+  "errors": {
+    "invalid_input": "Entrée de module incorrecte.",
+    "state_unavailable": "Impossible de lire l’état du noyau.",
+    "unsupported_environment": "Un processus root sous Android ARM64 est nécessaire.",
+    "confirmation_required": "Confirmez d’abord l’opération.",
+    "file_changed": "Le fichier a changé. Inspectez-le à nouveau.",
+    "modules_disabled": "Le noyau a désactivé le chargement et le déchargement des modules.",
+    "module_busy": "Le module est utilisé, en transition ou non déchargeable.",
+    "operation_busy": "Une autre opération de module est en cours.",
+    "operation_timeout": "Délai dépassé ; résultat inconnu. Actualisez avant de continuer.",
+    "kernel_rejected": "Le noyau a refusé l’opération.",
+    "kernel_modules_error": "Échec de l’opération du module.",
+    "operation_unknown": "Le processus s’est arrêté sans résultat fiable. Résultat inconnu ; actualisez avant de continuer."
+  },
+  "overview": {
+    "title": "Environnement du noyau",
+    "kernel": "Version du noyau",
+    "counts": "{loaded} chargés · {sysfs} uniquement dans sysfs"
+  },
+  "metadata": {
+    "version": "Version du module",
+    "srcversion": "Version du code source",
+    "taint": "Marques d’altération du noyau",
+    "name": "Nom du module",
+    "architecture": "Architecture ELF",
+    "size": "Taille du fichier",
+    "other": "Autre architecture"
+  }
+}

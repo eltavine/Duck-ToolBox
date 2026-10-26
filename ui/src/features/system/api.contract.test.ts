@@ -28,6 +28,7 @@ describe.skipIf(!hasDuckd)("system API against the real duckd", CONTRACT, () => 
       "tricky-store",
       "play-integrity",
       "system",
+      "kernel-modules",
     ])
   })
 

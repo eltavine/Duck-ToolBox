@@ -1,0 +1,93 @@
+{
+  "meta": {
+    "title": "Moduły jądra",
+    "description": "Przeglądaj moduły Linux i pliki .ko; ręcznie ładuj i usuwaj moduły."
+  },
+  "tabs": {
+    "runtime": "Uruchomione",
+    "files": "Pliki modułów"
+  },
+  "search": "Szukaj modułów",
+  "refresh": "Odśwież",
+  "runtime": {
+    "description": "Wpisy widoczne tylko w sysfs mogą być wbudowane w jądro. Ich obecność nie potwierdza możliwości usunięcia.",
+    "empty": "Brak pasujących wpisów.",
+    "loaded": "Załadowany",
+    "sysfsOnly": "Tylko sysfs",
+    "references": "Odwołania: {count}",
+    "usedBy": "Używany przez",
+    "parameters": "Parametry (tylko odczyt)",
+    "unavailable": "Przeglądanie jest dostępne. Operacje wymagają root w systemie Android ARM64 i odczytu /proc/modules.",
+    "unreadable": "Nie można odczytać",
+    "unload": "Usuń z pamięci",
+    "unloadConfirm": "Usunąć {name}? Usunięcie kodu jądra może zawiesić lub ponownie uruchomić urządzenie.",
+    "details": "Pokaż szczegóły {name}",
+    "unloadNamed": "Usuń {name} z pamięci",
+    "unloadBlocked": "Niedostępne, gdy moduł jest używany, zmienia stan lub nie udostępnia stanu odwołań pozwalającego na usunięcie.",
+    "referencesUnknown": "Liczba odwołań niedostępna",
+    "permanent": "Nieusuwalny",
+    "stateLive": "Aktywny",
+    "stateLoading": "Ładowanie",
+    "stateUnloading": "Usuwanie",
+    "stateUnknown": "Stan nieznany",
+    "parametersEmpty": "Brak udostępnionych parametrów do odczytu."
+  },
+  "files": {
+    "description": "Sprawdź nieskompresowane pliki .ko bez ich ładowania.",
+    "empty": "Nie znaleziono plików .ko. Możesz wpisać ścieżkę powyżej.",
+    "truncated": "Osiągnięto limit skanowania. Wybierz konkretny plik.",
+    "path": "Ścieżka .ko na urządzeniu",
+    "browse": "Przeglądaj pliki",
+    "inspect": "Sprawdź plik",
+    "parameters": "Parametry ładowania (opcjonalnie)",
+    "load": "Załaduj moduł",
+    "loadConfirm": "Załadować {name}? Kod jądra może zawiesić lub ponownie uruchomić urządzenie. Zależności muszą być już załadowane.",
+    "matches": "Wersja jądra jest zgodna.",
+    "mismatch": "Wersja jądra jest niezgodna.",
+    "unknown": "Nie można porównać wersji jądra.",
+    "compatibility": "Porównanie wersji ma charakter informacyjny. Przy CRC symboli jądro może zaakceptować inny prefiks. Jądro sprawdza ABI, symbole, podpis i zasady.",
+    "metadataReplaced": "Niektóre metadane nie są poprawnym UTF-8 i zawierają znaki zastępcze. Skrót nadal jest obliczany z oryginalnych bajtów.",
+    "metadata": "Metadane modułu",
+    "noParameters": "Brak",
+    "formatUnsupported": "Wymagany jest moduł ARM64 ELF64 little-endian.",
+    "vermagicRequired": "Wymagany jest jeden niepusty wpis vermagic.",
+    "alreadyLoaded": "Moduł o tej nazwie jest już widoczny w jądrze.",
+    "nameTooLong": "Nazwy modułów ARM64 mogą mieć najwyżej 55 bajtów."
+  },
+  "operation": {
+    "accepted": "Jądro zaakceptowało operację.",
+    "currentBoot": "Operacje ręczne dotyczą tego uruchomienia. Reguły startowe systemu nie są zmieniane.",
+    "loading": "Ładowanie {name}…",
+    "unloading": "Usuwanie {name}…",
+    "details": "Szczegóły błędu",
+    "refresh": "Odśwież stan"
+  },
+  "errors": {
+    "invalid_input": "Nieprawidłowe dane modułu.",
+    "state_unavailable": "Nie można odczytać stanu jądra.",
+    "unsupported_environment": "Wymagany jest proces root w systemie Android ARM64.",
+    "confirmation_required": "Najpierw potwierdź operację.",
+    "file_changed": "Plik się zmienił. Sprawdź go ponownie.",
+    "modules_disabled": "Jądro wyłączyło ładowanie i usuwanie modułów.",
+    "module_busy": "Moduł jest używany, zmienia stan lub nie może być usunięty.",
+    "operation_busy": "Trwa inna operacja na module.",
+    "operation_timeout": "Przekroczono czas; wynik nieznany. Odśwież przed kontynuowaniem.",
+    "kernel_rejected": "Jądro odrzuciło operację.",
+    "kernel_modules_error": "Operacja na module jądra nie powiodła się.",
+    "operation_unknown": "Proces zakończył się bez wiarygodnego wyniku. Wynik nieznany; odśwież przed kontynuowaniem."
+  },
+  "overview": {
+    "title": "Środowisko jądra",
+    "kernel": "Wersja jądra",
+    "counts": "Załadowano: {loaded} · tylko sysfs: {sysfs}"
+  },
+  "metadata": {
+    "version": "Wersja modułu",
+    "srcversion": "Wersja źródeł",
+    "taint": "Znaczniki zmian jądra",
+    "name": "Nazwa modułu",
+    "architecture": "Architektura ELF",
+    "size": "Rozmiar pliku",
+    "other": "Inna architektura"
+  }
+}

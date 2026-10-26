@@ -122,12 +122,31 @@ changed, removed or added on its own.
   files, isolated vendor calls, timeouts and partial-write reports. Its existence check does not
   verify payload equality; MEID entries are explicitly reported as omitted on this path.
   See [backend contracts, ABI evidence and compatibility limits](docs/trustkernel-provisioning.md).
+- **Kernel modules**: Linux kernel module inventory and runtime management.
+  - Reads loaded modules from `/proc/modules` and separately labels entries visible only
+    in `/sys/module`; those may be built into the kernel and are never offered for unloading.
+  - Shows memory size, reference counts, dependents, version, taint and readable parameters.
+    Parameters are read-only; unreadable state is reported separately from empty results.
+  - Scans standard Android module directories and inspects an explicitly chosen uncompressed
+    `.ko` file using the ELF `.modinfo` section, preserving repeated metadata entries.
+  - Manual loading requires confirmation and the SHA-256 from a prior inspection. The worker
+    verifies the file again and submits those exact bytes to the kernel, without force flags.
+    Dependencies must already be loaded. Vermagic release comparison is advisory because
+    symbol CRCs can permit a different release prefix; kernel ABI, symbol, signature and
+    policy checks remain authoritative. Loading requires a little-endian ARM64 ELF64 image.
+  - Unloading is limited to live modules reporting zero references and no dependents or holders.
+    The kernel makes the final decision. No forced unloading or startup-rule edits are exposed.
+  - Mutations are serialized in an isolated worker and require Android ARM64 root outside a test sysroot.
+    A 30-second worker timeout reports an unknown outcome: terminating userspace cannot undo
+    or reliably cancel a kernel init/exit routine. Missing or abnormal worker results also
+    report an unknown outcome. Refresh before further action.
+  - See [source contracts, interface guidance and verification limits](docs/kernel-modules.md).
 - **Module & updates**: version and device summary, stable and canary updates with
   changelog, output files, command history, uninstall and reboot.
 
-Every tool is translated into 14 languages: English, Simplified and Traditional Chinese,
+Every tool is translated into 16 languages: English, Simplified and Traditional Chinese,
 Japanese, Korean, Spanish, French, German, Italian, Brazilian Portuguese, Russian, Arabic,
-Vietnamese and Indonesian. Tricky Addon's other translations cover the strings the Tricky
+Vietnamese, Indonesian, Ukrainian and Polish. Tricky Addon's other translations cover the strings the Tricky
 Store manager shares with it.
 
 ## Architecture
@@ -141,6 +160,7 @@ crates/
   duck-tee-attestation/ Offline capture extraction and identity verification.
   duck-device-ids/    Device ID provisioning.   duck-tricky-store/ Keystore module manager.
   duck-system/        Module lifecycle, updates.
+  duck-kernel-modules/ Linux kernel inventory, ELF inspection and isolated runtime operations.
   duckd/              The binary: builds its CLI from the compiled-in features.
 xtask/                Repository checks (`cargo xtask line-limit`).
 ui/src/
@@ -187,7 +207,7 @@ What keeps it modular and resistant to breaking changes:
    `crates/duckd/src/main.rs`.
 2. **WebUI:** create `ui/src/features/<id>/` with an `index.ts` exporting
    `defineFeature({ id, namespace, icon, order, routes, messages })`, an `api.ts` that calls
-   `duckd()` with zod schemas, a `locales/<language>.json` for each of the 14 languages
+   `duckd()` with zod schemas, a `locales/<language>.json` for each of the 16 languages
    (`src/locales.test.ts` fails on a missing key), and optionally a `mock.ts`. The home page,
    router, i18n, availability check and dev mock pick it up automatically.
 
@@ -250,9 +270,18 @@ duckd tricky-store apps xposed | denylist | unnecessary [--refresh]
 duckd tricky-store entry status | enable | disable | apply | remove
 duckd system info | update check|install [--channel stable|canary] | artifacts | files --path <dir> --extension <ext>
 duckd system log [--limit <n>] | open-url <url> | uninstall | reboot
+duckd kernel-modules status | details <name> | files | inspect <device.ko>
+duckd kernel-modules load --stdin-json
+duckd kernel-modules unload --stdin-json
 ```
 
 Commands that take input read JSON from stdin with `--stdin-json`.
+
+Kernel module loading accepts
+`{"path":"/data/local/tmp/example.ko","sha256":"<digest from inspect>","parameters":"debug=1","confirmed":true}`.
+Unloading accepts `{"name":"example","confirmed":true}`. These operations affect the
+running kernel and can stop or restart a device even when preflight checks pass. The
+WebUI asks for confirmation before submitting either operation.
 
 `rkp-device status` identifies the SoC from manufacturer aliases, SoC part numbers,
 hardware properties and the kernel's [SoC family/machine attributes](https://www.kernel.org/doc/rustdoc/latest/kernel/soc/struct.Attributes.html). It reports the raw

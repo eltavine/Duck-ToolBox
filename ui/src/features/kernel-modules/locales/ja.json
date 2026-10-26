@@ -1,0 +1,93 @@
+{
+  "meta": {
+    "title": "カーネルモジュール",
+    "description": "Linux カーネルモジュールと .ko ファイルの閲覧、手動ロード・アンロード。"
+  },
+  "tabs": {
+    "runtime": "実行中",
+    "files": "モジュールファイル"
+  },
+  "search": "モジュールを検索",
+  "refresh": "更新",
+  "runtime": {
+    "description": "sysfs のみにある項目はカーネル組み込みの場合があり、アンロードできるとは限りません。",
+    "empty": "該当する項目はありません。",
+    "loaded": "ロード済み",
+    "sysfsOnly": "sysfs のみ",
+    "references": "参照数：{count}",
+    "usedBy": "参照元",
+    "parameters": "パラメーター（読み取り専用）",
+    "unavailable": "閲覧できます。操作には Android ARM64 の root と /proc/modules の読み取り権限が必要です。",
+    "unreadable": "読み取り不可",
+    "unload": "アンロード",
+    "unloadConfirm": "{name} をアンロードしますか？カーネルコードの削除で端末が停止・再起動する場合があります。",
+    "details": "{name} の詳細を表示",
+    "unloadNamed": "{name} をアンロード",
+    "unloadBlocked": "使用中、状態遷移中、またはアンロード可能な参照状態がない場合は操作できません。",
+    "referencesUnknown": "参照数を取得できません",
+    "permanent": "アンロード不可",
+    "stateLive": "実行中",
+    "stateLoading": "ロード中",
+    "stateUnloading": "アンロード中",
+    "stateUnknown": "状態不明",
+    "parametersEmpty": "読み取り可能な公開パラメーターはありません。"
+  },
+  "files": {
+    "description": "端末上の非圧縮 .ko ファイルをロードせずに解析します。",
+    "empty": ".ko ファイルが見つかりません。上にパスを入力できます。",
+    "truncated": "走査上限に達しました。個別のファイルを選択してください。",
+    "path": "端末上の .ko パス",
+    "browse": "ファイルを参照",
+    "inspect": "ファイルを解析",
+    "parameters": "ロードパラメーター（任意）",
+    "load": "モジュールをロード",
+    "loadConfirm": "{name} をロードしますか？端末が停止・再起動する場合があります。依存モジュールは事前にロードしてください。",
+    "matches": "カーネルのリリースが一致します。",
+    "mismatch": "カーネルのリリースが一致しません。",
+    "unknown": "カーネルのリリースを比較できません。",
+    "compatibility": "リリースの比較は参考情報です。シンボル CRC があれば異なる接頭辞も許可される場合があります。ABI、シンボル、署名、ポリシーはカーネルが確認します。",
+    "metadataReplaced": "一部のメタデータは有効な UTF-8 ではないため代替文字で表示します。ダイジェストは元のバイト列に基づきます。",
+    "metadata": "モジュールのメタデータ",
+    "noParameters": "なし",
+    "formatUnsupported": "ロードにはリトルエンディアンの ARM64 ELF64 モジュールが必要です。",
+    "vermagicRequired": "ロードには空でない vermagic 項目が一つ必要です。",
+    "alreadyLoaded": "同名のモジュールがカーネルに存在します。",
+    "nameTooLong": "ARM64 モジュール名は 55 バイト以内である必要があります。"
+  },
+  "operation": {
+    "accepted": "カーネルが操作を受け付けました。",
+    "currentBoot": "手動操作は今回の起動中のみ有効です。起動時の規則は変更しません。",
+    "loading": "{name} をロード中…",
+    "unloading": "{name} をアンロード中…",
+    "details": "エラーの詳細",
+    "refresh": "状態を更新"
+  },
+  "errors": {
+    "invalid_input": "モジュールの入力が無効です。",
+    "state_unavailable": "カーネルの状態を読み取れません。",
+    "unsupported_environment": "Android ARM64 の root プロセスが必要です。",
+    "confirmation_required": "先に操作を確認してください。",
+    "file_changed": "ファイルが変わりました。再解析してください。",
+    "modules_disabled": "カーネルがロード・アンロードを禁止しています。",
+    "module_busy": "使用中、状態遷移中、またはアンロード非対応です。",
+    "operation_busy": "別のモジュール操作を実行中です。",
+    "operation_timeout": "時間切れで結果は不明です。続行前に更新してください。",
+    "kernel_rejected": "カーネルが操作を拒否しました。",
+    "kernel_modules_error": "カーネルモジュールの操作に失敗しました。",
+    "operation_unknown": "ワーカーから確実な結果を取得できませんでした。続行前に状態を更新してください。"
+  },
+  "overview": {
+    "title": "カーネル環境",
+    "kernel": "カーネルリリース",
+    "counts": "ロード済み {loaded} · sysfs のみ {sysfs}"
+  },
+  "metadata": {
+    "version": "モジュールのバージョン",
+    "srcversion": "ソースのバージョン",
+    "taint": "カーネル汚染フラグ",
+    "name": "モジュール名",
+    "architecture": "ELF アーキテクチャ",
+    "size": "ファイルサイズ",
+    "other": "その他のアーキテクチャ"
+  }
+}

@@ -20,7 +20,7 @@ defineProps<{
 }>()
 
 const open = defineModel<boolean>("open", { required: true })
-const emit = defineEmits<{ confirm: [] }>()
+const emit = defineEmits<{ confirm: []; closeAutoFocus: [event: Event] }>()
 const { t } = useI18n()
 
 // Confirm before closing: callers read state that closing the dialog resets.
@@ -32,7 +32,7 @@ function accept() {
 
 <template>
   <AlertDialog v-model:open="open">
-    <AlertDialogContent>
+    <AlertDialogContent @close-auto-focus="emit('closeAutoFocus', $event)">
       <AlertDialogHeader>
         <AlertDialogTitle>{{ title }}</AlertDialogTitle>
         <AlertDialogDescription v-if="description" class="whitespace-pre-line">

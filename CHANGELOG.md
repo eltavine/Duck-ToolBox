@@ -1,5 +1,20 @@
 # Changelog
 
+## Unreleased
+
+### Kernel modules
+
+- Add a separate Linux kernel module browser with loaded/sysfs-only state, references,
+  dependents, runtime metadata and read-only parameters.
+- Browse standard Android module directories and inspect uncompressed `.ko` ELF metadata.
+- Add confirmed, serialized runtime load/unload operations with inspected-file digest checks,
+  dependency checks, kernel-enforced restrictions and explicit unknown-outcome timeout reports.
+- Match Android kernel procfs variants and keep release-prefix comparison advisory for
+  symbol-versioned modules. Check ELF class/byte order and preserve parameter whitespace.
+- Validate worker protocol/results, bound process cleanup, and retain partial read failures.
+- Add localized runtime states, isolated technical strings, persistent operation feedback,
+  keyboard focus restoration and layouts that adapt to larger text across 16 locales.
+
 ## 0.2.1-Stable - 2026-10-26
 
 ### Play Integrity

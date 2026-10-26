@@ -1,0 +1,93 @@
+{
+  "meta": {
+    "title": "核心模組",
+    "description": "檢視 Linux 核心模組與 .ko 檔案，手動載入和卸載模組。"
+  },
+  "tabs": {
+    "runtime": "執行中的模組",
+    "files": "模組檔案"
+  },
+  "search": "搜尋模組",
+  "refresh": "重新整理",
+  "runtime": {
+    "description": "僅在 sysfs 可見的項目可能已編入核心，不能據此判斷是否支援卸載。",
+    "empty": "沒有符合的項目。",
+    "loaded": "已載入",
+    "sysfsOnly": "僅 sysfs 可見",
+    "references": "參照：{count}",
+    "usedBy": "參照者",
+    "parameters": "參數（唯讀）",
+    "unavailable": "可以繼續檢視。載入與卸載需要 Android ARM64 ROOT，且能讀取 /proc/modules。",
+    "unreadable": "無法讀取",
+    "unload": "卸載",
+    "unloadConfirm": "卸載 {name}？移除核心程式碼可能導致裝置無回應或重新啟動。",
+    "details": "檢視 {name} 的詳細資訊",
+    "unloadNamed": "卸載 {name}",
+    "unloadBlocked": "模組正在使用、切換狀態，或未提供可卸載的參照狀態。",
+    "referencesUnknown": "參照數不可用",
+    "permanent": "不可卸載",
+    "stateLive": "執行中",
+    "stateLoading": "載入中",
+    "stateUnloading": "卸載中",
+    "stateUnknown": "狀態未知",
+    "parametersEmpty": "沒有公開可讀的參數。"
+  },
+  "files": {
+    "description": "解析本機未壓縮的 .ko 檔案，不執行載入。",
+    "empty": "找不到 .ko 檔案，可在上方輸入裝置檔案路徑。",
+    "truncated": "掃描已達上限，請瀏覽並選擇指定檔案。",
+    "path": "裝置上的 .ko 路徑",
+    "browse": "瀏覽檔案",
+    "inspect": "解析檔案",
+    "parameters": "載入參數（選填）",
+    "load": "載入模組",
+    "loadConfirm": "載入 {name}？核心程式碼可能導致裝置無回應或重新啟動，須事先載入相依模組。",
+    "matches": "核心版本號相符。",
+    "mismatch": "核心版本號不符。",
+    "unknown": "無法比較核心版本號。",
+    "compatibility": "版本號比較僅供參考。具有符號 CRC 時，核心可能接受不同的 release 前綴；ABI、符號、簽章與原則仍由核心檢查。",
+    "metadataReplaced": "部分中繼資料不是有效的 UTF-8，已顯示替代字元；檔案摘要仍以原始位元組計算。",
+    "metadata": "模組中繼資料",
+    "noParameters": "無",
+    "formatUnsupported": "僅可載入小端 ARM64 ELF64 模組。",
+    "vermagicRequired": "載入需要唯一且非空的 vermagic 項目。",
+    "alreadyLoaded": "核心中已存在同名模組。",
+    "nameTooLong": "ARM64 模組名稱最多可包含 55 位元組。"
+  },
+  "operation": {
+    "accepted": "核心已接受操作。",
+    "currentBoot": "手動操作僅影響本次執行，不修改系統的開機載入規則。",
+    "loading": "正在載入 {name}…",
+    "unloading": "正在卸載 {name}…",
+    "details": "錯誤詳細資訊",
+    "refresh": "重新整理狀態"
+  },
+  "errors": {
+    "invalid_input": "模組輸入無效。",
+    "state_unavailable": "無法讀取核心狀態。",
+    "unsupported_environment": "此操作需要 Android ARM64 ROOT 程序。",
+    "confirmation_required": "請先確認操作。",
+    "file_changed": "檔案已變更，請重新解析。",
+    "modules_disabled": "核心已禁止載入和卸載模組。",
+    "module_busy": "模組正在使用、切換狀態或不支援卸載。",
+    "operation_busy": "另一項模組操作正在執行。",
+    "operation_timeout": "操作逾時，結果未知；繼續操作前請重新整理。",
+    "kernel_rejected": "核心拒絕了操作。",
+    "kernel_modules_error": "核心模組操作失敗。",
+    "operation_unknown": "工作程序未傳回可靠結果，操作結果未知；繼續操作前請重新整理。"
+  },
+  "overview": {
+    "title": "核心執行環境",
+    "kernel": "核心版本",
+    "counts": "已載入 {loaded} 項 · 僅 sysfs 可見 {sysfs} 項"
+  },
+  "metadata": {
+    "version": "模組版本",
+    "srcversion": "原始碼版本",
+    "taint": "核心污染標記",
+    "name": "模組名稱",
+    "architecture": "ELF 架構",
+    "size": "檔案大小",
+    "other": "其他架構"
+  }
+}

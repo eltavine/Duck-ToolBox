@@ -1,0 +1,93 @@
+{
+  "meta": {
+    "title": "内核模块",
+    "description": "阅览 Linux 内核模块与 .ko 文件，手动加载和卸载模块。"
+  },
+  "tabs": {
+    "runtime": "运行中的模块",
+    "files": "模块文件"
+  },
+  "search": "搜索模块",
+  "refresh": "刷新",
+  "runtime": {
+    "description": "仅在 sysfs 可见的条目可能已编入内核，不能据此判断是否支持卸载。",
+    "empty": "没有匹配的条目。",
+    "loaded": "已加载",
+    "sysfsOnly": "仅 sysfs 可见",
+    "references": "引用：{count}",
+    "usedBy": "被引用于",
+    "parameters": "参数（只读）",
+    "unavailable": "可以继续阅览。加载和卸载需要 Android ARM64 ROOT，且能够读取 /proc/modules。",
+    "unreadable": "无法读取",
+    "unload": "卸载",
+    "unloadConfirm": "卸载 {name}？移除内核代码可能导致设备卡死或重启。",
+    "details": "查看 {name} 的详情",
+    "unloadNamed": "卸载 {name}",
+    "unloadBlocked": "模块正在使用、切换状态，或未提供可卸载的引用状态。",
+    "referencesUnknown": "引用数不可用",
+    "permanent": "不可卸载",
+    "stateLive": "运行中",
+    "stateLoading": "加载中",
+    "stateUnloading": "卸载中",
+    "stateUnknown": "状态未知",
+    "parametersEmpty": "没有公开可读的参数。"
+  },
+  "files": {
+    "description": "解析本机未压缩的 .ko 文件，不执行加载。",
+    "empty": "未找到 .ko 文件，可在上方填写设备文件路径。",
+    "truncated": "扫描已达到上限，请浏览并选择具体文件。",
+    "path": "设备上的 .ko 路径",
+    "browse": "浏览文件",
+    "inspect": "解析文件",
+    "parameters": "加载参数（可选）",
+    "load": "加载模块",
+    "loadConfirm": "加载 {name}？内核代码可能导致设备卡死或重启，依赖模块需要事先加载。",
+    "matches": "内核版本号匹配。",
+    "mismatch": "内核版本号不匹配。",
+    "unknown": "无法比较内核版本号。",
+    "compatibility": "版本号比较仅供参考。有符号 CRC 时，内核可能接受不同的 release 前缀；ABI、符号、签名与策略仍由内核检查。",
+    "metadataReplaced": "部分元信息不是有效的 UTF-8，已显示替代字符；文件摘要仍基于原始字节计算。",
+    "metadata": "模块元信息",
+    "noParameters": "无",
+    "formatUnsupported": "只能加载小端 ARM64 ELF64 模块。",
+    "vermagicRequired": "加载需要唯一且非空的 vermagic 条目。",
+    "alreadyLoaded": "内核中已存在同名模块。",
+    "nameTooLong": "ARM64 模块名最多可包含 55 字节。"
+  },
+  "operation": {
+    "accepted": "内核已接受操作。",
+    "currentBoot": "手动操作作用于本次运行，不修改系统的开机加载规则。",
+    "loading": "正在加载 {name}…",
+    "unloading": "正在卸载 {name}…",
+    "details": "错误详情",
+    "refresh": "刷新状态"
+  },
+  "errors": {
+    "invalid_input": "模块输入无效。",
+    "state_unavailable": "无法读取内核状态。",
+    "unsupported_environment": "此操作需要 Android ARM64 ROOT 进程。",
+    "confirmation_required": "请先确认操作。",
+    "file_changed": "文件已变化，请重新解析。",
+    "modules_disabled": "内核已禁止加载和卸载模块。",
+    "module_busy": "模块正在使用、切换状态或不支持卸载。",
+    "operation_busy": "另一个模块操作正在执行。",
+    "operation_timeout": "操作超时，结果未知；继续操作前请刷新状态。",
+    "kernel_rejected": "内核拒绝了操作。",
+    "kernel_modules_error": "内核模块操作失败。",
+    "operation_unknown": "工作进程未返回可靠结果，操作结果未知；继续操作前请刷新状态。"
+  },
+  "overview": {
+    "title": "内核运行环境",
+    "kernel": "内核版本",
+    "counts": "已加载 {loaded} 项 · 仅 sysfs 可见 {sysfs} 项"
+  },
+  "metadata": {
+    "version": "模块版本",
+    "srcversion": "源码版本",
+    "taint": "内核污染标记",
+    "name": "模块名称",
+    "architecture": "ELF 架构",
+    "size": "文件大小",
+    "other": "其他架构"
+  }
+}

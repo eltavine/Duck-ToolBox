@@ -237,7 +237,8 @@ fn features_manifest_lists_every_registered_tool() {
             "device-ids",
             "tricky-store",
             "play-integrity",
-            "system"
+            "system",
+            "kernel-modules"
         ]
     );
     assert_eq!(payload["data"]["api"], 1);

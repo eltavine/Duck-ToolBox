@@ -19,6 +19,7 @@ duck-rkp-device = { path = "crates/duck-rkp-device" }
 duck-tee-attestation = { path = "crates/duck-tee-attestation" }
 duck-device-ids = { path = "crates/duck-device-ids" }
 duck-system = { path = "crates/duck-system" }
+duck-kernel-modules = { path = "crates/duck-kernel-modules" }
 duck-play-integrity = { path = "crates/duck-play-integrity" }
 duck-tricky-store = { path = "crates/duck-tricky-store" }
 
@@ -34,6 +35,7 @@ getrandom = "0.4.3"
 hex = "0.4.3"
 hkdf = "0.13.0"
 libc = "0.2.189"
+object = { version = "0.40.0", default-features = false, features = ["read_core", "elf", "std"] }
 libloading = "0.9.0"
 p256 = { version = "0.14.0", features = ["arithmetic", "ecdh", "ecdsa", "pem", "pkcs8"] }
 p384 = { version = "0.14.0", features = ["ecdsa"] }

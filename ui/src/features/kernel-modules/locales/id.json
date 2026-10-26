@@ -1,0 +1,93 @@
+{
+  "meta": {
+    "title": "Modul kernel",
+    "description": "Jelajahi modul Linux dan berkas .ko; muat dan lepas modul saat berjalan."
+  },
+  "tabs": {
+    "runtime": "Saat berjalan",
+    "files": "Berkas modul"
+  },
+  "search": "Cari modul",
+  "refresh": "Segarkan",
+  "runtime": {
+    "description": "Entri yang hanya terlihat di sysfs mungkin tertanam dalam kernel. Keberadaannya tidak membuktikan dukungan pelepasan.",
+    "empty": "Tidak ada entri yang cocok.",
+    "loaded": "Dimuat",
+    "sysfsOnly": "Hanya sysfs",
+    "references": "Referensi: {count}",
+    "usedBy": "Digunakan oleh",
+    "parameters": "Parameter (hanya baca)",
+    "unavailable": "Penjelajahan tersedia. Operasi memerlukan root Android ARM64 dan akses baca /proc/modules.",
+    "unreadable": "Tidak dapat dibaca",
+    "unload": "Lepas modul",
+    "unloadConfirm": "Lepas {name}? Menghapus kode kernel dapat membuat perangkat macet atau memulai ulang.",
+    "details": "Lihat detail {name}",
+    "unloadNamed": "Lepas {name}",
+    "unloadBlocked": "Tidak tersedia jika modul digunakan, beralih status, atau tidak memiliki status referensi yang mengizinkan pelepasan.",
+    "referencesUnknown": "Jumlah referensi tidak tersedia",
+    "permanent": "Tidak dapat dilepas",
+    "stateLive": "Aktif",
+    "stateLoading": "Memuat",
+    "stateUnloading": "Melepas",
+    "stateUnknown": "Status tidak diketahui",
+    "parametersEmpty": "Tidak ada parameter terbuka yang dapat dibaca."
+  },
+  "files": {
+    "description": "Periksa berkas .ko tanpa kompresi di perangkat tanpa memuatnya.",
+    "empty": "Berkas .ko tidak ditemukan. Anda dapat memasukkan jalur di atas.",
+    "truncated": "Batas pemindaian tercapai. Pilih berkas tertentu.",
+    "path": "Jalur .ko di perangkat",
+    "browse": "Jelajahi berkas",
+    "inspect": "Periksa berkas",
+    "parameters": "Parameter pemuatan (opsional)",
+    "load": "Muat modul",
+    "loadConfirm": "Muat {name}? Kode kernel dapat membuat perangkat macet atau memulai ulang. Dependensi harus sudah dimuat.",
+    "matches": "Versi kernel cocok.",
+    "mismatch": "Versi kernel tidak cocok.",
+    "unknown": "Versi kernel tidak dapat dibandingkan.",
+    "compatibility": "Perbandingan versi hanya informasi. Dengan CRC simbol, kernel dapat menerima awalan berbeda; kernel memeriksa ABI, simbol, tanda tangan, dan kebijakan.",
+    "metadataReplaced": "Sebagian metadata bukan UTF-8 yang valid dan ditampilkan dengan karakter pengganti. Hash tetap menggunakan byte asli.",
+    "metadata": "Metadata modul",
+    "noParameters": "Tidak ada",
+    "formatUnsupported": "Pemuatan memerlukan modul ARM64 ELF64 little-endian.",
+    "vermagicRequired": "Pemuatan memerlukan tepat satu entri vermagic yang tidak kosong.",
+    "alreadyLoaded": "Modul dengan nama ini sudah terlihat di kernel.",
+    "nameTooLong": "Nama modul ARM64 tidak boleh melebihi 55 byte."
+  },
+  "operation": {
+    "accepted": "Kernel menerima operasi.",
+    "currentBoot": "Operasi manual berlaku untuk boot ini. Aturan awal sistem tidak diubah.",
+    "loading": "Memuat {name}…",
+    "unloading": "Melepas {name}…",
+    "details": "Detail kesalahan",
+    "refresh": "Segarkan status"
+  },
+  "errors": {
+    "invalid_input": "Masukan modul tidak valid.",
+    "state_unavailable": "Status kernel tidak dapat dibaca.",
+    "unsupported_environment": "Diperlukan proses root Android ARM64.",
+    "confirmation_required": "Konfirmasikan operasi terlebih dahulu.",
+    "file_changed": "Berkas berubah. Periksa kembali.",
+    "modules_disabled": "Kernel menonaktifkan pemuatan dan pelepasan modul.",
+    "module_busy": "Modul digunakan, sedang beralih status, atau tidak dapat dilepas.",
+    "operation_busy": "Operasi modul lain sedang berjalan.",
+    "operation_timeout": "Waktu habis; hasil tidak diketahui. Segarkan sebelum melanjutkan.",
+    "kernel_rejected": "Kernel menolak operasi.",
+    "kernel_modules_error": "Operasi modul kernel gagal.",
+    "operation_unknown": "Proses berhenti tanpa hasil yang dapat diandalkan. Hasil tidak diketahui; segarkan sebelum melanjutkan."
+  },
+  "overview": {
+    "title": "Lingkungan kernel",
+    "kernel": "Versi kernel",
+    "counts": "{loaded} dimuat · {sysfs} hanya sysfs"
+  },
+  "metadata": {
+    "version": "Versi modul",
+    "srcversion": "Versi sumber",
+    "taint": "Penanda perubahan kernel",
+    "name": "Nama modul",
+    "architecture": "Arsitektur ELF",
+    "size": "Ukuran berkas",
+    "other": "Arsitektur lain"
+  }
+}
