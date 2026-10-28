@@ -45,6 +45,10 @@ pub struct State {
     pub attempted_boot: Option<String>,
     #[serde(default)]
     pub boot_claimed: Vec<String>,
+    #[serde(default)]
+    pub next_profile_version: u64,
+    #[serde(default)]
+    pub profile_versions: std::collections::BTreeMap<String, u64>,
 }
 impl Default for State {
     fn default() -> Self {
@@ -55,6 +59,8 @@ impl Default for State {
             boot_results: vec![],
             attempted_boot: None,
             boot_claimed: vec![],
+            next_profile_version: 0,
+            profile_versions: Default::default(),
         }
     }
 }
@@ -199,6 +205,16 @@ impl State {
                 && self.boot_claimed.len() <= MAX_DEVICES,
             fail("state_unavailable", "invalid saved state version or size")
         );
+        ensure!(
+            self.profile_versions.len() <= MAX_DEVICES
+                && self
+                    .profile_versions
+                    .iter()
+                    .all(|(device, version)| *version > 0
+                        && *version <= self.next_profile_version
+                        && self.profiles.iter().any(|p| &p.device == device)),
+            fail("state_unavailable", "invalid saved plan versions")
+        );
         let unique = |names: Vec<&str>| {
             let mut set = std::collections::HashSet::new();
             names.into_iter().all(|n| valid_device(n) && set.insert(n))
@@ -245,11 +261,31 @@ impl State {
         );
         Ok(())
     }
-    pub fn claim_boot(&mut self, profile: &Profile, boot_id: &str) -> Result<()> {
+    pub fn profile_version(&self, device: &str) -> u64 {
+        self.profile_versions.get(device).copied().unwrap_or(0)
+    }
+    pub fn replace_profile(&mut self, profile: Profile) -> Result<()> {
+        let version = self
+            .next_profile_version
+            .checked_add(1)
+            .ok_or_else(|| fail("state_unavailable", "saved plan version exhausted"))?;
+        self.profiles.retain(|p| p.device != profile.device);
+        self.next_profile_version = version;
+        self.profile_versions
+            .insert(profile.device.clone(), version);
+        self.profiles.push(profile);
+        Ok(())
+    }
+    pub fn remove_profile(&mut self, device: &str) {
+        self.profiles.retain(|p| p.device != device);
+        self.profile_versions.remove(device);
+    }
+    pub fn claim_boot(&mut self, profile: &Profile, boot_id: &str, version: u64) -> Result<()> {
         ensure!(
             profile.apply_at_boot
                 && self.attempted_boot.as_deref() == Some(boot_id)
                 && self.profiles.contains(profile)
+                && self.profile_version(&profile.device) == version
                 && self
                     .boot_results
                     .iter()

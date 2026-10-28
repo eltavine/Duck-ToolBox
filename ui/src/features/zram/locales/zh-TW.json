@@ -60,7 +60,8 @@
     "recompression": "已設定二次壓縮，目前無法完整還原。",
     "holders": "其他區塊裝置正在使用此裝置。",
     "mounted": "此裝置已掛載為檔案系統。",
-    "stats_unknown": "無法讀取記憶體上限狀態。"
+    "stats_unknown": "無法讀取記憶體上限狀態。",
+    "read_only": "此區塊裝置為唯讀，已阻止修改。"
   },
   "errors": {
     "invalid_input": "ZRAM 設定無效。",
@@ -77,7 +78,8 @@
     "format_failed": "格式化失敗，交換可能維持停用。",
     "operation_timeout": "操作逾時，結果未知。請先重新整理狀態。",
     "operation_unknown": "結果未知，請先重新整理狀態。",
-    "zram_error": "ZRAM 操作失敗。"
+    "zram_error": "ZRAM 操作失敗。",
+    "contract_mismatch": "無法可靠解讀裝置資料。請重新整理並查看詳細資訊。"
   },
   "memoryLimit": "記憶體上限",
   "unlimited": "不限制",
@@ -86,5 +88,7 @@
   "algorithmError": "請選擇目前核心支援的演算法。",
   "bootOn": "啟用",
   "bootOff": "關閉",
-  "planFailure": "無法確認方案狀態。請重新整理後再試。"
+  "planFailure": "無法確認方案狀態。請重新整理後再試。",
+  "automaticPriority": "自動優先順序",
+  "unavailablePlans": "裝置無法使用的已存方案"
 }

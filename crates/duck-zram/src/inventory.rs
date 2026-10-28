@@ -137,8 +137,11 @@ pub fn algorithms(text: &str) -> Result<(Vec<String>, String)> {
 }
 #[cfg(unix)]
 pub fn identity(path: &Path) -> Option<String> {
+    block_identity(&fs::metadata(path).ok()?)
+}
+#[cfg(unix)]
+pub fn block_identity(meta: &fs::Metadata) -> Option<String> {
     use std::os::unix::fs::{FileTypeExt, MetadataExt};
-    let meta = fs::metadata(path).ok()?;
     if !meta.file_type().is_block_device() {
         return None;
     }
@@ -150,6 +153,10 @@ pub fn identity(path: &Path) -> Option<String> {
 }
 #[cfg(not(unix))]
 pub fn identity(_: &Path) -> Option<String> {
+    None
+}
+#[cfg(not(unix))]
+pub fn block_identity(_: &fs::Metadata) -> Option<String> {
     None
 }
 
@@ -244,6 +251,11 @@ fn device(
         fail("state_unavailable", "invalid device ID")
     );
     let generation = generation(&root, boot, &id)?;
+    let read_only = match number(&root, "ro")? {
+        0 => false,
+        1 => true,
+        _ => return Err(fail("state_unavailable", "invalid block read-only state")),
+    };
     let size = number(&root, "disksize")?;
     let initialized = match number(&root, "initstate")? {
         0 => false,
@@ -259,6 +271,9 @@ fn device(
     );
     let (algorithms, algorithm) = algorithms(&read(&root.join("comp_algorithm"))?)?;
     let mut blocked = Vec::new();
+    if read_only {
+        blocked.push("read_only".into());
+    }
     let path = [format!("/dev/block/{name}"), format!("/dev/{name}")]
         .into_iter()
         .find(|p| identity(&sys.path(p)).as_deref() == Some(&id));
@@ -337,6 +352,7 @@ fn device(
         name,
         &id,
         &generation,
+        read_only,
         size,
         initialized,
         &algorithm,

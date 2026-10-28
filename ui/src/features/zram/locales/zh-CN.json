@@ -60,7 +60,8 @@
     "recompression": "已配置二次压缩，当前无法完整恢复。",
     "holders": "其他块设备正在使用此设备。",
     "mounted": "此设备已挂载为文件系统。",
-    "stats_unknown": "无法读取内存上限状态。"
+    "stats_unknown": "无法读取内存上限状态。",
+    "read_only": "此块设备为只读，已阻止修改。"
   },
   "errors": {
     "invalid_input": "ZRAM 配置无效。",
@@ -77,7 +78,8 @@
     "format_failed": "格式化失败，交换可能保持停用。",
     "operation_timeout": "操作超时，结果未知。请先刷新状态。",
     "operation_unknown": "结果未知，请先刷新状态。",
-    "zram_error": "ZRAM 操作失败。"
+    "zram_error": "ZRAM 操作失败。",
+    "contract_mismatch": "无法可靠解读设备数据。请刷新并查看详情。"
   },
   "memoryLimit": "内存上限",
   "unlimited": "不限制",
@@ -86,5 +88,7 @@
   "algorithmError": "请选择当前内核支持的算法。",
   "bootOn": "启用",
   "bootOff": "关闭",
-  "planFailure": "无法确认方案状态。请刷新后再试。"
+  "planFailure": "无法确认方案状态。请刷新后再试。",
+  "automaticPriority": "自动优先级",
+  "unavailablePlans": "设备不可用的已存方案"
 }

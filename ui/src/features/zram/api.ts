@@ -2,32 +2,33 @@ import { z } from "zod"
 
 import { duckd } from "@/core/duckd"
 
+const unsigned = z.number().int().min(0).max(Number.MAX_SAFE_INTEGER)
 const configSchema = z.object({
-  size_bytes: z.number().nonnegative(),
+  size_bytes: unsigned,
   algorithm: z.string(),
-  priority: z.number().int().nullable(),
-  memory_limit: z.number().nonnegative(),
+  priority: z.number().int().min(0).max(32767).nullable(),
+  memory_limit: unsigned,
 })
 export type ZramConfig = z.infer<typeof configSchema>
 const statsSchema = z.object({
-  original: z.number().nullable(),
-  compressed: z.number().nullable(),
-  memory_used: z.number().nullable(),
-  memory_limit: z.number().nullable(),
+  original: unsigned.nullable(),
+  compressed: unsigned.nullable(),
+  memory_used: unsigned.nullable(),
+  memory_limit: unsigned.nullable(),
 })
 const swapSchema = z.object({
   path: z.string(),
   kind: z.string(),
-  size: z.number(),
-  used: z.number(),
-  priority: z.number(),
+  size: unsigned,
+  used: unsigned,
+  priority: z.number().int().min(-2147483648).max(32767),
 })
 const deviceSchema = z.object({
   name: z.string(),
   identity: z.string(),
   generation: z.string(),
   path: z.string().nullable(),
-  size: z.number(),
+  size: unsigned,
   initialized: z.boolean(),
   algorithms: z.array(z.string()),
   algorithm: z.string().nullable(),
@@ -47,10 +48,10 @@ const statusSchema = z.object({
   operations_supported: z.boolean(),
   operation_busy: z.boolean(),
   mmd_managed: z.boolean().nullable(),
-  memory_total: z.number(),
-  memory_available: z.number().nullable(),
-  swap_in_pages: z.number().nullable(),
-  swap_out_pages: z.number().nullable(),
+  memory_total: unsigned.positive(),
+  memory_available: unsigned.nullable(),
+  swap_in_pages: unsigned.nullable(),
+  swap_out_pages: unsigned.nullable(),
   boot_id: z.string(),
   devices: z.array(deviceSchema),
   swaps: z.array(swapSchema),

@@ -60,7 +60,8 @@
     "recompression": "二次圧縮が設定されており、ここでは復元できません。",
     "holders": "別のブロックデバイスが使用しています。",
     "mounted": "ファイルシステムとしてマウントされています。",
-    "stats_unknown": "メモリ上限の状態を読み取れません。"
+    "stats_unknown": "メモリ上限の状態を読み取れません。",
+    "read_only": "このブロックデバイスは読み取り専用です。変更できません。"
   },
   "errors": {
     "invalid_input": "ZRAM 設定が無効です。",
@@ -77,7 +78,8 @@
     "format_failed": "初期化に失敗しました。スワップが無効のままの可能性があります。",
     "operation_timeout": "タイムアウトしました。結果は不明です。状態を更新してください。",
     "operation_unknown": "結果は不明です。状態を更新してください。",
-    "zram_error": "ZRAM の操作に失敗しました。"
+    "zram_error": "ZRAM の操作に失敗しました。",
+    "contract_mismatch": "デバイスデータを正確に解釈できません。更新して詳細を確認してください。"
   },
   "memoryLimit": "メモリ上限",
   "unlimited": "制限なし",
@@ -86,5 +88,7 @@
   "algorithmError": "このカーネルで利用できるアルゴリズムを選んでください。",
   "bootOn": "有効",
   "bootOff": "無効",
-  "planFailure": "保存プランの状態を確認できません。更新してから再試行してください。"
+  "planFailure": "保存プランの状態を確認できません。更新してから再試行してください。",
+  "automaticPriority": "自動優先度",
+  "unavailablePlans": "利用できないデバイスの保存プラン"
 }

@@ -98,7 +98,7 @@ fn boot_apply(ctx: &Context) -> Result<Vec<BootResult>> {
         .profiles
         .iter()
         .filter(|p| p.apply_at_boot)
-        .cloned()
+        .map(|p| (p.clone(), state.profile_version(&p.device)))
         .collect();
     if profiles.is_empty() {
         return Ok(vec![]);
@@ -107,7 +107,7 @@ fn boot_apply(ctx: &Context) -> Result<Vec<BootResult>> {
     state.boot_claimed.clear();
     state.boot_results = profiles
         .iter()
-        .map(|p| BootResult {
+        .map(|(p, _)| BootResult {
             device: p.device.clone(),
             boot_id: status.boot_id.clone(),
             code: "operation_unknown".into(),
@@ -117,7 +117,7 @@ fn boot_apply(ctx: &Context) -> Result<Vec<BootResult>> {
     // Persist before starting so duplicate boot hooks and crashes cannot repeat a reset.
     store.save(&state)?;
     drop(store);
-    for profile in profiles {
+    for (profile, version) in profiles {
         let result = (|| -> Result<_> {
             let current = inventory::status(&ctx.sysroot)?;
             let d = current
@@ -134,6 +134,7 @@ fn boot_apply(ctx: &Context) -> Result<Vec<BootResult>> {
                     revision: d.revision.clone(),
                     confirmed: true,
                     boot_profile: Some(profile.clone()),
+                    boot_version: Some(version),
                     operation: mutation::Operation::Apply { config },
                 },
             )

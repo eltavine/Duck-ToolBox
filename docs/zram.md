@@ -14,6 +14,12 @@ Implementation references (WebUI/backend feature contract 2):
 - [ACK ZRAM sysfs ABI](https://android.googlesource.com/kernel/common/+/aa8f225d2792f5fd45e3a853fc2fd5d2e7baf8af/Documentation/ABI/testing/sysfs-block-zram)
   and [upstream ZRAM documentation](https://docs.kernel.org/admin-guide/blockdev/zram.html):
   counter order and units, selected algorithm syntax, reset semantics and swap setup.
+  [ACK block attributes](https://android.googlesource.com/kernel/common/+/aa8f225d2792f5fd45e3a853fc2fd5d2e7baf8af/block/genhd.c)
+  define the `ro` read-only state used to protect devices before deactivation.
+- [ACK block-device file operations](https://android.googlesource.com/kernel/common/+/aa8f225d2792f5fd45e3a853fc2fd5d2e7baf8af/block/fops.c)
+  and [claim handling](https://android.googlesource.com/kernel/common/+/aa8f225d2792f5fd45e3a853fc2fd5d2e7baf8af/block/bdev.c):
+  an `O_EXCL` block-device open holds a claim until its open file description is released.
+  The ZRAM driver refuses hot removal while there are openers.
 - [ACK disk sequence ABI](https://android.googlesource.com/kernel/common/+/aa8f225d2792f5fd45e3a853fc2fd5d2e7baf8af/Documentation/ABI/stable/sysfs-block):
   device sequence numbers distinguish a reused device name from an earlier instance.
 - [ACK swap implementation](https://android.googlesource.com/kernel/common/+/aa8f225d2792f5fd45e3a853fc2fd5d2e7baf8af/mm/swapfile.c):
@@ -34,14 +40,22 @@ Implementation references (WebUI/backend feature contract 2):
 - [waitid semantics](https://man7.org/linux/man-pages/man2/waitpid.2.html):
   `WNOWAIT` observes exit while retaining the leader PID until group cleanup.
 - [AOSP Toybox mkswap](https://android.googlesource.com/platform/external/toybox/+/59a869a838cfadbf6bc41cb400471ca9d2cae9b5/toys/other/mkswap.c):
-  swap header formatting with the runtime page size. The platform formatter is used
-  directly without a shell. This feature does not implement its own swap format.
+  swap header formatting with the runtime page size and an unsigned 32-bit last-page
+  field. Before deactivation, positive capacity must contain a header and data page,
+  fit that field, and align to the running page size; the retained memory limit must
+  also be page aligned. The platform formatter is used directly without a shell.
+  This feature does not implement its own swap format.
 - [Material 3 dialogs](https://m3.material.io/components/dialogs/guidelines),
   [Android dialog guidance](https://developer.android.com/develop/ui/compose/components/dialog),
   [Apple alerts](https://developer.apple.com/design/human-interface-guidelines/alerts),
   [Apple accessibility](https://developer.apple.com/design/human-interface-guidelines/accessibility):
   explicit action labels, confirmation for resetting swap, persistent in-context
-  feedback, readable layouts and keyboard focus restoration.
+  feedback, readable layouts and keyboard focus restoration. The automatic-priority
+  control follows [Android switch semantics](https://developer.android.com/develop/ui/compose/components/switch).
+- [ECMAScript safe integers](https://tc39.es/ecma262/multipage/numbers-and-dates.html#sec-number.max_safe_integer):
+  the WebUI rejects negative, fractional or unsafe integer byte/page fields, including
+  values above `Number.MAX_SAFE_INTEGER`. Native CLI and worker transport retain u64
+  values. An unrepresentable UI value is a contract error, never a rounded edit.
 
 ## Operation contract
 
@@ -55,12 +69,13 @@ An active swap device is associated with ZRAM using block-device major/minor ide
 including aliased paths. An unresolved active partition blocks resets. The revision
 also identifies the device instance using disk sequence (when available) and sysfs
 inode identity. Device identity, instance, size and initialization are rechecked at
-the end of each inventory read, and before destructive stages. A removed/recreated
-same-name device is distinguished by disk sequence where supported. The inode
+the end of each inventory read, and before reset, formatting and activation. A
+removed/recreated same-name device is distinguished by disk sequence where supported. The inode
 fallback on older kernels is best effort and cannot guarantee detection of inode
 reuse; avoid removing and recreating a device between changes and restoration.
 Legacy originals without an instance identifier are not restored; the next actual
-change captures a new original. Missing or malformed required state fails closed. Missing optional statistics remain unknown.
+change captures a new original. Missing or malformed required state fails closed.
+Missing optional statistics remain unknown.
 
 Runtime operations require Android ARM64, effective UID 0, the real `/` sysroot,
 explicit confirmation and a configuration revision from the current boot. Input
@@ -78,28 +93,36 @@ Before deactivation, available memory must exceed used swap bytes plus the large
 of 256 MiB or 10% of physical memory. This conservative check cannot guarantee
 successful swapoff or prevent concurrent memory pressure and OOM handling.
 
-Devices with mounts, block holders, writeback, configured secondary compressors,
-unreadable memory limits, or initialized non-swap contents are protected. The feature
-also blocks when `mmd` is running/restarting/stopping, when `mmd.enabled_aconfig` and `mmd.zram.enabled` enable management (including AOSP
-boolean spellings), or when property state cannot be obtained. Other vendor
+Devices marked read-only, with mounts, block holders, writeback, configured secondary
+compressors, unreadable memory limits, or initialized non-swap contents are protected.
+The feature also blocks when `mmd` is running/restarting/stopping, when
+`mmd.enabled_aconfig` and `mmd.zram.enabled` enable management (including AOSP boolean
+spellings), or when property state cannot be obtained. Other vendor
 services and root modules cannot be universally identified or excluded. They may
 race with or later override a manual configuration.
 
 The transition is `swapoff` (if active), reset, algorithm, size, retained memory
 limit, platform mkswap, and swapon. The first failing stage stops further changes.
+Formatting obtains an exclusive read/write block descriptor, verifies its identity and device instance, and gives
+that descriptor to the platform formatter as standard input with `/proc/self/fd/0`
+as its target. This pins the ZRAM instance and excludes competing filesystem/swap
+claims during header creation. The claim is released before activation; ordinary
+writes by other privileged processes cannot be universally excluded.
 Zero capacity resets and restores the chosen algorithm and memory limit without
 formatting or activation. This also preserves a previously uninitialized device's
 basic configuration. Unchanged configurations do not reset, require a formatter,
-check swapoff headroom, or create an original record. There are no force flags or blind retries. A
-private advisory lock serializes operations from this feature, not external tools.
+check swapoff headroom, or create an original record. There are no force flags or
+blind retries. A private advisory lock serializes operations from this feature,
+not external tools.
 
 Each kernel transition runs in a separate process group with a 45-second parent
 budget. Exit is observed with `waitid(WNOWAIT)`; the process group is terminated before
 reaping the leader, preventing descendants from surviving a completed worker and
 avoiding reuse of the leader PID during cleanup. On timeout the group is killed and
-ordinary children are reaped within a bounded interval. An uninterruptible kernel call may survive userspace termination
-and retain the operation lock. Timeout, missing output and contradictory worker
-responses mean **outcome unknown**. They are never presented as a rollback or success.
+ordinary children are reaped within a bounded interval. An uninterruptible kernel call
+may survive userspace termination and retain a device claim or the operation lock.
+Timeout, missing output and contradictory worker responses mean **outcome unknown**.
+They are never presented as a rollback or success.
 After an error, refresh state before another operation. A reset followed by failure
 may leave initialized, inactive swap; that state stays protected because it cannot
 be distinguished safely from non-swap contents. Rebooting without a boot plan allows
@@ -120,17 +143,29 @@ and runs once after boot completion through the module's existing boot hook. The
 boot ID and unknown-result placeholders are persisted before dispatch, preventing
 repeated resets after duplicate hooks or interrupted runs. Each worker rechecks the
 saved plan and atomically consumes its per-boot authorization under the mutation
-lock before acting; disabling or changing a plan invalidates an unclaimed request. Each plan retains the memory limit observed at application time, and is rechecked
+lock before acting. Every save receives a new per-device version from a persistent
+monotonic counter. Disabling, changing, removing or replacing an identical plan
+invalidates an unclaimed older request; changing a different device's plan leaves
+this device's version intact. Legacy saved plans use version zero until first saved.
+Each plan retains the memory limit observed at application time, and is rechecked
 against current capabilities, services and memory headroom. Results remain visible
 in the WebUI. Removing a saved plan disables future automatic application, without
-changing the current running device. Uninstall removes the saved plans with the data
-root; running swap remains until changed by the system or reboot.
+changing the current running device. Plans whose devices are currently unavailable
+remain visible with a removal action, so a missing device cannot trap an enabled
+boot plan. Uninstall removes the saved plans with the data root; running swap remains
+until changed by the system or reboot.
 
 Before the first actual operation in a boot, capacity, primary algorithm, priority
 (explicit or automatic) and memory limit are saved. Restore only uses an original
-from the same boot and device instance. It does not recover swapped data, counters, UUID, discard flags,
-compressor tuning, writeback, vendor policies, or a byte-for-byte system setup.
+from the same boot and device instance. It does not recover swapped data, counters,
+UUID, discard flags, compressor tuning, writeback, vendor policies, or a byte-for-byte
+system setup.
 Restoring the current device does not disable an independently saved boot plan.
+
+The editor retains drafts during ordinary refreshes and resets them when a device
+instance changes. An automatic-priority switch avoids requiring a minus key on mobile
+keyboards and preserves the previous explicit value when toggled off. The numeric
+field remains read-only in automatic mode, preserving focus for typed `-1` input.
 
 The UI provides 16 locales, isolated LTR technical values, logical RTL alignment,
 48 CSS-pixel action targets and reflow checks at 320px with enlarged text. Immediate
@@ -158,9 +193,12 @@ pnpm --dir ui exec playwright test
 
 Android cross-checks require the configured Android NDK C compiler, archive tool and
 linker. Rust tests cover parser bounds, stale state, protected devices, headroom,
-first-failure transition ordering, disabled-state restoration, no-op behavior,
-confirmation transport, atomic boot authorization, snapshots under lock, private
-storage, worker protocol consistency, process-group cleanup and timeouts. API contract tests use the real host binary and an isolated
-sysroot. Browser tests use a mock root host. Neither suite performs actual kernel
-swap mutations. Device-specific swapoff behavior, SELinux access, vendor races,
+first-failure transition ordering, read-only protection, swap-header geometry,
+disabled-state restoration, no-op behavior, confirmation transport, atomic boot
+authorization, snapshots under lock, private storage, saved-plan replacement,
+worker protocol consistency, process-group cleanup and timeouts. API contract tests
+use the real host binary and an isolated sysroot, including integer-precision
+rejection. Browser tests use a mock root host and cover draft lifetime, unavailable
+plans, focus and layout. These checks do not perform actual kernel swap mutations.
+Device-specific swapoff behavior, SELinux access, vendor races,
 real 4/16 KiB swap formatting and boot application still require rooted-device testing.

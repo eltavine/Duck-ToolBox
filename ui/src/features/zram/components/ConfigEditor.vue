@@ -42,6 +42,24 @@ const priority = ref(
         : -1,
   ),
 )
+const previousPriority = ref(
+  initial?.priority != null
+    ? String(initial.priority)
+    : props.device.swap && props.device.swap.priority >= 0
+      ? String(props.device.swap.priority)
+      : "100",
+)
+const automaticPriority = computed({
+  get: () => swapPriority(String(priority.value)) === null,
+  set: (enabled: boolean) => {
+    priority.value = enabled ? "-1" : previousPriority.value
+  },
+})
+function changePriority(value: string | number) {
+  priority.value = String(value)
+  const explicit = swapPriority(priority.value)
+  if (typeof explicit === "number") previousPriority.value = String(explicit)
+}
 const boot = ref(props.profile?.apply_at_boot ?? false)
 const sizeInvalid = computed(() => capacityBytes(String(size.value), props.total) === null)
 const priorityInvalid = computed(() => swapPriority(String(priority.value)) === undefined)
@@ -62,7 +80,7 @@ const range = computed(() =>
 )
 </script>
 <template>
-  <div class="flex min-w-0 flex-col gap-4">
+  <div class="@container flex min-w-0 flex-col gap-4">
     <p class="text-muted-foreground text-sm">{{ t("planHelp") }}</p>
     <div class="grid min-w-0 gap-4 sm:grid-cols-2">
       <div class="min-w-0 space-y-2">
@@ -116,12 +134,14 @@ const range = computed(() =>
         <Label :for="`zram-priority-${device.name}`">{{ t("priority") }}</Label>
         <Input
           :id="`zram-priority-${device.name}`"
-          v-model="priority"
+          :model-value="priority"
           inputmode="numeric"
           dir="ltr"
           :aria-invalid="priorityInvalid"
           :aria-describedby="`zram-input-help-${device.name}${priorityInvalid ? ` zram-priority-error-${device.name}` : ''}`"
+          :readonly="automaticPriority"
           :disabled="busy || !writable"
+          @update:model-value="changePriority"
         />
         <p
           v-if="priorityInvalid"
@@ -131,12 +151,24 @@ const range = computed(() =>
         >
           {{ t("priorityError") }}
         </p>
+        <label
+          class="flex min-h-12 cursor-pointer items-center justify-between gap-4 py-2 @max-[14rem]:flex-col @max-[14rem]:items-start"
+        >
+          <span class="min-w-0 text-sm">{{ t("automaticPriority") }}</span>
+          <Switch
+            v-model="automaticPriority"
+            :aria-label="t('automaticPriority')"
+            :disabled="busy || !writable"
+          />
+        </label>
       </div>
     </div>
     <p :id="`zram-input-help-${device.name}`" class="text-muted-foreground text-sm">
       {{ t("inputHelp", { max: range }) }}
     </p>
-    <label class="flex min-h-12 cursor-pointer items-center justify-between gap-4 rounded-md py-2">
+    <label
+      class="flex min-h-12 cursor-pointer items-center justify-between gap-4 rounded-md py-2 @max-[14rem]:flex-col @max-[14rem]:items-start"
+    >
       <span class="min-w-0"
         ><span class="block text-sm font-medium">{{ t("boot") }}</span
         ><span class="text-muted-foreground mt-1 block text-xs">{{ t("bootHelp") }}</span></span

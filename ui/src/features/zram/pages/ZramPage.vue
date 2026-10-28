@@ -64,7 +64,7 @@ let accepted = false
 const comparison = ref<ZramResult | null>(null)
 const operation = useMutation({
   mutationFn: async (
-    request: Pending | { kind: "forget"; device: ZramDevice },
+    request: Pending | { kind: "forget"; device: Pick<ZramDevice, "name"> },
   ): Promise<ZramResult | null> => {
     switch (request.kind) {
       case "apply":
@@ -84,7 +84,10 @@ const operation = useMutation({
     if (data) comparison.value = data
     notifySuccess(t("done"))
   },
-  onSettled: () => client.invalidateQueries({ queryKey: ["zram"] }),
+  onSettled: async (_data, error, request) => {
+    await client.invalidateQueries({ queryKey: ["zram"] })
+    if (!error && request.kind === "forget") pageRoot.value?.focus({ preventScroll: true })
+  },
 })
 function request(kind: "apply" | "save" | "restore", config: ZramConfig, boot = false) {
   if (!device.value || !writable.value || operation.isPending.value) return
@@ -107,8 +110,9 @@ function confirm() {
   operation.mutate(pending.value)
 }
 function restoreFocus(event: Event) {
+  const targetChanged = pending.value?.device.generation !== device.value?.generation
   pending.value = null
-  if (!accepted) return
+  if (!accepted && !targetChanged) return
   accepted = false
   event.preventDefault()
   pageRoot.value?.focus({ preventScroll: true })
@@ -148,6 +152,12 @@ const confirmRows = computed(() =>
           : []),
       ]
     : [],
+)
+const unavailablePlans = computed(
+  () =>
+    status.data.value?.saved.profiles.filter(
+      (p) => !status.data.value?.devices.some((d) => d.name === p.device),
+    ) ?? [],
 )
 const bootResults = computed(
   () =>
@@ -289,12 +299,12 @@ function count(value: number | null | undefined) {
         </SectionCard>
         <SectionCard :title="t('plan')">
           <ConfigEditor
-            :key="device.name"
+            :key="`${device.name}:${device.generation}`"
             :device="device"
             :profile="profile"
             :total="status.data.value.memory_total"
             :writable="writable"
-            :busy="operation.isPending.value"
+            :busy="operation.isPending.value || status.data.value.operation_busy"
             :can-restore="!!original"
             @request="request"
             @restore="original && request('restore', original.config)"
@@ -302,6 +312,30 @@ function count(value: number | null | undefined) {
           />
         </SectionCard>
       </template>
+      <SectionCard v-if="unavailablePlans.length" :title="t('unavailablePlans')" plain>
+        <div
+          v-for="plan in unavailablePlans"
+          :key="plan.device"
+          class="bg-card mb-0.5 flex min-w-0 flex-wrap items-center justify-between gap-3 rounded-xs p-4 first:rounded-t-lg last:rounded-b-lg"
+        >
+          <div class="min-w-0">
+            <p class="font-mono text-sm break-all">
+              <bdi dir="ltr">{{ plan.device }}</bdi>
+            </p>
+            <p class="text-muted-foreground mt-1 text-sm">
+              {{ t(plan.apply_at_boot ? "bootEnabled" : "bootDisabled") }}
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            class="min-h-12"
+            :aria-label="`${t('forget')} ${plan.device}`"
+            :disabled="operation.isPending.value || status.data.value.operation_busy"
+            @click="operation.mutate({ kind: 'forget', device: { name: plan.device } })"
+            >{{ t("forget") }}</Button
+          >
+        </div>
+      </SectionCard>
       <SectionCard v-if="comparison" :title="t('comparison')" :description="t('comparisonHelp')">
         <KeyValueList
           :rows="[

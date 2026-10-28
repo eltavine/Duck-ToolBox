@@ -60,7 +60,8 @@
     "recompression": "Une compression secondaire est configurée et ne peut être restaurée ici.",
     "holders": "Un autre périphérique bloc utilise ce périphérique.",
     "mounted": "Ce périphérique est monté comme système de fichiers.",
-    "stats_unknown": "La limite mémoire est illisible."
+    "stats_unknown": "La limite mémoire est illisible.",
+    "read_only": "Ce périphérique bloc est en lecture seule. Les modifications sont bloquées."
   },
   "errors": {
     "invalid_input": "Configuration ZRAM invalide.",
@@ -77,7 +78,8 @@
     "format_failed": "Le formatage a échoué ; le swap peut rester inactif.",
     "operation_timeout": "Délai dépassé ; résultat inconnu. Actualisez l’état.",
     "operation_unknown": "Résultat inconnu. Actualisez l’état.",
-    "zram_error": "L’opération ZRAM a échoué."
+    "zram_error": "L’opération ZRAM a échoué.",
+    "contract_mismatch": "Impossible de décoder les données du périphérique de façon fiable. Actualisez et consultez les détails."
   },
   "memoryLimit": "Limite mémoire",
   "unlimited": "Illimitée",
@@ -86,5 +88,7 @@
   "algorithmError": "Choisissez un algorithme disponible dans ce noyau.",
   "bootOn": "Activée",
   "bootOff": "Désactivée",
-  "planFailure": "Impossible de confirmer l’état du plan enregistré. Actualisez avant de réessayer."
+  "planFailure": "Impossible de confirmer l’état du plan enregistré. Actualisez avant de réessayer.",
+  "automaticPriority": "Priorité automatique",
+  "unavailablePlans": "Plans des périphériques indisponibles"
 }

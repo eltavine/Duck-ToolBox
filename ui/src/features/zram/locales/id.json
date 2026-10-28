@@ -60,7 +60,8 @@
     "recompression": "Kompresi sekunder dikonfigurasi dan tidak dapat dipulihkan di sini.",
     "holders": "Perangkat blok lain menggunakan perangkat ini.",
     "mounted": "Perangkat dipasang sebagai sistem berkas.",
-    "stats_unknown": "Status batas memori tidak dapat dibaca."
+    "stats_unknown": "Status batas memori tidak dapat dibaca.",
+    "read_only": "Perangkat blok ini hanya dapat dibaca. Perubahan diblokir."
   },
   "errors": {
     "invalid_input": "Konfigurasi ZRAM tidak valid.",
@@ -77,7 +78,8 @@
     "format_failed": "Format gagal; swap mungkin tetap nonaktif.",
     "operation_timeout": "Waktu habis; hasil tidak diketahui. Muat ulang status.",
     "operation_unknown": "Hasil tidak diketahui. Muat ulang status.",
-    "zram_error": "Operasi ZRAM gagal."
+    "zram_error": "Operasi ZRAM gagal.",
+    "contract_mismatch": "Data perangkat tidak dapat diuraikan dengan andal. Muat ulang dan periksa detailnya."
   },
   "memoryLimit": "Batas memori",
   "unlimited": "Tanpa batas",
@@ -86,5 +88,7 @@
   "algorithmError": "Pilih algoritma yang tersedia pada kernel ini.",
   "bootOn": "Aktif",
   "bootOff": "Nonaktif",
-  "planFailure": "Status rencana tersimpan tidak dapat dipastikan. Muat ulang sebelum mencoba lagi."
+  "planFailure": "Status rencana tersimpan tidak dapat dipastikan. Muat ulang sebelum mencoba lagi.",
+  "automaticPriority": "Prioritas otomatis",
+  "unavailablePlans": "Rencana perangkat yang tidak tersedia"
 }

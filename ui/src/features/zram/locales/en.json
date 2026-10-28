@@ -60,7 +60,8 @@
     "recompression": "Secondary compression is configured and cannot be restored here.",
     "holders": "Another block device holds this device.",
     "mounted": "This device is mounted as a filesystem.",
-    "stats_unknown": "Memory-limit state is unreadable."
+    "stats_unknown": "Memory-limit state is unreadable.",
+    "read_only": "This block device is read-only. Changes are blocked."
   },
   "errors": {
     "invalid_input": "Invalid ZRAM configuration.",
@@ -77,7 +78,8 @@
     "format_failed": "Formatting failed; swap may remain inactive.",
     "operation_timeout": "Timed out; outcome unknown. Refresh before proceeding.",
     "operation_unknown": "Outcome unknown. Refresh before proceeding.",
-    "zram_error": "ZRAM operation failed."
+    "zram_error": "ZRAM operation failed.",
+    "contract_mismatch": "Device data could not be decoded reliably. Refresh and inspect the details."
   },
   "memoryLimit": "Memory limit",
   "unlimited": "Unlimited",
@@ -86,5 +88,7 @@
   "algorithmError": "Choose an algorithm available in this kernel.",
   "bootOn": "Enabled",
   "bootOff": "Disabled",
-  "planFailure": "The saved plan state could not be confirmed. Refresh before trying again."
+  "planFailure": "The saved plan state could not be confirmed. Refresh before trying again.",
+  "automaticPriority": "Automatic priority",
+  "unavailablePlans": "Plans for unavailable devices"
 }

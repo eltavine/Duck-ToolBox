@@ -12,6 +12,7 @@ const _: () = {
     assert!(libc::SYS_swapon == 224);
     assert!(libc::SYS_swapoff == 225);
     assert!(std::mem::size_of::<libc::c_long>() == 8);
+    assert!(std::mem::size_of::<libc::c_uint>() == 4);
 };
 pub trait Operations {
     fn swapoff(&mut self) -> Result<()>;
@@ -91,9 +92,13 @@ impl Operations for Android<'_> {
     }
     fn format(&mut self) -> Result<()> {
         self.ensure_idle(self.config)?;
+        let device = formatter_device(self.path()?, &self.device.identity)?;
+        // Recheck the instance after opening; the descriptor pins it during formatting.
+        self.path()?;
+        self.ensure_idle(self.config)?;
         let status = std::process::Command::new("/system/bin/mkswap")
-            .arg(self.path()?)
-            .stdin(std::process::Stdio::null())
+            .arg("/proc/self/fd/0")
+            .stdin(device)
             .stdout(std::process::Stdio::null())
             .stderr(std::process::Stdio::null())
             .status()
@@ -113,6 +118,7 @@ impl Operations for Android<'_> {
         Ok(())
     }
     fn swapon(&mut self, priority: Option<u16>) -> Result<()> {
+        self.ensure_idle(self.config)?;
         swap(self.path()?, Some(priority))
     }
 }
@@ -162,14 +168,54 @@ pub fn preflight(device: &Device, config: &Config) -> Result<()> {
     );
     let page = unsafe { libc::sysconf(libc::_SC_PAGESIZE) };
     ensure!(
-        page > 0 && config.size_bytes.is_multiple_of(page as u64),
-        fail(
-            "invalid_input",
-            "size must be aligned to the running kernel page size"
-        )
+        page > 0,
+        fail("state_unavailable", "kernel page size unavailable")
     );
+    validate_geometry(config, page as u64)?;
     ensure!(device.path.as_ref().is_some_and(|p| inventory::identity(Path::new(p)).as_deref() == Some(&device.identity)), fail("state_changed", "device node identity changed"));
     Ok(())
+}
+fn validate_geometry(config: &Config, page: u64) -> Result<()> {
+    ensure!(
+        page >= 2048 && page.is_power_of_two(),
+        fail("state_unavailable", "unsupported kernel page geometry")
+    );
+    ensure!(
+        config.size_bytes.is_multiple_of(page) && config.memory_limit.is_multiple_of(page),
+        fail(
+            "invalid_input",
+            "capacity and retained memory limit must align to kernel pages"
+        )
+    );
+    let pages = config.size_bytes / page;
+    ensure!(
+        pages == 0 || (pages >= 2 && pages - 1 <= u64::from(u32::MAX)),
+        fail(
+            "invalid_input",
+            "capacity cannot be represented by the platform swap header"
+        )
+    );
+    Ok(())
+}
+fn formatter_device(path: &str, identity: &str) -> Result<fs::File> {
+    let mut options = fs::OpenOptions::new();
+    options.read(true).write(true);
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::OpenOptionsExt;
+        options.custom_flags(libc::O_EXCL | libc::O_NONBLOCK);
+    }
+    let file = options
+        .open(path)
+        .with_context(|| format!("claim block device {path} for formatting"))?;
+    ensure!(
+        inventory::block_identity(&file.metadata()?).as_deref() == Some(identity),
+        fail(
+            "state_changed",
+            "opened formatting target is not the expected block device"
+        )
+    );
+    Ok(file)
 }
 fn formatter_available() -> bool {
     let Ok(metadata) = fs::metadata("/system/bin/mkswap") else {
@@ -198,6 +244,33 @@ fn idle_matches(current: &Device, expected: &Device, config: &Config) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn regular_files_are_never_accepted_as_formatting_devices() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("file");
+        fs::write(&path, "unchanged").unwrap();
+        assert!(formatter_device(path.to_str().unwrap(), "254:0").is_err());
+        assert_eq!(fs::read_to_string(path).unwrap(), "unchanged");
+    }
+    #[test]
+    fn swap_header_geometry_is_checked_before_any_transition() {
+        let mut config = crate::tests::config();
+        for page in [4096, 16384, 65536] {
+            assert!(validate_geometry(&config, page).is_ok());
+        }
+        assert!(validate_geometry(&config, 0).is_err());
+        config.memory_limit = 1;
+        assert!(validate_geometry(&config, 4096).is_err());
+        config.memory_limit = 0;
+        config.size_bytes = 4096;
+        assert!(validate_geometry(&config, 4096).is_err());
+        config.size_bytes = (u64::from(u32::MAX) + 1) * 4096;
+        assert!(validate_geometry(&config, 4096).is_ok());
+        config.size_bytes += 4096;
+        assert!(validate_geometry(&config, 4096).is_err());
+        config.size_bytes = 0;
+        assert!(validate_geometry(&config, 16384).is_ok());
+    }
     #[test]
     fn idle_checks_reject_new_instances_and_new_owners_before_reset_or_format() {
         let expected = crate::tests::device();

@@ -190,6 +190,7 @@ mod tests {
             revision: "a".repeat(64),
             confirmed: true,
             boot_profile: None,
+            boot_version: None,
             operation: Operation::Restore,
         }
     }
@@ -218,6 +219,7 @@ mod tests {
             revision: "a".repeat(64),
             confirmed: true,
             boot_profile: None,
+            boot_version: None,
             operation: Operation::Apply { config: disabled },
         };
         assert!(decode(&value.to_string(), true, &disable).is_err());

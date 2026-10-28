@@ -115,6 +115,7 @@ fn rejects_stale_state_protected_devices_and_insufficient_headroom() {
     assert!(mutation::validate(&s, "zram0", &"b".repeat(64), &config()).is_err());
     for reason in [
         "mmd",
+        "read_only",
         "writeback",
         "recompression",
         "mounted",
@@ -224,12 +225,24 @@ fn request_round_trip_retains_confirmation_and_configuration() {
         revision: "a".repeat(64),
         confirmed: true,
         boot_profile: None,
+        boot_version: None,
         operation: Operation::Apply { config: config() },
     };
     let json = serde_json::to_string(&request).unwrap();
     let parsed: Request = serde_json::from_str(&json).unwrap();
     assert!(matches!(parsed.operation, Operation::Apply { .. }));
     assert!(parsed.confirmed);
+    let mut boot = request;
+    boot.boot_profile = Some(crate::store::Profile {
+        device: "zram0".into(),
+        config: config(),
+        apply_at_boot: true,
+    });
+    boot.boot_version = Some(7);
+    let json = serde_json::to_string(&boot).unwrap();
+    let parsed: Request = serde_json::from_str(&json).unwrap();
+    assert_eq!(parsed.boot_version, Some(7));
+    assert!(parsed.boot_profile.is_some());
 }
 #[test]
 fn private_store_is_atomic_locked_and_rejects_final_symlinks() {
@@ -316,10 +329,40 @@ fn boot_authorization_is_checked_and_consumed_under_the_operation_lock() {
     };
     let mut changed = profile.clone();
     changed.config.size_bytes *= 2;
-    assert!(state.claim_boot(&changed, boot).is_err());
+    assert!(state.claim_boot(&changed, boot, 0).is_err());
     state.profiles[0].apply_at_boot = false;
-    assert!(state.claim_boot(&profile, boot).is_err());
+    assert!(state.claim_boot(&profile, boot, 0).is_err());
     state.profiles[0].apply_at_boot = true;
-    state.claim_boot(&profile, boot).unwrap();
-    assert!(state.claim_boot(&profile, boot).is_err());
+    state.claim_boot(&profile, boot, 0).unwrap();
+    assert!(state.claim_boot(&profile, boot, 0).is_err());
+}
+
+#[test]
+fn replacing_an_identical_plan_invalidates_a_previously_scheduled_boot_request() {
+    use crate::store::{BootResult, Profile, State};
+    let profile = Profile {
+        device: "zram0".into(),
+        config: config(),
+        apply_at_boot: true,
+    };
+    let boot = "12345678-1234-1234-1234-123456789abc";
+    let mut state = State {
+        profiles: vec![profile.clone()],
+        attempted_boot: Some(boot.into()),
+        boot_results: vec![BootResult {
+            device: "zram0".into(),
+            boot_id: boot.into(),
+            code: "operation_unknown".into(),
+            message: String::new(),
+        }],
+        ..State::default()
+    };
+    let old = state.profile_version("zram0");
+    state.remove_profile("zram0");
+    state.replace_profile(profile.clone()).unwrap();
+    assert_eq!(state.profiles[0], profile);
+    assert!(state.claim_boot(&profile, boot, old).is_err());
+    let latest = state.profile_version("zram0");
+    assert_ne!(old, latest);
+    state.claim_boot(&profile, boot, latest).unwrap();
 }

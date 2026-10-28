@@ -60,7 +60,8 @@
     "recompression": "Đã cấu hình nén phụ và không thể khôi phục tại đây.",
     "holders": "Thiết bị khối khác đang sử dụng thiết bị này.",
     "mounted": "Thiết bị được gắn làm hệ thống tệp.",
-    "stats_unknown": "Không đọc được trạng thái giới hạn bộ nhớ."
+    "stats_unknown": "Không đọc được trạng thái giới hạn bộ nhớ.",
+    "read_only": "Thiết bị khối chỉ cho phép đọc. Thay đổi bị chặn."
   },
   "errors": {
     "invalid_input": "Cấu hình ZRAM không hợp lệ.",
@@ -77,7 +78,8 @@
     "format_failed": "Định dạng thất bại; swap có thể vẫn tắt.",
     "operation_timeout": "Hết thời gian; chưa rõ kết quả. Hãy làm mới trạng thái.",
     "operation_unknown": "Chưa rõ kết quả. Hãy làm mới trạng thái.",
-    "zram_error": "Thao tác ZRAM thất bại."
+    "zram_error": "Thao tác ZRAM thất bại.",
+    "contract_mismatch": "Không thể giải mã dữ liệu thiết bị một cách tin cậy. Hãy làm mới và xem chi tiết."
   },
   "memoryLimit": "Giới hạn bộ nhớ",
   "unlimited": "Không giới hạn",
@@ -86,5 +88,7 @@
   "algorithmError": "Chọn thuật toán có trên nhân hiện tại.",
   "bootOn": "Đã bật",
   "bootOff": "Đã tắt",
-  "planFailure": "Không xác nhận được trạng thái phương án đã lưu. Hãy làm mới trước khi thử lại."
+  "planFailure": "Không xác nhận được trạng thái phương án đã lưu. Hãy làm mới trước khi thử lại.",
+  "automaticPriority": "Ưu tiên tự động",
+  "unavailablePlans": "Phương án của thiết bị không khả dụng"
 }

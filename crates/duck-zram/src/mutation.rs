@@ -16,6 +16,8 @@ pub struct Request {
     pub confirmed: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub boot_profile: Option<Profile>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub boot_version: Option<u64>,
     #[serde(flatten)]
     pub operation: Operation,
 }
@@ -27,11 +29,15 @@ struct WireRequest {
     confirmed: bool,
     action: String,
     boot_profile: Option<Profile>,
+    boot_version: Option<u64>,
     config: Option<Config>,
 }
 impl TryFrom<WireRequest> for Request {
     type Error = String;
     fn try_from(v: WireRequest) -> std::result::Result<Self, String> {
+        if v.boot_profile.is_some() != v.boot_version.is_some() {
+            return Err("boot profile and version must be provided together".into());
+        }
         let operation = match (v.action.as_str(), v.config) {
             ("apply", Some(config)) => Operation::Apply { config },
             ("restore", None) => Operation::Restore,
@@ -42,6 +48,7 @@ impl TryFrom<WireRequest> for Request {
             revision: v.revision,
             confirmed: v.confirmed,
             boot_profile: v.boot_profile,
+            boot_version: v.boot_version,
             operation,
         })
     }
@@ -206,7 +213,13 @@ pub fn perform(ctx: &Context, request: Request) -> Result<OperationResult> {
                 "boot request does not match its authorization"
             )
         );
-        saved.claim_boot(profile, &status.boot_id)?;
+        saved.claim_boot(
+            profile,
+            &status.boot_id,
+            request
+                .boot_version
+                .ok_or_else(|| fail("invalid_input", "boot version is required"))?,
+        )?;
         store.save(&saved)?;
     }
     let current_device = status
@@ -336,10 +349,7 @@ pub fn save_profile(ctx: &Context, request: SaveRequest) -> Result<Profile> {
         d.algorithms.contains(&request.profile.config.algorithm),
         fail("invalid_input", "unsupported algorithm")
     );
-    saved
-        .profiles
-        .retain(|p| p.device != request.profile.device);
-    saved.profiles.push(request.profile.clone());
+    saved.replace_profile(request.profile.clone())?;
     store.save(&saved)?;
     Ok(request.profile)
 }
@@ -350,7 +360,7 @@ pub fn forget_profile(ctx: &Context, device: &str) -> Result<bool> {
     );
     let store = Store::open(ctx)?;
     let mut saved = store.load()?;
-    saved.profiles.retain(|p| p.device != device);
+    saved.remove_profile(device);
     store.save(&saved)?;
     Ok(true)
 }

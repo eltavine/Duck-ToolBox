@@ -20,12 +20,33 @@ let device: ZramDevice = {
     priority: 100,
   },
   stats: { original: 536870912, compressed: 201326592, memory_used: 218103808, memory_limit: 0 },
-  blocked: scenario === "mmd" ? ["mmd"] : scenario === "writeback" ? ["writeback"] : [],
+  blocked:
+    scenario === "mmd"
+      ? ["mmd"]
+      : scenario === "writeback"
+        ? ["writeback"]
+        : scenario === "read-only"
+          ? ["read_only"]
+          : [],
   revision: "a".repeat(64),
 }
 if (scenario === "fractional") device.size += 4096
-let profile: ZramProfile | null = null
+let profile: ZramProfile | null =
+  scenario === "busy" || scenario === "orphan"
+    ? {
+        device: device.name,
+        config: {
+          size_bytes: device.size,
+          algorithm: device.algorithm ?? "lz4",
+          priority: 100,
+          memory_limit: 0,
+        },
+        apply_at_boot: true,
+      }
+    : null
 let original: ZramConfig | null = null
+let originalGeneration: string | null = null
+let statusReads = 0
 function mutate(input: unknown) {
   const request = input as {
     confirmed: boolean
@@ -41,6 +62,7 @@ function mutate(input: unknown) {
     throw new MockFailure("state_changed", "Configuration changed")
   const config = request.action === "restore" ? original : request.config
   if (!config) throw new MockFailure("original_unavailable", "No captured configuration")
+  if (original === null) originalGeneration = device.generation
   original ??= {
     size_bytes: device.size,
     algorithm: device.algorithm ?? "lz4",
@@ -76,35 +98,47 @@ function mutate(input: unknown) {
 const mock: MockModule = {
   feature: { id: "zram", contract: 2 },
   handlers: {
-    "zram.status": () => ({
-      operation_busy: scenario === "busy",
-      operations_supported: scenario !== "unsupported",
-      mmd_managed: scenario === "mmd",
-      memory_total: 8 * 1073741824,
-      memory_available: 3 * 1073741824,
-      swap_in_pages: 18304,
-      swap_out_pages: 32768,
-      boot_id: bootId,
-      devices: scenario === "empty" ? [] : [device],
-      swaps: device.swap ? [device.swap] : [],
-      warnings: [],
-      saved: {
-        version: 1,
-        profiles: profile ? [profile] : [],
-        originals: original
-          ? [
-              {
-                device: device.name,
-                generation: device.generation,
-                boot_id: bootId,
-                config: original,
-              },
-            ]
-          : [],
-        boot_results: [],
-        attempted_boot: null,
-      },
-    }),
+    "zram.status": () => {
+      if (scenario === "recreated" && ++statusReads === 2) {
+        device = {
+          ...device,
+          generation: "d".repeat(64),
+          revision: "b".repeat(64),
+          size: 2 * 1073741824,
+          algorithm: "zstd",
+          swap: device.swap ? { ...device.swap, size: 2 * 1073741824 - 4096, priority: 42 } : null,
+        }
+      }
+      return {
+        operation_busy: scenario === "busy",
+        operations_supported: scenario !== "unsupported",
+        mmd_managed: scenario === "mmd",
+        memory_total: scenario === "precision" ? 9007199254740992 : 8 * 1073741824,
+        memory_available: 3 * 1073741824,
+        swap_in_pages: 18304,
+        swap_out_pages: 32768,
+        boot_id: bootId,
+        devices: scenario === "empty" || scenario === "orphan" ? [] : [device],
+        swaps: scenario !== "orphan" && device.swap ? [device.swap] : [],
+        warnings: [],
+        saved: {
+          version: 1,
+          profiles: profile ? [profile] : [],
+          originals: original
+            ? [
+                {
+                  device: device.name,
+                  generation: originalGeneration,
+                  boot_id: bootId,
+                  config: original,
+                },
+              ]
+            : [],
+          boot_results: [],
+          attempted_boot: null,
+        },
+      }
+    },
     "zram.apply": (_a, _f, input) => mutate(input),
     "zram.restore": (_a, _f, input) => mutate(input),
     "zram.save": (_a, _f, input) => {

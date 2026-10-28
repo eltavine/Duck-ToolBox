@@ -38,7 +38,7 @@ test("saves boot application separately from runtime changes and can remove it",
   await page.getByRole("button", { name: "Remove saved plan", exact: true }).click()
   await expect(page.getByRole("button", { name: "Remove saved plan", exact: true })).toHaveCount(0)
 })
-for (const scenario of ["mmd", "writeback", "unsupported"]) {
+for (const scenario of ["mmd", "writeback", "unsupported", "read-only"]) {
   test(`blocks mutations for ${scenario} while retaining statistics`, async ({ page, open }) => {
     await open("/zram", { query: { zram: scenario } })
     await expect(page.getByText("Actual memory allocated", { exact: true })).toBeVisible()
@@ -73,10 +73,10 @@ test("validates capacity and automatic priority before confirming", async ({ pag
   await page.getByRole("textbox", { name: "Swap priority", exact: true }).fill("-1")
   await expect(page.getByRole("button", { name: "Apply now", exact: true })).toBeEnabled()
 })
-for (const [locale, theme, label] of [
-  ["en", "light", "Apply now"],
-  ["zh-CN", "dark", "立即应用"],
-  ["ar", "light", "تطبيق الآن"],
+for (const [locale, theme, label, autoLabel] of [
+  ["en", "light", "Apply now", "Automatic priority"],
+  ["zh-CN", "dark", "立即应用", "自动优先级"],
+  ["ar", "light", "تطبيق الآن", "أولوية تلقائية"],
 ] as const) {
   test(`aligns ${locale} ${theme} at 320px and 200% text`, async ({ page, open }) => {
     await page.setViewportSize({ width: 320, height: 568 })
@@ -90,6 +90,14 @@ for (const [locale, theme, label] of [
     await page.addStyleTag({ content: "html { font-size: 200%; }" })
     await expect(page.getByRole("button", { name: label, exact: true })).toBeVisible()
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+    const toggleGeometry = await page
+      .getByRole("switch", { name: autoLabel, exact: true })
+      .evaluate((el) => {
+        const text = el.parentElement!.querySelector(":scope > span")!.getBoundingClientRect()
+        const control = el.getBoundingClientRect()
+        return { textBottom: text.bottom, controlTop: control.top }
+      })
+    expect(toggleGeometry.controlTop).toBeGreaterThanOrEqual(toggleGeometry.textBottom)
     await page.evaluate(() => scrollTo(0, 0))
     await page.screenshot({
       path: `test-results/screenshots/zram-${locale}-${theme}.png`,
@@ -116,6 +124,7 @@ test("keeps inspection available while another operation holds the lock", async 
 }) => {
   await open("/zram", { query: { zram: "busy" } })
   await expect(page.getByRole("status")).toContainText("Another ZRAM operation is running.")
+  await expect(page.getByRole("button", { name: "Remove saved plan", exact: true })).toBeDisabled()
   await expect(page.getByRole("button", { name: "Apply now", exact: true })).toBeDisabled()
   await expect(page.getByRole("button", { name: "Refresh", exact: true })).toBeEnabled()
 })
@@ -172,4 +181,60 @@ test("keeps field errors aligned with their controls on a wider screen", async (
     animations: "disabled",
   })
   expect(await editor.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true)
+})
+
+for (const scenario of ["stable", "recreated"]) {
+  test(`refreshing a ${scenario} device handles unsaved drafts correctly`, async ({
+    page,
+    open,
+  }) => {
+    await open("/zram", { query: { zram: scenario } })
+    await page.locator("#zram-size-zram0").fill("1024")
+    await page.getByRole("button", { name: "Refresh", exact: true }).click()
+    await expect(page.getByRole("button", { name: "Refresh", exact: true })).toBeEnabled()
+    await expect(page.locator("#zram-size-zram0")).toHaveValue(
+      scenario === "recreated" ? "2048" : "1024",
+    )
+  })
+}
+
+test("offers automatic priority without typing a minus sign and retains the explicit value", async ({
+  page,
+  open,
+}) => {
+  await open("/zram")
+  const priority = page.locator("#zram-priority-zram0")
+  await priority.fill("500")
+  const automatic = page.getByRole("switch", { name: "Automatic priority", exact: true })
+  await automatic.click()
+  await expect(priority).not.toBeEditable()
+  await expect(automatic).toHaveAttribute("aria-checked", "true")
+  await automatic.click()
+  await expect(priority).toBeEditable()
+  await expect(priority).toHaveValue("500")
+})
+test("rejects state that cannot be decoded accurately before enabling changes", async ({
+  page,
+  open,
+}) => {
+  await open("/zram", { query: { zram: "precision" } })
+  await expect(
+    page.getByText("Device data could not be decoded reliably. Refresh and inspect the details.", {
+      exact: true,
+    }),
+  ).toBeVisible()
+  await expect(page.getByRole("button", { name: "Apply now", exact: true })).toHaveCount(0)
+})
+
+test("allows removing a boot plan when its device is unavailable", async ({ page, open }) => {
+  await open("/zram", { query: { zram: "orphan" } })
+  await expect(
+    page.getByRole("heading", { name: "Plans for unavailable devices", exact: true }),
+  ).toBeVisible()
+  await expect(page.getByRole("button", { name: "Apply now", exact: true })).toHaveCount(0)
+  await page.getByRole("button", { name: "Remove saved plan zram0", exact: true }).click()
+  await expect(
+    page.getByRole("heading", { name: "Plans for unavailable devices", exact: true }),
+  ).toHaveCount(0)
+  await expect(page.getByTestId("zram-page")).toBeFocused()
 })

@@ -60,7 +60,8 @@
     "recompression": "Sekundäre Kompression ist konfiguriert und hier nicht wiederherstellbar.",
     "holders": "Ein anderes Blockgerät verwendet dieses Gerät.",
     "mounted": "Das Gerät ist als Dateisystem eingehängt.",
-    "stats_unknown": "Die Speichergrenze ist nicht lesbar."
+    "stats_unknown": "Die Speichergrenze ist nicht lesbar.",
+    "read_only": "Dieses Blockgerät ist schreibgeschützt. Änderungen sind gesperrt."
   },
   "errors": {
     "invalid_input": "Ungültige ZRAM-Konfiguration.",
@@ -77,7 +78,8 @@
     "format_failed": "Formatierung fehlgeschlagen; Swap könnte inaktiv bleiben.",
     "operation_timeout": "Zeitüberschreitung; Ergebnis unbekannt. Zustand aktualisieren.",
     "operation_unknown": "Ergebnis unbekannt. Zustand aktualisieren.",
-    "zram_error": "ZRAM-Aktion fehlgeschlagen."
+    "zram_error": "ZRAM-Aktion fehlgeschlagen.",
+    "contract_mismatch": "Gerätedaten konnten nicht zuverlässig gelesen werden. Aktualisieren und Details prüfen."
   },
   "memoryLimit": "Speichergrenze",
   "unlimited": "Unbegrenzt",
@@ -86,5 +88,7 @@
   "algorithmError": "Einen vom aktuellen Kernel angebotenen Algorithmus wählen.",
   "bootOn": "Aktiviert",
   "bootOff": "Deaktiviert",
-  "planFailure": "Der gespeicherte Planzustand konnte nicht bestätigt werden. Vor dem erneuten Versuch aktualisieren."
+  "planFailure": "Der gespeicherte Planzustand konnte nicht bestätigt werden. Vor dem erneuten Versuch aktualisieren.",
+  "automaticPriority": "Automatische Priorität",
+  "unavailablePlans": "Pläne für nicht verfügbare Geräte"
 }

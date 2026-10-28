@@ -60,7 +60,8 @@
     "recompression": "Hay compresión secundaria configurada y no puede restaurarse aquí.",
     "holders": "Otro dispositivo de bloques utiliza este dispositivo.",
     "mounted": "El dispositivo está montado como sistema de archivos.",
-    "stats_unknown": "No se puede leer el límite de memoria."
+    "stats_unknown": "No se puede leer el límite de memoria.",
+    "read_only": "Este dispositivo de bloques es de solo lectura. Los cambios están bloqueados."
   },
   "errors": {
     "invalid_input": "Configuración ZRAM no válida.",
@@ -77,7 +78,8 @@
     "format_failed": "El formateo falló; swap puede seguir inactivo.",
     "operation_timeout": "Tiempo agotado; resultado desconocido. Actualiza el estado.",
     "operation_unknown": "Resultado desconocido. Actualiza el estado.",
-    "zram_error": "La operación ZRAM falló."
+    "zram_error": "La operación ZRAM falló.",
+    "contract_mismatch": "No se pudieron interpretar los datos del dispositivo de forma fiable. Actualiza y revisa los detalles."
   },
   "memoryLimit": "Límite de memoria",
   "unlimited": "Sin límite",
@@ -86,5 +88,7 @@
   "algorithmError": "Elige un algoritmo disponible en este núcleo.",
   "bootOn": "Activada",
   "bootOff": "Desactivada",
-  "planFailure": "No se pudo confirmar el estado del plan guardado. Actualiza antes de reintentar."
+  "planFailure": "No se pudo confirmar el estado del plan guardado. Actualiza antes de reintentar.",
+  "automaticPriority": "Prioridad automática",
+  "unavailablePlans": "Planes de dispositivos no disponibles"
 }

@@ -9,25 +9,25 @@ afterEach(() => {
   host?.dispose()
   host = undefined
 })
+const deviceFiles = {
+  "/proc/meminfo": "MemTotal: 8388608 kB\nMemAvailable: 4194304 kB\n",
+  "/proc/vmstat": "pswpin 12\npswpout 34\n",
+  "/proc/swaps": "Filename Type Size Used Priority\n/dev/block/zram0 partition 1048572 2048 -2\n",
+  "/proc/sys/kernel/random/boot_id": "12345678-1234-1234-1234-123456789abc\n",
+  "/proc/self/mountinfo": "1 0 0:1 / / rw - rootfs rootfs rw\n",
+  "/sys/block/zram0/ro": "0\n",
+  "/sys/block/zram0/dev": "254:0\n",
+  "/sys/block/zram0/disksize": "1073741824\n",
+  "/sys/block/zram0/initstate": "1\n",
+  "/sys/block/zram0/comp_algorithm": "lzo [lz4] zstd\n",
+  "/sys/block/zram0/mm_stat": "2097152 524288 655360 0 1048576 0 0 0 0\n",
+  "/sys/block/zram0/backing_dev": "none\n",
+  "/sys/block/zram0/holders/.keep": "",
+}
+
 describe.skipIf(!hasDuckd)("ZRAM API against real duckd", CONTRACT, () => {
   it("reads native statistics and safely exposes an unidentifiable device", async () => {
-    host = installHost({
-      files: {
-        "/proc/meminfo": "MemTotal: 8388608 kB\nMemAvailable: 4194304 kB\n",
-        "/proc/vmstat": "pswpin 12\npswpout 34\n",
-        "/proc/swaps":
-          "Filename Type Size Used Priority\n/dev/block/zram0 partition 1048572 2048 -2\n",
-        "/proc/sys/kernel/random/boot_id": "12345678-1234-1234-1234-123456789abc\n",
-        "/proc/self/mountinfo": "1 0 0:1 / / rw - rootfs rootfs rw\n",
-        "/sys/block/zram0/dev": "254:0\n",
-        "/sys/block/zram0/disksize": "1073741824\n",
-        "/sys/block/zram0/initstate": "1\n",
-        "/sys/block/zram0/comp_algorithm": "lzo [lz4] zstd\n",
-        "/sys/block/zram0/mm_stat": "2097152 524288 655360 0 1048576 0 0 0 0\n",
-        "/sys/block/zram0/backing_dev": "none\n",
-        "/sys/block/zram0/holders/.keep": "",
-      },
-    })
+    host = installHost({ files: deviceFiles })
     const status = await zramApi.status()
     expect((await featureManifest()).features.find((f) => f.id === "zram")?.contract).toBe(2)
     expect(status.memory_total).toBe(8 * 1073741824)
@@ -42,6 +42,24 @@ describe.skipIf(!hasDuckd)("ZRAM API against real duckd", CONTRACT, () => {
     )
     expect(status.saved.profiles).toEqual([])
   })
+  it("protects read-only devices and rejects unknown read-only state", async () => {
+    host = installHost({ files: { ...deviceFiles, "/sys/block/zram0/ro": "1\n" } })
+    expect((await zramApi.status()).devices[0]?.blocked).toContain("read_only")
+    host.dispose()
+    host = installHost({ files: { ...deviceFiles, "/sys/block/zram0/ro": "2\n" } })
+    const status = await zramApi.status()
+    expect(status.devices).toEqual([])
+    expect(status.warnings.join(" ")).toContain("read-only state")
+  })
+  it.each(["9007199254740992", "9007199254740993", "18446744073709551615"])(
+    "rejects a memory limit that cannot be represented exactly: %s",
+    async (limit) => {
+      host = installHost({
+        files: { ...deviceFiles, "/sys/block/zram0/mm_stat": `0 0 0 ${limit} 0 0 0 0 0\n` },
+      })
+      await expect(zramApi.status()).rejects.toMatchObject({ code: "contract_mismatch" })
+    },
+  )
   it("retains explicit confirmation and rejects malformed input before worker startup", async () => {
     host = installHost()
     await expect(

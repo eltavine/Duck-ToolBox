@@ -60,7 +60,8 @@
     "recompression": "Skonfigurowano dodatkową kompresję, której nie można tu przywrócić.",
     "holders": "Inne urządzenie blokowe używa tego urządzenia.",
     "mounted": "Urządzenie jest zamontowane jako system plików.",
-    "stats_unknown": "Nie można odczytać limitu pamięci."
+    "stats_unknown": "Nie można odczytać limitu pamięci.",
+    "read_only": "Urządzenie blokowe jest tylko do odczytu. Zmiany są zablokowane."
   },
   "errors": {
     "invalid_input": "Nieprawidłowa konfiguracja ZRAM.",
@@ -77,7 +78,8 @@
     "format_failed": "Formatowanie nie powiodło się; wymiana może pozostać wyłączona.",
     "operation_timeout": "Upłynął czas; wynik nieznany. Odśwież stan.",
     "operation_unknown": "Wynik nieznany. Odśwież stan.",
-    "zram_error": "Operacja ZRAM nie powiodła się."
+    "zram_error": "Operacja ZRAM nie powiodła się.",
+    "contract_mismatch": "Nie można wiarygodnie odczytać danych urządzenia. Odśwież stan i sprawdź szczegóły."
   },
   "memoryLimit": "Limit pamięci",
   "unlimited": "Bez limitu",
@@ -86,5 +88,7 @@
   "algorithmError": "Wybierz algorytm dostępny w bieżącym jądrze.",
   "bootOn": "Włączone",
   "bootOff": "Wyłączone",
-  "planFailure": "Nie można potwierdzić stanu zapisanego planu. Odśwież przed ponowną próbą."
+  "planFailure": "Nie można potwierdzić stanu zapisanego planu. Odśwież przed ponowną próbą.",
+  "automaticPriority": "Automatyczny priorytet",
+  "unavailablePlans": "Plany niedostępnych urządzeń"
 }
