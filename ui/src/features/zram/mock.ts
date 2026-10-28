@@ -6,6 +6,7 @@ const bootId = "12345678-1234-1234-1234-123456789abc"
 let device: ZramDevice = {
   name: "zram0",
   identity: "254:0",
+  generation: "c".repeat(64),
   path: "/dev/block/zram0",
   size: 4 * 1073741824,
   initialized: true,
@@ -22,6 +23,7 @@ let device: ZramDevice = {
   blocked: scenario === "mmd" ? ["mmd"] : scenario === "writeback" ? ["writeback"] : [],
   revision: "a".repeat(64),
 }
+if (scenario === "fractional") device.size += 4096
 let profile: ZramProfile | null = null
 let original: ZramConfig | null = null
 function mutate(input: unknown) {
@@ -72,9 +74,10 @@ function mutate(input: unknown) {
   }
 }
 const mock: MockModule = {
-  feature: { id: "zram", contract: 1 },
+  feature: { id: "zram", contract: 2 },
   handlers: {
     "zram.status": () => ({
+      operation_busy: scenario === "busy",
       operations_supported: scenario !== "unsupported",
       mmd_managed: scenario === "mmd",
       memory_total: 8 * 1073741824,
@@ -88,7 +91,16 @@ const mock: MockModule = {
       saved: {
         version: 1,
         profiles: profile ? [profile] : [],
-        originals: original ? [{ device: device.name, boot_id: bootId, config: original }] : [],
+        originals: original
+          ? [
+              {
+                device: device.name,
+                generation: device.generation,
+                boot_id: bootId,
+                config: original,
+              },
+            ]
+          : [],
         boot_results: [],
         attempted_boot: null,
       },
@@ -96,6 +108,8 @@ const mock: MockModule = {
     "zram.apply": (_a, _f, input) => mutate(input),
     "zram.restore": (_a, _f, input) => mutate(input),
     "zram.save": (_a, _f, input) => {
+      if (scenario === "save-failure")
+        throw new MockFailure("zram_error", "Could not save the plan")
       profile = (input as { profile: ZramProfile }).profile
       return profile
     },

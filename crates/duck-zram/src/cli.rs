@@ -13,7 +13,7 @@ pub static FEATURE: ClapFeature<Command> = ClapFeature::new(
     FeatureInfo {
         id: "zram",
         summary: "ZRAM and swap inventory, runtime configuration and opt-in boot profiles",
-        contract: 1,
+        contract: 2,
     },
     dispatch,
 );
@@ -54,9 +54,10 @@ fn dispatch<'a>(command: Command, ctx: &'a Context) -> BoxFuture<'a, CommandResu
         match command {
             Command::Status => (|| -> Result<_> {
                 let status = inventory::status(&ctx.sysroot)?;
-                let saved = Store::open(ctx)?.load()?;
+                let (saved, busy) = Store::snapshot(ctx)?;
                 let mut value = serde_json::to_value(status)?;
                 value["saved"] = serde_json::to_value(saved)?;
+                value["operation_busy"] = busy.into();
                 Ok(value)
             })()
             .into_command("zram.status", code_of),
@@ -81,7 +82,7 @@ fn dispatch<'a>(command: Command, ctx: &'a Context) -> BoxFuture<'a, CommandResu
 }
 fn boot_apply(ctx: &Context) -> Result<Vec<BootResult>> {
     ensure!(
-        crate::kernel::supported(&ctx.sysroot),
+        crate::capabilities::supported(&ctx.sysroot),
         fail(
             "unsupported_environment",
             "boot application requires Android ARM64 root"
@@ -103,6 +104,7 @@ fn boot_apply(ctx: &Context) -> Result<Vec<BootResult>> {
         return Ok(vec![]);
     }
     state.attempted_boot = Some(status.boot_id.clone());
+    state.boot_claimed.clear();
     state.boot_results = profiles
         .iter()
         .map(|p| BootResult {
@@ -117,20 +119,13 @@ fn boot_apply(ctx: &Context) -> Result<Vec<BootResult>> {
     drop(store);
     for profile in profiles {
         let result = (|| -> Result<_> {
-            let saved = Store::open(ctx)?.load()?;
-            ensure!(
-                saved.profiles.iter().any(|p| p.device == profile.device
-                    && p.apply_at_boot
-                    && p.config == profile.config),
-                fail("state_changed", "saved boot authorization changed")
-            );
             let current = inventory::status(&ctx.sysroot)?;
             let d = current
                 .devices
                 .iter()
                 .find(|d| d.name == profile.device)
                 .ok_or_else(|| fail("state_changed", "saved device unavailable"))?;
-            let mut config = profile.config;
+            let mut config = profile.config.clone();
             config.memory_limit = d.stats.memory_limit.unwrap_or(0);
             worker::execute(
                 ctx,
@@ -138,6 +133,7 @@ fn boot_apply(ctx: &Context) -> Result<Vec<BootResult>> {
                     device: profile.device.clone(),
                     revision: d.revision.clone(),
                     confirmed: true,
+                    boot_profile: Some(profile.clone()),
                     operation: mutation::Operation::Apply { config },
                 },
             )

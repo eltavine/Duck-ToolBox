@@ -1,10 +1,14 @@
 //! Existing ZRAM swap devices, with explicit runtime and boot configuration.
+#[allow(unsafe_code)]
+mod capabilities;
 mod cli;
 mod inventory;
 #[allow(unsafe_code)]
 mod kernel;
 mod model;
 mod mutation;
+#[allow(unsafe_code)]
+mod process;
 mod store;
 mod worker;
 

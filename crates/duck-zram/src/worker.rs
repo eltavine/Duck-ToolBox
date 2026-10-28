@@ -1,6 +1,7 @@
 use crate::{
-    fail, kernel,
+    fail,
     mutation::{OperationResult, Request},
+    process,
     store::Store,
 };
 use anyhow::{Result, ensure};
@@ -32,8 +33,8 @@ pub fn execute(ctx: &Context, request: &Request) -> Result<OperationResult> {
         use std::os::unix::process::CommandExt;
         cmd.process_group(0);
     }
-    let mut process = Worker(cmd.spawn()?);
-    let exit = wait(&mut process.0, Duration::from_secs(45))?;
+    let mut process = Worker::new(cmd.spawn()?);
+    let exit = wait(&mut process, Duration::from_secs(45))?;
     output.seek(SeekFrom::Start(0)).map_err(|e| {
         fail(
             "operation_unknown",
@@ -53,31 +54,56 @@ pub fn execute(ctx: &Context, request: &Request) -> Result<OperationResult> {
     );
     decode(&raw, exit.success(), request)
 }
-struct Worker(std::process::Child);
+struct Worker {
+    child: std::process::Child,
+    reaped: bool,
+}
+impl Worker {
+    fn new(child: std::process::Child) -> Self {
+        Self {
+            child,
+            reaped: false,
+        }
+    }
+}
 impl Drop for Worker {
     fn drop(&mut self) {
-        if matches!(self.0.try_wait(), Ok(Some(_))) {
+        if self.reaped {
             return;
         }
-        kernel::terminate_group(self.0.id());
+        // The unreaped leader keeps its PID reserved while descendants are terminated.
+        process::kill_group(self.child.id());
         let deadline = Instant::now() + Duration::from_millis(100);
         while Instant::now() < deadline {
-            if matches!(self.0.try_wait(), Ok(Some(_))) {
+            if matches!(self.child.try_wait(), Ok(Some(_))) {
+                self.reaped = true;
                 return;
             }
             thread::sleep(Duration::from_millis(5));
         }
     }
 }
-fn wait(child: &mut std::process::Child, budget: Duration) -> Result<std::process::ExitStatus> {
+fn wait(worker: &mut Worker, budget: Duration) -> Result<std::process::ExitStatus> {
     let deadline = Instant::now() + budget;
     loop {
-        if let Some(exit) = child.try_wait().map_err(|e| {
+        if process::exited(worker.child.id()).map_err(|e| {
             fail(
                 "operation_unknown",
                 format!("worker status unavailable: {e}"),
             )
         })? {
+            process::kill_group(worker.child.id());
+            let exit = worker
+                .child
+                .try_wait()
+                .map_err(|e| {
+                    fail(
+                        "operation_unknown",
+                        format!("worker could not be reaped: {e}"),
+                    )
+                })?
+                .ok_or_else(|| fail("operation_unknown", "worker exit could not be collected"))?;
+            worker.reaped = true;
             return Ok(exit);
         }
         ensure!(
@@ -115,7 +141,7 @@ fn decode(raw: &str, success: bool, request: &Request) -> Result<OperationResult
             .error
             .ok_or_else(|| fail("operation_unknown", "worker failure has no details"))?;
         ensure!(
-            !success && reply.data.is_none() && !error.message.is_empty(),
+            !success && reply.data.is_none() && !error.message.is_empty() && !error.code.is_empty(),
             fail("operation_unknown", "contradictory worker failure")
         );
         let code = match error.code.as_str() {
@@ -143,7 +169,12 @@ fn decode(raw: &str, success: bool, request: &Request) -> Result<OperationResult
         success
             && reply.error.is_none()
             && data.device == request.device
-            && data.action == request.action(),
+            && data.action == request.action()
+            && match &request.operation {
+                crate::mutation::Operation::Apply { config } =>
+                    data.active == (config.size_bytes > 0),
+                crate::mutation::Operation::Restore => true,
+            },
         fail("operation_unknown", "contradictory worker result")
     );
     Ok(data)
@@ -158,6 +189,7 @@ mod tests {
             device: "zram0".into(),
             revision: "a".repeat(64),
             confirmed: true,
+            boot_profile: None,
             operation: Operation::Restore,
         }
     }
@@ -179,6 +211,18 @@ mod tests {
         value["data"]["device"] = "zram0".into();
         value["data"]["action"] = "apply".into();
         assert!(decode(&value.to_string(), true, &r).is_err());
+        let mut disabled = crate::tests::config();
+        disabled.size_bytes = 0;
+        let disable = Request {
+            device: "zram0".into(),
+            revision: "a".repeat(64),
+            confirmed: true,
+            boot_profile: None,
+            operation: Operation::Apply { config: disabled },
+        };
+        assert!(decode(&value.to_string(), true, &disable).is_err());
+        value["data"]["active"] = false.into();
+        assert!(!decode(&value.to_string(), true, &disable).unwrap().active);
         let failed = r#"{"api":1,"command":"zram.worker","ok":false,"error":{"code":"insufficient_memory","message":"no memory"}}"#;
         assert_eq!(
             code_of(&decode(failed, false, &r).unwrap_err()),
@@ -195,13 +239,34 @@ mod tests {
             .process_group(0)
             .spawn()
             .unwrap();
-        let mut worker = Worker(child);
+        let mut worker = Worker::new(child);
         let start = Instant::now();
         assert_eq!(
-            code_of(&wait(&mut worker.0, Duration::from_millis(1)).unwrap_err()),
+            code_of(&wait(&mut worker, Duration::from_millis(1)).unwrap_err()),
             "operation_timeout"
         );
         drop(worker);
         assert!(start.elapsed() < Duration::from_secs(2));
+    }
+}
+
+#[cfg(all(test, unix))]
+mod descendant_tests {
+    use super::*;
+    use std::os::unix::process::CommandExt;
+    #[test]
+    fn descendants_cannot_outlive_a_completed_worker() {
+        let dir = tempfile::tempdir().unwrap();
+        let target = dir.path().join("unexpected");
+        let child = Command::new("sh")
+            .args(["-c", "(sleep 0.3; touch \"$1\") & exit 0", "sh"])
+            .arg(&target)
+            .process_group(0)
+            .spawn()
+            .unwrap();
+        let mut worker = Worker::new(child);
+        assert!(wait(&mut worker, Duration::from_secs(2)).unwrap().success());
+        thread::sleep(Duration::from_millis(400));
+        assert!(!target.exists());
     }
 }

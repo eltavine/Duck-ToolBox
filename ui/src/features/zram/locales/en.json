@@ -80,5 +80,11 @@
     "zram_error": "ZRAM operation failed."
   },
   "memoryLimit": "Memory limit",
-  "unlimited": "Unlimited"
+  "unlimited": "Unlimited",
+  "sizeError": "Enter whole MiB from 16 to {max}, or 0 to disable.",
+  "priorityError": "Enter 0–32767, or -1 for automatic priority.",
+  "algorithmError": "Choose an algorithm available in this kernel.",
+  "bootOn": "Enabled",
+  "bootOff": "Disabled",
+  "planFailure": "The saved plan state could not be confirmed. Refresh before trying again."
 }

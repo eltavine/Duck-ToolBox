@@ -80,5 +80,11 @@
     "zram_error": "Operasi ZRAM gagal."
   },
   "memoryLimit": "Batas memori",
-  "unlimited": "Tanpa batas"
+  "unlimited": "Tanpa batas",
+  "sizeError": "Masukkan MiB bulat dari 16 hingga {max}, atau 0 untuk menonaktifkan.",
+  "priorityError": "Masukkan 0–32767, atau -1 untuk prioritas otomatis.",
+  "algorithmError": "Pilih algoritma yang tersedia pada kernel ini.",
+  "bootOn": "Aktif",
+  "bootOff": "Nonaktif",
+  "planFailure": "Status rencana tersimpan tidak dapat dipastikan. Muat ulang sebelum mencoba lagi."
 }

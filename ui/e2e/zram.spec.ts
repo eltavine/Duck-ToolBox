@@ -13,6 +13,7 @@ test("applies only after confirmation, restores original parameters and compares
   await expect(dialog).toBeVisible()
   await dialog.getByRole("button", { name: "Cancel", exact: true }).click()
   await expect(size).toHaveValue("2048")
+  await expect(page.getByRole("button", { name: "Apply now", exact: true })).toBeFocused()
   await page.getByRole("button", { name: "Apply now", exact: true }).click()
   await dialog.getByRole("button", { name: "Apply now", exact: true }).click()
   await expect(page.getByText("Memory after reset", { exact: true })).toBeVisible()
@@ -30,7 +31,7 @@ test("saves boot application separately from runtime changes and can remove it",
   await page.getByRole("switch", { name: "Apply at boot", exact: true }).click()
   await page.getByRole("button", { name: "Save plan", exact: true }).click()
   const dialog = page.getByRole("alertdialog")
-  await expect(dialog.getByText("Saved: boot application enabled", { exact: true })).toBeVisible()
+  await expect(dialog.getByText("Enabled", { exact: true })).toBeVisible()
   await dialog.getByRole("button", { name: "Save plan", exact: true }).click()
   await expect(page.getByText("Saved: boot application enabled", { exact: true })).toBeVisible()
   await expect(page.getByRole("button", { name: "Restore original", exact: true })).toBeDisabled()
@@ -80,6 +81,7 @@ for (const [locale, theme, label] of [
   test(`aligns ${locale} ${theme} at 320px and 200% text`, async ({ page, open }) => {
     await page.setViewportSize({ width: 320, height: 568 })
     await open("/zram", { locale, theme })
+    await expect(page.getByRole("button", { name: label, exact: true })).toBeVisible()
     await page.screenshot({
       path: `test-results/screenshots/zram-${locale}-${theme}-normal.png`,
       fullPage: true,
@@ -107,3 +109,67 @@ for (const [locale, theme, label] of [
     expect(await dialog.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true)
   })
 }
+
+test("keeps inspection available while another operation holds the lock", async ({
+  page,
+  open,
+}) => {
+  await open("/zram", { query: { zram: "busy" } })
+  await expect(page.getByRole("status")).toContainText("Another ZRAM operation is running.")
+  await expect(page.getByRole("button", { name: "Apply now", exact: true })).toBeDisabled()
+  await expect(page.getByRole("button", { name: "Refresh", exact: true })).toBeEnabled()
+})
+test("does not silently round an existing capacity or mark unrelated fields invalid", async ({
+  page,
+  open,
+}) => {
+  await open("/zram", { query: { zram: "fractional" } })
+  const size = page.locator("#zram-size-zram0"),
+    priority = page.locator("#zram-priority-zram0")
+  await expect(size).toHaveValue("4096.00390625")
+  await expect(size).toHaveAttribute("aria-invalid", "true")
+  await expect(priority).toHaveAttribute("aria-invalid", "false")
+  await expect(page.locator("#zram-size-error-zram0")).toBeVisible()
+  await size.fill("4096")
+  await priority.fill("-2")
+  await expect(size).toHaveAttribute("aria-invalid", "false")
+  await expect(priority).toHaveAttribute("aria-invalid", "true")
+})
+test("accepts Arabic digits and a localized minus sign without changing the requested values", async ({
+  page,
+  open,
+}) => {
+  await open("/zram", { locale: "ar" })
+  await page.locator("#zram-size-zram0").fill("١٠٢٤")
+  await page.locator("#zram-priority-zram0").fill("−١")
+  await expect(page.getByRole("button", { name: "تطبيق الآن", exact: true })).toBeEnabled()
+})
+test("reports plan failures without claiming a kernel transition occurred", async ({
+  page,
+  open,
+}) => {
+  await open("/zram", { query: { zram: "save-failure" } })
+  await page.getByRole("button", { name: "Save plan", exact: true }).click()
+  await page
+    .getByRole("alertdialog")
+    .getByRole("button", { name: "Save plan", exact: true })
+    .click()
+  await expect(page.getByRole("alert")).toContainText("The saved plan state could not be confirmed")
+  await expect(page.getByRole("alert")).not.toContainText("Some steps may already")
+})
+
+test("keeps field errors aligned with their controls on a wider screen", async ({ page, open }) => {
+  await page.setViewportSize({ width: 800, height: 900 })
+  await open("/zram")
+  await page.locator("#zram-size-zram0").fill("99999")
+  await page.locator("#zram-priority-zram0").fill("-2")
+  const editor = page
+    .locator("section")
+    .filter({ has: page.getByRole("heading", { name: "Configuration", exact: true }) })
+  await expect(editor.locator("#zram-priority-error-zram0")).toBeVisible()
+  await editor.screenshot({
+    path: "test-results/screenshots/zram-field-errors.png",
+    animations: "disabled",
+  })
+  expect(await editor.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true)
+})

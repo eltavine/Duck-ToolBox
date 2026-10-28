@@ -13,35 +13,6 @@ const _: () = {
     assert!(libc::SYS_swapoff == 225);
     assert!(std::mem::size_of::<libc::c_long>() == 8);
 };
-pub fn supported(sys: &Sysroot) -> bool {
-    #[cfg(all(target_os = "android", target_arch = "aarch64"))]
-    {
-        sys.root() == Path::new("/") && unsafe { libc::geteuid() } == 0
-    }
-    #[cfg(not(all(target_os = "android", target_arch = "aarch64")))]
-    {
-        let _ = sys;
-        false
-    }
-}
-pub fn mmd_managed() -> Option<bool> {
-    let tool = if cfg!(target_os = "android") {
-        "/system/bin/getprop"
-    } else {
-        "getprop"
-    };
-    let props = duck_platform::exec::stdout(tool, &[]).ok()?;
-    let props = duck_platform::props::parse_listing(&props);
-    Some(
-        props
-            .get("init.svc.mmd")
-            .is_some_and(|v| matches!(v.as_str(), "running" | "restarting"))
-            || (props
-                .get("mmd.enabled_aconfig")
-                .is_some_and(|v| v == "true")
-                && props.get("mmd.zram.enabled").is_some_and(|v| v == "true")),
-    )
-}
 pub trait Operations {
     fn swapoff(&mut self) -> Result<()>;
     fn reset(&mut self) -> Result<()>;
@@ -53,6 +24,7 @@ pub trait Operations {
 }
 pub struct Android<'a> {
     pub device: &'a Device,
+    pub config: &'a Config,
 }
 impl Android<'_> {
     fn path(&self) -> Result<&str> {
@@ -65,7 +37,29 @@ impl Android<'_> {
             inventory::identity(Path::new(path)).as_deref() == Some(&self.device.identity),
             fail("state_changed", "block device identity changed")
         );
+        let boot = inventory::read(Path::new("/proc/sys/kernel/random/boot_id"))?;
+        ensure!(
+            inventory::generation(
+                &std::path::PathBuf::from(format!("/sys/block/{}", self.device.name)),
+                boot.trim(),
+                &self.device.identity
+            )? == self.device.generation,
+            fail("state_changed", "ZRAM device instance changed")
+        );
         Ok(path)
+    }
+    fn ensure_idle(&self, expected: &Config) -> Result<()> {
+        let current = inventory::status(&Sysroot::default())?;
+        let device = current
+            .devices
+            .iter()
+            .find(|d| d.name == self.device.name)
+            .ok_or_else(|| fail("state_changed", "device disappeared"))?;
+        ensure!(
+            idle_matches(device, self.device, expected),
+            fail("state_changed", "device changed or acquired another user")
+        );
+        Ok(())
     }
     fn write(&self, attribute: &str, value: &str) -> Result<()> {
         self.path()?;
@@ -83,6 +77,7 @@ impl Operations for Android<'_> {
         swap(self.path()?, None)
     }
     fn reset(&mut self) -> Result<()> {
+        self.ensure_idle(&self.device.config()?)?;
         self.write("reset", "1")
     }
     fn algorithm(&mut self, value: &str) -> Result<()> {
@@ -95,16 +90,7 @@ impl Operations for Android<'_> {
         self.write("mem_limit", &bytes.to_string())
     }
     fn format(&mut self) -> Result<()> {
-        let current = inventory::status(&Sysroot::default())?;
-        let device = current
-            .devices
-            .iter()
-            .find(|d| d.name == self.device.name)
-            .ok_or_else(|| fail("state_changed", "device disappeared"))?;
-        ensure!(
-            device.swap.is_none() && device.blocked.iter().all(|b| b == "non_swap"),
-            fail("state_changed", "device acquired another user")
-        );
+        self.ensure_idle(self.config)?;
         let status = std::process::Command::new("/system/bin/mkswap")
             .arg(self.path()?)
             .stdin(std::process::Stdio::null())
@@ -185,15 +171,6 @@ pub fn preflight(device: &Device, config: &Config) -> Result<()> {
     ensure!(device.path.as_ref().is_some_and(|p| inventory::identity(Path::new(p)).as_deref() == Some(&device.identity)), fail("state_changed", "device node identity changed"));
     Ok(())
 }
-pub fn terminate_group(pid: u32) {
-    #[cfg(unix)]
-    unsafe {
-        libc::kill(-(pid as i32), libc::SIGKILL);
-    }
-    #[cfg(not(unix))]
-    let _ = pid;
-}
-
 fn formatter_available() -> bool {
     let Ok(metadata) = fs::metadata("/system/bin/mkswap") else {
         return false;
@@ -206,5 +183,36 @@ fn formatter_available() -> bool {
     #[cfg(not(unix))]
     {
         metadata.is_file()
+    }
+}
+
+fn idle_matches(current: &Device, expected: &Device, config: &Config) -> bool {
+    current.generation == expected.generation
+        && current.swap.is_none()
+        && current.blocked.iter().all(|b| b == "non_swap")
+        && current.size == config.size_bytes
+        && current.algorithm.as_ref() == Some(&config.algorithm)
+        && current.stats.memory_limit == Some(config.memory_limit)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn idle_checks_reject_new_instances_and_new_owners_before_reset_or_format() {
+        let expected = crate::tests::device();
+        let config = crate::tests::config();
+        let mut current = expected.clone();
+        current.swap = None;
+        current.blocked = vec!["non_swap".into()];
+        assert!(idle_matches(&current, &expected, &config));
+        current.generation = "d".repeat(64);
+        assert!(!idle_matches(&current, &expected, &config));
+        current.generation = expected.generation.clone();
+        current.blocked.push("mmd".into());
+        assert!(!idle_matches(&current, &expected, &config));
+        current.blocked.pop();
+        current.stats.memory_limit = None;
+        assert!(!idle_matches(&current, &expected, &config));
     }
 }

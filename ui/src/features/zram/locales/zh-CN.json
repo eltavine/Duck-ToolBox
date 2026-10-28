@@ -80,5 +80,11 @@
     "zram_error": "ZRAM 操作失败。"
   },
   "memoryLimit": "内存上限",
-  "unlimited": "不限制"
+  "unlimited": "不限制",
+  "sizeError": "容量需为 16–{max} 的整数 MiB，或填 0 停用。",
+  "priorityError": "优先级需为 0–32767，或填 -1 自动分配。",
+  "algorithmError": "请选择当前内核支持的算法。",
+  "bootOn": "启用",
+  "bootOff": "关闭",
+  "planFailure": "无法确认方案状态。请刷新后再试。"
 }

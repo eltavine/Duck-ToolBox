@@ -80,5 +80,11 @@
     "zram_error": "L’opération ZRAM a échoué."
   },
   "memoryLimit": "Limite mémoire",
-  "unlimited": "Illimitée"
+  "unlimited": "Illimitée",
+  "sizeError": "Saisissez des MiB entiers de 16 à {max}, ou 0 pour désactiver.",
+  "priorityError": "Saisissez 0–32767, ou -1 pour la priorité automatique.",
+  "algorithmError": "Choisissez un algorithme disponible dans ce noyau.",
+  "bootOn": "Activée",
+  "bootOff": "Désactivée",
+  "planFailure": "Impossible de confirmer l’état du plan enregistré. Actualisez avant de réessayer."
 }

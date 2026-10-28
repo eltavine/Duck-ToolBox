@@ -80,5 +80,11 @@
     "zram_error": "Operacja ZRAM nie powiodła się."
   },
   "memoryLimit": "Limit pamięci",
-  "unlimited": "Bez limitu"
+  "unlimited": "Bez limitu",
+  "sizeError": "Wpisz całkowite MiB od 16 do {max} lub 0, aby wyłączyć.",
+  "priorityError": "Wpisz 0–32767 lub -1 dla automatycznego priorytetu.",
+  "algorithmError": "Wybierz algorytm dostępny w bieżącym jądrze.",
+  "bootOn": "Włączone",
+  "bootOff": "Wyłączone",
+  "planFailure": "Nie można potwierdzić stanu zapisanego planu. Odśwież przed ponowną próbą."
 }

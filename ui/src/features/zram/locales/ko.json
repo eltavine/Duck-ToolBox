@@ -80,5 +80,11 @@
     "zram_error": "ZRAM 작업에 실패했습니다."
   },
   "memoryLimit": "메모리 한도",
-  "unlimited": "제한 없음"
+  "unlimited": "제한 없음",
+  "sizeError": "16~{max}의 정수 MiB 또는 비활성화하려면 0을 입력하세요.",
+  "priorityError": "0~32767 또는 자동 우선순위는 -1을 입력하세요.",
+  "algorithmError": "현재 커널에서 지원하는 알고리즘을 선택하세요.",
+  "bootOn": "켜짐",
+  "bootOff": "꺼짐",
+  "planFailure": "저장된 계획 상태를 확인할 수 없습니다. 새로고침한 뒤 다시 시도하세요."
 }

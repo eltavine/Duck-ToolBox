@@ -13,7 +13,7 @@ import {
 import { Switch } from "@/components/ui/switch"
 import type { ZramConfig, ZramDevice, ZramProfile } from "../api"
 import { useZramI18n } from "../i18n"
-import { parsePlan } from "../input"
+import { parsePlan, capacityBytes, swapPriority } from "../input"
 const props = defineProps<{
   device: ZramDevice
   profile?: ZramProfile
@@ -29,7 +29,7 @@ const emit = defineEmits<{
 }>()
 const { t, locale } = useZramI18n()
 const initial = props.profile?.config
-const size = ref(String(Math.round((initial?.size_bytes ?? props.device.size) / 1048576)))
+const size = ref(String((initial?.size_bytes ?? props.device.size) / 1048576))
 const algorithm = ref(
   initial?.algorithm ?? props.device.algorithm ?? props.device.algorithms[0] ?? "",
 )
@@ -43,6 +43,9 @@ const priority = ref(
   ),
 )
 const boot = ref(props.profile?.apply_at_boot ?? false)
+const sizeInvalid = computed(() => capacityBytes(String(size.value), props.total) === null)
+const priorityInvalid = computed(() => swapPriority(String(priority.value)) === undefined)
+const algorithmInvalid = computed(() => !props.device.algorithms.includes(algorithm.value))
 const plan = computed(() =>
   !props.device.algorithms.includes(algorithm.value)
     ? null
@@ -69,23 +72,45 @@ const range = computed(() =>
           v-model="size"
           inputmode="numeric"
           dir="ltr"
-          :aria-invalid="!plan"
-          :aria-describedby="`zram-input-help-${device.name}`"
+          :aria-invalid="sizeInvalid"
+          :aria-describedby="`zram-input-help-${device.name}${sizeInvalid ? ` zram-size-error-${device.name}` : ''}`"
           :disabled="busy || !writable"
         />
+        <p
+          v-if="sizeInvalid"
+          :id="`zram-size-error-${device.name}`"
+          class="text-destructive text-sm"
+          aria-live="polite"
+        >
+          {{ t("sizeError", { max: range }) }}
+        </p>
       </div>
       <div class="min-w-0 space-y-2">
         <Label :for="`zram-algorithm-${device.name}`">{{ t("algorithm") }}</Label>
         <Select v-model="algorithm" :disabled="busy || !writable">
-          <SelectTrigger :id="`zram-algorithm-${device.name}`" class="w-full"
+          <SelectTrigger
+            :id="`zram-algorithm-${device.name}`"
+            class="w-full"
+            :aria-invalid="algorithmInvalid"
+            :aria-describedby="algorithmInvalid ? `zram-algorithm-error-${device.name}` : undefined"
             ><SelectValue
-          /></SelectTrigger>
+              ><bdi dir="ltr">{{ algorithm }}</bdi></SelectValue
+            ></SelectTrigger
+          >
           <SelectContent
             ><SelectItem v-for="item in device.algorithms" :key="item" :value="item"
               ><bdi dir="ltr">{{ item }}</bdi></SelectItem
             ></SelectContent
           >
         </Select>
+        <p
+          v-if="algorithmInvalid"
+          :id="`zram-algorithm-error-${device.name}`"
+          class="text-destructive text-sm"
+          aria-live="polite"
+        >
+          {{ t("algorithmError") }}
+        </p>
       </div>
       <div class="min-w-0 space-y-2">
         <Label :for="`zram-priority-${device.name}`">{{ t("priority") }}</Label>
@@ -94,16 +119,21 @@ const range = computed(() =>
           v-model="priority"
           inputmode="numeric"
           dir="ltr"
-          :aria-invalid="!plan"
-          :aria-describedby="`zram-input-help-${device.name}`"
+          :aria-invalid="priorityInvalid"
+          :aria-describedby="`zram-input-help-${device.name}${priorityInvalid ? ` zram-priority-error-${device.name}` : ''}`"
           :disabled="busy || !writable"
         />
+        <p
+          v-if="priorityInvalid"
+          :id="`zram-priority-error-${device.name}`"
+          class="text-destructive text-sm"
+          aria-live="polite"
+        >
+          {{ t("priorityError") }}
+        </p>
       </div>
     </div>
-    <p
-      :id="`zram-input-help-${device.name}`"
-      :class="['text-sm', plan ? 'text-muted-foreground' : 'text-destructive']"
-    >
+    <p :id="`zram-input-help-${device.name}`" class="text-muted-foreground text-sm">
       {{ t("inputHelp", { max: range }) }}
     </p>
     <label class="flex min-h-12 cursor-pointer items-center justify-between gap-4 rounded-md py-2">

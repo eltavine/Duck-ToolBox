@@ -80,5 +80,11 @@
     "zram_error": "Thao tác ZRAM thất bại."
   },
   "memoryLimit": "Giới hạn bộ nhớ",
-  "unlimited": "Không giới hạn"
+  "unlimited": "Không giới hạn",
+  "sizeError": "Nhập MiB nguyên từ 16 đến {max}, hoặc 0 để tắt.",
+  "priorityError": "Nhập 0–32767, hoặc -1 để đặt ưu tiên tự động.",
+  "algorithmError": "Chọn thuật toán có trên nhân hiện tại.",
+  "bootOn": "Đã bật",
+  "bootOff": "Đã tắt",
+  "planFailure": "Không xác nhận được trạng thái phương án đã lưu. Hãy làm mới trước khi thử lại."
 }

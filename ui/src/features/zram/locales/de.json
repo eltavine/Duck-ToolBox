@@ -80,5 +80,11 @@
     "zram_error": "ZRAM-Aktion fehlgeschlagen."
   },
   "memoryLimit": "Speichergrenze",
-  "unlimited": "Unbegrenzt"
+  "unlimited": "Unbegrenzt",
+  "sizeError": "Ganze MiB von 16 bis {max} eingeben, oder 0 zum Deaktivieren.",
+  "priorityError": "0–32767 oder -1 für automatische Priorität eingeben.",
+  "algorithmError": "Einen vom aktuellen Kernel angebotenen Algorithmus wählen.",
+  "bootOn": "Aktiviert",
+  "bootOff": "Deaktiviert",
+  "planFailure": "Der gespeicherte Planzustand konnte nicht bestätigt werden. Vor dem erneuten Versuch aktualisieren."
 }

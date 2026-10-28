@@ -5,7 +5,7 @@ import { NAMESPACE } from "./i18n"
 export default defineFeature({
   id: "zram",
   namespace: NAMESPACE,
-  contract: 1,
+  contract: 2,
   icon: MemoryStick,
   order: 61,
   routes: [{ path: "", name: "zram", component: () => import("./pages/ZramPage.vue") }],

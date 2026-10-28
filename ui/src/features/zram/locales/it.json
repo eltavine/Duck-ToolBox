@@ -80,5 +80,11 @@
     "zram_error": "Operazione ZRAM fallita."
   },
   "memoryLimit": "Limite di memoria",
-  "unlimited": "Illimitata"
+  "unlimited": "Illimitata",
+  "sizeError": "Inserisci MiB interi da 16 a {max}, oppure 0 per disattivare.",
+  "priorityError": "Inserisci 0–32767, oppure -1 per la priorità automatica.",
+  "algorithmError": "Scegli un algoritmo disponibile in questo kernel.",
+  "bootOn": "Attivata",
+  "bootOff": "Disattivata",
+  "planFailure": "Impossibile confermare lo stato del piano salvato. Aggiorna prima di riprovare."
 }

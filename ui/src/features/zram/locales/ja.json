@@ -80,5 +80,11 @@
     "zram_error": "ZRAM の操作に失敗しました。"
   },
   "memoryLimit": "メモリ上限",
-  "unlimited": "制限なし"
+  "unlimited": "制限なし",
+  "sizeError": "16～{max} の整数 MiB、または無効化するには 0 を入力してください。",
+  "priorityError": "0～32767、または自動優先度の -1 を入力してください。",
+  "algorithmError": "このカーネルで利用できるアルゴリズムを選んでください。",
+  "bootOn": "有効",
+  "bootOff": "無効",
+  "planFailure": "保存プランの状態を確認できません。更新してから再試行してください。"
 }

@@ -47,10 +47,6 @@ impl Config {
                 "size must be 16 MiB to twice physical memory, or zero to disable"
             )
         );
-        ensure!(
-            self.memory_limit <= total_memory,
-            fail("invalid_input", "memory limit exceeds physical memory")
-        );
         Ok(())
     }
 }
@@ -76,6 +72,7 @@ pub struct Swap {
 pub struct Device {
     pub name: String,
     pub identity: String,
+    pub generation: String,
     pub path: Option<String>,
     pub size: u64,
     pub initialized: bool,
@@ -98,4 +95,35 @@ pub struct Status {
     pub devices: Vec<Device>,
     pub swaps: Vec<Swap>,
     pub warnings: Vec<String>,
+}
+
+pub fn valid_boot_id(value: &str) -> bool {
+    value.len() == 36
+        && value.bytes().enumerate().all(|(i, c)| {
+            if [8, 13, 18, 23].contains(&i) {
+                c == b'-'
+            } else {
+                c.is_ascii_hexdigit()
+            }
+        })
+}
+
+impl Device {
+    pub fn config(&self) -> Result<Config> {
+        Ok(Config {
+            size_bytes: self.size,
+            algorithm: self
+                .algorithm
+                .clone()
+                .ok_or_else(|| fail("state_unavailable", "active algorithm unavailable"))?,
+            priority: self
+                .swap
+                .as_ref()
+                .and_then(|s| u16::try_from(s.priority).ok()),
+            memory_limit: self
+                .stats
+                .memory_limit
+                .ok_or_else(|| fail("state_unavailable", "memory limit unavailable"))?,
+        })
+    }
 }

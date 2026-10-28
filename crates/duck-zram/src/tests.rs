@@ -6,7 +6,7 @@ use crate::{
     store::Store,
 };
 use anyhow::Result;
-fn config() -> Config {
+pub(crate) fn config() -> Config {
     Config {
         size_bytes: 512 << 20,
         algorithm: "lz4".into(),
@@ -14,10 +14,11 @@ fn config() -> Config {
         memory_limit: 0,
     }
 }
-fn device() -> Device {
+pub(crate) fn device() -> Device {
     Device {
         name: "zram0".into(),
         identity: "254:0".into(),
+        generation: "c".repeat(64),
         path: Some("/dev/block/zram0".into()),
         size: 512 << 20,
         initialized: true,
@@ -60,6 +61,8 @@ fn parses_swap_units_paths_and_priorities_without_guessing() {
     assert_eq!(swaps[0].priority, -2);
     assert_eq!(swaps[1].path, "/data/a b");
     for text in [
+        "Filename Type Size Used Priority\n/dev/zram0 mystery 4 0 1",
+        "Filename Type Size Used Priority\n/dev/zram0 partition 4 5 1",
         "",
         "Filename Type Size Used Priority\na b c d e",
         "Filename Type Size Used Priority\n/dev/zram0 partition 18446744073709551615 0 1",
@@ -71,10 +74,19 @@ fn parses_swap_units_paths_and_priorities_without_guessing() {
 #[test]
 fn algorithm_selection_and_config_limits_follow_kernel_abi() {
     assert_eq!(inventory::algorithms("lzo [lz4] zstd\n").unwrap().1, "lz4");
+    assert!(crate::model::valid_boot_id(
+        "12345678-1234-1234-1234-123456789abc"
+    ));
+    assert!(!crate::model::valid_boot_id(
+        "------------------------------------"
+    ));
     for s in ["", "lz4", "[lz4] [zstd]", "[lz4] ../zstd", "[lz4] lz4"] {
         assert!(inventory::algorithms(s).is_err());
     }
     assert!(config().validate(4 << 30).is_ok());
+    let mut retained = config();
+    retained.memory_limit = 8 << 30;
+    assert!(retained.validate(4 << 30).is_ok());
     let mut c = config();
     c.priority = Some(32768);
     assert!(c.validate(4 << 30).is_err());
@@ -128,13 +140,15 @@ fn rejects_stale_state_protected_devices_and_insufficient_headroom() {
         "state_changed"
     );
     s.devices[0].stats.memory_limit = Some(0);
+    let mut change = config();
+    change.size_bytes *= 2;
     s.memory_available = Some(300 << 20);
     assert_eq!(
-        crate::code_of(&mutation::validate(&s, "zram0", &"a".repeat(64), &config()).unwrap_err()),
+        crate::code_of(&mutation::validate(&s, "zram0", &"a".repeat(64), &change).unwrap_err()),
         "insufficient_memory"
     );
     s.memory_available = None;
-    assert!(mutation::validate(&s, "zram0", &"a".repeat(64), &config()).is_err());
+    assert!(mutation::validate(&s, "zram0", &"a".repeat(64), &change).is_err());
 }
 #[derive(Default)]
 struct Fake {
@@ -198,10 +212,10 @@ fn every_failed_stage_stops_before_later_writes() {
     f.calls.clear();
     c.size_bytes = 0;
     mutation::transition(&mut f, true, &c).unwrap();
-    assert_eq!(f.calls, ["swapoff", "reset"]);
+    assert_eq!(f.calls, ["swapoff", "reset", "algorithm", "limit"]);
     f.calls.clear();
     mutation::transition(&mut f, false, &c).unwrap();
-    assert_eq!(f.calls, ["reset"]);
+    assert_eq!(f.calls, ["reset", "algorithm", "limit"]);
 }
 #[test]
 fn request_round_trip_retains_confirmation_and_configuration() {
@@ -209,6 +223,7 @@ fn request_round_trip_retains_confirmation_and_configuration() {
         device: "zram0".into(),
         revision: "a".repeat(64),
         confirmed: true,
+        boot_profile: None,
         operation: Operation::Apply { config: config() },
     };
     let json = serde_json::to_string(&request).unwrap();
@@ -243,4 +258,68 @@ fn private_store_is_atomic_locked_and_rejects_final_symlinks() {
         assert!(Store::open(&ctx).unwrap().load().is_err());
         assert_eq!(std::fs::read_to_string(target).unwrap(), "untouched");
     }
+}
+
+#[test]
+fn disabled_configuration_preserves_algorithm_and_memory_limit_but_ignores_priority() {
+    let mut d = device();
+    let mut c = config();
+    d.size = 0;
+    d.initialized = false;
+    d.swap = None;
+    c.size_bytes = 0;
+    assert!(mutation::configuration_matches(&d, &c));
+    d.stats.memory_limit = None;
+    assert!(!mutation::configuration_matches(&d, &c));
+    d.stats.memory_limit = Some(0);
+    c.algorithm = "zstd".into();
+    assert!(!mutation::configuration_matches(&d, &c));
+    let mut s = status();
+    s.memory_available = None;
+    assert!(mutation::validate(&s, "zram0", &"a".repeat(64), &config()).is_ok());
+}
+
+#[test]
+fn status_snapshot_remains_readable_under_a_mutation_lock() {
+    let t = tempfile::tempdir().unwrap();
+    let ctx = duck_core::Context {
+        paths: duck_core::AppPaths::for_root(t.path(), t.path()),
+        sysroot: duck_core::Sysroot::new(t.path()),
+    };
+    assert!(!Store::snapshot(&ctx).unwrap().1);
+    assert!(!ctx.paths.var_dir.exists());
+    let store = Store::open(&ctx).unwrap();
+    store.save(&store.load().unwrap()).unwrap();
+    assert!(Store::snapshot(&ctx).unwrap().1);
+    drop(store);
+    assert!(!Store::snapshot(&ctx).unwrap().1);
+}
+#[test]
+fn boot_authorization_is_checked_and_consumed_under_the_operation_lock() {
+    use crate::store::{BootResult, Profile, State};
+    let profile = Profile {
+        device: "zram0".into(),
+        config: config(),
+        apply_at_boot: true,
+    };
+    let boot = "12345678-1234-1234-1234-123456789abc";
+    let mut state = State {
+        profiles: vec![profile.clone()],
+        attempted_boot: Some(boot.into()),
+        boot_results: vec![BootResult {
+            device: "zram0".into(),
+            boot_id: boot.into(),
+            code: "operation_unknown".into(),
+            message: String::new(),
+        }],
+        ..State::default()
+    };
+    let mut changed = profile.clone();
+    changed.config.size_bytes *= 2;
+    assert!(state.claim_boot(&changed, boot).is_err());
+    state.profiles[0].apply_at_boot = false;
+    assert!(state.claim_boot(&profile, boot).is_err());
+    state.profiles[0].apply_at_boot = true;
+    state.claim_boot(&profile, boot).unwrap();
+    assert!(state.claim_boot(&profile, boot).is_err());
 }

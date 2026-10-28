@@ -29,11 +29,12 @@ describe.skipIf(!hasDuckd)("ZRAM API against real duckd", CONTRACT, () => {
       },
     })
     const status = await zramApi.status()
-    expect((await featureManifest()).features.find((f) => f.id === "zram")?.contract).toBe(1)
+    expect((await featureManifest()).features.find((f) => f.id === "zram")?.contract).toBe(2)
     expect(status.memory_total).toBe(8 * 1073741824)
     expect(status.swap_in_pages).toBe(12)
     expect(status.swaps[0]?.used).toBe(2097152)
     expect(status.operations_supported).toBe(false)
+    expect(status.devices[0]?.generation).toMatch(/^[a-f0-9]{64}$/)
     expect(status.devices[0]?.algorithm).toBe("lz4")
     expect(status.devices[0]?.stats.memory_used).toBe(655360)
     expect(status.devices[0]?.blocked).toEqual(

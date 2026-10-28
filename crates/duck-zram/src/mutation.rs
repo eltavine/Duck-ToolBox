@@ -14,6 +14,8 @@ pub struct Request {
     pub device: String,
     pub revision: String,
     pub confirmed: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub boot_profile: Option<Profile>,
     #[serde(flatten)]
     pub operation: Operation,
 }
@@ -24,6 +26,7 @@ struct WireRequest {
     revision: String,
     confirmed: bool,
     action: String,
+    boot_profile: Option<Profile>,
     config: Option<Config>,
 }
 impl TryFrom<WireRequest> for Request {
@@ -38,6 +41,7 @@ impl TryFrom<WireRequest> for Request {
             device: v.device,
             revision: v.revision,
             confirmed: v.confirmed,
+            boot_profile: v.boot_profile,
             operation,
         })
     }
@@ -70,7 +74,7 @@ impl Request {
             fail("invalid_input", "invalid device or revision")
         );
         ensure!(
-            kernel::supported(&ctx.sysroot),
+            crate::capabilities::supported(&ctx.sysroot),
             fail(
                 "unsupported_environment",
                 "operations require Android ARM64 root outside a test sysroot"
@@ -84,20 +88,6 @@ impl Request {
             Operation::Restore => "restore",
         }
     }
-}
-pub fn current_config(device: &Device) -> Result<Config> {
-    Ok(Config {
-        size_bytes: device.size,
-        algorithm: device
-            .algorithm
-            .clone()
-            .ok_or_else(|| fail("state_unavailable", "active algorithm unavailable"))?,
-        priority: device
-            .swap
-            .as_ref()
-            .and_then(|s| u16::try_from(s.priority).ok()),
-        memory_limit: device.stats.memory_limit.unwrap_or(0),
-    })
 }
 #[cfg(test)]
 pub fn validate<'a>(
@@ -154,7 +144,9 @@ fn validate_state<'a>(
         device.algorithms.contains(&config.algorithm),
         fail("invalid_input", "algorithm is not exposed by this kernel")
     );
-    if let Some(swap) = &device.swap {
+    if let Some(swap) = &device.swap
+        && !configuration_matches(device, config)
+    {
         let available = status
             .memory_available
             .ok_or_else(|| fail("state_unavailable", "MemAvailable unavailable"))?;
@@ -169,19 +161,33 @@ fn validate_state<'a>(
     }
     Ok(device)
 }
+pub fn configuration_matches(device: &Device, config: &Config) -> bool {
+    device.size == config.size_bytes
+        && device.algorithm.as_ref() == Some(&config.algorithm)
+        && device.stats.memory_limit == Some(config.memory_limit)
+        && device.swap.is_some() == (config.size_bytes > 0)
+        && (config.size_bytes == 0
+            || device
+                .swap
+                .as_ref()
+                .and_then(|s| u16::try_from(s.priority).ok())
+                == config.priority)
+}
 /// Stop at the first failed stage. A partial transition is never described as rolled back.
 pub fn transition(ops: &mut impl Operations, was_active: bool, config: &Config) -> Result<()> {
     if was_active {
         ops.swapoff()?;
     }
     ops.reset()?;
-    if config.size_bytes == 0 {
-        return Ok(());
-    }
     ops.algorithm(&config.algorithm)?;
-    ops.size(config.size_bytes)?;
+    if config.size_bytes > 0 {
+        ops.size(config.size_bytes)?;
+    }
     if config.memory_limit > 0 {
         ops.limit(config.memory_limit)?;
+    }
+    if config.size_bytes == 0 {
+        return Ok(());
     }
     ops.format()?;
     ops.swapon(config.priority)?;
@@ -192,12 +198,32 @@ pub fn perform(ctx: &Context, request: Request) -> Result<OperationResult> {
     let store = Store::open(ctx)?;
     let mut saved = store.load()?;
     let status = inventory::status(&ctx.sysroot)?;
+    if let Some(profile) = &request.boot_profile {
+        ensure!(
+            matches!(&request.operation, Operation::Apply { config } if request.device == profile.device && config.size_bytes == profile.config.size_bytes && config.algorithm == profile.config.algorithm && config.priority == profile.config.priority),
+            fail(
+                "invalid_input",
+                "boot request does not match its authorization"
+            )
+        );
+        saved.claim_boot(profile, &status.boot_id)?;
+        store.save(&saved)?;
+    }
+    let current_device = status
+        .devices
+        .iter()
+        .find(|d| d.name == request.device)
+        .ok_or_else(|| fail("state_changed", "device disappeared"))?;
     let config = match &request.operation {
         Operation::Apply { config } => config.clone(),
         Operation::Restore => saved
             .originals
             .iter()
-            .find(|v| v.device == request.device && v.boot_id == status.boot_id)
+            .find(|v| {
+                v.device == request.device
+                    && v.boot_id == status.boot_id
+                    && v.generation.as_ref() == Some(&current_device.generation)
+            })
             .map(|v| v.config.clone())
             .ok_or_else(|| {
                 fail(
@@ -213,34 +239,46 @@ pub fn perform(ctx: &Context, request: Request) -> Result<OperationResult> {
         &config,
         matches!(request.operation, Operation::Restore),
     )?;
-    kernel::preflight(device, &config)?;
-    saved.originals.retain(|v| v.boot_id == status.boot_id);
-    if !saved.originals.iter().any(|v| v.device == request.device) {
+    let changing = !configuration_matches(device, &config);
+    if changing {
+        kernel::preflight(device, &config)?;
+    }
+    saved.originals.retain(|v| {
+        v.boot_id == status.boot_id
+            && (v.device != request.device || v.generation.as_ref() == Some(&device.generation))
+    });
+    if changing && !saved.originals.iter().any(|v| v.device == request.device) {
         saved.originals.push(Original {
             device: request.device.clone(),
+            generation: Some(device.generation.clone()),
             boot_id: status.boot_id.clone(),
-            config: current_config(device)?,
+            config: device.config()?,
         });
         store.save(&saved)?;
     }
-    let current = current_config(device)?;
-    if current != config || (config.size_bytes > 0) != device.swap.is_some() {
+    if changing {
         transition(
-            &mut kernel::Android { device },
+            &mut kernel::Android {
+                device,
+                config: &config,
+            },
             device.swap.is_some(),
             &config,
         )?;
     }
-    let observed = inventory::status(&ctx.sysroot)?;
+    let observed = inventory::status(&ctx.sysroot).map_err(|e| {
+        fail(
+            "operation_unknown",
+            format!("cannot verify the completed operation: {e}"),
+        )
+    })?;
     let after = observed
         .devices
         .iter()
         .find(|v| v.name == request.device)
         .ok_or_else(|| fail("operation_unknown", "device disappeared after operation"))?;
     ensure!(
-        after.size == config.size_bytes
-            && after.swap.is_some() == (config.size_bytes > 0)
-            && (config.size_bytes == 0 || current_config(after)? == config),
+        after.generation == device.generation && configuration_matches(after, &config),
         fail(
             "operation_unknown",
             "observed configuration differs from the requested state; refresh before proceeding"
@@ -267,7 +305,7 @@ pub fn save_profile(ctx: &Context, request: SaveRequest) -> Result<Profile> {
         fail("confirmation_required", "confirm the saved plan first")
     );
     ensure!(
-        kernel::supported(&ctx.sysroot),
+        crate::capabilities::supported(&ctx.sysroot),
         fail(
             "unsupported_environment",
             "saving requires Android ARM64 root"

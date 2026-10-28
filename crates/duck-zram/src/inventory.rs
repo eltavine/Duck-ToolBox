@@ -1,6 +1,8 @@
 use crate::{
-    fail, kernel,
-    model::{Device, MAX_DEVICES, Stats, Status, Swap, valid_algorithm, valid_device},
+    capabilities, fail,
+    model::{
+        Device, MAX_DEVICES, Stats, Status, Swap, valid_algorithm, valid_boot_id, valid_device,
+    },
 };
 use anyhow::{Context as _, Result, ensure};
 use duck_core::Sysroot;
@@ -56,6 +58,10 @@ pub fn parse_swaps(text: &str) -> Result<Vec<Swap>> {
                 .and_then(|n| n.checked_mul(1024))
                 .ok_or_else(|| fail("state_unavailable", "invalid swap size"))
         };
+        ensure!(
+            matches!(f[1], "partition" | "file") && bytes(f[3])? <= bytes(f[2])?,
+            fail("state_unavailable", "invalid swap type or usage")
+        );
         let path = decode_path(f[0])?;
         swaps.push(Swap {
             path,
@@ -162,7 +168,7 @@ pub fn status(sys: &Sysroot) -> Result<Status> {
         .trim()
         .to_owned();
     ensure!(
-        boot_id.len() == 36 && boot_id.bytes().all(|c| c.is_ascii_hexdigit() || c == b'-'),
+        valid_boot_id(&boot_id),
         fail("state_unavailable", "boot ID unavailable")
     );
     let mut swaps = parse_swaps(&read(&sys.path("/proc/swaps"))?)?;
@@ -175,16 +181,18 @@ pub fn status(sys: &Sysroot) -> Result<Status> {
             }
         }
     }
-    let mmd = kernel::mmd_managed();
+    let mmd = capabilities::mmd_managed();
     let mut devices = Vec::new();
+    let mut scanned = 0;
     for entry in fs::read_dir(sys.path("/sys/block"))? {
         let entry = entry?;
         let name = entry.file_name().to_string_lossy().into_owned();
         if !valid_device(&name) {
             continue;
         }
+        scanned += 1;
         ensure!(
-            devices.len() < MAX_DEVICES,
+            scanned <= MAX_DEVICES,
             fail("state_unavailable", "device count exceeds limit")
         );
         match device(sys, &name, &boot_id, &swaps, mmd, swap_identity_known) {
@@ -194,7 +202,7 @@ pub fn status(sys: &Sysroot) -> Result<Status> {
     }
     devices.sort_by_key(|v| v.name[4..].parse::<u32>().unwrap_or(0));
     Ok(Status {
-        operations_supported: kernel::supported(sys),
+        operations_supported: capabilities::supported(sys),
         mmd_managed: mmd,
         memory_total: total,
         memory_available: mem.get("MemAvailable").copied(),
@@ -235,12 +243,20 @@ fn device(
         major.parse::<u32>().is_ok() && minor.parse::<u32>().is_ok(),
         fail("state_unavailable", "invalid device ID")
     );
+    let generation = generation(&root, boot, &id)?;
     let size = number(&root, "disksize")?;
     let initialized = match number(&root, "initstate")? {
         0 => false,
         1 => true,
         _ => return Err(fail("state_unavailable", "invalid initstate")),
     };
+    ensure!(
+        initialized == (size > 0),
+        fail(
+            "state_changed",
+            "ZRAM initialization changed during inventory"
+        )
+    );
     let (algorithms, algorithm) = algorithms(&read(&root.join("comp_algorithm"))?)?;
     let mut blocked = Vec::new();
     let path = [format!("/dev/block/{name}"), format!("/dev/{name}")]
@@ -261,6 +277,10 @@ fn device(
         .iter()
         .find(|s| s.identity.as_deref() == Some(&id))
         .cloned();
+    ensure!(
+        swap.is_none() || initialized,
+        fail("state_changed", "active swap is not initialized")
+    );
     if initialized && swap.is_none() {
         blocked.push("non_swap".into());
     }
@@ -305,10 +325,18 @@ fn device(
     if stats.memory_limit.is_none() {
         blocked.push("stats_unknown".into());
     }
+    ensure!(
+        generation == self::generation(&root, boot, &id)?
+            && read(&root.join("dev"))?.trim() == id
+            && size == number(&root, "disksize")?
+            && u64::from(initialized) == number(&root, "initstate")?,
+        fail("state_changed", "ZRAM device changed during inventory")
+    );
     let revision = hex::encode(Sha256::digest(serde_json::to_vec(&(
         boot,
         name,
         &id,
+        &generation,
         size,
         initialized,
         &algorithm,
@@ -320,6 +348,7 @@ fn device(
     Ok(Device {
         name: name.into(),
         identity: id,
+        generation,
         path,
         size,
         initialized,
@@ -330,4 +359,36 @@ fn device(
         blocked,
         revision,
     })
+}
+
+pub(crate) fn generation(root: &Path, boot: &str, identity: &str) -> Result<String> {
+    let sequence = optional(root, "diskseq")?
+        .map(|s| s.trim().parse::<u64>())
+        .transpose()?;
+    #[cfg(unix)]
+    let inode = {
+        use std::os::unix::fs::MetadataExt;
+        let metadata = fs::metadata(root)?;
+        (metadata.dev(), metadata.ino())
+    };
+    #[cfg(not(unix))]
+    let inode = (0u64, 0u64);
+    Ok(hex::encode(Sha256::digest(serde_json::to_vec(&(
+        boot, identity, sequence, inode,
+    ))?)))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn generation_distinguishes_recreated_block_devices() {
+        let t = tempfile::tempdir().unwrap();
+        fs::write(t.path().join("diskseq"), "1\n").unwrap();
+        let first = generation(t.path(), "boot", "254:0").unwrap();
+        fs::write(t.path().join("diskseq"), "2\n").unwrap();
+        assert_ne!(first, generation(t.path(), "boot", "254:0").unwrap());
+        fs::write(t.path().join("diskseq"), "invalid").unwrap();
+        assert!(generation(t.path(), "boot", "254:0").is_err());
+    }
 }

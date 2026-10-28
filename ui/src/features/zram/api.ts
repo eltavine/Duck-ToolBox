@@ -25,6 +25,7 @@ const swapSchema = z.object({
 const deviceSchema = z.object({
   name: z.string(),
   identity: z.string(),
+  generation: z.string(),
   path: z.string().nullable(),
   size: z.number(),
   initialized: z.boolean(),
@@ -44,6 +45,7 @@ const profileSchema = z.object({
 export type ZramProfile = z.infer<typeof profileSchema>
 const statusSchema = z.object({
   operations_supported: z.boolean(),
+  operation_busy: z.boolean(),
   mmd_managed: z.boolean().nullable(),
   memory_total: z.number(),
   memory_available: z.number().nullable(),
@@ -56,7 +58,14 @@ const statusSchema = z.object({
   saved: z.object({
     version: z.literal(1),
     profiles: z.array(profileSchema),
-    originals: z.array(z.object({ device: z.string(), boot_id: z.string(), config: configSchema })),
+    originals: z.array(
+      z.object({
+        device: z.string(),
+        generation: z.string().nullable(),
+        boot_id: z.string(),
+        config: configSchema,
+      }),
+    ),
     boot_results: z.array(
       z.object({ device: z.string(), boot_id: z.string(), code: z.string(), message: z.string() }),
     ),

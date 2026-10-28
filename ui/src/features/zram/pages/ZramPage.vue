@@ -39,13 +39,17 @@ const profile = computed(() =>
 )
 const original = computed(() =>
   status.data.value?.saved.originals.find(
-    (p) => p.device === device.value?.name && p.boot_id === status.data.value?.boot_id,
+    (p) =>
+      p.device === device.value?.name &&
+      p.boot_id === status.data.value?.boot_id &&
+      p.generation === device.value?.generation,
   ),
 )
 const writable = computed(
   () =>
     !!status.data.value?.operations_supported &&
     !status.isError.value &&
+    !status.data.value?.operation_busy &&
     device.value?.blocked.length === 0,
 )
 type Pending = {
@@ -113,14 +117,24 @@ const confirmRows = computed(() =>
   pending.value
     ? [
         { label: t("device"), value: pending.value.device.name, mono: true },
-        { label: t("size"), value: formatBytes(pending.value.config.size_bytes) },
+        {
+          label: t("sizeInput"),
+          value: new Intl.NumberFormat(locale.value, { maximumFractionDigits: 20 }).format(
+            pending.value.config.size_bytes / 1048576,
+          ),
+        },
         { label: t("algorithm"), value: pending.value.config.algorithm, mono: true },
         {
           label: t("memoryLimit"),
           value:
             pending.value.config.memory_limit === 0
               ? t("unlimited")
-              : formatBytes(pending.value.config.memory_limit),
+              : new Intl.NumberFormat(locale.value, {
+                  style: "unit",
+                  unit: "byte",
+                  unitDisplay: "short",
+                  maximumFractionDigits: 0,
+                }).format(pending.value.config.memory_limit),
         },
         {
           label: t("priority"),
@@ -130,7 +144,7 @@ const confirmRows = computed(() =>
               : new Intl.NumberFormat(locale.value).format(pending.value.config.priority),
         },
         ...(pending.value.kind === "save"
-          ? [{ label: t("boot"), value: t(pending.value.boot ? "bootEnabled" : "bootDisabled") }]
+          ? [{ label: t("boot"), value: t(pending.value.boot ? "bootOn" : "bootOff") }]
           : []),
       ]
     : [],
@@ -192,6 +206,13 @@ function count(value: number | null | undefined) {
         {{ t("unsupported") }}
       </p>
       <p
+        v-if="status.data.value?.operation_busy"
+        role="status"
+        class="text-muted-foreground mt-4 text-sm"
+      >
+        {{ t("errors.operation_busy") }}
+      </p>
+      <p
         v-for="warning in status.data.value?.warnings"
         :key="warning"
         class="text-destructive mt-3 text-sm break-all"
@@ -214,7 +235,16 @@ function count(value: number | null | undefined) {
       :title="errorTitle(operation.error.value)"
       role="alert"
     >
-      <p class="mb-3 text-sm">{{ t("partialFailure") }}</p>
+      <p class="mb-3 text-sm">
+        {{
+          t(
+            operation.variables.value?.kind === "apply" ||
+              operation.variables.value?.kind === "restore"
+              ? "partialFailure"
+              : "planFailure",
+          )
+        }}
+      </p>
       <Button variant="outline" class="min-h-12" @click="showErrorDetails(operation.error.value)">{{
         t("details")
       }}</Button>
