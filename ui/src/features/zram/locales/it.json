@@ -61,7 +61,8 @@
     "holders": "Un altro dispositivo a blocchi utilizza questo dispositivo.",
     "mounted": "Il dispositivo è montato come file system.",
     "stats_unknown": "Il limite di memoria non è leggibile.",
-    "read_only": "Il dispositivo a blocchi è in sola lettura. Le modifiche sono bloccate."
+    "read_only": "Il dispositivo a blocchi è in sola lettura. Le modifiche sono bloccate.",
+    "initstate_unknown": "Lo stato di inizializzazione non è leggibile o è incoerente. Le modifiche sono bloccate."
   },
   "errors": {
     "invalid_input": "Configurazione ZRAM non valida.",
@@ -90,5 +91,6 @@
   "bootOff": "Disattivata",
   "planFailure": "Impossibile confermare lo stato del piano salvato. Aggiorna prima di riprovare.",
   "automaticPriority": "Priorità automatica",
-  "unavailablePlans": "Piani per dispositivi non disponibili"
+  "unavailablePlans": "Piani per dispositivi non disponibili",
+  "incomplete": "Alcuni dati dei dispositivi non sono stati letti in modo affidabile. Aggiorna e controlla i dettagli."
 }

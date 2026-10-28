@@ -29,7 +29,7 @@ const deviceSchema = z.object({
   generation: z.string(),
   path: z.string().nullable(),
   size: unsigned,
-  initialized: z.boolean(),
+  initialized: z.boolean().nullable(),
   algorithms: z.array(z.string()),
   algorithm: z.string().nullable(),
   swap: swapSchema.nullable(),

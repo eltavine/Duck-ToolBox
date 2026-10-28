@@ -38,12 +38,65 @@ test("saves boot application separately from runtime changes and can remove it",
   await page.getByRole("button", { name: "Remove saved plan", exact: true }).click()
   await expect(page.getByRole("button", { name: "Remove saved plan", exact: true })).toHaveCount(0)
 })
-for (const scenario of ["mmd", "writeback", "unsupported", "read-only"]) {
+for (const scenario of [
+  "mmd",
+  "writeback",
+  "unsupported",
+  "read-only",
+  "initstate-unknown",
+  "stats-unknown",
+]) {
   test(`blocks mutations for ${scenario} while retaining statistics`, async ({ page, open }) => {
     await open("/zram", { query: { zram: scenario } })
     await expect(page.getByText("Actual memory allocated", { exact: true })).toBeVisible()
     await expect(page.getByRole("button", { name: "Apply now", exact: true })).toBeDisabled()
     await expect(page.getByRole("button", { name: "Save plan", exact: true })).toBeDisabled()
+  })
+}
+for (const [locale, theme, message, details] of [
+  [
+    "en",
+    "light",
+    "Some device details could not be read reliably. Refresh and inspect the details.",
+    "Details",
+  ],
+  ["zh-CN", "dark", "部分设备信息无法可靠读取。请刷新并查看详情。", "详情"],
+  [
+    "ar",
+    "light",
+    "تعذرت قراءة بعض تفاصيل الأجهزة بشكل موثوق. حدّث الحالة وافحص التفاصيل.",
+    "التفاصيل",
+  ],
+] as const) {
+  test(`explains incomplete inventory in ${locale} without claiming there are no devices`, async ({
+    page,
+    open,
+  }) => {
+    await page.setViewportSize({ width: 320, height: 568 })
+    await open("/zram", { locale, theme, query: { zram: "scan-failure" } })
+    await page.addStyleTag({ content: "html { font-size: 200%; }" })
+    await expect(page.getByText(message, { exact: true })).toBeVisible()
+    const disclosure = page.locator("details")
+    await disclosure.locator("summary").filter({ hasText: details }).click()
+    await expect(disclosure).toContainText("zram0: /sys/block/zram0/initstate")
+    await expect(disclosure.locator("li")).toHaveAttribute("dir", "ltr")
+    const headingLayout = await page.locator("[data-zram-refresh]").evaluate((control) => {
+      const heading = control.parentElement!.querySelector(":scope > div")!.getBoundingClientRect()
+      return { headingBottom: heading.bottom, controlTop: control.getBoundingClientRect().top }
+    })
+    expect(headingLayout.controlTop).toBeGreaterThanOrEqual(headingLayout.headingBottom)
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+    await page.evaluate(() => scrollTo(0, 0))
+    await page.screenshot({
+      path: `test-results/screenshots/zram-${locale}-incomplete.png`,
+      fullPage: true,
+      animations: "disabled",
+    })
+    if (locale === "en")
+      await expect(page.getByText("No entries found.", { exact: true })).toHaveCount(0)
+    await expect(
+      page.getByRole("button", { name: /Apply now|立即应用|تطبيق الآن/, exact: true }),
+    ).toHaveCount(0)
   })
 }
 for (const scenario of ["reject", "timeout"]) {

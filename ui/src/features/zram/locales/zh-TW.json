@@ -61,7 +61,8 @@
     "holders": "其他區塊裝置正在使用此裝置。",
     "mounted": "此裝置已掛載為檔案系統。",
     "stats_unknown": "無法讀取記憶體上限狀態。",
-    "read_only": "此區塊裝置為唯讀，已阻止修改。"
+    "read_only": "此區塊裝置為唯讀，已阻止修改。",
+    "initstate_unknown": "初始化狀態無法讀取或與容量不一致，已阻止修改。"
   },
   "errors": {
     "invalid_input": "ZRAM 設定無效。",
@@ -90,5 +91,6 @@
   "bootOff": "關閉",
   "planFailure": "無法確認方案狀態。請重新整理後再試。",
   "automaticPriority": "自動優先順序",
-  "unavailablePlans": "裝置無法使用的已存方案"
+  "unavailablePlans": "裝置無法使用的已存方案",
+  "incomplete": "部分裝置資訊無法可靠讀取。請重新整理並查看詳細資訊。"
 }

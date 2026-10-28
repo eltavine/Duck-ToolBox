@@ -75,7 +75,7 @@ pub struct Device {
     pub generation: String,
     pub path: Option<String>,
     pub size: u64,
-    pub initialized: bool,
+    pub initialized: Option<bool>,
     pub algorithms: Vec<String>,
     pub algorithm: Option<String>,
     pub swap: Option<Swap>,

@@ -61,7 +61,8 @@
     "holders": "Otro dispositivo de bloques utiliza este dispositivo.",
     "mounted": "El dispositivo está montado como sistema de archivos.",
     "stats_unknown": "No se puede leer el límite de memoria.",
-    "read_only": "Este dispositivo de bloques es de solo lectura. Los cambios están bloqueados."
+    "read_only": "Este dispositivo de bloques es de solo lectura. Los cambios están bloqueados.",
+    "initstate_unknown": "El estado de inicialización no se puede leer o es incoherente. Los cambios están bloqueados."
   },
   "errors": {
     "invalid_input": "Configuración ZRAM no válida.",
@@ -90,5 +91,6 @@
   "bootOff": "Desactivada",
   "planFailure": "No se pudo confirmar el estado del plan guardado. Actualiza antes de reintentar.",
   "automaticPriority": "Prioridad automática",
-  "unavailablePlans": "Planes de dispositivos no disponibles"
+  "unavailablePlans": "Planes de dispositivos no disponibles",
+  "incomplete": "No se pudieron leer algunos datos del dispositivo de forma fiable. Actualiza y consulta los detalles."
 }

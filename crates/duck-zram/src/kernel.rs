@@ -234,6 +234,7 @@ fn formatter_available() -> bool {
 
 fn idle_matches(current: &Device, expected: &Device, config: &Config) -> bool {
     current.generation == expected.generation
+        && current.initialized == Some(config.size_bytes > 0)
         && current.swap.is_none()
         && current.blocked.iter().all(|b| b == "non_swap")
         && current.size == config.size_bytes
@@ -285,6 +286,9 @@ mod tests {
         current.blocked.push("mmd".into());
         assert!(!idle_matches(&current, &expected, &config));
         current.blocked.pop();
+        current.initialized = None;
+        assert!(!idle_matches(&current, &expected, &config));
+        current.initialized = Some(true);
         current.stats.memory_limit = None;
         assert!(!idle_matches(&current, &expected, &config));
     }

@@ -222,14 +222,22 @@ function count(value: number | null | undefined) {
       >
         {{ t("errors.operation_busy") }}
       </p>
-      <p
-        v-for="warning in status.data.value?.warnings"
-        :key="warning"
-        class="text-destructive mt-3 text-sm break-all"
-        dir="auto"
-      >
-        {{ warning }}
-      </p>
+      <div v-if="status.data.value?.warnings.length" class="mt-4 text-sm" role="status">
+        <p>{{ t("incomplete") }}</p>
+        <details class="mt-2 min-w-0">
+          <summary class="text-primary min-h-12 cursor-pointer py-3">{{ t("details") }}</summary>
+          <ul class="space-y-2">
+            <li
+              v-for="warning in status.data.value.warnings"
+              :key="warning"
+              class="font-mono text-xs break-words"
+              dir="ltr"
+            >
+              {{ warning }}
+            </li>
+          </ul>
+        </details>
+      </div>
     </SectionCard>
     <div
       v-if="operation.isPending.value"
@@ -260,7 +268,9 @@ function count(value: number | null | undefined) {
       }}</Button>
     </SectionCard>
     <template v-if="status.data.value">
-      <SectionCard v-if="!status.data.value.devices.length" :title="t('device')"
+      <SectionCard
+        v-if="!status.data.value.devices.length && !status.data.value.warnings.length"
+        :title="t('device')"
         ><p class="text-muted-foreground text-sm">{{ t("empty") }}</p></SectionCard
       >
       <template v-if="device">

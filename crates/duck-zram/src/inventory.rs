@@ -21,10 +21,60 @@ pub fn read(path: &Path) -> Result<String> {
     Ok(text)
 }
 fn number(root: &Path, file: &str) -> Result<u64> {
-    read(&root.join(file))?
-        .trim()
-        .parse()
-        .map_err(|_| fail("state_unavailable", format!("invalid {file}")))
+    let path = root.join(file);
+    let value = read(&path).with_context(|| format!("read {}", path.display()))?;
+    value.trim().parse().map_err(|_| {
+        fail(
+            "state_unavailable",
+            format!(
+                "{}: expected an unsigned integer, received {:?}",
+                path.display(),
+                value.chars().take(64).collect::<String>()
+            ),
+        )
+    })
+}
+fn binary(root: &Path, file: &str) -> Result<bool> {
+    let path = root.join(file);
+    let value = read(&path).with_context(|| format!("read {}", path.display()))?;
+    match value.trim() {
+        "0" => Ok(false),
+        "1" => Ok(true),
+        _ => Err(fail(
+            "state_unavailable",
+            format!(
+                "{}: expected 0 or 1, received {:?}",
+                path.display(),
+                value.chars().take(64).collect::<String>()
+            ),
+        )),
+    }
+}
+fn initialization(root: &Path, size: u64) -> Result<bool> {
+    let value = number(root, "initstate")?;
+    // Some vendor kernels expose disksize through the u32 initstate output.
+    ensure!(
+        if size == 0 {
+            value == 0
+        } else {
+            value == 1 || value == size || value == (size & u64::from(u32::MAX))
+        },
+        fail(
+            "state_unavailable",
+            format!("initstate {value} conflicts with disksize {size}"),
+        )
+    );
+    Ok(size > 0)
+}
+fn memory_stats(text: &str) -> Stats {
+    let mut fields = text.split_whitespace().take(4);
+    let mut next = || fields.next().and_then(|s| s.parse::<u64>().ok());
+    Stats {
+        original: next(),
+        compressed: next(),
+        memory_used: next(),
+        memory_limit: next(),
+    }
 }
 pub fn counters(text: &str, unit: u64) -> std::collections::BTreeMap<String, u64> {
     text.lines()
@@ -202,7 +252,15 @@ pub fn status(sys: &Sysroot) -> Result<Status> {
             scanned <= MAX_DEVICES,
             fail("state_unavailable", "device count exceeds limit")
         );
-        match device(sys, &name, &boot_id, &swaps, mmd, swap_identity_known) {
+        match device(
+            sys,
+            &name,
+            &boot_id,
+            &swaps,
+            mmd,
+            swap_identity_known,
+            &mut warnings,
+        ) {
             Ok(item) => devices.push(item),
             Err(e) => warnings.push(format!("{name}: {e}")),
         }
@@ -240,6 +298,7 @@ fn device(
     swaps: &[Swap],
     mmd: Option<bool>,
     identities_known: bool,
+    warnings: &mut Vec<String>,
 ) -> Result<Device> {
     let root = sys.path(format!("/sys/block/{name}"));
     let id = read(&root.join("dev"))?.trim().to_owned();
@@ -251,26 +310,16 @@ fn device(
         fail("state_unavailable", "invalid device ID")
     );
     let generation = generation(&root, boot, &id)?;
-    let read_only = match number(&root, "ro")? {
-        0 => false,
-        1 => true,
-        _ => return Err(fail("state_unavailable", "invalid block read-only state")),
-    };
+    let read_only = binary(&root, "ro")?;
     let size = number(&root, "disksize")?;
-    let initialized = match number(&root, "initstate")? {
-        0 => false,
-        1 => true,
-        _ => return Err(fail("state_unavailable", "invalid initstate")),
-    };
-    ensure!(
-        initialized == (size > 0),
-        fail(
-            "state_changed",
-            "ZRAM initialization changed during inventory"
-        )
-    );
-    let (algorithms, algorithm) = algorithms(&read(&root.join("comp_algorithm"))?)?;
     let mut blocked = Vec::new();
+    let initialized = initialization(&root, size)
+        .map_err(|e| {
+            warnings.push(format!("{name}: {e:#}"));
+            blocked.push("initstate_unknown".into());
+        })
+        .ok();
+    let (algorithms, algorithm) = algorithms(&read(&root.join("comp_algorithm"))?)?;
     if read_only {
         blocked.push("read_only".into());
     }
@@ -293,10 +342,10 @@ fn device(
         .find(|s| s.identity.as_deref() == Some(&id))
         .cloned();
     ensure!(
-        swap.is_none() || initialized,
+        swap.is_none() || initialized != Some(false),
         fail("state_changed", "active swap is not initialized")
     );
-    if initialized && swap.is_none() {
+    if initialized == Some(true) && swap.is_none() {
         blocked.push("non_swap".into());
     }
     let backing = optional(&root, "backing_dev")?;
@@ -320,22 +369,8 @@ fn device(
     {
         blocked.push("mounted".into());
     }
-    let values = optional(&root, "mm_stat")?
-        .map(|s| {
-            s.split_whitespace()
-                .map(str::parse::<u64>)
-                .collect::<std::result::Result<Vec<_>, _>>()
-        })
-        .transpose()?;
-    let stats = values
-        .as_ref()
-        .filter(|v| v.len() >= 4)
-        .map(|v| Stats {
-            original: Some(v[0]),
-            compressed: Some(v[1]),
-            memory_used: Some(v[2]),
-            memory_limit: Some(v[3]),
-        })
+    let stats = read(&root.join("mm_stat"))
+        .map(|s| memory_stats(&s))
         .unwrap_or_default();
     if stats.memory_limit.is_none() {
         blocked.push("stats_unknown".into());
@@ -344,7 +379,17 @@ fn device(
         generation == self::generation(&root, boot, &id)?
             && read(&root.join("dev"))?.trim() == id
             && size == number(&root, "disksize")?
-            && u64::from(initialized) == number(&root, "initstate")?,
+            && initialized.is_none_or(|v| initialization(&root, size).ok() == Some(v))
+            && read_only == binary(&root, "ro")?
+            && (algorithms.clone(), algorithm.clone())
+                == self::algorithms(&read(&root.join("comp_algorithm"))?)?
+            && backing == optional(&root, "backing_dev")?
+            && recomp == optional(&root, "recomp_algorithm")?
+            && stats.memory_limit
+                == read(&root.join("mm_stat"))
+                    .ok()
+                    .map(|s| memory_stats(&s))
+                    .and_then(|s| s.memory_limit),
         fail("state_changed", "ZRAM device changed during inventory")
     );
     let revision = hex::encode(Sha256::digest(serde_json::to_vec(&(
@@ -397,6 +442,44 @@ pub(crate) fn generation(root: &Path, boot: &str, identity: &str) -> Result<Stri
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn initialization_matches_boolean_and_vendor_capacity_encodings() {
+        let t = tempfile::tempdir().unwrap();
+        for (size, value, expected) in [
+            (0, "0\n", Some(false)),
+            (8053063680, "1\n", Some(true)),
+            (8053063680, "3758096384\n", Some(true)),
+            (8053063680, "8053063680\n", Some(true)),
+            (4294967296, "0\n", Some(true)),
+            (8589934592, "0\n", Some(true)),
+            (8053063680, "0\n", None),
+            (8053063680, "2\n", None),
+            (0, "1\n", None),
+            (4096, "true\n", None),
+            (4096, "-1\n", None),
+            (4096, "18446744073709551616\n", None),
+        ] {
+            fs::write(t.path().join("initstate"), value).unwrap();
+            assert_eq!(
+                initialization(t.path(), size).ok(),
+                expected,
+                "{size}: {value:?}"
+            );
+        }
+        fs::remove_file(t.path().join("initstate")).unwrap();
+        assert!(initialization(t.path(), 4096).is_err());
+    }
+    #[test]
+    fn optional_statistics_fail_independently_and_ignore_unused_extension_fields() {
+        let stats = memory_stats("invalid 2 3 4 ignored-extension");
+        assert_eq!(stats.original, None);
+        assert_eq!(stats.compressed, Some(2));
+        assert_eq!(stats.memory_used, Some(3));
+        assert_eq!(stats.memory_limit, Some(4));
+        assert_eq!(memory_stats("1 2 3 -1").memory_limit, None);
+        assert_eq!(memory_stats("1 2 3").memory_limit, None);
+        assert_eq!(memory_stats("").original, None);
+    }
     #[test]
     fn generation_distinguishes_recreated_block_devices() {
         let t = tempfile::tempdir().unwrap();

@@ -31,6 +31,14 @@ let device: ZramDevice = {
   revision: "a".repeat(64),
 }
 if (scenario === "fractional") device.size += 4096
+if (scenario === "initstate-unknown") {
+  device.initialized = null
+  device.blocked = ["initstate_unknown"]
+}
+if (scenario === "stats-unknown") {
+  device.stats = { ...device.stats, memory_limit: null }
+  device.blocked = ["stats_unknown"]
+}
 let profile: ZramProfile | null =
   scenario === "busy" || scenario === "orphan"
     ? {
@@ -96,7 +104,7 @@ function mutate(input: unknown) {
   }
 }
 const mock: MockModule = {
-  feature: { id: "zram", contract: 2 },
+  feature: { id: "zram", contract: 3 },
   handlers: {
     "zram.status": () => {
       if (scenario === "recreated" && ++statusReads === 2) {
@@ -118,9 +126,12 @@ const mock: MockModule = {
         swap_in_pages: 18304,
         swap_out_pages: 32768,
         boot_id: bootId,
-        devices: scenario === "empty" || scenario === "orphan" ? [] : [device],
+        devices: ["empty", "orphan", "scan-failure"].includes(scenario ?? "") ? [] : [device],
         swaps: scenario !== "orphan" && device.swap ? [device.swap] : [],
-        warnings: [],
+        warnings:
+          scenario === "initstate-unknown" || scenario === "scan-failure"
+            ? ["zram0: /sys/block/zram0/initstate: value conflicts with disksize"]
+            : [],
         saved: {
           version: 1,
           profiles: profile ? [profile] : [],

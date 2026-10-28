@@ -29,7 +29,7 @@ describe.skipIf(!hasDuckd)("ZRAM API against real duckd", CONTRACT, () => {
   it("reads native statistics and safely exposes an unidentifiable device", async () => {
     host = installHost({ files: deviceFiles })
     const status = await zramApi.status()
-    expect((await featureManifest()).features.find((f) => f.id === "zram")?.contract).toBe(2)
+    expect((await featureManifest()).features.find((f) => f.id === "zram")?.contract).toBe(3)
     expect(status.memory_total).toBe(8 * 1073741824)
     expect(status.swap_in_pages).toBe(12)
     expect(status.swaps[0]?.used).toBe(2097152)
@@ -49,8 +49,61 @@ describe.skipIf(!hasDuckd)("ZRAM API against real duckd", CONTRACT, () => {
     host = installHost({ files: { ...deviceFiles, "/sys/block/zram0/ro": "2\n" } })
     const status = await zramApi.status()
     expect(status.devices).toEqual([])
-    expect(status.warnings.join(" ")).toContain("read-only state")
+    expect(status.warnings.join(" ")).toContain("expected 0 or 1")
   })
+  it.each([
+    ["8053063680", "3758096384"],
+    ["8053063680", "8053063680"],
+    ["4294967296", "0"],
+    ["8589934592", "0"],
+  ])("recognizes vendor capacity initstate %s / %s", async (size, initstate) => {
+    host = installHost({
+      files: {
+        ...deviceFiles,
+        "/sys/block/zram0/disksize": `${size}\n`,
+        "/sys/block/zram0/initstate": `${initstate}\n`,
+      },
+    })
+    const status = await zramApi.status()
+    expect(status.devices[0]?.size).toBe(Number(size))
+    expect(status.devices[0]?.initialized).toBe(true)
+    expect(status.devices[0]?.blocked).not.toContain("initstate_unknown")
+    expect(status.warnings).toEqual([])
+  })
+  it.each(["2", "0", "-1", "true", "", "18446744073709551616"])(
+    "keeps an unrecognized initialization value visible and protected: %s",
+    async (value) => {
+      host = installHost({ files: { ...deviceFiles, "/sys/block/zram0/initstate": `${value}\n` } })
+      const status = await zramApi.status()
+      expect(status.devices[0]?.initialized).toBeNull()
+      expect(status.devices[0]?.blocked).toContain("initstate_unknown")
+      expect(status.devices[0]?.stats.memory_used).toBe(655360)
+      expect(status.warnings.join(" ")).toContain("initstate")
+    },
+  )
+  it("keeps other devices visible when one initialization attribute is missing", async () => {
+    const files: Record<string, string> = { ...deviceFiles }
+    delete files["/sys/block/zram0/initstate"]
+    for (const [path, value] of Object.entries(deviceFiles)) {
+      if (path.startsWith("/sys/block/zram0/")) {
+        files[path.replace("zram0", "zram1")] = path.endsWith("/dev") ? "254:1\n" : value
+      }
+    }
+    host = installHost({ files })
+    const status = await zramApi.status()
+    expect(status.devices.map((d) => d.name)).toEqual(["zram0", "zram1"])
+    expect(status.devices[0]?.initialized).toBeNull()
+    expect(status.devices[1]?.initialized).toBe(true)
+  })
+  it.each(["", "1 2 3", "1 2 3 -1", "1 2 3 invalid"])(
+    "preserves browsing when the memory limit cannot be decoded: %s",
+    async (value) => {
+      host = installHost({ files: { ...deviceFiles, "/sys/block/zram0/mm_stat": `${value}\n` } })
+      const status = await zramApi.status()
+      expect(status.devices[0]?.blocked).toContain("stats_unknown")
+      expect(status.devices[0]?.stats.memory_limit).toBeNull()
+    },
+  )
   it.each(["9007199254740992", "9007199254740993", "18446744073709551615"])(
     "rejects a memory limit that cannot be represented exactly: %s",
     async (limit) => {

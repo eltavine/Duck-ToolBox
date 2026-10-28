@@ -61,7 +61,8 @@
     "holders": "其他块设备正在使用此设备。",
     "mounted": "此设备已挂载为文件系统。",
     "stats_unknown": "无法读取内存上限状态。",
-    "read_only": "此块设备为只读，已阻止修改。"
+    "read_only": "此块设备为只读，已阻止修改。",
+    "initstate_unknown": "初始化状态无法读取或与容量不一致，已阻止修改。"
   },
   "errors": {
     "invalid_input": "ZRAM 配置无效。",
@@ -90,5 +91,6 @@
   "bootOff": "关闭",
   "planFailure": "无法确认方案状态。请刷新后再试。",
   "automaticPriority": "自动优先级",
-  "unavailablePlans": "设备不可用的已存方案"
+  "unavailablePlans": "设备不可用的已存方案",
+  "incomplete": "部分设备信息无法可靠读取。请刷新并查看详情。"
 }

@@ -21,7 +21,7 @@ pub(crate) fn device() -> Device {
         generation: "c".repeat(64),
         path: Some("/dev/block/zram0".into()),
         size: 512 << 20,
-        initialized: true,
+        initialized: Some(true),
         algorithms: vec!["lz4".into(), "zstd".into()],
         algorithm: Some("lz4".into()),
         swap: Some(crate::model::Swap {
@@ -124,6 +124,7 @@ fn rejects_stale_state_protected_devices_and_insufficient_headroom() {
         "device_node",
         "manager_unknown",
         "stats_unknown",
+        "initstate_unknown",
         "swap_identity",
     ] {
         s.devices[0].blocked = vec![reason.into()];
@@ -150,6 +151,13 @@ fn rejects_stale_state_protected_devices_and_insufficient_headroom() {
     );
     s.memory_available = None;
     assert!(mutation::validate(&s, "zram0", &"a".repeat(64), &change).is_err());
+}
+#[test]
+fn unknown_initialization_cannot_verify_a_completed_operation() {
+    let mut d = device();
+    assert!(mutation::configuration_matches(&d, &config()));
+    d.initialized = None;
+    assert!(!mutation::configuration_matches(&d, &config()));
 }
 #[derive(Default)]
 struct Fake {
@@ -278,7 +286,7 @@ fn disabled_configuration_preserves_algorithm_and_memory_limit_but_ignores_prior
     let mut d = device();
     let mut c = config();
     d.size = 0;
-    d.initialized = false;
+    d.initialized = Some(false);
     d.swap = None;
     c.size_bytes = 0;
     assert!(mutation::configuration_matches(&d, &c));

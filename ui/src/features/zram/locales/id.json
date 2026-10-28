@@ -61,7 +61,8 @@
     "holders": "Perangkat blok lain menggunakan perangkat ini.",
     "mounted": "Perangkat dipasang sebagai sistem berkas.",
     "stats_unknown": "Status batas memori tidak dapat dibaca.",
-    "read_only": "Perangkat blok ini hanya dapat dibaca. Perubahan diblokir."
+    "read_only": "Perangkat blok ini hanya dapat dibaca. Perubahan diblokir.",
+    "initstate_unknown": "Status inisialisasi tidak terbaca atau tidak konsisten. Perubahan diblokir."
   },
   "errors": {
     "invalid_input": "Konfigurasi ZRAM tidak valid.",
@@ -90,5 +91,6 @@
   "bootOff": "Nonaktif",
   "planFailure": "Status rencana tersimpan tidak dapat dipastikan. Muat ulang sebelum mencoba lagi.",
   "automaticPriority": "Prioritas otomatis",
-  "unavailablePlans": "Rencana perangkat yang tidak tersedia"
+  "unavailablePlans": "Rencana perangkat yang tidak tersedia",
+  "incomplete": "Sebagian detail perangkat tidak dapat dibaca dengan andal. Muat ulang dan periksa detailnya."
 }

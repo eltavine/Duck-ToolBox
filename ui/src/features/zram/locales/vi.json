@@ -61,7 +61,8 @@
     "holders": "Thiết bị khối khác đang sử dụng thiết bị này.",
     "mounted": "Thiết bị được gắn làm hệ thống tệp.",
     "stats_unknown": "Không đọc được trạng thái giới hạn bộ nhớ.",
-    "read_only": "Thiết bị khối chỉ cho phép đọc. Thay đổi bị chặn."
+    "read_only": "Thiết bị khối chỉ cho phép đọc. Thay đổi bị chặn.",
+    "initstate_unknown": "Không đọc được trạng thái khởi tạo hoặc trạng thái không nhất quán. Các thay đổi bị chặn."
   },
   "errors": {
     "invalid_input": "Cấu hình ZRAM không hợp lệ.",
@@ -90,5 +91,6 @@
   "bootOff": "Đã tắt",
   "planFailure": "Không xác nhận được trạng thái phương án đã lưu. Hãy làm mới trước khi thử lại.",
   "automaticPriority": "Ưu tiên tự động",
-  "unavailablePlans": "Phương án của thiết bị không khả dụng"
+  "unavailablePlans": "Phương án của thiết bị không khả dụng",
+  "incomplete": "Không thể đọc chính xác một số thông tin thiết bị. Hãy làm mới và kiểm tra chi tiết."
 }

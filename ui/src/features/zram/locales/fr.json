@@ -61,7 +61,8 @@
     "holders": "Un autre périphérique bloc utilise ce périphérique.",
     "mounted": "Ce périphérique est monté comme système de fichiers.",
     "stats_unknown": "La limite mémoire est illisible.",
-    "read_only": "Ce périphérique bloc est en lecture seule. Les modifications sont bloquées."
+    "read_only": "Ce périphérique bloc est en lecture seule. Les modifications sont bloquées.",
+    "initstate_unknown": "L’état d’initialisation est illisible ou incohérent. Les modifications sont bloquées."
   },
   "errors": {
     "invalid_input": "Configuration ZRAM invalide.",
@@ -90,5 +91,6 @@
   "bootOff": "Désactivée",
   "planFailure": "Impossible de confirmer l’état du plan enregistré. Actualisez avant de réessayer.",
   "automaticPriority": "Priorité automatique",
-  "unavailablePlans": "Plans des périphériques indisponibles"
+  "unavailablePlans": "Plans des périphériques indisponibles",
+  "incomplete": "Certaines données des appareils n’ont pas pu être lues de manière fiable. Actualisez et consultez les détails."
 }

@@ -61,7 +61,8 @@
     "holders": "Ein anderes Blockgerät verwendet dieses Gerät.",
     "mounted": "Das Gerät ist als Dateisystem eingehängt.",
     "stats_unknown": "Die Speichergrenze ist nicht lesbar.",
-    "read_only": "Dieses Blockgerät ist schreibgeschützt. Änderungen sind gesperrt."
+    "read_only": "Dieses Blockgerät ist schreibgeschützt. Änderungen sind gesperrt.",
+    "initstate_unknown": "Der Initialisierungsstatus ist nicht lesbar oder widersprüchlich. Änderungen sind gesperrt."
   },
   "errors": {
     "invalid_input": "Ungültige ZRAM-Konfiguration.",
@@ -90,5 +91,6 @@
   "bootOff": "Deaktiviert",
   "planFailure": "Der gespeicherte Planzustand konnte nicht bestätigt werden. Vor dem erneuten Versuch aktualisieren.",
   "automaticPriority": "Automatische Priorität",
-  "unavailablePlans": "Pläne für nicht verfügbare Geräte"
+  "unavailablePlans": "Pläne für nicht verfügbare Geräte",
+  "incomplete": "Einige Gerätedaten konnten nicht zuverlässig gelesen werden. Aktualisieren und Details prüfen."
 }

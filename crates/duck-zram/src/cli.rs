@@ -13,7 +13,7 @@ pub static FEATURE: ClapFeature<Command> = ClapFeature::new(
     FeatureInfo {
         id: "zram",
         summary: "ZRAM and swap inventory, runtime configuration and opt-in boot profiles",
-        contract: 2,
+        contract: 3,
     },
     dispatch,
 );

@@ -169,7 +169,8 @@ fn validate_state<'a>(
     Ok(device)
 }
 pub fn configuration_matches(device: &Device, config: &Config) -> bool {
-    device.size == config.size_bytes
+    device.initialized == Some(config.size_bytes > 0)
+        && device.size == config.size_bytes
         && device.algorithm.as_ref() == Some(&config.algorithm)
         && device.stats.memory_limit == Some(config.memory_limit)
         && device.swap.is_some() == (config.size_bytes > 0)

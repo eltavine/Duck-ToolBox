@@ -15,7 +15,7 @@ defineProps<{
       v-if="title || description || $slots.action"
       class="flex min-h-8 flex-wrap items-center gap-3 px-4"
     >
-      <div class="min-w-0 flex-1">
+      <div class="min-w-0 flex-[1_1_12rem]">
         <h2 v-if="title" class="text-base font-semibold leading-6">{{ title }}</h2>
         <p v-if="description" class="text-muted-foreground text-sm break-words">
           {{ description }}

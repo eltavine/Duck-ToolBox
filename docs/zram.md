@@ -6,11 +6,13 @@ fstab, init scripts, Android properties, SELinux policy, or memory-manager setti
 
 ## Source baseline
 
-Implementation references (WebUI/backend feature contract 2):
+Implementation references (WebUI/backend feature contract 3):
 
 - [ACK android15-6.6 ZRAM driver](https://android.googlesource.com/kernel/common/+/aa8f225d2792f5fd45e3a853fc2fd5d2e7baf8af/drivers/block/zram/zram_drv.c):
   `comp_algorithm`, initialization, memory counters, secondary compressors, writeback,
   and `reset_store()` refusing open or claimed devices.
+  `init_done()` returns a boolean derived from `disksize`; standard `initstate`
+  output is `0` or `1`.
 - [ACK ZRAM sysfs ABI](https://android.googlesource.com/kernel/common/+/aa8f225d2792f5fd45e3a853fc2fd5d2e7baf8af/Documentation/ABI/testing/sysfs-block-zram)
   and [upstream ZRAM documentation](https://docs.kernel.org/admin-guide/blockdev/zram.html):
   counter order and units, selected algorithm syntax, reset semantics and swap setup.
@@ -75,7 +77,28 @@ fallback on older kernels is best effort and cannot guarantee detection of inode
 reuse; avoid removing and recreating a device between changes and restoration.
 Legacy originals without an instance identifier are not restored; the next actual
 change captures a new original. Missing or malformed required state fails closed.
-Missing optional statistics remain unknown.
+Missing optional statistics remain unknown. The stable configuration fields are
+read again before publishing an inventory: read-only state, primary algorithm,
+backing device, secondary compressors and memory limit must still match.
+
+Some vendor kernels expose capacity through `initstate` instead of normalizing it
+to a boolean. Compatibility accepts the full capacity or its low 32 bits, only
+when they match the separately read `disksize`. For example, capacity `8053063680`
+and initialization value `3758096384` describe an initialized 7.5 GiB device.
+Capacity multiples of 4 GiB can produce a truncated zero; these remain initialized
+when the nonzero capacity matches this encoding. This is a compatibility rule,
+not an upstream ABI guarantee. Unrelated positive numbers, malformed values and
+conflicting zero/size pairs are not treated as a generic truthy value.
+
+Unreadable, unrecognized or inconsistent initialization is represented as `null`,
+with the device still listed and protected by `initstate_unknown`. The WebUI/backend
+contract is 3 because initialization was previously a required boolean. Unknown
+initialization cannot authorize a transition or verify successful completion.
+The first four `mm_stat` fields are decoded independently; unused extension fields
+do not invalidate usable counters. Missing or malformed memory limits block changes
+without removing the device. Diagnostics distinguish incomplete discovery from an
+empty inventory and preserve readable technical details separately from localized
+feedback.
 
 Runtime operations require Android ARM64, effective UID 0, the real `/` sysroot,
 explicit confirmation and a configuration revision from the current boot. Input
@@ -196,6 +219,8 @@ linker. Rust tests cover parser bounds, stale state, protected devices, headroom
 first-failure transition ordering, read-only protection, swap-header geometry,
 disabled-state restoration, no-op behavior, confirmation transport, atomic boot
 authorization, snapshots under lock, private storage, saved-plan replacement,
+vendor initialization encodings (including zero after 32-bit truncation),
+unknown-initialization protection and independent optional statistics,
 worker protocol consistency, process-group cleanup and timeouts. API contract tests
 use the real host binary and an isolated sysroot, including integer-precision
 rejection. Browser tests use a mock root host and cover draft lifetime, unavailable

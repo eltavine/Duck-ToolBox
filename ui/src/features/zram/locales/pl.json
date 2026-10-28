@@ -61,7 +61,8 @@
     "holders": "Inne urządzenie blokowe używa tego urządzenia.",
     "mounted": "Urządzenie jest zamontowane jako system plików.",
     "stats_unknown": "Nie można odczytać limitu pamięci.",
-    "read_only": "Urządzenie blokowe jest tylko do odczytu. Zmiany są zablokowane."
+    "read_only": "Urządzenie blokowe jest tylko do odczytu. Zmiany są zablokowane.",
+    "initstate_unknown": "Stan inicjalizacji jest nieczytelny lub niespójny. Zmiany są zablokowane."
   },
   "errors": {
     "invalid_input": "Nieprawidłowa konfiguracja ZRAM.",
@@ -90,5 +91,6 @@
   "bootOff": "Wyłączone",
   "planFailure": "Nie można potwierdzić stanu zapisanego planu. Odśwież przed ponowną próbą.",
   "automaticPriority": "Automatyczny priorytet",
-  "unavailablePlans": "Plany niedostępnych urządzeń"
+  "unavailablePlans": "Plany niedostępnych urządzeń",
+  "incomplete": "Nie udało się wiarygodnie odczytać części danych urządzeń. Odśwież i sprawdź szczegóły."
 }

@@ -61,7 +61,8 @@
     "holders": "Another block device holds this device.",
     "mounted": "This device is mounted as a filesystem.",
     "stats_unknown": "Memory-limit state is unreadable.",
-    "read_only": "This block device is read-only. Changes are blocked."
+    "read_only": "This block device is read-only. Changes are blocked.",
+    "initstate_unknown": "Initialization state is unreadable or inconsistent. Changes are blocked."
   },
   "errors": {
     "invalid_input": "Invalid ZRAM configuration.",
@@ -90,5 +91,6 @@
   "bootOff": "Disabled",
   "planFailure": "The saved plan state could not be confirmed. Refresh before trying again.",
   "automaticPriority": "Automatic priority",
-  "unavailablePlans": "Plans for unavailable devices"
+  "unavailablePlans": "Plans for unavailable devices",
+  "incomplete": "Some device details could not be read reliably. Refresh and inspect the details."
 }
