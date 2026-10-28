@@ -238,7 +238,8 @@ fn features_manifest_lists_every_registered_tool() {
             "tricky-store",
             "play-integrity",
             "system",
-            "kernel-modules"
+            "kernel-modules",
+            "zram"
         ]
     );
     assert_eq!(payload["data"]["api"], 1);

@@ -29,6 +29,7 @@ describe.skipIf(!hasDuckd)("system API against the real duckd", CONTRACT, () => 
       "play-integrity",
       "system",
       "kernel-modules",
+      "zram",
     ])
   })
 

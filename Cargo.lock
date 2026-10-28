@@ -787,6 +787,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "duck-zram"
+version = "0.2.1-Stable"
+dependencies = [
+ "anyhow",
+ "clap",
+ "duck-core",
+ "duck-platform",
+ "hex",
+ "libc",
+ "serde",
+ "serde_json",
+ "sha2",
+ "tempfile",
+ "thiserror",
+]
+
+[[package]]
 name = "duckd"
 version = "0.2.1-Stable"
 dependencies = [
@@ -802,6 +819,7 @@ dependencies = [
  "duck-system",
  "duck-tee-attestation",
  "duck-tricky-store",
+ "duck-zram",
  "serde",
  "serde_json",
  "tempfile",

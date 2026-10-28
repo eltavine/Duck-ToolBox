@@ -31,6 +31,8 @@ static FEATURES: &[&dyn Feature] = &[
     &duck_system::FEATURE,
     #[cfg(feature = "kernel-modules")]
     &duck_kernel_modules::FEATURE,
+    #[cfg(feature = "zram")]
+    &duck_zram::FEATURE,
 ];
 
 fn cli() -> clap::Command {
@@ -108,7 +110,7 @@ fn emit(ctx: &Context, result: CommandResult) {
     // History reads must not mutate the data being paginated.
     if !matches!(
         value["command"].as_str(),
-        Some("system.log" | "kernel-modules.worker")
+        Some("system.log" | "kernel-modules.worker" | "zram.worker")
     ) {
         duck_core::log::append(&ctx.paths, &value);
     }

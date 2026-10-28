@@ -143,6 +143,11 @@ changed, removed or added on its own.
     or reliably cancel a kernel init/exit routine. Missing or abnormal worker results also
     report an unknown outcome. Refresh before further action.
   - See [source contracts, interface guidance and verification limits](docs/kernel-modules.md).
+- **ZRAM & swap**: existing ZRAM swap devices, compression and physical-memory statistics,
+  capacity/algorithm/priority changes, same-boot parameter restoration and opt-in boot plans.
+  Runtime changes require confirmation and Android ARM64 root. Devices managed by mmd,
+  using writeback/secondary compression, mounted or held by another block device are protected.
+  Other swap areas are read-only. See [source contracts and verification limits](docs/zram.md).
 - **Module & updates**: version and device summary, stable and canary updates with
   changelog, output files, command history, uninstall and reboot.
 
@@ -163,6 +168,7 @@ crates/
   duck-device-ids/    Device ID provisioning.   duck-tricky-store/ Keystore module manager.
   duck-system/        Module lifecycle, updates.
   duck-kernel-modules/ Linux kernel inventory, ELF inspection and isolated runtime operations.
+  duck-zram/          ZRAM inventory, swap configuration and opt-in boot profiles
   duckd/              The binary: builds its CLI from the compiled-in features.
 xtask/                Repository checks (`cargo xtask line-limit`).
 ui/src/
@@ -275,6 +281,11 @@ duckd system log [--limit <n>] | open-url <url> | uninstall | reboot
 duckd kernel-modules status | details <name> | files | inspect <device.ko>
 duckd kernel-modules load --stdin-json
 duckd kernel-modules unload --stdin-json
+duckd zram status
+duckd zram apply --stdin-json
+duckd zram restore --stdin-json
+duckd zram save --stdin-json
+duckd zram forget <zramN>
 ```
 
 Commands that take input read JSON from stdin with `--stdin-json`.

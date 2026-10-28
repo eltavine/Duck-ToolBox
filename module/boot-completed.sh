@@ -19,6 +19,9 @@ fi
 "$DUCKCTL" tricky-store auto-apply >/dev/null 2>&1 || true
 "$DUCKCTL" describe >/dev/null 2>&1 || true
 
+# Apply only explicitly saved ZRAM boot profiles after Android has initialized swap.
+( "$DUCKCTL" zram boot-apply >/dev/null 2>&1 || true ) &
+
 # TSupport-Advance rewrites the target list on its own unless this flag exists (as Tricky
 # Addon does). Shared storage appears only after the user unlocks the device.
 tries=0
