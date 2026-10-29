@@ -52,7 +52,8 @@
     "stopping": "停止中",
     "stopped": "已停止",
     "unknown": "狀態不明",
-    "validating": "正在檢查封存檔"
+    "validating": "正在檢查封存檔",
+    "cancelled": "已取消"
   },
   "errors": {
     "invalid_input": "請檢查名稱、DNS 位址及服務 ID。服務 ID 必須有效且不重複，指令不可為空。",
@@ -64,7 +65,16 @@
     "runtime_failed": "Linux 環境: 失敗",
     "unsupported_environment": "變更需要 Android ARM64 ROOT。仍可瀏覽及檢查。",
     "confirmation_required": "請先確認操作。",
-    "linux_env_error": "Linux 環境: 失敗"
+    "linux_env_error": "Linux 環境: 失敗",
+    "operation_timeout": "rootfs 匯入逾時。",
+    "cancelled": "已取消",
+    "operation_unknown": "結果未知，請先重新整理狀態。",
+    "interrupted": "Linux 環境: 狀態不明"
   },
-  "nameHelp": "1–120 個 UTF-8 位元組，不含控制字元。"
+  "nameHelp": "1–120 個 UTF-8 位元組，不含控制字元。",
+  "disabled": "已停用",
+  "defaultDns": "保留 rootfs 的 DNS 設定",
+  "noServices": "尚未設定服務。",
+  "inspectionPending": "正在計算封存檔 SHA-256…",
+  "stopConfirm": "停止此環境中的所有程序（包括終端機工作階段）？未儲存的工作可能遺失。"
 }

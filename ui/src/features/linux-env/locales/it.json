@@ -52,7 +52,8 @@
     "stopping": "Arresto",
     "stopped": "Arrestato",
     "unknown": "Stato sconosciuto",
-    "validating": "Convalida archivio"
+    "validating": "Convalida archivio",
+    "cancelled": "Annullato"
   },
   "errors": {
     "invalid_input": "Controlla nome, indirizzi DNS e ID dei servizi. Gli ID devono essere validi e univoci; i comandi non possono essere vuoti.",
@@ -64,7 +65,16 @@
     "runtime_failed": "Ambienti Linux: Non riuscito",
     "unsupported_environment": "Le modifiche richiedono Android ARM64 con ROOT. La consultazione resta disponibile.",
     "confirmation_required": "Conferma prima l’operazione.",
-    "linux_env_error": "Ambienti Linux: Non riuscito"
+    "linux_env_error": "Ambienti Linux: Non riuscito",
+    "operation_timeout": "Tempo di importazione del rootfs scaduto.",
+    "cancelled": "Annullato",
+    "operation_unknown": "Esito sconosciuto. Aggiorna lo stato.",
+    "interrupted": "Ambienti Linux: Stato sconosciuto"
   },
-  "nameHelp": "Da 1 a 120 byte UTF-8, senza caratteri di controllo."
+  "nameHelp": "Da 1 a 120 byte UTF-8, senza caratteri di controllo.",
+  "disabled": "Disattivato",
+  "defaultDns": "Mantieni la configurazione DNS del rootfs",
+  "noServices": "Nessun servizio configurato.",
+  "inspectionPending": "Calcolo SHA-256 dell’archivio…",
+  "stopConfirm": "Arrestare tutti i processi dell’ambiente, incluse le sessioni del terminale? Il lavoro non salvato potrebbe andare perso."
 }

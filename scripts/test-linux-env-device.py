@@ -3,6 +3,9 @@
 import argparse
 import hashlib
 import json
+import os
+import select
+import threading
 from pathlib import Path
 import shlex
 import subprocess
@@ -97,7 +100,27 @@ def run(args):
         assert "service-ready" in device.api(["logs", "--id", "sample"])
         device.api(["remove", "--stdin-json"], target, error="operation_busy")
         init = state["environments"][0]["runtime"]["init"]["pid"]
-        device.api(["stop", "--stdin-json"], target)
+        session = subprocess.Popen(device.adb + ["shell", shlex.join(device.command + ["shell", "sample"])],
+                                   stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=0)
+        try:
+            session.stdin.write(b"echo terminal-session-ready; /bin/sleep 600\n")
+            session.stdin.flush()
+            output = b""
+            until = time.monotonic() + 10
+            while b"terminal-session-ready" not in output:
+                remaining = until - time.monotonic()
+                assert remaining > 0, "Terminal did not become ready"
+                assert select.select([session.stdout], [], [], remaining)[0], "Terminal readiness timed out"
+                chunk = os.read(session.stdout.fileno(), 4096)
+                assert chunk, "Terminal ended before readiness"
+                output += chunk
+            device.api(["stop", "--stdin-json"], target)
+            session.communicate(timeout=10)
+            assert session.returncode != 0, "Stopping must terminate the active terminal"
+        finally:
+            if session.poll() is None:
+                session.kill()
+                session.communicate(timeout=10)
         assert device.status()["environments"][0]["phase"] == "stopped"
         assert device.shell(["test", "-e", f"/proc/{init}"], check=False).returncode != 0
         # Simulate supervisor loss. cgroup fallback must report remaining descendants and stop them.
@@ -111,6 +134,27 @@ def run(args):
             device.shell(["rm", directory + "/runtime.json"])
             assert device.status()["environments"][0]["phase"] == "unknown"
             device.api(["stop", "--stdin-json"], target)
+        polling_done = threading.Event()
+        polling_errors = []
+        def poll_status():
+            while not polling_done.is_set():
+                try:
+                    device.status()
+                except Exception as error:
+                    polling_errors.append(error)
+                    return
+                polling_done.wait(0.02)
+        polling = threading.Thread(target=poll_status, daemon=True)
+        polling.start()
+        try:
+            for _ in range(3):
+                device.api(["start", "--stdin-json"], target)
+                device.wait(lambda s: s["environments"][0]["phase"] == "running")
+                device.api(["stop", "--stdin-json"], target)
+        finally:
+            polling_done.set()
+            polling.join(timeout=50)
+        assert not polling.is_alive() and not polling_errors, polling_errors
         # Boot replay is limited to one attempt per environment instance per Android boot.
         config["auto_start"] = True
         device.api(["save", "--stdin-json"], {"target": target, "config": config})
@@ -122,7 +166,7 @@ def run(args):
         device.api(["remove", "--stdin-json"], target)
         assert device.status()["environments"] == []
         completed = True
-        print("Passed: import, private permissions, stale revision, services, DNS, terminal, stop, supervisor loss, boot replay and removal.")
+        print("Passed: import, private permissions, stale revision, services, DNS, active terminal cleanup, concurrent status polling, supervisor loss, boot replay and removal.")
         print("Kernel:", device.shell(["uname", "-r"]).stdout.strip())
         print("SELinux:", device.shell(["getenforce"]).stdout.strip())
         print("Rootfs SHA-256:", digest)

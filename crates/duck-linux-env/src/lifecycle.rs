@@ -147,7 +147,7 @@ pub fn stop(ctx: &Context, target: Target) -> Result<bool> {
     let env = store.environment(&target.id)?;
     target.check(&env)?;
     let path = store.env_dir(&env.id)?.join("runtime.json");
-    let runtime: Runtime = if path.try_exists()? {
+    let mut runtime: Runtime = if path.try_exists()? {
         store::load(&path)?
     } else {
         Runtime {
@@ -165,14 +165,7 @@ pub fn stop(ctx: &Context, target: Target) -> Result<bool> {
         fail("state_changed", "runtime instance differs")
     );
     let mut handles = Vec::new();
-    for identity in [runtime.supervisor.as_ref(), runtime.init.as_ref()]
-        .into_iter()
-        .flatten()
-    {
-        if native::alive(identity)? {
-            handles.push(native::checked_pidfd(identity)?);
-        }
-    }
+    track_processes(&runtime, &mut handles)?;
     ensure!(
         !handles.is_empty() || scope::populated(&env.instance)?,
         fail("state_changed", "environment has already stopped; refresh")
@@ -182,20 +175,9 @@ pub fn stop(ctx: &Context, target: Target) -> Result<bool> {
     } else {
         scope::kill(&env.instance)?;
     }
-    let deadline = Instant::now() + Duration::from_secs(6);
-    while handles.iter().any(|fd| !native::exited(fd)) && Instant::now() < deadline {
-        thread::sleep(Duration::from_millis(40));
-    }
-    for handle in &handles {
-        if !native::exited(handle) {
-            native::signal(handle, libc::SIGKILL)?;
-        }
-    }
-    scope::finish(&env.instance)?;
-    let deadline = Instant::now() + Duration::from_secs(2);
-    while handles.iter().any(|fd| !native::exited(fd)) && Instant::now() < deadline {
-        thread::sleep(Duration::from_millis(40));
-    }
+    wait_processes(&handles, Duration::from_secs(6));
+    kill_processes(&handles)?;
+    wait_processes(&handles, Duration::from_secs(2));
     ensure!(
         handles.iter().all(native::exited),
         fail(
@@ -203,11 +185,67 @@ pub fn stop(ctx: &Context, target: Target) -> Result<bool> {
             "process termination could not be confirmed"
         )
     );
+    // A queued supervisor may publish init after this stop request captured its state.
+    // Its lease must end before reading that final process identity and recording success.
+    ensure!(
+        !store::locked(&store.env_dir(&env.id)?.join("environment.lock"))?,
+        fail(
+            "operation_unknown",
+            "environment supervisor lease is still held"
+        )
+    );
+    if path.try_exists()? {
+        runtime = store::load(&path)?;
+        ensure!(
+            runtime.instance == env.instance,
+            fail("state_changed", "runtime instance changed during stop")
+        );
+        track_processes(&runtime, &mut handles)?;
+    }
+    kill_processes(&handles)?;
+    scope::finish(&env.instance)?;
+    wait_processes(&handles, Duration::from_secs(2));
+    ensure!(
+        handles.iter().all(native::exited),
+        fail(
+            "operation_unknown",
+            "guest termination could not be confirmed"
+        )
+    );
     let mut completed = runtime;
     completed.phase = "stopped".into();
     completed.message.clear();
     store::save(&store.env_dir(&env.id)?.join("runtime.json"), &completed)?;
     Ok(true)
+}
+fn track_processes(runtime: &Runtime, handles: &mut Vec<fs::File>) -> Result<()> {
+    for identity in [runtime.supervisor.as_ref(), runtime.init.as_ref()]
+        .into_iter()
+        .flatten()
+    {
+        if native::alive(identity)? {
+            match native::checked_pidfd(identity) {
+                Ok(handle) => handles.push(handle),
+                Err(_) if !native::alive(identity)? => {}
+                Err(error) => return Err(error),
+            }
+        }
+    }
+    Ok(())
+}
+fn wait_processes(handles: &[fs::File], duration: Duration) {
+    let deadline = Instant::now() + duration;
+    while handles.iter().any(|fd| !native::exited(fd)) && Instant::now() < deadline {
+        thread::sleep(Duration::from_millis(40));
+    }
+}
+fn kill_processes(handles: &[fs::File]) -> Result<()> {
+    for handle in handles {
+        if !native::exited(handle) {
+            native::signal(handle, libc::SIGKILL)?;
+        }
+    }
+    Ok(())
 }
 pub fn start_boot(ctx: &Context, target: Target) -> Result<bool> {
     native::require(ctx)?;

@@ -34,7 +34,9 @@ Only a complete, validated environment is published by directory rename. Staging
 and metadata are private; interrupted staging is removed during the next import.
 Cancellation and the 30-minute deadline are checked between copy/decompression
 reads as well as archive entries. A blocked filesystem operation can delay these
-cooperative checks. Failure leaves the source archive unchanged and publishes no
+cooperative checks. Cancellation and timeout error codes are retained through
+archive I/O errors so the UI can distinguish a cancelled import from failure.
+Failure leaves the source archive unchanged and publishes no
 partial environment. A crash after publication can leave a completed environment
 with an interrupted job result; the environment list is authoritative in that case.
 
@@ -65,6 +67,8 @@ environment. It intentionally does not use the JSON API output format. Internal
 supervisor and import-worker commands also bypass the asynchronous JSON dispatcher.
 
 Stopping signals a verified supervisor through a pidfd, then escalates if needed.
+It waits for the supervisor lease to end and rechecks the final init identity,
+including an init created after the stop request initially captured its state.
 Boot ID and process start time guard against PID reuse. With PID namespaces, init
 termination kills the namespace's descendants. Without them, guest children and
 terminal sessions join a per-instance cgroup before exec; `cgroup.kill` and
@@ -84,7 +88,9 @@ failures remain visible and are not worked around with permissive mode.
 
 Host checks cover archive identity, confinement, gzip integrity, guest symlinks,
 configuration, private state and CLI/UI contracts. WebUI checks cover all 16 locales,
-RTL, 320px screens, large text and confirmation layouts. These do not establish
+RTL, 320px screens, large text and confirmation layouts. Runtime state refreshes
+while an environment is active and preserves unsaved configuration drafts; these
+status polls do not append to operation history. These do not establish
 compatibility with an arbitrary vendor kernel or root manager.
 
 The device integration script requires an explicitly selected **disposable rooted
@@ -105,14 +111,15 @@ Alpine minirootfs 3.23.7 aarch64 (SHA-256
 `7dcc7420bcc426a615c0512cc85b4a52e9f89df9c600b93ce78d22e0e9234891`). This kernel has
 `CONFIG_PID_NS` disabled, exercising the cgroup fallback. The script checks import,
 permissions, stale revision rejection, services, DNS, terminal entry, termination,
-supervisor loss, boot replay protection and deletion. PID namespace mode and vendor
+supervisor loss, active terminal cleanup, concurrent status polling, boot replay
+protection and deletion. PID namespace mode and vendor
 KernelSU/APatch/Magisk policies still require device-specific verification.
 
 ## Technical references
 
 - [ACK ARM64 syscall header](https://android.googlesource.com/kernel/common/+/refs/heads/android14-6.1/arch/arm64/include/uapi/asm/unistd.h)
   includes [asm-generic numbers](https://android.googlesource.com/kernel/common/+/refs/heads/android14-6.1/include/uapi/asm-generic/unistd.h):
-  `mount=40`, `chroot=51`, `unshare=97`, `setns=268`,
+  `mount=40`, `chroot=51`, `unshare=97`, `prctl=167`, `setns=268`,
   `pidfd_send_signal=424`, `pidfd_open=434`. Compile-time assertions check the used
   AArch64 ABI; ARM32 uses a different table and is not enabled for mutation.
 - [AOSP bionic syscall declarations](https://android.googlesource.com/platform/bionic/+/refs/heads/main/libc/SYSCALLS.TXT),
@@ -122,11 +129,14 @@ KernelSU/APatch/Magisk policies still require device-specific verification.
 - Linux manual pages: [chroot](https://man7.org/linux/man-pages/man2/chroot.2.html),
   [setns](https://man7.org/linux/man-pages/man2/setns.2.html),
   [pidfd_open](https://man7.org/linux/man-pages/man2/pidfd_open.2.html),
-  [PID namespaces](https://man7.org/linux/man-pages/man7/pid_namespaces.7.html).
+  [PID namespaces](https://man7.org/linux/man-pages/man7/pid_namespaces.7.html),
+  [prctl varargs](https://man7.org/linux/man-pages/man2/prctl.2.html),
+  [parent-death signals](https://man7.org/linux/man-pages/man2/PR_SET_PDEATHSIG.2const.html).
 - [tar unpack_in contract](https://docs.rs/tar/0.4.46/tar/struct.Entry.html#method.unpack_in),
   [Tini v0.19.0 source/release](https://github.com/krallin/tini/releases/tag/v0.19.0),
   [Alpine ARM64 release files](https://dl-cdn.alpinelinux.org/alpine/v3.23/releases/aarch64/).
 - Interface guidance: [Material 3 Expressive](https://m3.material.io/blog/building-with-m3-expressive),
+  [Google Design research](https://design.google/library/expressive-material-design-google-research),
   [Material dialogs](https://m3.material.io/components/dialogs/accessibility),
   [Android accessibility targets](https://developer.android.com/guide/topics/ui/accessibility/views/apps-views),
   [Apple alerts](https://developer.apple.com/design/human-interface-guidelines/alerts),

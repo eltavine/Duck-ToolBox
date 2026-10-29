@@ -115,6 +115,10 @@ pub fn cancel(ctx: &Context, token: &str) -> Result<bool> {
         job.token == token,
         fail("state_changed", "import job changed")
     );
+    ensure!(
+        !matches!(job.phase.as_str(), "done" | "failed"),
+        fail("state_changed", "import is already complete")
+    );
     store::save(&base.join("cancel.json"), &token)?;
     Ok(true)
 }
@@ -125,7 +129,7 @@ pub fn worker(ctx: &Context, token: &str) -> Result<()> {
     let path = base.join("import.json");
     let mut job: Job = store::load(&path)?;
     ensure!(
-        job.token == token && valid_digest(token),
+        job.token == token && valid_digest(token) && job.phase == "queued" && job.request.confirmed,
         fail("state_changed", "import authorization changed")
     );
     let deadline = Instant::now() + Duration::from_secs(1800);
@@ -134,7 +138,12 @@ pub fn worker(ctx: &Context, token: &str) -> Result<()> {
             Instant::now() < deadline,
             fail("operation_timeout", "rootfs import exceeded 30 minutes")
         );
-        let cancel: Option<String> = store::load(&base.join("cancel.json")).ok();
+        let cancel_path = base.join("cancel.json");
+        let cancel: Option<String> = if cancel_path.try_exists()? {
+            Some(store::load(&cancel_path)?)
+        } else {
+            None
+        };
         ensure!(
             cancel.as_deref() != Some(token),
             fail("cancelled", "import cancelled")

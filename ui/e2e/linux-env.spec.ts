@@ -91,6 +91,42 @@ test("read-only inspection remains available while mutations stay disabled", asy
   await expect(page.getByText("ab".repeat(32), { exact: true })).toHaveCount(2)
   await expect(page.getByRole("button", { name: "Import rootfs", exact: true })).toBeDisabled()
 })
+test("running environments refresh automatically and preserve a draft", async ({ page, open }) => {
+  await open("/linux-env", { locale: "en", query: { linuxEnv: "exited" } })
+  const root = page.getByTestId("linux-env-page")
+  await expect(root.getByText("Running", { exact: true })).toBeVisible()
+  await root.locator("summary").click()
+  await page.locator("#linux-config-name-debian").fill("Unsaved name")
+  await expect(root.getByText("State unknown", { exact: true })).toBeVisible({ timeout: 10000 })
+  await expect(page.locator("#linux-config-name-debian")).toHaveValue("Unsaved name")
+  await expect(root.getByRole("button", { name: "Delete environment", exact: true })).toBeDisabled()
+})
+test("inspection keeps pending and error feedback next to its controls", async ({ page, open }) => {
+  await open("/linux-env", { locale: "en", query: { latency: "500" } })
+  await page.locator("#linux-archive").fill("/sdcard/missing.tar")
+  await page.getByRole("button", { name: "Inspect archive", exact: true }).click()
+  await expect(page.getByText("Calculating archive SHA-256…", { exact: true })).toBeVisible()
+  await expect(page.getByTestId("linux-env-page").getByRole("alert")).toContainText(
+    "The archive cannot be imported.",
+  )
+  await page.locator("#linux-archive").fill("/sdcard/rootfs.tar")
+  await expect(page.getByTestId("linux-env-page").getByRole("alert")).toHaveCount(0)
+})
+test("cancelled imports and disabled settings are explicit", async ({ page, open }) => {
+  await open("/linux-env", { locale: "en", query: { linuxEnv: "cancelled" } })
+  const root = page.getByTestId("linux-env-page")
+  await expect(root.getByText("Cancelled", { exact: true })).toBeVisible()
+  await root.locator("summary").click()
+  await root.getByRole("button", { name: "Save configuration", exact: true }).click()
+  const dialog = page.getByRole("alertdialog")
+  await expect(dialog.getByText("Disabled", { exact: true })).toBeVisible()
+  await expect(
+    dialog.getByText("Keep rootfs resolver configuration", { exact: true }),
+  ).toBeVisible()
+  await expect(dialog.getByText("No services configured.", { exact: true })).toBeVisible()
+  await dialog.getByRole("button", { name: "Cancel", exact: true }).click()
+  await expect(root.getByRole("button", { name: "Save configuration", exact: true })).toBeFocused()
+})
 for (const file of readdirSync(locales).filter((f) => f.endsWith(".json"))) {
   const messages = JSON.parse(readFileSync(new URL(file, locales), "utf8")) as {
     overview: string

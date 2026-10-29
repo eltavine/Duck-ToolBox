@@ -26,27 +26,28 @@ export const configSchema = z
   })
   .refine((v) => new Set(v.services.map((s) => s.id)).size === v.services.length)
 export type Config = z.infer<typeof configSchema>
+const digest = z.string().regex(/^[a-fA-F0-9]{64}$/)
 const environment = z.object({
   id: idSchema,
-  instance: z.string(),
-  archive_sha256: z.string(),
-  expanded_bytes: uint,
-  entries: uint,
+  instance: digest,
+  archive_sha256: digest,
+  expanded_bytes: uint.max(16 * 2 ** 30),
+  entries: uint.max(250000),
   created_at: uint,
   config: configSchema,
 })
 export const viewSchema = z.object({
   environment,
-  revision: z.string(),
-  phase: z.string(),
+  revision: digest,
+  phase: z.enum(["starting", "running", "stopping", "stopped", "failed", "unknown"]),
   message: z.string(),
   runtime: z.object({ config: configSchema }).nullable(),
 })
 export type EnvironmentView = z.infer<typeof viewSchema>
 const job = z.object({
-  token: z.string(),
-  phase: z.string(),
-  entries: uint,
+  token: digest,
+  phase: z.enum(["queued", "copying", "validating", "extracting", "done", "failed"]),
+  entries: uint.max(250000),
   bytes: uint,
   code: z.string(),
   message: z.string(),
@@ -55,7 +56,7 @@ const status = z.object({
   supported: z.boolean(),
   runtime_ready: z.boolean(),
   busy: z.boolean(),
-  environments: z.array(viewSchema),
+  environments: z.array(viewSchema).max(16),
   job: job.nullable(),
 })
 export const inspectionSchema = z.object({

@@ -35,6 +35,17 @@ fn fail(code: &'static str, message: impl Into<String>) -> anyhow::Error {
 }
 fn code_of(error: &anyhow::Error) -> &'static str {
     error
-        .downcast_ref::<Error>()
-        .map_or("linux_env_error", |e| e.code)
+        .chain()
+        .find_map(|cause| {
+            cause
+                .downcast_ref::<Error>()
+                .or_else(|| {
+                    cause
+                        .downcast_ref::<std::io::Error>()?
+                        .get_ref()?
+                        .downcast_ref::<Error>()
+                })
+                .map(|error| error.code)
+        })
+        .unwrap_or("linux_env_error")
 }

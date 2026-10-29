@@ -52,7 +52,8 @@
     "stopping": "Zatrzymywanie",
     "stopped": "Zatrzymano",
     "unknown": "Stan nieznany",
-    "validating": "Sprawdzanie archiwum"
+    "validating": "Sprawdzanie archiwum",
+    "cancelled": "Anulowano"
   },
   "errors": {
     "invalid_input": "Sprawdź nazwę, adresy DNS i identyfikatory usług. ID muszą być poprawne i unikalne; polecenia nie mogą być puste.",
@@ -64,7 +65,16 @@
     "runtime_failed": "Środowiska Linux: Błąd",
     "unsupported_environment": "Zmiany wymagają Androida ARM64 z ROOT. Odczyt nadal jest dostępny.",
     "confirmation_required": "Najpierw potwierdź operację.",
-    "linux_env_error": "Środowiska Linux: Błąd"
+    "linux_env_error": "Środowiska Linux: Błąd",
+    "operation_timeout": "Upłynął limit czasu importu rootfs.",
+    "cancelled": "Anulowano",
+    "operation_unknown": "Wynik nieznany. Odśwież stan.",
+    "interrupted": "Środowiska Linux: Stan nieznany"
   },
-  "nameHelp": "1–120 bajtów UTF-8, bez znaków sterujących."
+  "nameHelp": "1–120 bajtów UTF-8, bez znaków sterujących.",
+  "disabled": "Wyłączone",
+  "defaultDns": "Zachowaj konfigurację DNS rootfs",
+  "noServices": "Nie skonfigurowano usług.",
+  "inspectionPending": "Obliczanie SHA-256 archiwum…",
+  "stopConfirm": "Zatrzymać wszystkie procesy środowiska, w tym sesje terminala? Niezapisana praca może zostać utracona."
 }

@@ -8,6 +8,8 @@ import FilePickerDialog from "@/core/components/FilePickerDialog.vue"
 import ConfirmDialog from "@/core/components/ConfirmDialog.vue"
 import SectionCard from "@/core/components/SectionCard.vue"
 import KeyValueList from "@/core/components/KeyValueList.vue"
+import { errorTitle, showErrorDetails } from "@/core/notify"
+import { LoaderCircle } from "@lucide/vue"
 import { formatBytes } from "@/core/format"
 import { linuxApi, idSchema, configSchema } from "../api"
 import type { Inspection } from "../api"
@@ -24,8 +26,10 @@ const inspected = ref<Inspection | null>(null)
 const pending = ref<{ id: string; name: string; archive: Inspection } | null>(null)
 watch(path, () => {
   inspected.value = null
+  inspect.reset()
 })
 const inspect = useMutation({
+  onError: () => undefined,
   mutationFn: async () => {
     const original = path.value
     const result = await linuxApi.inspect(original)
@@ -112,6 +116,17 @@ function request() {
           >{{ t("inspect") }}</Button
         >
       </div>
+    </div>
+    <p v-if="inspect.isPending.value" class="mt-3 flex items-center gap-2 text-sm" role="status">
+      <LoaderCircle class="size-4 motion-safe:animate-spin" aria-hidden="true" />{{
+        t("inspectionPending")
+      }}
+    </p>
+    <div v-if="inspect.error.value" class="mt-3 space-y-2" role="alert">
+      <p class="text-destructive text-sm">{{ errorTitle(inspect.error.value) }}</p>
+      <Button variant="outline" class="min-h-12" @click="showErrorDetails(inspect.error.value)">{{
+        t("details")
+      }}</Button>
     </div>
     <KeyValueList
       v-if="inspected"

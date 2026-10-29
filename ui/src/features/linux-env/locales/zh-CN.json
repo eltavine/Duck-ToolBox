@@ -52,7 +52,8 @@
     "stopping": "停止中",
     "stopped": "已停止",
     "unknown": "状态未知",
-    "validating": "正在检查归档"
+    "validating": "正在检查归档",
+    "cancelled": "已取消"
   },
   "errors": {
     "invalid_input": "环境配置无效。",
@@ -64,7 +65,16 @@
     "runtime_failed": "Linux 环境意外停止。",
     "unsupported_environment": "修改需要 Android ARM64 ROOT 权限。",
     "confirmation_required": "请先确认此操作。",
-    "linux_env_error": "Linux 环境操作失败。"
+    "linux_env_error": "Linux 环境操作失败。",
+    "operation_timeout": "rootfs 导入超时。",
+    "cancelled": "已取消",
+    "operation_unknown": "结果未知，请先刷新状态。",
+    "interrupted": "无法确认环境状态。"
   },
-  "nameHelp": "1–120 个 UTF-8 字节，不含控制字符。"
+  "nameHelp": "1–120 个 UTF-8 字节，不含控制字符。",
+  "disabled": "已禁用",
+  "defaultDns": "保留 rootfs 的 DNS 配置",
+  "noServices": "未配置服务。",
+  "inspectionPending": "正在计算归档 SHA-256…",
+  "stopConfirm": "停止此环境中的所有进程（包括终端会话）？未保存的工作可能丢失。"
 }

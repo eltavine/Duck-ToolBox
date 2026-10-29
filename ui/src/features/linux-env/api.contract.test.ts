@@ -7,7 +7,7 @@ import { afterEach, describe, expect, it } from "vitest"
 import { duckd, featureManifest } from "@/core/duckd"
 import { CONTRACT, hasDuckd, installHost } from "@/core/testing/host"
 import type { Host } from "@/core/testing/host"
-import { linuxApi, configSchema } from "./api"
+import { linuxApi, configSchema, viewSchema } from "./api"
 let host: Host | undefined
 let temporary: string | undefined
 afterEach(() => {
@@ -74,5 +74,34 @@ describe("Linux environment configuration", () => {
     expect(
       configSchema.safeParse({ ...config, dns: ["1.1.1.1", "2606:4700:4700::1111"] }).success,
     ).toBe(true)
+  })
+})
+
+describe("Linux environment status contract", () => {
+  const view = {
+    environment: {
+      id: "debian",
+      instance: "a".repeat(64),
+      archive_sha256: "b".repeat(64),
+      expanded_bytes: 4096,
+      entries: 3,
+      created_at: 1,
+      config: { name: "Debian", auto_start: false, dns: [], services: [] },
+    },
+    revision: "c".repeat(64),
+    phase: "stopped",
+    message: "",
+    runtime: null,
+  }
+  it("rejects unknown lifecycle states and malformed identities before exposing actions", () => {
+    expect(viewSchema.safeParse(view).success).toBe(true)
+    expect(viewSchema.safeParse({ ...view, phase: "ready" }).success).toBe(false)
+    expect(viewSchema.safeParse({ ...view, revision: "bad" }).success).toBe(false)
+    expect(
+      viewSchema.safeParse({
+        ...view,
+        environment: { ...view.environment, expanded_bytes: 16 * 2 ** 30 + 1 },
+      }).success,
+    ).toBe(false)
   })
 })

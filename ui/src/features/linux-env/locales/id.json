@@ -52,7 +52,8 @@
     "stopping": "Menghentikan",
     "stopped": "Berhenti",
     "unknown": "Status tidak diketahui",
-    "validating": "Memvalidasi arsip"
+    "validating": "Memvalidasi arsip",
+    "cancelled": "Dibatalkan"
   },
   "errors": {
     "invalid_input": "Periksa nama, alamat DNS, dan ID layanan. ID harus valid dan unik; perintah tidak boleh kosong.",
@@ -64,7 +65,16 @@
     "runtime_failed": "Lingkungan Linux: Gagal",
     "unsupported_environment": "Perubahan memerlukan Android ARM64 dengan ROOT. Pemeriksaan tetap tersedia.",
     "confirmation_required": "Konfirmasikan operasi terlebih dahulu.",
-    "linux_env_error": "Lingkungan Linux: Gagal"
+    "linux_env_error": "Lingkungan Linux: Gagal",
+    "operation_timeout": "Waktu impor rootfs habis.",
+    "cancelled": "Dibatalkan",
+    "operation_unknown": "Hasil tidak diketahui. Muat ulang status.",
+    "interrupted": "Lingkungan Linux: Status tidak diketahui"
   },
-  "nameHelp": "1–120 byte UTF-8, tanpa karakter kontrol."
+  "nameHelp": "1–120 byte UTF-8, tanpa karakter kontrol.",
+  "disabled": "Nonaktif",
+  "defaultDns": "Pertahankan konfigurasi DNS rootfs",
+  "noServices": "Belum ada layanan dikonfigurasi.",
+  "inspectionPending": "Menghitung SHA-256 arsip…",
+  "stopConfirm": "Hentikan semua proses lingkungan ini, termasuk sesi terminal? Pekerjaan yang belum disimpan dapat hilang."
 }

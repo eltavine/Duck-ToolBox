@@ -29,32 +29,36 @@ const status = useQuery({
     const data = query.state.data
     return data &&
       ((data.job && !["done", "failed"].includes(data.job.phase)) ||
-        data.environments.some((v) => ["starting", "stopping"].includes(v.phase)))
-      ? 1500
+        data.environments.some((v) =>
+          ["starting", "running", "stopping", "unknown"].includes(v.phase),
+        ))
+      ? data.job && !["done", "failed"].includes(data.job.phase)
+        ? 1500
+        : 3000
       : false
   },
 })
 const allowed = computed(
   () => !!status.data.value?.supported && !status.data.value.busy && !status.isError.value,
 )
+type Pending = {
+  action: "start" | "stop" | "remove" | "save"
+  view: EnvironmentView
+  config?: Config
+}
 const dialog = ref(false),
-  pending = ref<{
-    action: "start" | "stop" | "remove" | "save"
-    view: EnvironmentView
-    config?: Config
-  } | null>(null)
+  pending = ref<Pending | null>(null)
 const logs = ref<{ id: string; text: string } | null>(null)
 const refresh = () => client.invalidateQueries({ queryKey: ["linux-env"] })
 const operation = useMutation({
-  mutationFn: async () => {
-    const request = pending.value
-    if (!request) return
+  onError: () => undefined,
+  mutationFn: async (request: Pending) => {
     if (request.action === "save" && request.config)
       await linuxApi.save(request.view, request.config)
     else if (request.action !== "save") await linuxApi.action(request.action, request.view)
   },
-  onSuccess: () => {
-    if (pending.value?.action === "save") notifySuccess(t("done"))
+  onSuccess: (_data, request) => {
+    if (request.action === "save") notifySuccess(t("done"))
   },
   onSettled: refresh,
 })
@@ -82,7 +86,7 @@ function request(
 }
 function confirmOperation() {
   accepted = true
-  operation.mutate()
+  if (pending.value) operation.mutate(pending.value)
 }
 function focus(event: Event) {
   event.preventDefault()
@@ -138,7 +142,11 @@ function terminal(id: string) {
     >
     <SectionCard v-if="status.data.value?.job" :title="t('import')">
       <p role="status">
-        {{ dynamic(`phase.${status.data.value.job.phase}`, status.data.value.job.phase) }}
+        {{
+          status.data.value.job.code === "cancelled"
+            ? t("phase.cancelled")
+            : dynamic(`phase.${status.data.value.job.phase}`, status.data.value.job.phase)
+        }}
       </p>
       <KeyValueList
         :rows="[
@@ -254,6 +262,8 @@ function terminal(id: string) {
           v-if="logs?.id === view.environment.id"
           class="bg-muted mt-4 max-h-96 max-w-full overflow-auto rounded-lg p-4 text-xs"
           dir="ltr"
+          tabindex="0"
+          :aria-label="t('logs')"
           >{{ logs.text || t("empty") }}</pre>
       </SectionCard>
     </template>
@@ -261,7 +271,13 @@ function terminal(id: string) {
       v-model:open="dialog"
       :title="t(pending?.action ?? 'start')"
       :confirm-label="t(pending?.action ?? 'start')"
-      :description="pending?.action === 'remove' ? t('deleteConfirm') : t('trust')"
+      :description="
+        pending?.action === 'remove'
+          ? t('deleteConfirm')
+          : pending?.action === 'stop'
+            ? t('stopConfirm')
+            : t('trust')
+      "
       :destructive="pending?.action === 'remove' || pending?.action === 'stop'"
       @confirm="confirmOperation"
       @close-auto-focus="focus"
@@ -276,16 +292,27 @@ function terminal(id: string) {
       />
       <template v-if="pending?.action === 'save' && pending.config">
         <p class="mt-4 text-sm">{{ t("configHelp") }}</p>
-        <p v-if="pending.config.auto_start" class="mt-3 font-medium">{{ t("boot") }}</p>
-        <p v-if="pending.config.dns.length" class="mt-3 text-sm" dir="ltr">
-          DNS: {{ pending.config.dns.join(", ") }}
-        </p>
+        <KeyValueList
+          class="mt-3"
+          :rows="[
+            { label: t('boot'), value: pending.config.auto_start ? t('enabled') : t('disabled') },
+            {
+              label: t('dns'),
+              value: pending.config.dns.length ? pending.config.dns.join(', ') : t('defaultDns'),
+              mono: !!pending.config.dns.length,
+            },
+          ]"
+        />
+        <p v-if="!pending.config.services.length" class="mt-3 text-sm">{{ t("noServices") }}</p>
         <div v-for="service in pending.config.services" :key="service.id" class="mt-3 text-sm">
-          <span class="font-mono" dir="ltr">{{ service.id }}</span
-          ><span v-if="service.enabled"> · {{ t("enabled") }}</span>
-          <pre class="bg-muted mt-1 max-h-48 overflow-auto rounded-lg p-3 text-xs" dir="ltr">{{
-            service.command
-          }}</pre>
+          <bdi class="font-mono" dir="ltr">{{ service.id }}</bdi
+          ><span> · {{ service.enabled ? t("enabled") : t("disabled") }}</span>
+          <pre
+            class="bg-muted mt-1 max-h-48 overflow-auto rounded-lg p-3 text-xs"
+            dir="ltr"
+            tabindex="0"
+            :aria-label="t('command')"
+            >{{ service.command }}</pre>
         </div>
       </template></ConfirmDialog
     >

@@ -52,7 +52,8 @@
     "stopping": "중지 중",
     "stopped": "중지됨",
     "unknown": "상태 알 수 없음",
-    "validating": "압축 파일 검사 중"
+    "validating": "압축 파일 검사 중",
+    "cancelled": "취소됨"
   },
   "errors": {
     "invalid_input": "이름, DNS 주소, 서비스 ID를 확인하세요. ID는 유효하고 고유해야 하며 명령은 비어 있을 수 없습니다.",
@@ -64,7 +65,16 @@
     "runtime_failed": "Linux 환경: 실패",
     "unsupported_environment": "변경하려면 Android ARM64 ROOT가 필요합니다. 조회와 검사는 계속 사용할 수 있습니다.",
     "confirmation_required": "먼저 작업을 확인하세요.",
-    "linux_env_error": "Linux 환경: 실패"
+    "linux_env_error": "Linux 환경: 실패",
+    "operation_timeout": "rootfs 가져오기 시간이 초과되었습니다.",
+    "cancelled": "취소됨",
+    "operation_unknown": "결과를 알 수 없습니다. 상태를 새로고침하세요.",
+    "interrupted": "Linux 환경: 상태 알 수 없음"
   },
-  "nameHelp": "UTF-8 기준 1~120바이트이며 제어 문자는 사용할 수 없습니다."
+  "nameHelp": "UTF-8 기준 1~120바이트이며 제어 문자는 사용할 수 없습니다.",
+  "disabled": "사용 안 함",
+  "defaultDns": "rootfs DNS 설정 유지",
+  "noServices": "설정된 서비스가 없습니다.",
+  "inspectionPending": "압축 파일 SHA-256 계산 중…",
+  "stopConfirm": "터미널 세션을 포함하여 이 환경의 모든 프로세스를 중지할까요? 저장하지 않은 작업은 사라질 수 있습니다."
 }

@@ -130,6 +130,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ env.TARGET }}
+          components: clippy
       - uses: Swatinem/rust-cache@v2
       - name: Build backend binary
         env:
@@ -139,6 +140,7 @@ jobs:
           export CXX_aarch64_linux_android="${TOOLCHAIN}/${TARGET}${ANDROID_API_LEVEL}-clang++"
           export AR_aarch64_linux_android="${TOOLCHAIN}/llvm-ar"
           export CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER="${CC_aarch64_linux_android}"
+          cargo clippy --locked --package duck-linux-env --all-targets --target "${TARGET}" -- -D warnings
           cargo build --locked --release --package duckd --target "${TARGET}"
       - name: Upload backend binary
         uses: actions/upload-artifact@v7

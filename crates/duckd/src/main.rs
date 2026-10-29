@@ -124,7 +124,7 @@ fn emit(ctx: &Context, result: CommandResult) {
     // History reads must not mutate the data being paginated.
     if !matches!(
         value["command"].as_str(),
-        Some("system.log" | "kernel-modules.worker" | "zram.worker")
+        Some("system.log" | "kernel-modules.worker" | "zram.worker" | "linux-env.status")
     ) {
         duck_core::log::append(&ctx.paths, &value);
     }

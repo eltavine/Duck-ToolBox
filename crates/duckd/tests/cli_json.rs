@@ -521,3 +521,12 @@ fn linux_terminal_and_internal_workers_bypass_the_json_dispatcher() {
         assert!(!output.stderr.is_empty());
     }
 }
+
+#[test]
+fn linux_status_polling_does_not_fill_operation_history() {
+    let environment = env("linux-status-history");
+    for _ in 0..2 {
+        assert_eq!(run(&environment, &["linux-env", "status"])["ok"], true);
+    }
+    assert!(!environment.data.join("var/logs/duckd.log").exists());
+}

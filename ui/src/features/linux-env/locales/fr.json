@@ -52,7 +52,8 @@
     "stopping": "Arrêt en cours",
     "stopped": "Arrêté",
     "unknown": "État inconnu",
-    "validating": "Validation de l’archive"
+    "validating": "Validation de l’archive",
+    "cancelled": "Annulé"
   },
   "errors": {
     "invalid_input": "Vérifiez le nom, les adresses DNS et les identifiants des services. Les identifiants doivent être valides et uniques ; les commandes ne peuvent pas être vides.",
@@ -64,7 +65,16 @@
     "runtime_failed": "Environnements Linux: Échec",
     "unsupported_environment": "Les modifications nécessitent Android ARM64 avec ROOT. La consultation reste disponible.",
     "confirmation_required": "Confirmez d’abord l’opération.",
-    "linux_env_error": "Environnements Linux: Échec"
+    "linux_env_error": "Environnements Linux: Échec",
+    "operation_timeout": "Le délai d’importation du rootfs a expiré.",
+    "cancelled": "Annulé",
+    "operation_unknown": "Résultat inconnu. Actualisez l’état.",
+    "interrupted": "Environnements Linux: État inconnu"
   },
-  "nameHelp": "1 à 120 octets UTF-8, sans caractères de contrôle."
+  "nameHelp": "1 à 120 octets UTF-8, sans caractères de contrôle.",
+  "disabled": "Désactivé",
+  "defaultDns": "Conserver la configuration DNS du rootfs",
+  "noServices": "Aucun service configuré.",
+  "inspectionPending": "Calcul du SHA-256 de l’archive…",
+  "stopConfirm": "Arrêter tous les processus de cet environnement, y compris les sessions de terminal ? Le travail non enregistré peut être perdu."
 }

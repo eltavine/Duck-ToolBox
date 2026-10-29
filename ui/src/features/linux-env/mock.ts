@@ -31,6 +31,7 @@ let job: {
 } | null = null
 let imported: EnvironmentView | null = null
 let ticks = 0
+let statusCalls = 0
 function target(input: unknown) {
   const request = input as { id: string; revision: string; confirmed: boolean }
   if (!request.confirmed) throw new MockFailure("confirmation_required", "Confirm first")
@@ -43,6 +44,18 @@ const mock: MockModule = {
   feature: { id: "linux-env", contract: 1 },
   handlers: {
     "linux-env.status": () => {
+      statusCalls++
+      if (scenario === "exited" && environments[0])
+        environments[0].phase = statusCalls >= 2 ? "unknown" : "running"
+      if (scenario === "cancelled" && !job)
+        job = {
+          token: digest(),
+          phase: "failed",
+          entries: 0,
+          bytes: 0,
+          code: "cancelled",
+          message: "Import cancelled",
+        }
       if (job && !["done", "failed"].includes(job.phase) && ++ticks >= 2) {
         job = { ...job, phase: "done", entries: 12000, bytes: 1073741824 }
         if (imported) environments.push(imported)
@@ -56,7 +69,10 @@ const mock: MockModule = {
         job,
       }
     },
-    "linux-env.inspect": (args) => ({ path: args[0], bytes: 33554432, sha256: "ab".repeat(32) }),
+    "linux-env.inspect": (args) => {
+      if (args[0]?.includes("missing")) throw new MockFailure("invalid_archive", "No such archive")
+      return { path: args[0], bytes: 33554432, sha256: "ab".repeat(32) }
+    },
     "linux-env.import": (_args, _flags, input) => {
       const request = input as { id: string; config: unknown; confirmed: boolean }
       if (!request.confirmed) throw new MockFailure("confirmation_required", "Confirm first")

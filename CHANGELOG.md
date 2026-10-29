@@ -4,6 +4,11 @@
 
 ### Linux environments
 
+- Preserve cancellation codes during decompression, handle concurrent cgroup removal,
+  and verify the final init identity and supervisor lease before confirming stop.
+- Drain final log output, refresh active runtime state without filling operation history,
+  and make inspection feedback, cancelled imports and disabled settings explicit.
+
 - Import trusted ARM64 rootfs archives with inspected SHA-256 verification, bounded
   extraction, asynchronous progress, cancellation and private staging.
 - Manage private mounts, terminal entry, foreground services, DNS, bounded logs and

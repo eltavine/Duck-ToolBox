@@ -107,6 +107,8 @@ pub fn run(ctx: &Context, id: &str, instance: &str) -> Result<()> {
                 native::signal(&init_fd, libc::SIGKILL)?;
             }
             if let Some(status) = child.try_wait()? {
+                stdout.drain_limit(MAX_LOG as usize)?;
+                stderr.drain_limit(MAX_LOG as usize)?;
                 ensure!(
                     stopping.is_some(),
                     fail(
@@ -169,20 +171,49 @@ impl Capture {
         })
     }
     fn drain(&mut self) -> Result<()> {
+        self.drain_limit(131072)
+    }
+    fn drain_limit(&mut self, budget: usize) -> Result<()> {
         let mut bytes = [0u8; 8192];
-        match self.reader.read(&mut bytes) {
-            Ok(count) => {
-                let keep = (MAX_LOG.saturating_sub(self.total) as usize).min(count);
-                self.file.write_all(&bytes[..keep])?;
-                self.total = self.total.saturating_add(count as u64);
+        let mut read = 0;
+        while read < budget {
+            match self.reader.read(&mut bytes) {
+                Ok(0) => break,
+                Ok(count) => {
+                    let keep = (MAX_LOG.saturating_sub(self.total) as usize).min(count);
+                    self.file.write_all(&bytes[..keep])?;
+                    self.total = self.total.saturating_add(count as u64);
+                    read += count;
+                }
+                Err(e) if e.kind() == std::io::ErrorKind::Interrupted => break,
+                Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => break,
+                Err(e) => return Err(e.into()),
             }
-            Err(e)
-                if matches!(
-                    e.kind(),
-                    std::io::ErrorKind::WouldBlock | std::io::ErrorKind::Interrupted
-                ) => {}
-            Err(e) => return Err(e.into()),
         }
         Ok(())
+    }
+}
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn final_output_is_retained_up_to_the_cap_without_unbounded_reads() {
+        let root = tempfile::tempdir().unwrap();
+        let path = root.path().join("log");
+        let mut output = vec![b'a'; 100000];
+        output.extend_from_slice(b"last line\n");
+        let mut capture = Capture {
+            reader: Box::new(std::io::Cursor::new(output.clone())),
+            file: store::open(&path, true).unwrap(),
+            total: 0,
+        };
+        capture.drain_limit(MAX_LOG as usize).unwrap();
+        assert_eq!(std::fs::read(&path).unwrap(), output);
+        capture.reader = Box::new(std::io::Cursor::new(vec![b'b'; 2 * MAX_LOG as usize]));
+        for _ in 0..20 {
+            capture.drain().unwrap();
+        }
+        assert_eq!(std::fs::metadata(path).unwrap().len(), MAX_LOG);
+        assert!(capture.total > MAX_LOG);
     }
 }

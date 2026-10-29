@@ -52,7 +52,8 @@
     "stopping": "停止処理中",
     "stopped": "停止済み",
     "unknown": "状態不明",
-    "validating": "アーカイブを確認中"
+    "validating": "アーカイブを確認中",
+    "cancelled": "キャンセル済み"
   },
   "errors": {
     "invalid_input": "名前、DNS アドレス、サービス ID を確認してください。ID は有効かつ一意で、コマンドは空にできません。",
@@ -64,7 +65,16 @@
     "runtime_failed": "Linux 環境: 失敗",
     "unsupported_environment": "変更には Android ARM64 の ROOT が必要です。確認は引き続き利用できます。",
     "confirmation_required": "先に操作を確認してください。",
-    "linux_env_error": "Linux 環境: 失敗"
+    "linux_env_error": "Linux 環境: 失敗",
+    "operation_timeout": "rootfs のインポートがタイムアウトしました。",
+    "cancelled": "キャンセル済み",
+    "operation_unknown": "結果は不明です。状態を更新してください。",
+    "interrupted": "Linux 環境: 状態不明"
   },
-  "nameHelp": "UTF-8 で 1～120 バイト。制御文字は使えません。"
+  "nameHelp": "UTF-8 で 1～120 バイト。制御文字は使えません。",
+  "disabled": "無効",
+  "defaultDns": "rootfs の DNS 設定を保持",
+  "noServices": "サービスは設定されていません。",
+  "inspectionPending": "アーカイブの SHA-256 を計算中…",
+  "stopConfirm": "ターミナルセッションを含む、この環境の全プロセスを停止しますか？未保存の作業は失われる場合があります。"
 }

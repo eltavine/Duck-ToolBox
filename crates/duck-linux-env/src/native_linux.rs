@@ -15,6 +15,8 @@ const _: () = {
     assert!(libc::SYS_unshare == 97);
     assert!(libc::SYS_setns == 268);
     assert!(libc::SYS_chroot == 51);
+    assert!(libc::SYS_mount == 40);
+    assert!(libc::SYS_prctl == 167);
 };
 pub fn pidfd(pid: u32) -> Result<File> {
     let fd = unsafe { libc::syscall(libc::SYS_pidfd_open, pid, 0) };
@@ -39,7 +41,13 @@ pub fn signal(file: &File, signal: i32) -> Result<()> {
             0,
         )
     };
-    ensure!(result == 0, io::Error::last_os_error());
+    if result != 0 {
+        let error = io::Error::last_os_error();
+        ensure!(
+            error.raw_os_error() == Some(libc::ESRCH) && exited(file),
+            error
+        );
+    }
     Ok(())
 }
 pub fn exited(file: &File) -> bool {
@@ -48,7 +56,9 @@ pub fn exited(file: &File) -> bool {
         events: libc::POLLIN,
         revents: 0,
     };
-    unsafe { libc::poll(&mut event, 1, 0) > 0 }
+    unsafe {
+        libc::poll(&mut event, 1, 0) > 0 && event.revents & (libc::POLLIN | libc::POLLHUP) != 0
+    }
 }
 pub fn isolate() -> Result<bool> {
     ensure!(
@@ -119,7 +129,14 @@ impl ChildSetup {
     /// Called only from Command::pre_exec: no allocation, locks or Rust destructors.
     pub fn apply(&self, mount_proc: bool) -> io::Result<()> {
         let result = unsafe {
-            if libc::prctl(libc::PR_SET_PDEATHSIG, libc::SIGKILL) != 0 {
+            if libc::prctl(
+                libc::PR_SET_PDEATHSIG,
+                libc::SIGKILL as libc::c_ulong,
+                0 as libc::c_ulong,
+                0 as libc::c_ulong,
+                0 as libc::c_ulong,
+            ) != 0
+            {
                 return Err(io::Error::last_os_error());
             }
             let mut event = libc::pollfd {
@@ -130,10 +147,10 @@ impl ChildSetup {
             if libc::poll(&mut event, 1, 0) != 0 {
                 return Err(io::Error::from_raw_os_error(libc::ESRCH));
             }
-            if let Some(scope) = &self.scope {
-                if libc::write(scope.as_raw_fd(), c"0\n".as_ptr().cast(), 2) != 2 {
-                    return Err(io::Error::last_os_error());
-                }
+            if let Some(scope) = &self.scope
+                && libc::write(scope.as_raw_fd(), c"0\n".as_ptr().cast(), 2) != 2
+            {
+                return Err(io::Error::last_os_error());
             }
             let mut signals = std::mem::zeroed::<libc::sigset_t>();
             libc::sigemptyset(&mut signals);

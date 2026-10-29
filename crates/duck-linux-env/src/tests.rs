@@ -299,7 +299,8 @@ fn extraction_checks_interruption_before_reading_payload() {
         &|| Err(crate::fail("cancelled", "import cancelled")),
         |_, _, _| Ok(()),
     );
-    assert!(result.is_err());
+    let error = result.unwrap_err();
+    assert_eq!(crate::code_of(&error), "cancelled", "{error:#}");
     assert!(fs::read_dir(out).unwrap().next().is_none());
 }
 

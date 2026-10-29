@@ -52,7 +52,8 @@
     "stopping": "Wird gestoppt",
     "stopped": "Gestoppt",
     "unknown": "Status unbekannt",
-    "validating": "Archiv wird validiert"
+    "validating": "Archiv wird validiert",
+    "cancelled": "Abgebrochen"
   },
   "errors": {
     "invalid_input": "Name, DNS-Adressen und Dienst-IDs prüfen. IDs müssen gültig und eindeutig sein; Befehle dürfen nicht leer sein.",
@@ -64,7 +65,16 @@
     "runtime_failed": "Linux-Umgebungen: Fehlgeschlagen",
     "unsupported_environment": "Änderungen erfordern Android ARM64 mit ROOT. Die Ansicht bleibt verfügbar.",
     "confirmation_required": "Aktion zuerst bestätigen.",
-    "linux_env_error": "Linux-Umgebungen: Fehlgeschlagen"
+    "linux_env_error": "Linux-Umgebungen: Fehlgeschlagen",
+    "operation_timeout": "Zeitüberschreitung beim Rootfs-Import.",
+    "cancelled": "Abgebrochen",
+    "operation_unknown": "Ergebnis unbekannt. Zustand aktualisieren.",
+    "interrupted": "Linux-Umgebungen: Status unbekannt"
   },
-  "nameHelp": "1–120 UTF-8-Bytes, keine Steuerzeichen."
+  "nameHelp": "1–120 UTF-8-Bytes, keine Steuerzeichen.",
+  "disabled": "Deaktiviert",
+  "defaultDns": "DNS-Konfiguration des Rootfs behalten",
+  "noServices": "Keine Dienste konfiguriert.",
+  "inspectionPending": "SHA-256 des Archivs wird berechnet…",
+  "stopConfirm": "Alle Prozesse dieser Umgebung einschließlich Terminalsitzungen stoppen? Ungespeicherte Arbeit kann verloren gehen."
 }

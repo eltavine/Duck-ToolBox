@@ -52,7 +52,8 @@
     "stopping": "Stopping",
     "stopped": "Stopped",
     "unknown": "State unknown",
-    "validating": "Validating archive"
+    "validating": "Validating archive",
+    "cancelled": "Cancelled"
   },
   "errors": {
     "invalid_input": "Invalid environment configuration.",
@@ -64,7 +65,16 @@
     "runtime_failed": "The Linux environment stopped unexpectedly.",
     "unsupported_environment": "Changes require Android ARM64 ROOT.",
     "confirmation_required": "Confirm this operation first.",
-    "linux_env_error": "The Linux environment operation failed."
+    "linux_env_error": "The Linux environment operation failed.",
+    "operation_timeout": "The rootfs import timed out.",
+    "cancelled": "Cancelled",
+    "operation_unknown": "Outcome unknown. Refresh before proceeding.",
+    "interrupted": "Environment state could not be verified."
   },
-  "nameHelp": "1–120 UTF-8 bytes; no control characters."
+  "nameHelp": "1–120 UTF-8 bytes; no control characters.",
+  "disabled": "Disabled",
+  "defaultDns": "Keep rootfs resolver configuration",
+  "noServices": "No services configured.",
+  "inspectionPending": "Calculating archive SHA-256…",
+  "stopConfirm": "Stop all processes in this environment, including terminal sessions? Unsaved work may be lost."
 }

@@ -123,7 +123,12 @@ struct CheckedReader<'a> {
 impl Read for CheckedReader<'_> {
     fn read(&mut self, buffer: &mut [u8]) -> std::io::Result<usize> {
         if self.last.elapsed() >= Duration::from_millis(100) {
-            (self.interrupt)().map_err(std::io::Error::other)?;
+            (self.interrupt)().map_err(|error| {
+                std::io::Error::other(crate::Error {
+                    code: crate::code_of(&error),
+                    message: format!("{error:#}"),
+                })
+            })?;
             self.last = Instant::now();
         }
         let limit = buffer.len().min(131072);

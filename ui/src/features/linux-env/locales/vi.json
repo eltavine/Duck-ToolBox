@@ -52,7 +52,8 @@
     "stopping": "Đang dừng",
     "stopped": "Đã dừng",
     "unknown": "Không rõ trạng thái",
-    "validating": "Đang kiểm tra tệp"
+    "validating": "Đang kiểm tra tệp",
+    "cancelled": "Đã hủy"
   },
   "errors": {
     "invalid_input": "Kiểm tra tên, địa chỉ DNS và ID dịch vụ. ID phải hợp lệ và duy nhất; lệnh không được để trống.",
@@ -64,7 +65,16 @@
     "runtime_failed": "Môi trường Linux: Thất bại",
     "unsupported_environment": "Thay đổi yêu cầu Android ARM64 có ROOT. Vẫn có thể xem và kiểm tra.",
     "confirmation_required": "Hãy xác nhận thao tác trước.",
-    "linux_env_error": "Môi trường Linux: Thất bại"
+    "linux_env_error": "Môi trường Linux: Thất bại",
+    "operation_timeout": "Đã hết thời gian nhập rootfs.",
+    "cancelled": "Đã hủy",
+    "operation_unknown": "Chưa rõ kết quả. Hãy làm mới trạng thái.",
+    "interrupted": "Môi trường Linux: Không rõ trạng thái"
   },
-  "nameHelp": "1–120 byte UTF-8, không có ký tự điều khiển."
+  "nameHelp": "1–120 byte UTF-8, không có ký tự điều khiển.",
+  "disabled": "Tắt",
+  "defaultDns": "Giữ cấu hình DNS của rootfs",
+  "noServices": "Chưa cấu hình dịch vụ.",
+  "inspectionPending": "Đang tính SHA-256 của tệp…",
+  "stopConfirm": "Dừng mọi tiến trình trong môi trường, gồm các phiên terminal? Công việc chưa lưu có thể bị mất."
 }

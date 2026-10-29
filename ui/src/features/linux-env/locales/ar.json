@@ -52,7 +52,8 @@
     "stopping": "جارٍ الإيقاف",
     "stopped": "متوقف",
     "unknown": "الحالة غير معروفة",
-    "validating": "فحص الأرشيف"
+    "validating": "فحص الأرشيف",
+    "cancelled": "أُلغي"
   },
   "errors": {
     "invalid_input": "تحقق من الاسم وعناوين DNS ومعرّفات الخدمات. يجب أن تكون المعرّفات صالحة وفريدة، والأوامر غير فارغة.",
@@ -64,7 +65,16 @@
     "runtime_failed": "بيئات Linux: فشل",
     "unsupported_environment": "تتطلب التغييرات Android ARM64 بصلاحيات ROOT. يظل الفحص متاحًا.",
     "confirmation_required": "أكّد العملية أولًا.",
-    "linux_env_error": "بيئات Linux: فشل"
+    "linux_env_error": "بيئات Linux: فشل",
+    "operation_timeout": "انتهت مهلة استيراد rootfs.",
+    "cancelled": "أُلغي",
+    "operation_unknown": "النتيجة غير معروفة. حدّث الحالة أولًا.",
+    "interrupted": "بيئات Linux: الحالة غير معروفة"
   },
-  "nameHelp": "من 1 إلى 120 بايت UTF-8، دون محارف تحكم."
+  "nameHelp": "من 1 إلى 120 بايت UTF-8، دون محارف تحكم.",
+  "disabled": "معطّل",
+  "defaultDns": "الاحتفاظ بإعدادات DNS في rootfs",
+  "noServices": "لم تُضبط أي خدمات.",
+  "inspectionPending": "جارٍ حساب SHA-256 للأرشيف…",
+  "stopConfirm": "هل تريد إيقاف جميع عمليات هذه البيئة، بما فيها جلسات الطرفية؟ قد يُفقد العمل غير المحفوظ."
 }

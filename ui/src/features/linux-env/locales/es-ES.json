@@ -52,7 +52,8 @@
     "stopping": "Deteniendo",
     "stopped": "Detenido",
     "unknown": "Estado desconocido",
-    "validating": "Validando archivo"
+    "validating": "Validando archivo",
+    "cancelled": "Cancelado"
   },
   "errors": {
     "invalid_input": "Revisa el nombre, las direcciones DNS y los ID de servicio. Los ID deben ser válidos y únicos; los comandos no pueden estar vacíos.",
@@ -64,7 +65,16 @@
     "runtime_failed": "Entornos Linux: Error",
     "unsupported_environment": "Los cambios requieren Android ARM64 con ROOT. La consulta sigue disponible.",
     "confirmation_required": "Confirma primero la operación.",
-    "linux_env_error": "Entornos Linux: Error"
+    "linux_env_error": "Entornos Linux: Error",
+    "operation_timeout": "Se agotó el tiempo de importación del rootfs.",
+    "cancelled": "Cancelado",
+    "operation_unknown": "Resultado desconocido. Actualiza el estado.",
+    "interrupted": "Entornos Linux: Estado desconocido"
   },
-  "nameHelp": "Entre 1 y 120 bytes UTF-8, sin caracteres de control."
+  "nameHelp": "Entre 1 y 120 bytes UTF-8, sin caracteres de control.",
+  "disabled": "Desactivado",
+  "defaultDns": "Conservar la configuración DNS del rootfs",
+  "noServices": "No hay servicios configurados.",
+  "inspectionPending": "Calculando SHA-256 del archivo…",
+  "stopConfirm": "¿Detener todos los procesos de este entorno, incluidas las sesiones de terminal? El trabajo sin guardar puede perderse."
 }

@@ -19,8 +19,21 @@ pub fn populated(instance: &str) -> Result<bool> {
     if !path.try_exists()? {
         return Ok(false);
     }
-    let events = fs::read_to_string(path.join("cgroup.events"))?;
-    match events.lines().find_map(|l| l.strip_prefix("populated ")) {
+    populated_at(&path)
+}
+fn populated_at(path: &std::path::Path) -> Result<bool> {
+    let events = match fs::read_to_string(path.join("cgroup.events")) {
+        Ok(events) => events,
+        Err(_) if !path.try_exists()? => return Ok(false),
+        Err(error) => return Err(error.into()),
+    };
+    let mut population = events.lines().filter_map(|l| l.strip_prefix("populated "));
+    let value = population.next();
+    ensure!(
+        population.next().is_none(),
+        fail("state_unavailable", "duplicate cgroup population state")
+    );
+    match value {
         Some("0") => Ok(false),
         Some("1") => Ok(true),
         _ => Err(fail("state_unavailable", "invalid cgroup population state")),
@@ -50,8 +63,10 @@ pub fn attach(instance: &str) -> Result<File> {
         .open(path(instance)?.join("cgroup.procs"))?)
 }
 pub fn kill(instance: &str) -> Result<()> {
-    if populated(instance)? {
-        fs::write(path(instance)?.join("cgroup.kill"), b"1\n")?;
+    if populated(instance)?
+        && let Err(error) = fs::write(path(instance)?.join("cgroup.kill"), b"1\n")
+    {
+        ensure!(!populated(instance)?, error);
     }
     Ok(())
 }
@@ -78,7 +93,32 @@ pub fn remove(instance: &str) -> Result<()> {
             fail("operation_busy", "environment cgroup is populated")
         );
         // Guest /sys is a non-recursive read-only bind; nested cgroups are not managed.
-        fs::remove_dir(path)?;
+        match fs::remove_dir(path) {
+            Ok(()) => {}
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+            Err(error) => return Err(error.into()),
+        }
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn removed_cgroups_are_empty_but_missing_or_invalid_events_are_not() {
+        let root = tempfile::tempdir().unwrap();
+        let path = root.path().join("scope");
+        assert!(!populated_at(&path).unwrap());
+        fs::create_dir(&path).unwrap();
+        assert!(populated_at(&path).is_err());
+        for value in ["populated 0\n", "populated 1\n"] {
+            fs::write(path.join("cgroup.events"), value).unwrap();
+            assert_eq!(populated_at(&path).unwrap(), value.contains('1'));
+        }
+        for value in ["", "populated 2\n", "populated 0\npopulated 1\n"] {
+            fs::write(path.join("cgroup.events"), value).unwrap();
+            assert!(populated_at(&path).is_err());
+        }
+    }
 }
