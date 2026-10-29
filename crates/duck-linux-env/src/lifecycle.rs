@@ -37,14 +37,18 @@ pub fn view(base: &Path, environment: Environment) -> Result<View> {
     let (phase, message) = match &runtime {
         Some(r) if r.instance == environment.instance => {
             r.config.validate()?;
-            if !busy
-                && (populated
-                    || r.init
-                        .as_ref()
-                        .map(native::alive)
-                        .transpose()?
-                        .unwrap_or(false))
-            {
+            let init_alive = r
+                .init
+                .as_ref()
+                .map(native::alive)
+                .transpose()?
+                .unwrap_or(false);
+            if busy && r.phase == "running" && !init_alive {
+                (
+                    "unknown".into(),
+                    "Guest init ended while the supervisor lease is still held".into(),
+                )
+            } else if !busy && (populated || init_alive) {
                 (
                     "unknown".into(),
                     "Guest processes remain after their supervisor ended".into(),
@@ -421,6 +425,9 @@ pub fn shell(ctx: &Context, id: &str) -> Result<i32> {
 pub fn logs(ctx: &Context, id: &str) -> Result<String> {
     let env = store::environment(&store::base(ctx), id)?;
     let dir = store::env_dir(&store::base(ctx), &env.id)?;
+    if !store::directory(&dir.join("logs"))? {
+        return Ok(String::new());
+    }
     let mut output = String::new();
     for name in ["stdout.log", "stderr.log"] {
         let path = dir.join("logs").join(name);

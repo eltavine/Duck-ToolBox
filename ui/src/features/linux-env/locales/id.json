@@ -76,5 +76,10 @@
   "defaultDns": "Pertahankan konfigurasi DNS rootfs",
   "noServices": "Belum ada layanan dikonfigurasi.",
   "inspectionPending": "Menghitung SHA-256 arsip…",
-  "stopConfirm": "Hentikan semua proses lingkungan ini, termasuk sesi terminal? Pekerjaan yang belum disimpan dapat hilang."
+  "stopConfirm": "Hentikan semua proses lingkungan ini, termasuk sesi terminal? Pekerjaan yang belum disimpan dapat hilang.",
+  "commandHelp": "1–8192 byte UTF-8, tanpa karakter NUL.",
+  "serviceIdHelp": "Gunakan ID unik: 1–32 huruf kecil, angka, atau tanda hubung; awali dengan huruf.",
+  "configChanged": "Konfigurasi tersimpan berubah di tempat lain. Draf Anda dipertahankan. Muat ulang untuk membuang draf dan memakai pengaturan tersimpan.",
+  "reloadConfig": "Muat ulang konfigurasi tersimpan",
+  "emptyLogs": "Belum ada keluaran tercatat."
 }

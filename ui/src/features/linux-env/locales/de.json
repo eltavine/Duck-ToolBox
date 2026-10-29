@@ -76,5 +76,10 @@
   "defaultDns": "DNS-Konfiguration des Rootfs behalten",
   "noServices": "Keine Dienste konfiguriert.",
   "inspectionPending": "SHA-256 des Archivs wird berechnet…",
-  "stopConfirm": "Alle Prozesse dieser Umgebung einschließlich Terminalsitzungen stoppen? Ungespeicherte Arbeit kann verloren gehen."
+  "stopConfirm": "Alle Prozesse dieser Umgebung einschließlich Terminalsitzungen stoppen? Ungespeicherte Arbeit kann verloren gehen.",
+  "commandHelp": "1–8192 UTF-8-Bytes, kein NUL-Zeichen.",
+  "serviceIdHelp": "Eindeutige ID: 1–32 Kleinbuchstaben, Ziffern oder Bindestriche; mit einem Buchstaben beginnen.",
+  "configChanged": "Die gespeicherte Konfiguration wurde andernorts geändert. Dein Entwurf bleibt erhalten. Neu laden verwirft ihn und übernimmt die gespeicherten Einstellungen.",
+  "reloadConfig": "Gespeicherte Konfiguration neu laden",
+  "emptyLogs": "Es wurde noch keine Ausgabe aufgezeichnet."
 }

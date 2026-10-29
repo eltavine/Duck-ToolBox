@@ -76,5 +76,10 @@
   "defaultDns": "Conserver la configuration DNS du rootfs",
   "noServices": "Aucun service configuré.",
   "inspectionPending": "Calcul du SHA-256 de l’archive…",
-  "stopConfirm": "Arrêter tous les processus de cet environnement, y compris les sessions de terminal ? Le travail non enregistré peut être perdu."
+  "stopConfirm": "Arrêter tous les processus de cet environnement, y compris les sessions de terminal ? Le travail non enregistré peut être perdu.",
+  "commandHelp": "1 à 8192 octets UTF-8, sans caractère NUL.",
+  "serviceIdHelp": "Utilisez un identifiant unique : 1 à 32 lettres minuscules, chiffres ou tirets, commençant par une lettre.",
+  "configChanged": "La configuration enregistrée a été modifiée ailleurs. Votre brouillon est conservé. Recharger l’abandonne et applique les réglages enregistrés.",
+  "reloadConfig": "Recharger la configuration enregistrée",
+  "emptyLogs": "Aucune sortie enregistrée."
 }

@@ -322,3 +322,95 @@ fn private_state_can_round_trip_maximum_escaped_service_commands() {
     let decoded: Config = load(&path).unwrap();
     assert_eq!(decoded.services[7].command, cfg.services[7].command);
 }
+
+#[test]
+fn arm64_core_dumps_are_not_executable_rootfs_programs() {
+    use std::os::unix::fs::PermissionsExt;
+    let temporary = tempfile::tempdir().unwrap();
+    let path = temporary.path().join("program");
+    let mut bytes = elf();
+    bytes[16..18].copy_from_slice(&4u16.to_le_bytes());
+    fs::write(&path, bytes).unwrap();
+    fs::set_permissions(&path, fs::Permissions::from_mode(0o755)).unwrap();
+    assert!(guest_path::arm64_executable(&path).is_err());
+}
+
+#[test]
+fn exited_process_states_do_not_block_recovery() {
+    let mut fields = vec!["0".to_string(); 20];
+    fields[19] = "4321".into();
+    for state in ["R", "S", "D", "T", "t", "I", "Z", "X", "x"] {
+        fields[0] = state.into();
+        let text = format!("42 (name with ) brackets) {}", fields.join(" "));
+        assert_eq!(
+            native::stat_alive(&text, 4321).unwrap(),
+            !["Z", "X", "x"].contains(&state)
+        );
+        assert!(!native::stat_alive(&text, 4322).unwrap());
+    }
+    assert!(native::stat_alive("42 (bad) ", 0).is_err());
+}
+#[test]
+fn private_directory_symlinks_and_files_are_not_environment_storage() {
+    use std::os::unix::fs::symlink;
+    let root = tempfile::tempdir().unwrap();
+    let actual = root.path().join("actual");
+    private_dir(&actual).unwrap();
+    let link = root.path().join("link");
+    symlink(&actual, &link).unwrap();
+    assert!(directory(&link).is_err());
+    assert!(list(&link).is_err());
+    let missing = root.path().join("missing");
+    assert!(!directory(&missing).unwrap());
+    symlink(&missing, root.path().join("dangling")).unwrap();
+    assert!(directory(&root.path().join("dangling")).is_err());
+    fs::write(root.path().join("file"), "data").unwrap();
+    assert!(directory(&root.path().join("file")).is_err());
+    symlink(&actual, actual.join("debian")).unwrap();
+    assert!(environment(&actual, "debian").is_err());
+}
+#[test]
+fn dynamic_programs_require_a_valid_guest_interpreter() {
+    use std::os::unix::fs::{PermissionsExt, symlink};
+    let root = tempfile::tempdir().unwrap();
+    fs::create_dir_all(root.path().join("bin")).unwrap();
+    fs::create_dir_all(root.path().join("lib")).unwrap();
+    let interpreter = b"/lib/ld.so\0";
+    let mut bytes = elf();
+    bytes.resize(176 + interpreter.len(), 0);
+    bytes[16..18].copy_from_slice(&3u16.to_le_bytes());
+    bytes[56..58].copy_from_slice(&2u16.to_le_bytes());
+    bytes[120..124].copy_from_slice(&3u32.to_le_bytes());
+    bytes[128..136].copy_from_slice(&176u64.to_le_bytes());
+    bytes[152..160].copy_from_slice(&(interpreter.len() as u64).to_le_bytes());
+    bytes[176..].copy_from_slice(interpreter);
+    let program = root.path().join("bin/sh");
+    fs::write(&program, &bytes).unwrap();
+    fs::set_permissions(&program, fs::Permissions::from_mode(0o755)).unwrap();
+    assert!(guest_path::validate_program(root.path(), Path::new("/bin/sh")).is_err());
+    let loader = root.path().join("lib/loader");
+    fs::write(&loader, elf()).unwrap();
+    fs::set_permissions(&loader, fs::Permissions::from_mode(0o755)).unwrap();
+    symlink("/lib/loader", root.path().join("lib/ld.so")).unwrap();
+    guest_path::validate_program(root.path(), Path::new("/bin/sh")).unwrap();
+    let mut wrong = elf();
+    wrong[18..20].copy_from_slice(&62u16.to_le_bytes());
+    fs::write(&loader, wrong).unwrap();
+    assert!(guest_path::validate_program(root.path(), Path::new("/bin/sh")).is_err());
+}
+
+#[test]
+fn executable_load_segments_cannot_exceed_file_or_memory_bounds() {
+    use std::os::unix::fs::PermissionsExt;
+    let root = tempfile::tempdir().unwrap();
+    let path = root.path().join("program");
+    for (offset, size, memory) in [(0u64, 129u64, 129u64), (0, 128, 127), (u64::MAX, 128, 128)] {
+        let mut bytes = elf();
+        bytes[72..80].copy_from_slice(&offset.to_le_bytes());
+        bytes[96..104].copy_from_slice(&size.to_le_bytes());
+        bytes[104..112].copy_from_slice(&memory.to_le_bytes());
+        fs::write(&path, bytes).unwrap();
+        fs::set_permissions(&path, fs::Permissions::from_mode(0o755)).unwrap();
+        assert!(guest_path::arm64_executable(&path).is_err());
+    }
+}

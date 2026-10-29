@@ -76,5 +76,10 @@
   "defaultDns": "Giữ cấu hình DNS của rootfs",
   "noServices": "Chưa cấu hình dịch vụ.",
   "inspectionPending": "Đang tính SHA-256 của tệp…",
-  "stopConfirm": "Dừng mọi tiến trình trong môi trường, gồm các phiên terminal? Công việc chưa lưu có thể bị mất."
+  "stopConfirm": "Dừng mọi tiến trình trong môi trường, gồm các phiên terminal? Công việc chưa lưu có thể bị mất.",
+  "commandHelp": "1–8192 byte UTF-8, không có ký tự NUL.",
+  "serviceIdHelp": "Dùng ID duy nhất: 1–32 chữ cái thường, chữ số hoặc dấu gạch nối; bắt đầu bằng chữ cái.",
+  "configChanged": "Cấu hình đã lưu thay đổi ở nơi khác. Bản nháp được giữ lại. Tải lại để bỏ bản nháp và dùng thiết lập đã lưu.",
+  "reloadConfig": "Tải lại cấu hình đã lưu",
+  "emptyLogs": "Chưa ghi nhận đầu ra."
 }

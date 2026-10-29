@@ -14,18 +14,23 @@ use std::{
 pub fn base(ctx: &Context) -> PathBuf {
     ctx.paths.var_dir.join("linux-env")
 }
+pub fn directory(path: &Path) -> Result<bool> {
+    match fs::symlink_metadata(path) {
+        Ok(metadata) => {
+            ensure!(
+                metadata.is_dir() && !metadata.file_type().is_symlink(),
+                fail("state_unavailable", "expected a real private directory")
+            );
+            Ok(true)
+        }
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(false),
+        Err(error) => Err(error.into()),
+    }
+}
 pub fn private_dir(path: &Path) -> Result<()> {
-    if !path.try_exists()? {
+    if !directory(path)? {
         fs::create_dir_all(path)?;
     }
-    let meta = fs::symlink_metadata(path)?;
-    ensure!(
-        meta.is_dir() && !meta.file_type().is_symlink(),
-        fail(
-            "state_unavailable",
-            "private directory is not a real directory"
-        )
-    );
     #[cfg(unix)]
     {
         use std::os::unix::fs::PermissionsExt;
@@ -107,7 +112,12 @@ pub fn env_dir(base: &Path, id: &str) -> Result<PathBuf> {
     Ok(base.join(id))
 }
 pub fn environment(base: &Path, id: &str) -> Result<Environment> {
-    let env: Environment = load(&env_dir(base, id)?.join("environment.json"))?;
+    let dir = env_dir(base, id)?;
+    ensure!(
+        directory(base)? && directory(&dir)?,
+        fail("state_unavailable", "environment directory is missing")
+    );
+    let env: Environment = load(&dir.join("environment.json"))?;
     env.validate()?;
     ensure!(
         env.id == id,
@@ -116,7 +126,7 @@ pub fn environment(base: &Path, id: &str) -> Result<Environment> {
     Ok(env)
 }
 pub fn list(base: &Path) -> Result<Vec<Environment>> {
-    if !base.try_exists()? {
+    if !directory(base)? {
         return Ok(vec![]);
     }
     let mut result = Vec::new();

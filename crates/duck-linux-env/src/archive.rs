@@ -235,7 +235,7 @@ pub fn extract(
     }
     drain_padding(archive.into_inner())?;
     for executable in ["/bin/sh", "/bin/sleep", "/bin/cat"] {
-        guest_path::arm64_executable(&guest_path::resolve(destination, Path::new(executable))?)?;
+        guest_path::validate_program(destination, Path::new(executable))?;
     }
     Ok((entries, expanded))
 }

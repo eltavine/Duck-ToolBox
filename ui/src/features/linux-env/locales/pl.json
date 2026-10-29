@@ -76,5 +76,10 @@
   "defaultDns": "Zachowaj konfigurację DNS rootfs",
   "noServices": "Nie skonfigurowano usług.",
   "inspectionPending": "Obliczanie SHA-256 archiwum…",
-  "stopConfirm": "Zatrzymać wszystkie procesy środowiska, w tym sesje terminala? Niezapisana praca może zostać utracona."
+  "stopConfirm": "Zatrzymać wszystkie procesy środowiska, w tym sesje terminala? Niezapisana praca może zostać utracona.",
+  "commandHelp": "1–8192 bajtów UTF-8, bez znaku NUL.",
+  "serviceIdHelp": "Użyj unikalnego ID: 1–32 małe litery, cyfry lub łączniki, zaczynając od litery.",
+  "configChanged": "Zapisana konfiguracja została zmieniona w innym miejscu. Szkic zachowano. Wczytaj ponownie, aby odrzucić szkic i użyć zapisanych ustawień.",
+  "reloadConfig": "Wczytaj zapisaną konfigurację",
+  "emptyLogs": "Nie zarejestrowano żadnego wyjścia."
 }

@@ -45,6 +45,12 @@ const mock: MockModule = {
   handlers: {
     "linux-env.status": () => {
       statusCalls++
+      if (scenario === "config-change" && environments[0]) {
+        if (statusCalls === 2) {
+          environments[0].environment.config.name = "Saved elsewhere"
+          environments[0].revision = digest()
+        }
+      }
       if (scenario === "exited" && environments[0])
         environments[0].phase = statusCalls >= 2 ? "unknown" : "running"
       if (scenario === "cancelled" && !job)
@@ -118,7 +124,10 @@ const mock: MockModule = {
       view.revision = digest()
       return view.environment
     },
-    "linux-env.logs": () => "stdout.log\n[web] starting\nListening on 8080\nstderr.log\n",
+    "linux-env.logs": () =>
+      scenario === "empty-logs"
+        ? ""
+        : "stdout.log\n[web] starting\nListening on 8080\nstderr.log\n",
   },
 }
 export default mock

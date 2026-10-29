@@ -19,7 +19,11 @@ Use a local `.tar` or `.tar.gz` root filesystem, such as an official ARM64 minim
 distribution image. Limits are 4 GiB for the source archive and any individual file,
 16 GiB of expanded payload, 250,000 headers and 16 environments. Required programs
 are executable ARM64 ELF files at `/bin/sh`, `/bin/sleep` and `/bin/cat`; symlinks
-within the guest are resolved for this check. A full disk image is unsupported.
+within the guest are resolved for this check. Programs must use executable or
+shared-object ELF types with executable load segments and valid file/memory bounds.
+When PT_INTERP is present, its interpreter must resolve to a valid ARM64 executable
+inside the guest. This does not validate all shared-library dependencies, CPU
+extensions or kernel ABI compatibility. A full disk image is unsupported.
 
 Inspection computes SHA-256. Import copies and verifies a private snapshot before
 extracting it, so changes after inspection fail verification. A raw header pass
@@ -69,8 +73,9 @@ supervisor and import-worker commands also bypass the asynchronous JSON dispatch
 Stopping signals a verified supervisor through a pidfd, then escalates if needed.
 It waits for the supervisor lease to end and rechecks the final init identity,
 including an init created after the stop request initially captured its state.
-Boot ID and process start time guard against PID reuse. With PID namespaces, init
-termination kills the namespace's descendants. Without them, guest children and
+Boot ID and process start time guard against PID reuse. Zombie and dead procfs
+states count as terminated even while their process records await reaping. With
+PID namespaces, init termination kills the namespace's descendants. Without them, guest children and
 terminal sessions join a per-instance cgroup before exec; `cgroup.kill` and
 `cgroup.events populated` provide final cleanup and verification. A supervisor
 crash can leave fallback descendants until Stop runs; this is reported as unknown
@@ -90,8 +95,11 @@ Host checks cover archive identity, confinement, gzip integrity, guest symlinks,
 configuration, private state and CLI/UI contracts. WebUI checks cover all 16 locales,
 RTL, 320px screens, large text and confirmation layouts. Runtime state refreshes
 while an environment is active and preserves unsaved configuration drafts; these
-status polls do not append to operation history. These do not establish
-compatibility with an arbitrary vendor kernel or root manager.
+status polls do not append to operation history. Configuration changes from another
+client preserve an edited draft and require explicit reload before saving against
+the new revision. Invalid fields retain localized constraints and accessible error
+associations; empty logs are distinct from an empty environment list. These checks
+do not establish compatibility with an arbitrary vendor kernel or root manager.
 
 The device integration script requires an explicitly selected **disposable rooted
 Android VM** and an independently verified local rootfs. It changes no SELinux mode:
@@ -111,8 +119,8 @@ Alpine minirootfs 3.23.7 aarch64 (SHA-256
 `7dcc7420bcc426a615c0512cc85b4a52e9f89df9c600b93ce78d22e0e9234891`). This kernel has
 `CONFIG_PID_NS` disabled, exercising the cgroup fallback. The script checks import,
 permissions, stale revision rejection, services, DNS, terminal entry, termination,
-supervisor loss, active terminal cleanup, concurrent status polling, boot replay
-protection and deletion. PID namespace mode and vendor
+zombie init recovery, supervisor loss, active terminal cleanup, concurrent status
+polling, boot replay protection and deletion. PID namespace mode and vendor
 KernelSU/APatch/Magisk policies still require device-specific verification.
 
 ## Technical references
@@ -122,7 +130,10 @@ KernelSU/APatch/Magisk policies still require device-specific verification.
   `mount=40`, `chroot=51`, `unshare=97`, `prctl=167`, `setns=268`,
   `pidfd_send_signal=424`, `pidfd_open=434`. Compile-time assertions check the used
   AArch64 ABI; ARM32 uses a different table and is not enabled for mutation.
-- [AOSP bionic syscall declarations](https://android.googlesource.com/platform/bionic/+/refs/heads/main/libc/SYSCALLS.TXT),
+- [AOSP ELF loading](https://android.googlesource.com/platform/bionic/+/refs/heads/main/linker/linker_phdr.cpp),
+  [ACK executable loading](https://android.googlesource.com/kernel/common/+/refs/heads/android14-6.1/fs/binfmt_elf.c),
+  [procfs process states](https://docs.kernel.org/filesystems/proc.html),
+  [AOSP bionic syscall declarations](https://android.googlesource.com/platform/bionic/+/refs/heads/main/libc/SYSCALLS.TXT),
   [ACK PID namespace teardown](https://android.googlesource.com/kernel/common/+/refs/heads/android14-6.1/kernel/pid_namespace.c),
   [namespace setup](https://android.googlesource.com/kernel/common/+/refs/heads/android14-6.1/kernel/nsproxy.c),
   [cgroup v2 interfaces](https://docs.kernel.org/admin-guide/cgroup-v2.html).

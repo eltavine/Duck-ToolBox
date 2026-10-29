@@ -4,6 +4,13 @@
 
 ### Linux environments
 
+- Reject ARM64 core dumps, malformed load segments and unavailable ELF interpreters
+  during import; resolve interpreter paths within the guest filesystem.
+- Distinguish zombie processes from live guests and reject symbolic links used as
+  private state directories.
+- Preserve edited drafts across external configuration changes, identify invalid fields
+  and distinguish empty logs from missing environments across all 16 locales.
+
 - Preserve cancellation codes during decompression, handle concurrent cgroup removal,
   and verify the final init identity and supervisor lease before confirming stop.
 - Drain final log output, refresh active runtime state without filling operation history,

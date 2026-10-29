@@ -123,6 +123,15 @@ def run(args):
                 session.communicate(timeout=10)
         assert device.status()["environments"][0]["phase"] == "stopped"
         assert device.shell(["test", "-e", f"/proc/{init}"], check=False).returncode != 0
+        # A stopped supervisor cannot reap init; its zombie must not be reported as running.
+        device.api(["start", "--stdin-json"], target)
+        state = device.wait(lambda s: s["environments"][0]["phase"] == "running")
+        runtime = state["environments"][0]["runtime"]
+        device.shell(["kill", "-STOP", str(runtime["supervisor"]["pid"])])
+        device.shell(["kill", "-KILL", str(runtime["init"]["pid"])])
+        device.wait(lambda s: s["environments"][0]["phase"] == "unknown")
+        device.api(["stop", "--stdin-json"], target)
+        assert device.status()["environments"][0]["phase"] == "stopped"
         # Simulate supervisor loss. cgroup fallback must report remaining descendants and stop them.
         device.api(["start", "--stdin-json"], target)
         state = device.wait(lambda s: s["environments"][0]["phase"] == "running")
@@ -166,7 +175,7 @@ def run(args):
         device.api(["remove", "--stdin-json"], target)
         assert device.status()["environments"] == []
         completed = True
-        print("Passed: import, private permissions, stale revision, services, DNS, active terminal cleanup, concurrent status polling, supervisor loss, boot replay and removal.")
+        print("Passed: import, private permissions, stale revision, services, DNS, active terminal cleanup, concurrent status polling, zombie init recovery, supervisor loss, boot replay and removal.")
         print("Kernel:", device.shell(["uname", "-r"]).stdout.strip())
         print("SELinux:", device.shell(["getenforce"]).stdout.strip())
         print("Rootfs SHA-256:", digest)

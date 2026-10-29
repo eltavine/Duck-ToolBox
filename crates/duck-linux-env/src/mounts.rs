@@ -52,6 +52,10 @@ pub fn setup(root: &Path, config: &Config, init: &[u8], pid_namespace: bool) -> 
         ensure!(rc == 0, std::io::Error::last_os_error());
         Ok(())
     }
+    ensure!(
+        crate::store::directory(root)?,
+        fail("invalid_archive", "rootfs must be a real directory")
+    );
     for name in ["dev", "proc", "sys", "run", "tmp"] {
         let path = root.join(name);
         if !path.try_exists()? {

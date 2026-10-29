@@ -76,5 +76,10 @@
   "defaultDns": "保留 rootfs 的 DNS 設定",
   "noServices": "尚未設定服務。",
   "inspectionPending": "正在計算封存檔 SHA-256…",
-  "stopConfirm": "停止此環境中的所有程序（包括終端機工作階段）？未儲存的工作可能遺失。"
+  "stopConfirm": "停止此環境中的所有程序（包括終端機工作階段）？未儲存的工作可能遺失。",
+  "commandHelp": "1–8192 個 UTF-8 位元組，不含 NUL 字元。",
+  "serviceIdHelp": "使用不重複的 ID：1–32 個小寫英文字母、數字或連字號，並以字母開頭。",
+  "configChanged": "已儲存的設定已在別處變更。目前草稿已保留。重新載入將捨棄草稿並使用已儲存的設定。",
+  "reloadConfig": "重新載入已儲存設定",
+  "emptyLogs": "尚無輸出記錄。"
 }

@@ -76,5 +76,10 @@
   "defaultDns": "Mantieni la configurazione DNS del rootfs",
   "noServices": "Nessun servizio configurato.",
   "inspectionPending": "Calcolo SHA-256 dell’archivio…",
-  "stopConfirm": "Arrestare tutti i processi dell’ambiente, incluse le sessioni del terminale? Il lavoro non salvato potrebbe andare perso."
+  "stopConfirm": "Arrestare tutti i processi dell’ambiente, incluse le sessioni del terminale? Il lavoro non salvato potrebbe andare perso.",
+  "commandHelp": "Da 1 a 8192 byte UTF-8, senza caratteri NUL.",
+  "serviceIdHelp": "Usa un ID univoco: 1–32 lettere minuscole, cifre o trattini; inizia con una lettera.",
+  "configChanged": "La configurazione salvata è cambiata altrove. La bozza è conservata. Ricarica per scartarla e usare le impostazioni salvate.",
+  "reloadConfig": "Ricarica configurazione salvata",
+  "emptyLogs": "Nessun output registrato."
 }

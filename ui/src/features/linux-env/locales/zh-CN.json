@@ -76,5 +76,10 @@
   "defaultDns": "保留 rootfs 的 DNS 配置",
   "noServices": "未配置服务。",
   "inspectionPending": "正在计算归档 SHA-256…",
-  "stopConfirm": "停止此环境中的所有进程（包括终端会话）？未保存的工作可能丢失。"
+  "stopConfirm": "停止此环境中的所有进程（包括终端会话）？未保存的工作可能丢失。",
+  "commandHelp": "1–8192 个 UTF-8 字节，不含 NUL 字符。",
+  "serviceIdHelp": "使用不重复的标识：1–32 位小写字母、数字或连字符，以字母开头。",
+  "configChanged": "保存的配置已在别处变更。当前草稿已保留。重新加载将丢弃草稿并使用已保存的配置。",
+  "reloadConfig": "重新加载已保存配置",
+  "emptyLogs": "尚无输出记录。"
 }

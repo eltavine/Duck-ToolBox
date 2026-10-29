@@ -76,5 +76,10 @@
   "defaultDns": "Conservar la configuración DNS del rootfs",
   "noServices": "No hay servicios configurados.",
   "inspectionPending": "Calculando SHA-256 del archivo…",
-  "stopConfirm": "¿Detener todos los procesos de este entorno, incluidas las sesiones de terminal? El trabajo sin guardar puede perderse."
+  "stopConfirm": "¿Detener todos los procesos de este entorno, incluidas las sesiones de terminal? El trabajo sin guardar puede perderse.",
+  "commandHelp": "Entre 1 y 8192 bytes UTF-8, sin caracteres NUL.",
+  "serviceIdHelp": "Usa un ID único: entre 1 y 32 letras minúsculas, dígitos o guiones; empieza con una letra.",
+  "configChanged": "La configuración guardada cambió en otro lugar. Se conserva tu borrador. Recarga para descartarlo y usar los ajustes guardados.",
+  "reloadConfig": "Recargar configuración guardada",
+  "emptyLogs": "No se ha registrado ninguna salida."
 }

@@ -76,5 +76,10 @@
   "defaultDns": "Keep rootfs resolver configuration",
   "noServices": "No services configured.",
   "inspectionPending": "Calculating archive SHA-256…",
-  "stopConfirm": "Stop all processes in this environment, including terminal sessions? Unsaved work may be lost."
+  "stopConfirm": "Stop all processes in this environment, including terminal sessions? Unsaved work may be lost.",
+  "commandHelp": "1–8192 UTF-8 bytes; no NUL character.",
+  "serviceIdHelp": "Use a unique ID: 1–32 lowercase letters, digits or hyphens; start with a letter.",
+  "configChanged": "The saved configuration changed elsewhere. Your draft is preserved. Reload to discard the draft and use the saved settings.",
+  "reloadConfig": "Reload saved configuration",
+  "emptyLogs": "No output has been recorded."
 }

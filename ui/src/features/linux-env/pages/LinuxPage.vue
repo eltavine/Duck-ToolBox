@@ -252,7 +252,7 @@ function terminal(id: string) {
           <summary class="min-h-12 cursor-pointer py-3">{{ t("configure") }}</summary>
           <EnvironmentConfig
             :id="view.environment.id"
-            :key="view.revision"
+            :revision="view.revision"
             :config="view.environment.config"
             :disabled="!allowed || busy"
             @save="(config) => request('save', view, config)"
@@ -264,7 +264,7 @@ function terminal(id: string) {
           dir="ltr"
           tabindex="0"
           :aria-label="t('logs')"
-          >{{ logs.text || t("empty") }}</pre>
+          >{{ logs.text || t("emptyLogs") }}</pre>
       </SectionCard>
     </template>
     <ConfirmDialog

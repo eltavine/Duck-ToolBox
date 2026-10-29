@@ -24,7 +24,18 @@ export const configSchema = z
       )
       .max(8),
   })
-  .refine((v) => new Set(v.services.map((s) => s.id)).size === v.services.length)
+  .superRefine((value, context) => {
+    const counts = new Map<string, number>()
+    for (const service of value.services) counts.set(service.id, (counts.get(service.id) ?? 0) + 1)
+    value.services.forEach((service, index) => {
+      if ((counts.get(service.id) ?? 0) > 1)
+        context.addIssue({
+          code: "custom",
+          path: ["services", index, "id"],
+          message: "duplicate_service_id",
+        })
+    })
+  })
 export type Config = z.infer<typeof configSchema>
 const digest = z.string().regex(/^[a-fA-F0-9]{64}$/)
 const environment = z.object({

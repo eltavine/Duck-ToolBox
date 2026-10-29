@@ -33,16 +33,30 @@ pub fn require(ctx: &Context) -> Result<()> {
     );
     Ok(())
 }
-pub fn parse_start(text: &str) -> Result<u64> {
+fn parse_stat(text: &str) -> Result<(u8, u64)> {
     let tail = text
         .rsplit_once(") ")
         .ok_or_else(|| fail("state_unavailable", "invalid process stat"))?
         .1;
-    tail.split_whitespace()
-        .nth(19)
+    let mut fields = tail.split_whitespace();
+    let state = fields
+        .next()
+        .filter(|state| state.len() == 1)
+        .ok_or_else(|| fail("state_unavailable", "missing process state"))?
+        .as_bytes()[0];
+    let start = fields
+        .nth(18)
         .ok_or_else(|| fail("state_unavailable", "missing process start time"))?
-        .parse()
-        .map_err(Into::into)
+        .parse()?;
+    Ok((state, start))
+}
+pub fn parse_start(text: &str) -> Result<u64> {
+    Ok(parse_stat(text)?.1)
+}
+// Runtime identities refer to the single-threaded supervisor and pinned init helper.
+pub fn stat_alive(text: &str, expected: u64) -> Result<bool> {
+    let (state, start) = parse_stat(text)?;
+    Ok(start == expected && !matches!(state, b'Z' | b'X' | b'x'))
 }
 pub fn boot() -> Result<String> {
     Ok(fs::read_to_string("/proc/sys/kernel/random/boot_id")?
@@ -66,7 +80,7 @@ pub fn alive(identity: &Identity) -> Result<bool> {
         return Ok(false);
     }
     match fs::read_to_string(format!("/proc/{}/stat", identity.pid)) {
-        Ok(text) => Ok(parse_start(&text)? == identity.start),
+        Ok(text) => stat_alive(&text, identity.start),
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(false),
         Err(e) => Err(e.into()),
     }
