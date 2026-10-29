@@ -8,6 +8,7 @@
 /var/
 module/bin/duckd
 module/bin/duckd.exe
+module/bin/tini-arm64
 *.zip
 __pycache__/
 

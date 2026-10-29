@@ -1,5 +1,6 @@
 //! `duckd`: every feature crate registered in [`FEATURES`] becomes `duckd <id> ...`, and every
-//! invocation prints exactly one JSON envelope on stdout.
+//! API invocation prints exactly one JSON envelope on stdout. Foreground terminals and
+//! internal namespace/import workers run before the asynchronous runtime starts.
 
 mod builtin;
 #[cfg(feature = "play-integrity")]
@@ -33,18 +34,20 @@ static FEATURES: &[&dyn Feature] = &[
     &duck_kernel_modules::FEATURE,
     #[cfg(feature = "zram")]
     &duck_zram::FEATURE,
+    #[cfg(feature = "linux-env")]
+    &duck_linux_env::FEATURE,
 ];
 
 fn cli() -> clap::Command {
     clap::Command::new("duckd")
         .version(env!("CARGO_PKG_VERSION"))
-        .about("Duck ToolBox backend. Every subcommand prints exactly one JSON envelope on stdout.")
+        .about("Duck ToolBox backend. API subcommands print one JSON envelope; linux-env shell opens an interactive terminal.")
         .arg(
             Arg::new("json")
                 .long("json")
                 .global(true)
                 .action(ArgAction::SetTrue)
-                .help("Accepted for compatibility; output is always JSON"),
+                .help("Accepted for compatibility; API output is JSON"),
         )
         .subcommand_required(true)
         .arg_required_else_help(true)
@@ -52,8 +55,7 @@ fn cli() -> clap::Command {
         .subcommands(FEATURES.iter().map(|feature| feature.command()))
 }
 
-#[tokio::main]
-async fn main() {
+fn main() {
     let matches = match cli().try_get_matches() {
         Ok(matches) => matches,
         Err(error)
@@ -89,15 +91,27 @@ async fn main() {
         sysroot: Sysroot::from_env(),
     };
 
-    let result = match matches.subcommand() {
-        Some((builtin::MANIFEST, _)) => builtin::manifest(FEATURES),
-        Some((builtin::DESCRIBE, _)) => builtin::describe(FEATURES, &ctx),
-        Some((id, sub)) => match FEATURES.iter().find(|feature| feature.info().id == id) {
-            Some(feature) => feature.run(sub, &ctx).await,
-            None => unreachable!("clap only accepts registered subcommands"),
-        },
-        None => unreachable!("a subcommand is required"),
-    };
+    if let Some((id, sub)) = matches.subcommand()
+        && let Some(feature) = FEATURES.iter().find(|f| f.info().id == id)
+        && let Some(code) = feature.foreground(sub, &ctx)
+    {
+        std::process::exit(code);
+    }
+    let runtime = tokio::runtime::Builder::new_multi_thread()
+        .enable_all()
+        .build()
+        .expect("create async runtime");
+    let result = runtime.block_on(async {
+        match matches.subcommand() {
+            Some((builtin::MANIFEST, _)) => builtin::manifest(FEATURES),
+            Some((builtin::DESCRIBE, _)) => builtin::describe(FEATURES, &ctx),
+            Some((id, sub)) => match FEATURES.iter().find(|feature| feature.info().id == id) {
+                Some(feature) => feature.run(sub, &ctx).await,
+                None => unreachable!("clap only accepts registered subcommands"),
+            },
+            None => unreachable!("a subcommand is required"),
+        }
+    });
     emit(&ctx, result);
 }
 

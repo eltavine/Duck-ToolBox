@@ -30,6 +30,7 @@ describe.skipIf(!hasDuckd)("system API against the real duckd", CONTRACT, () => 
       "system",
       "kernel-modules",
       "zram",
+      "linux-env",
     ])
   })
 

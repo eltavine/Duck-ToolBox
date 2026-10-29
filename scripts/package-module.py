@@ -7,6 +7,7 @@ from pathlib import Path
 import shutil
 import struct
 import subprocess
+import sys
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -54,6 +55,11 @@ def validate():
         if hashlib.sha256(path.read_bytes()).hexdigest() != digest:
             raise ValueError(f"Engine artifact hash mismatch: {name}")
     elf(MODULE / "bin/duckd", 2, 183)
+    elf(MODULE / "bin/tini-arm64", 2, 183)
+    init = json.loads((ROOT / "components/linux-env/tini.json").read_text())
+    if hashlib.sha256((MODULE / "bin/tini-arm64").read_bytes()).hexdigest() != init["sha256"]:
+        raise ValueError("Init helper hash differs from its pinned release")
+    require(ROOT / init["notice"])
     elf(MODULE / "play-integrity/pif-engine", 2, 183)
     elf(MODULE / "zygisk/arm64-v8a.so", 2, 183)
     elf(MODULE / "zygisk/armeabi-v7a.so", 1, 40)
@@ -98,6 +104,9 @@ def main():
     for binary_path in [MODULE / "bin/duckd", MODULE / "play-integrity/pif-engine"]:
         if binary_path.exists():
             binary_path.chmod(0o755)
+    require(MODULE / "play-integrity/build.json")
+    if not args.validate_only:
+        subprocess.run([sys.executable, str(ROOT / "scripts/prepare-linux-env.py")], check=True)
     validate()
     if args.validate_only:
         return

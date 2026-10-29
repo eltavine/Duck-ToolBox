@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+### Linux environments
+
+- Import trusted ARM64 rootfs archives with inspected SHA-256 verification, bounded
+  extraction, asynchronous progress, cancellation and private staging.
+- Manage private mounts, terminal entry, foreground services, DNS, bounded logs and
+  optional startup after boot. Use PID namespaces or cgroup v2 to track guest processes.
+- Confirm changes against the current configuration revision and preserve data when
+  termination cannot be verified. Keep all 16 locales and RTL layouts aligned with
+  existing interface components.
+
 ### Kernel modules
 
 - Reject duplicate or unreadable ELF metadata sections, and mark inferred or repeated

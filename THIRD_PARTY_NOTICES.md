@@ -31,3 +31,11 @@ TrustKernel provisioning loads the device's existing `libkphproxy.so` at runtime
 an isolated worker. No KPH vendor executable or library is distributed by this module.
 The root MIT license covers the independently written adapter, not the device's vendor
 libraries. Vendor ABI and firmware compatibility still require device validation.
+
+Linux environment import uses `tar` 0.4.46 and `filetime` 0.2.29 under their MIT
+licenses, included in `module/licenses/tar-MIT.txt` and `filetime-MIT.txt`.
+Gzip decoding uses the existing locked `flate2` / `zlib-rs` backend.
+The separate static ARM64 Tini executable is pinned to upstream v0.19.0 and its
+SHA-256 in `components/linux-env/tini.json`; its original copyright and MIT license
+are included in `module/licenses/tini-MIT.txt`. It is copied into each environment's
+private runtime mount and is not linked into `duckd`.

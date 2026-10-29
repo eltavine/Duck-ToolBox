@@ -43,6 +43,7 @@ const routes = [
   "/rkp-device",
   "/tee-attestation",
   "/kernel-modules",
+  "/linux-env",
   "/rkp",
   "/rkp?tab=profile",
   "/rkp?tab=verify",

@@ -1,7 +1,7 @@
 # Duck ToolBox
 
-Duck ToolBox is a root module (KernelSU, APatch or Magisk) that puts several Android
-attestation tools behind one WebUI. The backend is a Cargo workspace of single-purpose crates
+Duck ToolBox is a root module (KernelSU, APatch or Magisk) that puts Android attestation
+and system tools behind one WebUI. The backend is a Cargo workspace of single-purpose crates
 compiled into one JSON CLI (`duckd`); the WebUI is a set of feature folders that the app
 discovers at build time. Features only meet through versioned contracts, so each one can be
 changed, removed or added on its own.
@@ -143,6 +143,12 @@ changed, removed or added on its own.
     or reliably cancel a kernel init/exit routine. Missing or abnormal worker results also
     report an unknown outcome. Refresh before further action.
   - See [source contracts, interface guidance and verification limits](docs/kernel-modules.md).
+- **Linux environments**: import trusted ARM64 `.tar` / `.tar.gz` root filesystems,
+  start and stop them, copy a terminal entry command, configure foreground services,
+  read bounded logs and opt into boot startup. Private mounts use PID namespaces when
+  available, with cgroup v2 cleanup on kernels without them. Commands run as ROOT and
+  share Android's kernel and network; chroot is not a security sandbox. See
+  [requirements, lifecycle and verification](docs/linux-env.md).
 - **ZRAM & swap**: existing ZRAM swap devices, compression and physical-memory statistics,
   capacity/algorithm/priority changes, same-boot parameter restoration and opt-in boot plans.
   Runtime changes require confirmation and Android ARM64 root. Devices managed by mmd,

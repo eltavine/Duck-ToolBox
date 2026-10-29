@@ -239,7 +239,8 @@ fn features_manifest_lists_every_registered_tool() {
             "play-integrity",
             "system",
             "kernel-modules",
-            "zram"
+            "zram",
+            "linux-env"
         ]
     );
     assert_eq!(payload["data"]["api"], 1);
@@ -505,4 +506,18 @@ fn system_files_lists_matching_files() {
     assert!(names.contains(&"nested"));
     assert!(names.contains(&"keybox.xml"));
     assert!(!names.contains(&"notes.txt"));
+}
+
+#[test]
+fn linux_terminal_and_internal_workers_bypass_the_json_dispatcher() {
+    let environment = env("linux-foreground");
+    for args in [
+        vec!["linux-env", "shell", "sample"],
+        vec!["linux-env", "import-worker", "--token", "bad"],
+    ] {
+        let output = command(&environment).args(args).output().unwrap();
+        assert!(!output.status.success());
+        assert!(output.stdout.is_empty());
+        assert!(!output.stderr.is_empty());
+    }
 }

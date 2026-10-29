@@ -30,6 +30,12 @@ pub trait Feature: Sync {
     /// The clap command for `duckd <id>`, including every subcommand.
     fn command(&self) -> clap::Command;
 
+    /// Foreground terminals and namespace supervisors must run before the async
+    /// runtime creates threads. This path owns its output and returns an exit code.
+    fn foreground(&self, _matches: &ArgMatches, _ctx: &Context) -> Option<i32> {
+        None
+    }
+
     fn run<'a>(&'a self, matches: &'a ArgMatches, ctx: &'a Context)
     -> BoxFuture<'a, CommandResult>;
 
