@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/vue-query"
 import { useStorage } from "@vueuse/core"
-import { onScopeDispose, ref, watch } from "vue"
+import { effectScope, onScopeDispose, ref, watch } from "vue"
 import { contributions } from "@/core/features"
 import type { SecurityPatchPreview, SecurityPatchTarget } from "@/core/features"
 import { notifyError, notifySuccess } from "@/core/notify"
@@ -8,6 +8,8 @@ import { integrityApi } from "./api"
 import { libraryApi } from "./library-api"
 import type { Options, Preview, Task } from "./api"
 import { useIntegrityI18n } from "./i18n"
+
+const TASK_STORAGE_KEY = "duck-toolbox/play-integrity-task"
 
 export function useIntegrity() {
   const { t } = useIntegrityI18n()
@@ -34,7 +36,7 @@ export function useIntegrity() {
     { target: SecurityPatchTarget; preview: SecurityPatchPreview; selected: boolean }[]
   >([])
   const task = ref<Task | null>(null)
-  const taskId = useStorage("duck-toolbox/play-integrity-task", "")
+  const taskId = useStorage(TASK_STORAGE_KEY, "")
   const backup = useStorage("duck-toolbox/play-integrity-backup", "")
   const options = ref<Options>({
     enabled: true,
@@ -169,7 +171,14 @@ export function useIntegrity() {
       taskId.value = ""
     }
   }
-  if (taskId.value) void poll()
+  watch(
+    taskId,
+    (id) => {
+      if (timer) clearTimeout(timer)
+      if (id && !disposed) void poll()
+    },
+    { immediate: true, flush: "sync" },
+  )
   onScopeDispose(() => {
     disposed = true
     clearPreview()
@@ -232,9 +241,26 @@ export function useIntegrity() {
       action(async () => {
         clearPreview()
         taskGeneration = previewGeneration
-        task.value = await integrityApi.taskStart(strong, match)
-        taskId.value = task.value.id
-        void poll()
+        // Keep only the pending request's storage adapter alive across page disposal.
+        const requestScope = effectScope(true)
+        try {
+          const tracked = requestScope.run(() =>
+            useStorage(TASK_STORAGE_KEY, "", undefined, { flush: "sync" }),
+          )!
+          const previous = tracked.value
+          let result: Task
+          try {
+            result = await integrityApi.taskStart(strong, match)
+          } catch (error) {
+            if (!disposed && (!tracked.value || tracked.value === previous)) throw error
+            return
+          }
+          if (tracked.value && tracked.value !== previous) return
+          if (!disposed) task.value = result
+          tracked.value = result.id
+        } finally {
+          requestScope.stop()
+        }
       }),
     cancel: () =>
       action(async () => {

@@ -1,6 +1,10 @@
 //! Platform adapter for the toolbox's ordered global-property boot pass.
 use anyhow::Result;
-use std::{path::Path, process::Command};
+use std::{path::Path, process::Command, time::Duration};
+
+// PI owns a 30-second script deadline followed by bounded SELinux handling.
+// Its boot-completed caller must allow that cleanup before attempting fallback.
+const INTEGRITY_TIMEOUT: Duration = Duration::from_secs(35);
 fn legacy(module: &Path, fallback: bool) -> Result<()> {
     let mut command = Command::new(if cfg!(target_os = "android") {
         "/system/bin/sh"
@@ -21,7 +25,7 @@ pub fn stages(module: &Path) -> Result<()> {
         command
             .args(["stage", "late"])
             .env("PIF_ENGINE_MODULE", module.join("play-integrity"));
-        crate::bounded::output(command)
+        crate::bounded::output_with_timeout(command, INTEGRITY_TIMEOUT)
             .map(|_| ())
             .or_else(|_| legacy(module, true))
     } else {

@@ -21,6 +21,10 @@ restoration, density recovery and global-session ownership; JNI field compatibil
 and owned property mappings. The original copyright and license notices above
 remain applicable.
 
+Modified 2026-10-31: boot-completed PI calls allow their bounded lifecycle stage
+to finish before fallback. Native companion and ordinary platform commands retain
+the existing five-second limit; early boot budgets are unchanged.
+
 The Device Faker adaptations, management process and Java density helper are
 licensed under GPL-3.0-or-later. The combined Zygisk library links the GPL-3.0-only
 Play Integrity engine and dispatcher and is distributed under GPL-3.0-only.

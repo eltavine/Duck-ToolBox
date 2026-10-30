@@ -114,6 +114,12 @@ AOSP `PropertyLoadBootDefaults` 按分区优先级加载后再派生产品属性
 晚期阶段只检查启动完成，不在阻塞的早期阶段等待。阶段进程自身的超时不延长 root manager 的预算：
 [KernelSU](https://kernelsu.org/guide/module.html#boot-scripts) 的 post-fs-data 上限为 10 秒；
 [Magisk](https://topjohnwu.github.io/Magisk/guides.html#boot-scripts) 还有整体挂载预算。
+组合管理程序在开机完成后的 PI 调用使用 35 秒外层预算，覆盖 PI 的 30 秒脚本预算及有界后处理；
+不会因通用命令的 5 秒预算提前杀死仍正常执行的晚期阶段。原属性处理器、原生 companion 等通用命令仍保持 5 秒预算。
+PI 子进程通过 [waitid 的 WNOWAIT 语义](https://man7.org/linux/man-pages/man2/waitpid.2.html)
+先保留可回收子进程身份、终止所属进程组，再回收状态；ECHILD 后不再按数字 PID 发信号。
+依据 [Android common 等待实现](https://android.googlesource.com/kernel/common/+/e99406ef2429696d82cc58f2d5c24721c5a2e133/kernel/exit.c)
+及 [bionic wait 接口](https://android.googlesource.com/platform/bionic/+/731631f300090436d7f5df80d50b6275c8c60a93/libc/include/sys/wait.h)。
 
 [Zygisk Next 文档 cddf38d5](https://github.com/Dr-TSNG/ZygiskNext/tree/cddf38d5b1501d0cbf08393767afed09ac478b14)
 要求 Magisk 内置 Zygisk 与外置 provider 不同时启用。本组件使用保留 ISC 声明的标准 v4 ABI，
@@ -143,6 +149,9 @@ SHA-256／SHA-512 vbmeta 摘要仅作来源参考，不随 PI 候选写入全局
 不发布旧候选，也不显示已经失效的错误提示。获取目录与准备配置分别报告状态。
 编辑器、文件导入和快照预览在发送请求前确定候选代次；内容同步修改、来源切换、关闭预览或离开页面后，
 旧响应不能重新发布候选。当前请求的网络或补丁准备错误仍正常报告。
+生成启动请求的存储适配层只存活到请求结束，页面关闭后仍保存返回的任务 ID；不会覆盖后来已跟踪的其他任务。
+重新进入页面或任务 ID 跨视图更新时继续轮询，页面本身的轮询与 UI 更新在离开时释放。
+Canary 日期按界面语言显示，以 UTC 的日期语义格式化，避免负时区把发布日期显示成前一天；未知文本仍保留原值。
 打包时逐字节核对主项目、PI、Device Faker 及随源码保留的依赖声明，
 缺失或被截断的声明不能仅凭文件名存在而通过校验。
 

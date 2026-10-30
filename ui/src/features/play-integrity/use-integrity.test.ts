@@ -148,7 +148,11 @@ for (const stale of ["unmounted", "replaced", "failed"] as const) {
       error: null,
       output: "",
     })
-    vi.mocked(integrityApi.taskStatus).mockReturnValue(pending.promise)
+    vi.mocked(integrityApi.taskStatus).mockImplementation(async (id) =>
+      id === "old"
+        ? pending.promise
+        : { id, state: "running", result: null, error: null, output: "" },
+    )
     const state = await setup()
     await state.generate(true, false)
     if (stale === "unmounted") cleanups.pop()!()
@@ -313,3 +317,66 @@ for (const failed of [false, true]) {
     expect(notifyError).not.toHaveBeenCalled()
   })
 }
+
+it("persists a delayed start after page disposal and resumes it in the next view", async () => {
+  const pending = deferred<Awaited<ReturnType<typeof integrityApi.taskStart>>>()
+  vi.mocked(integrityApi.taskStart).mockReturnValue(pending.promise)
+  vi.mocked(integrityApi.taskStatus).mockImplementation(async (id) => ({
+    id,
+    state: "running",
+    result: null,
+    error: null,
+    output: "",
+  }))
+  const old = await setup()
+  const request = old.generate(true, false)
+  cleanups.pop()!()
+  const next = await setup()
+  pending.resolve({ id: "delayed", state: "running", result: null, error: null, output: "" })
+  await request
+  await flushPromises()
+  expect(localStorage.getItem("duck-toolbox/play-integrity-task")).toBe("delayed")
+  expect(next.taskId.value).toBe("delayed")
+  expect(next.task.value?.id).toBe("delayed")
+  expect(old.preview.value).toBeNull()
+})
+
+for (const failed of [false, true]) {
+  it(`preserves a newer view's job when an old start ${failed ? "fails" : "finishes"}`, async () => {
+    const pending = deferred<Awaited<ReturnType<typeof integrityApi.taskStart>>>()
+    vi.mocked(integrityApi.taskStart)
+      .mockReturnValueOnce(pending.promise)
+      .mockResolvedValueOnce({ id: "new", state: "running", result: null, error: null, output: "" })
+    vi.mocked(integrityApi.taskStatus).mockImplementation(async (id) => ({
+      id,
+      state: "running",
+      result: null,
+      error: null,
+      output: "",
+    }))
+    const old = await setup()
+    const request = old.generate(true, false)
+    cleanups.pop()!()
+    const next = await setup()
+    await next.generate(true, false)
+    if (failed) pending.reject(new Error("Old start failure"))
+    else pending.resolve({ id: "old", state: "running", result: null, error: null, output: "" })
+    await request
+    await flushPromises()
+    expect(next.taskId.value).toBe("new")
+    expect(localStorage.getItem("duck-toolbox/play-integrity-task")).toBe("new")
+    expect(next.task.value?.id).toBe("new")
+    expect(notifyError).not.toHaveBeenCalled()
+  })
+}
+
+it("reports a current start failure and releases its request-scoped tracker", async () => {
+  vi.mocked(integrityApi.taskStart).mockRejectedValueOnce(new Error("Current start failure"))
+  const state = await setup()
+  await state.generate(true, false)
+  expect(notifyError).toHaveBeenCalledWith(
+    expect.objectContaining({ message: "Current start failure" }),
+  )
+  expect(state.taskId.value).toBe("")
+  expect(state.busy.value).toBe(false)
+})

@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { Button } from "@/components/ui/button"
 import { ref } from "vue"
+import { useI18n } from "vue-i18n"
+import { isRtl } from "@/core/i18n"
 import { useQueryClient } from "@tanstack/vue-query"
 import { Input } from "@/components/ui/input"
 import { libraryApi } from "../library-api"
@@ -22,6 +24,19 @@ const emit = defineEmits<{
   patchPreview: [id: string, partitions: Record<string, string>]
 }>()
 const { t } = useIntegrityI18n()
+const global = useI18n()
+function formatDate(value: string | null) {
+  if (!value) return "—"
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return value
+  const date = new Date(`${value}T00:00:00Z`)
+  if (!Number.isFinite(date.getTime()) || date.toISOString().slice(0, 10) !== value) return value
+  return new Intl.DateTimeFormat(global.locale.value, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  }).format(date)
+}
 const profileName = ref("")
 const saving = ref(false)
 const client = useQueryClient()
@@ -42,9 +57,10 @@ async function saveCandidate() {
 </script>
 <template>
   <SectionCard :title="t('preview')" :description="t('previewHelp')">
-    <p v-if="preview.metadata" class="mb-3 text-sm">
-      {{ t("dates") }}: {{ preview.metadata.released ?? "—" }} →
-      {{ preview.metadata.estimated_expiry ?? "—" }}
+    <p v-if="preview.metadata" class="mb-3 text-sm break-words">
+      {{ t("dates") }}: <bdi>{{ formatDate(preview.metadata.released) }}</bdi>
+      <span>{{ isRtl(global.locale.value) ? "←" : "→" }}</span>
+      <bdi>{{ formatDate(preview.metadata.estimated_expiry) }}</bdi>
     </p>
     <div
       v-if="preview.warnings.length"

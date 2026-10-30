@@ -32,6 +32,9 @@ tablet identities. Official release snapshots bind the complete fingerprint,
 incremental version, model, launch API and paired properties. Older source
 records remain readable and are identified as incomplete identity records.
 Preview requests reject superseded responses while retaining current errors.
+Subprocess groups are stopped before reaping releases their numeric identity;
+externally reaped children are never signalled through a stale numeric PID.
+Delayed generator starts retain their task identifier after page disposal.
 
 Original PIF concepts and mechanisms are credited upstream to kdrag0n's ProtonAOSP
 and Universal SafetyNet Fix. Boot scripts derive from Displax's USNF MOD fork.

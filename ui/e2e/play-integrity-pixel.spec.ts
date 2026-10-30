@@ -1,5 +1,29 @@
 import { expect, test } from "./fixtures"
 
+test.describe("Canary date-only metadata", () => {
+  test.use({ timezoneId: "America/Los_Angeles" })
+  for (const [locale, generate, released, expiry] of [
+    ["en", "Generate fingerprint", "Oct 1, 2026", "Nov 12, 2026"],
+    ["zh-CN", "生成指纹", "2026年10月1日", "2026年11月12日"],
+    ["ar", "إنشاء بصمة", "1 أكتوبر 2026", "12 نوفمبر 2026"],
+  ] as const) {
+    test(`localizes dates without shifting the release day in ${locale}`, async ({
+      page,
+      open,
+    }, testInfo) => {
+      await page.setViewportSize({ width: 320, height: 800 })
+      await open("/play-integrity/generate", { locale })
+      await page.getByRole("button", { name: generate, exact: true }).click()
+      await expect(page.getByText(released, { exact: true })).toBeVisible()
+      await expect(page.getByText(expiry, { exact: true })).toBeVisible()
+      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+        320,
+      )
+      await page.screenshot({ path: testInfo.outputPath("canary-dates.png"), fullPage: true })
+    })
+  }
+})
+
 test("searches new, fold, tablet and legacy Pixel models by name or codename", async ({
   page,
   open,
