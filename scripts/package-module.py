@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 """Validate and package the module, including the separately licensed engine."""
 import argparse
+import io
+import os
+import tempfile
 import hashlib
 import json
 from pathlib import Path
@@ -35,12 +38,55 @@ def check_source_checkout(commit, root=ROOT):
     if head != commit:
         raise ValueError("Engine source commit differs from the packaging checkout")
     dirty = subprocess.check_output(
-        ["git", "status", "--porcelain", "--untracked-files=all", "--",
-         "components/play-integrity", "components/device-faker", "components/zygisk-runtime", "module", "scripts", "ui/src/features/device-faker", "ui/src/features/play-integrity"],
+        ["git", "status", "--porcelain", "--untracked-files=all"],
         cwd=root, text=True,
     ).strip()
     if dirty:
         raise ValueError("Corresponding-source checkout contains unpublished changes: " + dirty)
+
+
+def validate_source_archive(archive, commit, root=ROOT):
+    tracked = subprocess.check_output(["git", "archive", "--format=tar", commit], cwd=root)
+    with tarfile.open(archive) as delivered, tarfile.open(fileobj=io.BytesIO(tracked)) as expected:
+        prefix = "Duck-ToolBox-source/"
+        marker = delivered.extractfile(prefix + "SOURCE_COMMIT")
+        if marker is None or marker.read().decode().strip() != commit:
+            raise ValueError("Corresponding-source archive differs from the binary commit")
+        for member in expected:
+            if not member.isfile():
+                continue
+            original = expected.extractfile(member).read()
+            actual_member = delivered.getmember(prefix + member.name)
+            if not actual_member.isfile():
+                raise ValueError("Corresponding-source entry is not a regular file: " + member.name)
+            actual = delivered.extractfile(actual_member).read()
+            # Cargo vendor adds source replacement tables to the committed config.
+            matches = actual.startswith(original + b"\n") if member.name == ".cargo/config.toml" else actual == original
+            if not matches or (actual_member.mode & 0o111) != (member.mode & 0o111):
+                raise ValueError("Corresponding-source file differs from the build commit: " + member.name)
+
+
+def write_module_archive(module, archive, metadata=None):
+    archive = Path(archive)
+    if archive.resolve().is_relative_to(module.resolve()):
+        raise ValueError("Archive output must be outside the module source directory")
+    archive.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.NamedTemporaryFile(dir=archive.parent, suffix=".zip", delete=False) as temporary:
+        candidate = Path(temporary.name)
+    try:
+        with zipfile.ZipFile(candidate, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=6, strict_timestamps=False) as output:
+            for path in sorted(module.rglob("*")):
+                if path.is_file():
+                    if path == module / "module.prop" and metadata is not None:
+                        output.writestr("module.prop", metadata)
+                    else:
+                        output.write(path, path.relative_to(module))
+        with zipfile.ZipFile(candidate) as output:
+            if output.testzip() is not None:
+                raise ValueError("Module archive CRC validation failed")
+        os.replace(candidate, archive)
+    finally:
+        candidate.unlink(missing_ok=True)
 
 
 def validate_device_faker():
@@ -141,6 +187,8 @@ def main():
         subprocess.run([sys.executable, str(ROOT / "scripts/prepare-linux-env.py")], check=True)
     validate()
     if args.validate_only:
+        validate_source_archive(MODULE / "webroot/licenses/corresponding-source.tar.gz",
+                                json.loads((MODULE / "play-integrity/build.json").read_text())["source_commit"])
         return
     version = next(line.split("=", 1)[1] for line in (MODULE / "module.prop").read_text().splitlines() if line.startswith("version="))
     metadata = (MODULE / "module.prop").read_text()
@@ -159,27 +207,11 @@ def main():
     if not source_archive.exists():
         subprocess.run([sys.executable, str(ROOT / "scripts/source-bundle.py"),
                         "--commit", commit, "--output", str(source_archive), "--offline"], check=True)
-    with tarfile.open(source_archive) as source:
-        prefix = "Duck-ToolBox-source/"
-        if source.extractfile(prefix + "SOURCE_COMMIT").read().decode().strip() != commit:
-            raise ValueError("Corresponding-source archive differs from the binary commit")
-        for name in ["components/device-faker/engine/src/lib.rs", "components/device-faker/manager/src/main.rs",
-                     "components/zygisk-runtime/entry.cpp", "components/play-integrity/Cargo.lock",
-                     "scripts/build-play-integrity.py", "third-party/native/shadowhook/.revision"]:
-            source.getmember(prefix + name)
+    validate_source_archive(source_archive, commit)
     with source_archive.open("rb") as stream:
         digest = hashlib.file_digest(stream, "sha256").hexdigest()
     source_archive.with_suffix(".gz.sha256").write_text(digest + "  " + source_archive.name + "\n")
-    with zipfile.ZipFile(archive, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=6, strict_timestamps=False) as output:
-        for path in sorted(MODULE.rglob("*")):
-            if path.is_file():
-                if path == MODULE / "module.prop" and args.channel:
-                    output.writestr("module.prop", metadata)
-                else:
-                    output.write(path, path.relative_to(MODULE))
-    with zipfile.ZipFile(archive) as output:
-        if output.testzip() is not None:
-            raise ValueError("Module archive CRC validation failed")
+    write_module_archive(MODULE, archive, metadata if args.channel else None)
     print(archive)
 
 

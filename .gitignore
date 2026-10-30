@@ -62,3 +62,6 @@ components/play-integrity/android/build/
 /components/device-faker/manager/target/
 
 /components/device-faker/engine/target/
+
+# CI artifact download staging
+/artifact/

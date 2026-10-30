@@ -26,9 +26,10 @@ process, Device Faker does not modify that process. Otherwise Device Faker runs
 its own callbacks. Library unload occurs after both engines finish. Companion
 connections carry a bounded, versioned routing frame; each engine owns its state.
 
-Startup performs legacy property updates and PI late initialization before
-publishing a boot-specific Device Faker readiness token. Failure keeps injection
-closed. Enable acknowledges the current stop token; a stale request cannot cancel
+Startup serializes legacy property updates and PI late initialization before
+publishing a boot-specific Device Faker readiness token. Duplicate successful boot
+passes skip global mutation. Failure keeps injection
+closed. Enable acknowledges the current stop token; sessions retain this generation, and a stale request cannot cancel
 a later stop. Parent disable/removal, pending cleanup, absent readiness or a loaded
 standalone `device_faker` closes the gate. A standalone disable flag must predate
 the current boot. Reboot after installation or disabling a conflicting module.
@@ -71,6 +72,7 @@ host fixture root. It is not a native injection override.
 | enable | Requires valid targets, current revision and stop token, readiness and no conflict |
 | disable | Publishes a stop token without waiting for configuration parsing or its lock |
 
+`stage boot` owns the ordered property/PI pass and readiness publication;
 `stage setup` creates empty defaults; `stage ready` recovers density and publishes
 readiness; `stage blocked` records startup failure; `stage uninstall` attempts
 cleanup and preserves unresolved recovery data.

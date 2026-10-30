@@ -40,7 +40,12 @@ const { t } = useFakerI18n()
         :key="`${warning.code}-${index}`"
         class="[overflow-wrap:anywhere]"
       >
-        {{ t(`warnings.${warning.code}`, { target: warning.target, count: warning.count }) }}
+        {{
+          t(`warnings.${warning.code}`, {
+            target: warning.target ? `\u2066${warning.target}\u2069` : undefined,
+            count: warning.count,
+          })
+        }}
       </li>
     </ul>
   </div>

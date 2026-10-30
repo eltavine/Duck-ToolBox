@@ -1,4 +1,5 @@
 //! Public process interface for the separately built Device Faker engine.
+mod boot;
 #[path = "../../engine/src/bounded.rs"]
 mod bounded;
 #[allow(dead_code, unused_imports)]
@@ -46,11 +47,12 @@ fn execute() -> Result<Value> {
             state::request(operation, &input)
         }
         ["stage", "setup"] => state::setup(),
+        ["stage", "boot"] => state::boot(),
         ["stage", "ready"] => state::ready(),
         ["stage", "blocked"] => state::blocked(),
         ["stage", "uninstall"] => state::uninstall(),
         _ => bail!(
-            "usage: device-faker-engine request OPERATION | stage setup/ready/blocked/uninstall"
+            "usage: device-faker-engine request OPERATION | stage setup/boot/ready/blocked/uninstall"
         ),
     }
 }

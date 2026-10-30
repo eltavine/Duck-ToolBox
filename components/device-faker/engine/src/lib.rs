@@ -21,7 +21,7 @@ use std::{
 };
 
 use anyhow::Context;
-use companion::{handle_companion_request, spoof_system_props_via_companion};
+use companion::{SessionTarget, handle_companion_request, spoof_system_props_via_companion};
 use config::Config;
 use hooks::hook_build_fields;
 use jni::EnvUnowned;
@@ -101,9 +101,17 @@ impl MyModule {
         env: &mut EnvUnowned,
         args: &mut <V4 as ZygiskRaw>::AppSpecializeArgs,
     ) -> anyhow::Result<()> {
+        let Some(generation) = gate::activation_at(Path::new("/")) else {
+            api.set_option(ZygiskOption::DlCloseModuleLibrary);
+            return Ok(());
+        };
         let package_name = Self::extract_package_name(env, args)?;
         let user_id = Self::extract_android_user_id(args);
         let package_with_user = format!("{package_name}@{user_id}");
+        let target = SessionTarget {
+            package: &package_with_user,
+            generation: &generation,
+        };
 
         // companion 侧现在自己管理会话状态和恢复逻辑；
         // Zygisk 模块侧不再需要跨应用恢复（ACTIVE_RESET_SESSION 已移除）。
@@ -215,7 +223,7 @@ impl MyModule {
                     &prop_map,
                     &explicit_props,
                     &delete_props,
-                    &package_with_user,
+                    target,
                     merged.dpi,
                     config.debug,
                 ) {
@@ -267,7 +275,7 @@ impl MyModule {
                     &empty,
                     &no_explicit,
                     &[],
-                    &package_with_user,
+                    target,
                     merged.dpi,
                     config.debug,
                 ) {

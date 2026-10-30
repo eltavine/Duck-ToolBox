@@ -1,4 +1,3 @@
-use super::rebuild_all_contexts;
 use log::info;
 use prop_rs_android::{resetprop::ResetProp, sys_prop};
 use std::collections::{HashMap, HashSet};
@@ -39,11 +38,7 @@ pub(super) fn new_resetprop() -> anyhow::Result<ResetProp> {
         .map_err(|e| anyhow::anyhow!("failed to initialize system property API: {e}"))?;
 
     Ok(ResetProp {
-        // `-n`: bypass property_service, direct mmap write.
-        // All properties we set (ro.*, persist.*, etc.) benefit from direct
-        // mmap — no SELinux policy denials, no init service restarts, no
-        // PROP_VALUE_MAX limit.  ro.* is forced to mmap regardless, but
-        // skip_svc=true also covers non-ro keys in custom_props.
+        // Bypass init property triggers; persistent storage remains untouched.
         skip_svc: true,
         persistent: false,
         persist_only: false,
@@ -60,8 +55,8 @@ pub(super) fn apply_resetprop(key: &str, value: &str) -> anyhow::Result<()> {
     // 重新分配 long buffer 并改写 prop_info 的 long offset），不再需要
     // delete+set 兜底——后者是全局可见的破坏性操作（delete 与 set 之间其他进程
     // 读到空值，set 再失败则属性永久丢失）。
-    // 返回的 bool 表示旧 long buffer 成为孤儿、需要 rebuild 回收；调用方
-    // （apply_props_batch / restore）结束时会统一 rebuild_all_contexts。
+    // Rebuilding would relocate prop_info entries cached by other processes.
+    // Leave old long buffers allocated rather than compacting a live property area.
     rp.set(key, value)
         .map_err(|e| anyhow::anyhow!("resetprop set failed for {key}: {e}"))?;
     Ok(())
@@ -86,22 +81,24 @@ pub(super) fn resetprop_delete(key: &str) -> anyhow::Result<()> {
 pub(super) fn apply_props_batch(
     props: &HashMap<String, String>,
     delete_props: &[String],
+    attempted: &mut HashSet<String>,
+    generation: &str,
 ) -> anyhow::Result<()> {
     for (key, value) in props {
-        if !crate::gate::enabled() {
+        if crate::gate::activation_at(std::path::Path::new("/")).as_deref() != Some(generation) {
             anyhow::bail!("global property activation cancelled");
         }
+        attempted.insert(key.clone());
         apply_resetprop(key, value)?;
     }
 
     for key in delete_props {
-        if !crate::gate::enabled() {
+        if crate::gate::activation_at(std::path::Path::new("/")).as_deref() != Some(generation) {
             anyhow::bail!("global property activation cancelled");
         }
+        attempted.insert(key.clone());
         resetprop_delete(key)?;
     }
-
-    rebuild_all_contexts(props.keys().chain(delete_props.iter()));
 
     Ok(())
 }
@@ -111,15 +108,21 @@ pub(super) fn restore_owned_props(
     absent: &HashSet<String>,
     applied: &HashMap<String, String>,
     deleted: &[String],
+    attempted: &HashSet<String>,
 ) -> anyhow::Result<()> {
     let mut failed = false;
     for (key, before) in backups {
+        if !attempted.contains(key) {
+            continue;
+        }
         let exists = property_exists(key);
         if exists.is_none() {
             failed = true;
             continue;
         }
-        let owned = if let Some(after) = applied.get(key) {
+        let owned = if deleted.contains(key) {
+            exists == Some(false)
+        } else if let Some(after) = applied.get(key) {
             if exists == Some(true) {
                 let Some(current) = property_value(key) else {
                     failed = true;
@@ -129,8 +132,6 @@ pub(super) fn restore_owned_props(
             } else {
                 false
             }
-        } else if deleted.contains(key) {
-            exists == Some(false)
         } else {
             false
         };
@@ -152,13 +153,13 @@ pub(super) fn restore_owned_props(
     Ok(())
 }
 
-pub(super) fn set_density(density: Option<u32>) -> anyhow::Result<()> {
-    let root = std::path::Path::new("/");
-    if let Some(density) = density {
-        crate::density::apply(root, density, &mut crate::density::AndroidBridge)
-    } else {
-        crate::density::recover(root, &mut crate::density::AndroidBridge)
-    }
+pub(super) fn set_density(density: u32, generation: &str) -> anyhow::Result<()> {
+    crate::density::apply(
+        std::path::Path::new("/"),
+        density,
+        generation,
+        &mut crate::density::AndroidBridge,
+    )
 }
 pub(super) fn restore_density() -> anyhow::Result<()> {
     crate::density::recover(

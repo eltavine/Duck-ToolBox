@@ -132,7 +132,7 @@ jobs:
           cargo test --locked --manifest-path components/device-faker/manager/Cargo.toml --target-dir target/device-faker-manager
           python3 scripts/test-device-faker.py
       - name: Build ARM64 native engine and manager
-        run: python3 scripts/build-device-faker.py
+        run: python3 scripts/build-device-faker.py --lint-native
       - uses: actions/upload-artifact@v7
         with:
           name: device-faker

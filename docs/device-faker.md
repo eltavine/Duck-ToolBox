@@ -16,20 +16,36 @@ provides the VMA lifecycle reference. Owned private clones replace neither bioni
 real mappings nor another object's Rust mapping owner. `hide_maps` is ignored.
 No kernel ABI or private bionic structure layout is assumed universally stable.
 
+Global areas are never compacted during session application or restoration.
+The pinned [property library rebuild implementation](https://github.com/KernelSU2/ksu_props/blob/ddb6ee7294467f7f25bad2118e9e24eee104144b/crates/prop-rs-android/src/sys_prop.rs)
+recreates entries and copies the new area over the old area; cached `prop_info*`
+pointers could then refer to relocated or unrelated entries. Long-value orphan
+buffers are retained rather than reclaiming them through live-area reordering.
+The [AOSP ContextNode definition](https://android.googlesource.com/platform/bionic/+/09a271af557444c9a6b3f3146d6d474156fd6cdb/libc/system_properties/include/system_properties/context_node.h)
+is the layout reference, with unknown layouts still rejected conservatively.
+
 ## Boot and mutation order
 
 AOSP init/property reference:
 [`68be0c2c0006a0740d0b1809abe4717308f90d15`](https://android.googlesource.com/platform/system/core/+/68be0c2c0006a0740d0b1809abe4717308f90d15/init/property_service.cpp),
 [system property guidance](https://source.android.com/docs/core/architecture/configuration/add-system-properties).
 The toolbox waits for boot completion and finishes legacy property and PI late
-stages before publishing a boot/build-specific readiness token. Failure records
+stages under an exclusive boot lock before publishing a boot/build-specific
+readiness token. Duplicate calls skip global writes once that token is valid.
+Every legacy property read/write failure contributes to the stage result; later
+success cannot hide an earlier failure. Failure records
 startup failure and leaves the gate closed. Stop-token acknowledgement prevents a
-stale enable from reopening the gate. Standalone module conflicts require reboot.
+stale enable from reopening the gate. Sessions and individual property/DPI writes
+retain their enable generation: a rapid stop/re-enable cancels the old generation.
+Standalone module conflicts require reboot.
 
-Global-property cleanup compares the current value with the applied value before
+Global-property cleanup tracks attempted writes and compares the current value
+with the applied value before
 restoring. This avoids overwriting a later external edit, but global-property
 backup is companion-process state: companion crashes and power loss can lose that
-backup. A reboot may be required. Density has a durable private recovery journal,
+backup. A reboot may be required. Cleanup failure markers identify their boot; a
+successful boot pass clears an older boot’s global marker after density recovery.
+Density has a durable private recovery journal,
 independent of companion memory, and retains the journal if recovery fails.
 
 The density helper uses explicit user IDs, following the window manager interface
@@ -87,6 +103,9 @@ python3 scripts/build-play-integrity.py
 The installation ZIP contains one root-manager module, one Zygisk library per ABI,
 both management CLIs, licenses, hashes and the exact corresponding-source archive.
 The archive carries locked Rust dependencies and pinned native build dependencies.
+Packaging compares every archived regular source file with the build commit
+(except the required Cargo vendor configuration extension), preserves executable
+bits, and publishes the final ZIP atomically only after CRC validation.
 Host tests, ABI harnesses, source inspection and Android cross-compilation do not
 prove real injection, every OEM bionic layout, JNI field availability or actual
 property/density restoration on a device. `injection_verified` remains false.

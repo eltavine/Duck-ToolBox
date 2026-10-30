@@ -1,7 +1,5 @@
 //! 不可读 context 的进程内合成属性区（S4/S5）。
 //!
-//! 背景见 `AGENTS.md`「不可读属性区：进程内合成区 + `context_` 改写」。
-//!
 //! 有些属性区文件对 app 域不可读（如 HyperOS 的 `vendor_default_prop`），bionic 惰性
 //! 映射失败 ⇒ 节点 `prop_area_` 永远 NULL ⇒ `SystemProperties.get` 恒空。对**用户显式
 //! 写出**（`custom_props`）的这类 key：合成一块空 prop_area、写入键值、挂到路由到该

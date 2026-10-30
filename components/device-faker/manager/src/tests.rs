@@ -88,3 +88,126 @@ fn atomic_config_writes_are_private_and_stale_revisions_fail() {
         );
     }
 }
+
+fn boot_fixture() -> (tempfile::TempDir, Paths) {
+    let (root, paths) = fixture();
+    write(
+        &paths.root.join("proc/sys/kernel/random/boot_id"),
+        "boot-test",
+    )
+    .unwrap();
+    write(
+        &paths.module("duck-toolbox").join("module.prop"),
+        "id=duck-toolbox",
+    )
+    .unwrap();
+    (root, paths)
+}
+#[test]
+fn boot_publishes_readiness_only_after_the_ordered_pass_and_skips_duplicates() {
+    let (_root, paths) = boot_fixture();
+    run_boot(&paths, || {
+        assert!(!crate::gate::startup_ready_at(&paths.root));
+        Ok(())
+    })
+    .unwrap();
+    assert!(crate::gate::startup_ready_at(&paths.root));
+    run_boot(&paths, || {
+        panic!("must not mutate global props after readiness")
+    })
+    .unwrap();
+}
+#[test]
+fn failed_boot_replaces_stale_readiness_and_can_be_retried() {
+    let (_root, paths) = boot_fixture();
+    write(&paths.file("ready"), "old-boot:old-build").unwrap();
+    assert!(run_boot(&paths, || anyhow::bail!("property write failed")).is_err());
+    assert!(!crate::gate::startup_ready_at(&paths.root));
+    assert_eq!(
+        read(&paths.file("startup-failed"), 64).unwrap().as_deref(),
+        Some("boot-test")
+    );
+    run_boot(&paths, || Ok(())).unwrap();
+    assert!(crate::gate::startup_ready_at(&paths.root));
+    assert!(!paths.file("startup-failed").exists());
+}
+#[test]
+fn concurrent_boot_does_not_publish_failure_or_run_a_second_pass() {
+    let (_root, paths) = boot_fixture();
+    private_dir(&paths.data).unwrap();
+    let owner = File::options()
+        .create(true)
+        .truncate(false)
+        .write(true)
+        .open(paths.file("boot.lock"))
+        .unwrap();
+    owner.try_lock().unwrap();
+    assert_eq!(
+        run_boot(&paths, || panic!("another boot owns the pass")).unwrap()["boot_in_progress"],
+        true
+    );
+    assert!(!paths.file("startup-failed").exists());
+    assert!(!crate::gate::startup_ready_at(&paths.root));
+}
+
+#[test]
+fn deletion_wins_over_an_overlapping_set_in_both_property_plans() {
+    let config = crate::config::Config::from_toml("[[apps]]\npackage='com.app'\nmodel='Phone'\n[apps.custom_props]\n'ro.product.model'='__DELETE__'\n").unwrap();
+    let merged = config.get_merged_config("com.app").unwrap();
+    let (properties, _) = crate::config::Config::build_merged_property_map_with_explicit(&merged);
+    let deleted = crate::config::Config::build_delete_props_list(&merged);
+    assert!(deleted.contains(&"ro.product.model".into()));
+    assert!(!properties.contains_key("ro.product.model"));
+}
+#[test]
+fn a_new_boot_clears_only_the_previous_boot_global_failure_marker() {
+    let (_root, paths) = boot_fixture();
+    write(
+        &paths.file("cleanup-failed"),
+        "previous-boot:global_cleanup_pending",
+    )
+    .unwrap();
+    run_boot(&paths, || Ok(())).unwrap();
+    assert!(!paths.file("cleanup-failed").exists());
+    fs::remove_file(paths.file("ready")).unwrap();
+    write(
+        &paths.file("cleanup-failed"),
+        "boot-test:global_cleanup_pending",
+    )
+    .unwrap();
+    run_boot(&paths, || Ok(())).unwrap();
+    assert!(paths.file("cleanup-failed").exists());
+}
+
+#[cfg(unix)]
+#[test]
+fn boot_adapter_runs_legacy_then_integrity_then_fallback_before_readiness() {
+    use std::os::unix::fs::PermissionsExt;
+    let (_root, paths) = boot_fixture();
+    let module = paths.module("duck-toolbox");
+    write(
+        &module.join("prop.sh"),
+        "printf 'prop %s\\n' \"$*\" >> \"${0%/*}/order\"\n",
+    )
+    .unwrap();
+    write(
+        &module.join("play-integrity/pif-engine"),
+        "#!/bin/sh\nprintf 'integrity %s\\n' \"$*\" >> \"$PIF_ENGINE_MODULE/../order\"\nexit 1\n",
+    )
+    .unwrap();
+    fs::set_permissions(
+        module.join("play-integrity/pif-engine"),
+        fs::Permissions::from_mode(0o755),
+    )
+    .unwrap();
+    run_boot(&paths, || crate::boot::stages(&module)).unwrap();
+    assert!(crate::gate::startup_ready_at(&paths.root));
+    assert_eq!(
+        fs::read_to_string(module.join("order")).unwrap(),
+        "prop \nintegrity stage late\nprop --fallback\n"
+    );
+    fs::remove_file(paths.file("ready")).unwrap();
+    write(&module.join("prop.sh"), "exit 1\n").unwrap();
+    assert!(run_boot(&paths, || crate::boot::stages(&module)).is_err());
+    assert!(!crate::gate::startup_ready_at(&paths.root));
+}

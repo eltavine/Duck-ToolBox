@@ -37,11 +37,9 @@ function setPreviewRegion(value: Element | ComponentPublicInstance | null) {
 const fileInput = ref<HTMLInputElement>()
 const sourceCommit = import.meta.env.VITE_DEVICE_FAKER_SOURCE_COMMIT || "main"
 const sourceUrl = `https://github.com/eltavine/Duck-ToolBox/tree/${sourceCommit}/components/device-faker`
-const canEnable = computed(
+const prerequisitesReady = computed(
   () =>
     !!data.value &&
-    !busy.value &&
-    !stopping.value &&
     !data.value.config.error &&
     !data.value.conflict &&
     !data.value.payload_pending &&
@@ -52,10 +50,13 @@ const canEnable = computed(
     !data.value.startup_failed &&
     !!data.value.config.summary?.targets.length,
 )
+const canEnable = computed(
+  () => prerequisitesReady.value && !data.value?.enabled && !busy.value && !stopping.value,
+)
 const state = computed(() => {
   if (editor.status.isPending.value) return t("loading")
   if (!data.value) return t("unavailable")
-  if (data.value.enabled && !data.value.startup_ready) return t("waiting")
+  if (data.value.enabled && !prerequisitesReady.value) return t("waiting")
   return data.value.enabled ? t("enabled") : t("disabled")
 })
 </script>

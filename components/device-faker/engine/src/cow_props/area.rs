@@ -53,7 +53,7 @@ pub(super) fn open_area(addr: usize, size: usize) -> anyhow::Result<View> {
 pub(super) fn readonly_area(mapping: &PropAreaMapping) -> Option<MmapPropArea> {
     let file = std::fs::File::open(&mapping.path).ok()?;
     let size = mapping.end.checked_sub(mapping.start)?;
-    if size < 128 || size > 16 * 1024 * 1024 {
+    if !(128..=16 * 1024 * 1024).contains(&size) {
         return None;
     }
     // SAFETY: the known property-area file remains mapped for this view's lifetime.

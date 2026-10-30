@@ -1,6 +1,12 @@
 #!/usr/bin/env python3
 """Corresponding-source links must identify the exact published Git checkout."""
 import importlib.util
+import io
+import tarfile
+import copy
+import os
+import zipfile
+from unittest.mock import patch
 import json
 from pathlib import Path
 import shutil
@@ -56,6 +62,55 @@ class SourceCheckoutTest(unittest.TestCase):
         for value in (None, "", "main", "a" * 39, "z" * 40):
             with self.subTest(value=value), self.assertRaisesRegex(ValueError, "invalid"):
                 package.check_source_checkout(value)
+
+
+class DistributionIntegrityTest(unittest.TestCase):
+    def test_rejects_source_changes_even_with_a_matching_commit_marker(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            git(root, "init", "-q")
+            (root / "source.rs").write_text("committed source")
+            git(root, "add", ".")
+            git(root, "-c", "user.name=CI", "-c", "user.email=ci@example.invalid", "commit", "-qm", "Source")
+            commit = git(root, "rev-parse", "HEAD")
+            raw = subprocess.check_output(["git", "archive", commit], cwd=root)
+            archive = root / "source.tar.gz"
+            for corrupt in [False, True]:
+                with tarfile.open(archive, "w:gz") as output, tarfile.open(fileobj=io.BytesIO(raw)) as tracked:
+                    for member in tracked:
+                        entry = copy.copy(member)
+                        entry.name = "Duck-ToolBox-source/" + member.name
+                        data = b"altered source" if corrupt else tracked.extractfile(member).read()
+                        entry.size = len(data)
+                        output.addfile(entry, io.BytesIO(data))
+                    marker = tarfile.TarInfo("Duck-ToolBox-source/SOURCE_COMMIT")
+                    marker.size = len(commit)
+                    output.addfile(marker, io.BytesIO(commit.encode()))
+                if corrupt:
+                    with self.assertRaisesRegex(ValueError, "file differs"):
+                        package.validate_source_archive(archive, commit, root)
+                else:
+                    package.validate_source_archive(archive, commit, root)
+
+    def test_failed_packaging_preserves_the_previous_complete_archive(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            module = root / "module"
+            module.mkdir()
+            source = module / "module.prop"
+            source.write_text("version=1")
+            os.utime(source, (1, 1))
+            archive = root / "module.zip"
+            package.write_module_archive(module, archive)
+            before = archive.read_bytes()
+            with zipfile.ZipFile(archive) as output:
+                self.assertEqual(output.getinfo("module.prop").date_time[0], 1980)
+            source.write_text("version=2")
+            with patch.object(zipfile.ZipFile, "write", side_effect=OSError("disk full")):
+                with self.assertRaisesRegex(OSError, "disk full"):
+                    package.write_module_archive(module, archive)
+            self.assertEqual(archive.read_bytes(), before)
+            self.assertEqual(list(root.glob("*.zip")), [archive])
 
 
 class ShellEntrypointTest(unittest.TestCase):

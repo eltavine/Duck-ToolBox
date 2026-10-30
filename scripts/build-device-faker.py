@@ -65,6 +65,7 @@ def notices(payload, source, commit):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--host-only", action="store_true")
+    parser.add_argument("--lint-native", action="store_true", help="Lint the native Android engine after building")
     parser.add_argument("--sdk", default=os.environ.get("ANDROID_HOME", str(Path.home() / "Library/Android/sdk")))
     args = parser.parse_args()
     revision = check_source()
@@ -90,6 +91,10 @@ def main():
                              (ENGINE / "manager/Cargo.toml", ROOT / "target/device-faker-manager")]:
         run("cargo", "build", "--locked", "--release", "--manifest-path", manifest,
             "--target-dir", target, "--target", "aarch64-linux-android", env=env)
+    if args.lint_native:
+        run("cargo", "clippy", "--locked", "--manifest-path", source / "Cargo.toml",
+            "--target-dir", TARGET / "native", "--target", "aarch64-linux-android",
+            "--", "-D", "warnings", env=env)
     payload = ROOT / "module/device-faker"
     if payload.exists():
         shutil.rmtree(payload)

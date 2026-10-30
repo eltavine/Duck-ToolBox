@@ -111,15 +111,15 @@ pub fn recover(root: &Path, bridge: &mut impl Bridge) -> Result<()> {
     let _lock = lock(&lock_path)?;
     restore_locked(&path, bridge)
 }
-pub fn apply(root: &Path, density: u32, bridge: &mut impl Bridge) -> Result<()> {
+pub fn apply(root: &Path, density: u32, generation: &str, bridge: &mut impl Bridge) -> Result<()> {
     let (path, lock_path) = paths(root);
     let _lock = lock(&lock_path)?;
     restore_locked(&path, bridge)?;
-    if !crate::gate::enabled_at(root) {
+    if crate::gate::activation_at(root).as_deref() != Some(generation) {
         bail!("density activation is disabled");
     }
     let before = bridge.read(None)?;
-    if !crate::gate::enabled_at(root) {
+    if crate::gate::activation_at(root).as_deref() != Some(generation) {
         bail!("density activation was cancelled");
     }
     let mut record =
@@ -131,7 +131,7 @@ pub fn apply(root: &Path, density: u32, bridge: &mut impl Bridge) -> Result<()> 
     record.as_file().sync_all()?;
     record.persist(&path)?;
     File::open(path.parent().context("journal parent missing")?)?.sync_all()?;
-    if !crate::gate::enabled_at(root) {
+    if crate::gate::activation_at(root).as_deref() != Some(generation) {
         bail!("density activation was cancelled");
     }
     bridge.set(before.user, Some(density))
@@ -145,9 +145,15 @@ mod tests {
         current: u32,
         values: BTreeMap<u32, Option<u32>>,
         fail_after_write: bool,
+        change_generation_on_read: Option<PathBuf>,
     }
     impl Bridge for Fake {
         fn read(&mut self, user: Option<u32>) -> Result<Value> {
+            if let Some(root) = self.change_generation_on_read.take() {
+                let data = root.join("data/adb/duck-device-faker");
+                fs::write(data.join("stop"), "next").unwrap();
+                fs::write(data.join("enabled"), "next").unwrap();
+            }
             let user = user.unwrap_or(self.current);
             Ok(Value {
                 user,
@@ -191,13 +197,14 @@ mod tests {
                 current: 0,
                 values: BTreeMap::from([(0, Some(280)), (10, Some(360))]),
                 fail_after_write: false,
+                change_generation_on_read: None,
             },
         )
     }
     #[test]
     fn recovery_uses_the_original_user_after_a_user_switch() {
         let (root, mut bridge) = fixture();
-        apply(root.path(), 420, &mut bridge).unwrap();
+        apply(root.path(), 420, "initial", &mut bridge).unwrap();
         bridge.current = 10;
         recover(root.path(), &mut bridge).unwrap();
         assert_eq!(bridge.values[&0], Some(280));
@@ -208,7 +215,7 @@ mod tests {
     fn a_post_write_failure_retains_a_durable_recovery_record() {
         let (root, mut bridge) = fixture();
         bridge.fail_after_write = true;
-        assert!(apply(root.path(), 420, &mut bridge).is_err());
+        assert!(apply(root.path(), 420, "initial", &mut bridge).is_err());
         assert!(paths(root.path()).0.exists());
         recover(root.path(), &mut bridge).unwrap();
         assert_eq!(bridge.values[&0], Some(280));
@@ -216,7 +223,7 @@ mod tests {
     #[test]
     fn recovery_preserves_an_external_density_edit() {
         let (root, mut bridge) = fixture();
-        apply(root.path(), 420, &mut bridge).unwrap();
+        apply(root.path(), 420, "initial", &mut bridge).unwrap();
         bridge.values.insert(0, Some(480));
         recover(root.path(), &mut bridge).unwrap();
         assert_eq!(bridge.values[&0], Some(480));
@@ -225,11 +232,12 @@ mod tests {
     fn reset_and_recovery_survive_a_new_process_instance() {
         let (root, mut bridge) = fixture();
         bridge.values.insert(0, None);
-        apply(root.path(), 420, &mut bridge).unwrap();
+        apply(root.path(), 420, "initial", &mut bridge).unwrap();
         let mut next = Fake {
             current: 10,
             values: bridge.values,
             fail_after_write: false,
+            change_generation_on_read: None,
         };
         recover(root.path(), &mut next).unwrap();
         assert_eq!(next.values[&0], None);
@@ -246,9 +254,20 @@ mod tests {
         }
     }
     #[test]
+    fn stop_then_reenable_cannot_resume_an_old_density_activation() {
+        let (root, mut bridge) = fixture();
+        bridge.change_generation_on_read = Some(root.path().into());
+        assert!(apply(root.path(), 420, "initial", &mut bridge).is_err());
+        assert_eq!(bridge.values[&0], Some(280));
+        assert!(!paths(root.path()).0.exists());
+        apply(root.path(), 420, "next", &mut bridge).unwrap();
+        recover(root.path(), &mut bridge).unwrap();
+        assert_eq!(bridge.values[&0], Some(280));
+    }
+    #[test]
     fn the_recovery_record_is_private() {
         let (root, mut bridge) = fixture();
-        apply(root.path(), 420, &mut bridge).unwrap();
+        apply(root.path(), 420, "initial", &mut bridge).unwrap();
         #[cfg(unix)]
         {
             use std::os::unix::fs::PermissionsExt;

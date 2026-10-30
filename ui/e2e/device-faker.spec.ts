@@ -25,6 +25,7 @@ test("imports and previews without enabling, then applies and independently cont
   ).toBeVisible()
   await page.getByRole("button", { name: "Enable", exact: true }).click()
   await expect(page.getByText("Enabled for new app processes", { exact: true })).toBeVisible()
+  await expect(page.getByRole("button", { name: "Enable", exact: true })).toBeDisabled()
   await page.getByRole("button", { name: "Stop spoofing", exact: true }).click()
   await expect(page.getByText("Disabled for new app processes", { exact: true })).toBeVisible()
   await expect(page.getByLabel("Configuration (TOML)", { exact: true })).toHaveValue(
@@ -120,3 +121,21 @@ test("preserves the draft across navigation and keeps stop available while start
   await page.getByRole("button", { name: "Stop spoofing", exact: true }).click()
   await expect(page.locator("#faker-config")).toHaveValue(draft)
 })
+
+for (const prerequisite of [
+  "faker-startup-pending",
+  "faker-cleanup-pending",
+  "faker-conflict",
+  "faker-parent-disabled",
+]) {
+  test(`an armed engine does not claim injection while ${prerequisite}`, async ({ page, open }) => {
+    await open("/device-faker", {
+      locale: "en",
+      query: { "faker-enabled": "1", [prerequisite]: "1" },
+    })
+    await expect(page.getByText("Enabled for new app processes", { exact: true })).toHaveCount(0)
+    await expect(page.getByRole("button", { name: "Enable", exact: true })).toBeDisabled()
+    await page.getByRole("button", { name: "Stop spoofing", exact: true }).click()
+    await expect(page.getByText("Disabled for new app processes", { exact: true })).toBeVisible()
+  })
+}

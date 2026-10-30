@@ -131,7 +131,9 @@ pub fn setup() -> Result<Value> {
     Ok(json!({"ready": true}))
 }
 pub fn blocked() -> Result<Value> {
-    let paths = Paths::discover()?;
+    blocked_at(&Paths::discover()?)
+}
+fn blocked_at(paths: &Paths) -> Result<Value> {
     if paths.file("ready").exists() {
         fs::remove_file(paths.file("ready"))?;
     }
@@ -142,7 +144,9 @@ pub fn blocked() -> Result<Value> {
 }
 
 pub fn ready() -> Result<Value> {
-    let paths = Paths::discover()?;
+    ready_at(&Paths::discover()?)
+}
+fn ready_at(paths: &Paths) -> Result<Value> {
     let boot = read(&paths.root.join("proc/sys/kernel/random/boot_id"), 64)?
         .context("boot identity unavailable")?;
     if !paths.active("duck-toolbox") {
@@ -155,6 +159,53 @@ pub fn ready() -> Result<Value> {
         fs::remove_file(paths.file("startup-failed"))?;
     }
     Ok(json!({"startup_ready":true}))
+}
+
+pub fn boot() -> Result<Value> {
+    let paths = Paths::discover()?;
+    run_boot(&paths, || {
+        crate::boot::stages(&paths.module("duck-toolbox"))
+    })
+}
+fn run_boot(paths: &Paths, stages: impl FnOnce() -> Result<()>) -> Result<Value> {
+    private_dir(&paths.data)?;
+    let lock = File::options()
+        .create(true)
+        .truncate(false)
+        .write(true)
+        .open(paths.file("boot.lock"))?;
+    match lock.try_lock() {
+        Ok(()) => (),
+        Err(std::fs::TryLockError::WouldBlock) => return Ok(json!({"boot_in_progress":true})),
+        Err(error) => return Err(error.into()),
+    }
+    if crate::gate::startup_ready_at(&paths.root) {
+        return Ok(json!({"startup_ready":true,"already_completed":true}));
+    }
+    let result = (|| {
+        // Remove stale readiness before any global mutation or recovery.
+        if paths.file("ready").exists() {
+            fs::remove_file(paths.file("ready"))?;
+        }
+        crate::density::recover(&paths.root, &mut crate::density::AndroidBridge)?;
+        stages()?;
+        // Direct nonpersistent properties are recreated by init on each boot.
+        // A same-boot failure remains owned by its companion and must not be cleared here.
+        let boot = read(&paths.root.join("proc/sys/kernel/random/boot_id"), 64)?
+            .context("boot identity unavailable")?;
+        if read(&paths.file("cleanup-failed"), 256)?.is_some_and(|marker| {
+            marker
+                .split_once(':')
+                .is_some_and(|(owner, _)| !owner.is_empty() && owner != boot.trim())
+        }) {
+            fs::remove_file(paths.file("cleanup-failed"))?;
+        }
+        ready_at(paths)
+    })();
+    if result.is_err() {
+        blocked_at(paths)?;
+    }
+    result
 }
 
 pub fn uninstall() -> Result<Value> {

@@ -135,6 +135,11 @@ impl Config {
             }
         }
 
+        // Global application has always deleted after setting. Use the same final
+        // plan for private clones so a key cannot be both set and deleted.
+        let deleted: HashSet<_> = Self::build_delete_props_list(merged).into_iter().collect();
+        map.retain(|key, _| !deleted.contains(key));
+        explicit.retain(|key| !deleted.contains(key));
         (map, explicit)
     }
 

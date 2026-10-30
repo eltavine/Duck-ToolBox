@@ -57,19 +57,28 @@ pub fn startup_ready_at(root: &Path) -> bool {
 }
 
 pub(crate) fn enabled_at(root: &Path) -> bool {
-    std::fs::read_to_string(root.join("data/adb/duck-device-faker/enabled")).is_ok_and(|token| {
-        let stop = std::fs::read_to_string(root.join("data/adb/duck-device-faker/stop"));
-        match stop {
-            Ok(stop) => token == stop,
-            Err(error) if error.kind() == std::io::ErrorKind::NotFound => token == "initial",
-            Err(_) => false,
-        }
-    }) && !root
-        .join("data/adb/duck-device-faker/cleanup-failed")
-        .exists()
+    activation_at(root).is_some()
+}
+
+/// The acknowledgement identifies a single enable/stop generation.
+pub fn activation_at(root: &Path) -> Option<String> {
+    let token = std::fs::read_to_string(root.join("data/adb/duck-device-faker/enabled")).ok()?;
+    if token.len() > 256 || token.is_empty() {
+        return None;
+    }
+    let acknowledged = match std::fs::read_to_string(root.join("data/adb/duck-device-faker/stop")) {
+        Ok(stop) => token == stop,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => token == "initial",
+        Err(_) => false,
+    };
+    (acknowledged
+        && !root
+            .join("data/adb/duck-device-faker/cleanup-failed")
+            .exists()
         && active(root, "duck-toolbox")
         && startup_ready_at(root)
-        && !standalone_conflict_at(root)
+        && !standalone_conflict_at(root))
+    .then_some(token)
 }
 
 #[cfg(test)]

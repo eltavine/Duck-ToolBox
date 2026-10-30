@@ -12,7 +12,6 @@ use std::{
 };
 
 use log::{LevelFilter, error, info, warn};
-use prop_rs_android::sys_prop;
 use zygisk_api::api::{V4, ZygiskApi};
 
 use crate::config::{DPI_MAX, DPI_MIN};
@@ -25,12 +24,17 @@ use crate::config::{DPI_MAX, DPI_MIN};
 // 激活属性批量与密度，`FG != 包名` 恢复。前台源未就绪时一律不做全局变更
 // （D2 宁缺毋滥）。
 
+pub(crate) struct SessionTarget<'a> {
+    pub(crate) package: &'a str,
+    pub(crate) generation: &'a str,
+}
+
 pub fn spoof_system_props_via_companion(
     api: &mut ZygiskApi<V4>,
     prop_map: &HashMap<String, String>,
     explicit_props: &HashSet<String>,
     delete_props: &[String],
-    package_name: &str,
+    target: SessionTarget<'_>,
     density: Option<u32>,
     debug: bool,
 ) -> anyhow::Result<()> {
@@ -40,12 +44,13 @@ pub fn spoof_system_props_via_companion(
 
     let request = CompanionRequest::Apply(ResetpropSessionRequest {
         pid: std::process::id(),
+        generation: target.generation.to_string(),
         start: crate::process_identity::start_at(std::path::Path::new("/"), std::process::id())
             .ok_or_else(|| anyhow::anyhow!("process identity unavailable"))?,
         props: prop_map.clone(),
         explicit_props: explicit_props.iter().cloned().collect(),
         delete_props: delete_props.to_vec(),
-        package_name: package_name.to_string(),
+        package_name: target.package.to_string(),
         density,
         debug,
     });
@@ -83,7 +88,9 @@ pub fn handle_companion_request(stream: &mut UnixStream) {
 
     match request {
         CompanionRequest::Apply(request) => {
-            if !crate::gate::enabled() {
+            if crate::gate::activation_at(std::path::Path::new("/")).as_deref()
+                != Some(request.generation.as_str())
+            {
                 let _ =
                     write_companion_response(stream, &CompanionResponse::err("engine disabled"));
                 return;
@@ -92,18 +99,6 @@ pub fn handle_companion_request(stream: &mut UnixStream) {
                 Ok(backups) => CompanionResponse::ok_with_backups(backups),
                 Err(err) => {
                     error!("Companion failed to apply resetprop session: {err}");
-                    CompanionResponse::err(err.to_string())
-                }
-            };
-            if let Err(e) = write_companion_response(stream, &response) {
-                warn!("Failed to write companion response: {e}");
-            }
-        }
-        CompanionRequest::Restore(request) => {
-            let response = match restore_properties(request) {
-                Ok(_) => CompanionResponse::ok(),
-                Err(err) => {
-                    error!("Companion failed to restore properties: {err}");
                     CompanionResponse::err(err.to_string())
                 }
             };
@@ -122,30 +117,6 @@ pub fn handle_companion_request(stream: &mut UnixStream) {
             if let Err(e) = write_companion_response(stream, &response) {
                 warn!("Failed to write companion response: {e}");
             }
-        }
-    }
-}
-
-/// Rebuild property areas for ALL distinct contexts touched by the given keys.
-/// More complete than single-context rebuild; handles custom_props spanning
-/// multiple SELinux contexts (e.g. ro.* + debug.* + gsm.*).
-fn rebuild_all_contexts(keys_iter: impl Iterator<Item = impl AsRef<str>>) {
-    let mut contexts: std::collections::HashSet<String> = std::collections::HashSet::new();
-    for key in keys_iter {
-        if let Ok(ctx) = sys_prop::get_context(key.as_ref()) {
-            contexts.insert(ctx);
-        }
-    }
-    for ctx in &contexts {
-        // ksu_props ≥ ddb6ee7：`rebuild(context, check, appcompat)` 一次只处理一个
-        // area；normal 与 appcompat 各调一次以覆盖两侧（与旧版单参 rebuild 等价）。
-        // check=false：无条件重建，保留旧行为（长值 update 后旧 long buffer 会成为
-        // 孤儿，需要重建回收）。
-        if let Err(e) = sys_prop::rebuild(ctx, false, false) {
-            warn!("prop area rebuild for {ctx} failed (non-fatal): {e}");
-        }
-        if let Err(e) = sys_prop::rebuild(ctx, false, true) {
-            warn!("appcompat prop area rebuild for {ctx} failed (non-fatal): {e}");
         }
     }
 }
@@ -250,6 +221,7 @@ fn apply_resetprop_session(
         && sess.package == request.package_name
         && sess.app_pid == request.pid
         && sess.start == request.start
+        && sess.generation == request.generation
         && sess.spec.density == request.density
     {
         info!(
@@ -268,6 +240,8 @@ fn apply_resetprop_session(
     let backups_for_response = HashMap::new();
     *guard = Some(Session {
         package: request.package_name.clone(),
+        generation: request.generation,
+        attempted: HashSet::new(),
         app_pid: request.pid,
         start: request.start,
         unknown_since: None,
@@ -288,24 +262,6 @@ fn apply_resetprop_session(
     Ok(backups_for_response)
 }
 
-fn restore_properties(request: RestoreRequest) -> anyhow::Result<()> {
-    if request.props.is_empty() {
-        return Ok(());
-    }
-
-    for (key, value) in &request.props {
-        apply_resetprop(key, value)?;
-    }
-
-    // Rebuild after restoring originals to reclaim any holes.
-    rebuild_all_contexts(request.props.keys());
-
-    Ok(())
-}
-
-/// 属性在真机是否存在。返回 `None` = 无法判定（bionic 符号加载失败），调用方保守放行。
-///
-/// 走 `sys_prop::find`（本进程直接查属性区）——**不 fork/exec `getprop`**。
 const LOG_PATH: &str = "/data/adb/duck-device-faker/logs/device_faker.log";
 
 fn write_log_lines(request: WriteLogRequest) -> anyhow::Result<()> {

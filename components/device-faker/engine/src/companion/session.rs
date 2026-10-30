@@ -12,6 +12,8 @@ pub(super) struct Session {
     pub(super) package: String,
     pub(super) app_pid: u32,
     pub(super) start: u64,
+    pub(super) generation: String,
+    pub(super) attempted: HashSet<String>,
     pub(super) unknown_since: Option<Instant>,
     pub(super) closing: bool,
     /// 本次伪装规格（来自 Apply 请求）
@@ -114,7 +116,11 @@ pub(super) fn handle_fg_event(observed: &str) {
     };
     let live = crate::process_identity::start_at(std::path::Path::new("/"), sess.app_pid)
         == Some(sess.start);
-    if !crate::gate::enabled() || !live || sess.closing {
+    if crate::gate::activation_at(std::path::Path::new("/")).as_deref()
+        != Some(sess.generation.as_str())
+        || !live
+        || sess.closing
+    {
         let mut taken = guard.take().unwrap();
         if taken.activated && !deactivate_session(&mut taken, "closed") {
             *guard = Some(taken);
@@ -174,16 +180,22 @@ fn activate_session(sess: &mut Session) {
         return;
     };
     sess.originals = originals;
+    sess.attempted.clear();
     // A partial apply must still enter the cleanup path with its original baseline.
     sess.activated = true;
-    if let Err(error) = apply_props_batch(&sess.spec.props, &sess.spec.delete_props) {
+    if let Err(error) = apply_props_batch(
+        &sess.spec.props,
+        &sess.spec.delete_props,
+        &mut sess.attempted,
+        &sess.generation,
+    ) {
         error!("property activation failed: {error}");
         deactivate_session(sess, "activation failed");
         sess.closing = true;
         return;
     }
     if let Some(density) = sess.spec.density
-        && let Err(error) = set_density(Some(density))
+        && let Err(error) = set_density(density, &sess.generation)
     {
         error!("density activation failed: {error}");
         deactivate_session(sess, "activation failed");
@@ -197,6 +209,7 @@ pub(super) fn deactivate_session(sess: &mut Session, _focused: &str) -> bool {
         &sess.originals.absent_props,
         &sess.spec.props,
         &sess.spec.delete_props,
+        &sess.attempted,
     );
     let density = restore_density();
     let restored = props.is_ok() && density.is_ok();
@@ -217,7 +230,11 @@ pub(super) fn deactivate_session(sess: &mut Session, _focused: &str) -> bool {
             .mode(0o600)
             .open(marker)
         {
-            let _ = file.write_all(b"global_cleanup_pending");
+            if let Ok(boot) = std::fs::read_to_string("/proc/sys/kernel/random/boot_id") {
+                let _ = write!(file, "{}:global_cleanup_pending", boot.trim());
+            } else {
+                let _ = file.write_all(b"global_cleanup_pending");
+            }
         }
         error!("global cleanup remains pending");
     }

@@ -48,7 +48,7 @@ use self::{
 
 /// 对目标进程的所有属性应用 COW 伪造。
 ///
-/// - 已有属性：COW remap + 原地 patch
+/// - 已有属性：自有私有映射中的 patch
 /// - 不存在属性：在对应 prop_area 的 COW 映射中插入 trie 节点 + prop_info
 ///   （例外：`config::is_patch_only_key` 认定的「本机可能不存在」的自动展开变体
 ///   —— dlkm 分区副本、营销名族、OPPO 别名 —— 只做「已存在才补齐」，不存在时
@@ -102,7 +102,7 @@ pub fn apply_cow_spoof(
 
     // 把被 patch 的属性区迁移到进程私有副本，原始 /dev/__properties__/*
     // 映射保持 r--s（消除 maps 里 rw-p 的指纹）。
-    // 解析失败 → 降级回原地 COW（maps 会重新出现 rw-p），日志说明原因。
+    // 解析失败时跳过属性内存修改，保留真实映射并记录原因。
     let backend = match PropBackend::resolve_cached() {
         Ok(b) => Some(b),
         Err(e) => {

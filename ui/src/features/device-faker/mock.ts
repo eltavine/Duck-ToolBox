@@ -1,11 +1,14 @@
 import type { MockModule } from "@/core/mock"
 import { MockFailure } from "@/core/mock"
 
-let content = "debug = false\n\n[templates]\n"
+const parameters = new URLSearchParams(location.search)
+let content = parameters.has("faker-enabled")
+  ? '[[apps]]\npackage = "com.example.app"\nmodel = "Phone"\n'
+  : "debug = false\n\n[templates]\n"
 let revision = "initial"
 let backup = content
 let backupAfter = ""
-let enabled = false
+let enabled = parameters.has("faker-enabled")
 let stopRevision = "initial"
 const summary = (value: string) => ({
   templates: [...value.matchAll(/^\[templates\.([^\]]+)\]/gm)].map((m) => m[1]!),
@@ -27,14 +30,14 @@ const mock: MockModule = {
     "device-faker.status": () => ({
       enabled,
       stop_revision: stopRevision,
-      parent_active: true,
+      parent_active: !parameters.has("faker-parent-disabled"),
       startup_ready: !new URLSearchParams(location.search).has("faker-startup-pending"),
       startup_failed: new URLSearchParams(location.search).has("faker-startup-failed"),
       cleanup_pending: new URLSearchParams(location.search).has("faker-cleanup-pending"),
       payload_installed: true,
-      payload_active: true,
+      payload_active: !parameters.has("faker-parent-disabled"),
       payload_pending: false,
-      conflict: false,
+      conflict: parameters.has("faker-conflict"),
       injection_verified: false,
       legacy_available: true,
       config: config(),

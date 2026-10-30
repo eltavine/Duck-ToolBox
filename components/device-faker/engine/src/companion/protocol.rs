@@ -96,6 +96,7 @@ pub(crate) fn write_companion_response(
 pub(crate) struct ResetpropSessionRequest {
     pub(super) pid: u32,
     pub(super) start: u64,
+    pub(super) generation: String,
     pub(super) props: HashMap<String, String>,
     /// `custom_props` 里用户显式写出的 key：不受「本机不存在就不写」门控。
     #[serde(default)]
@@ -110,15 +111,9 @@ pub(crate) struct ResetpropSessionRequest {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub(crate) struct RestoreRequest {
-    pub(super) props: HashMap<String, String>,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
 #[serde(tag = "cmd", content = "payload")]
 pub enum CompanionRequest {
     Apply(ResetpropSessionRequest),
-    Restore(RestoreRequest),
     WriteLog(WriteLogRequest),
 }
 

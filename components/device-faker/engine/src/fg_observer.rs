@@ -44,8 +44,6 @@ pub static FG_READY: AtomicBool = AtomicBool::new(false);
 /// 当前 TOP 包名（observer/轮询维护），供 Apply 关闭"事件先于 Apply"竞态。
 static CURRENT_FG: Mutex<Option<String>> = Mutex::new(None);
 
-/// 返回当前 TOP 包名（未知/过渡态为 None）。
-
 /// AMS 进程状态：前台（top resumed activity 所在进程）。
 pub const PROCESS_STATE_TOP: i32 = 2;
 /// `ActivityManager.UID_OBSERVER_PROCSTATE = 1 << 0`（Android 定义）。
