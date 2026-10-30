@@ -13,6 +13,12 @@ mod error;
 #[allow(dead_code)]
 #[path = "../../engine/src/toolbox.rs"]
 mod gate;
+#[cfg(all(test, unix, not(target_os = "android")))]
+#[path = "../../engine/src/hooks.rs"]
+mod hooks;
+#[cfg(all(test, unix, not(target_os = "android")))]
+#[path = "../../engine/src/jni_policy.rs"]
+mod jni_policy;
 #[cfg(test)]
 #[allow(dead_code)]
 #[path = "../../engine/src/process_identity.rs"]
@@ -63,7 +69,11 @@ fn main() {
         Err(error) => {
             let domain = error.downcast_ref::<crate::error::Error>();
             let code = domain.map(|value| value.code).unwrap_or_else(|| {
-                if error.downcast_ref::<toml::de::Error>().is_some() {
+                if error.downcast_ref::<toml::de::Error>().is_some()
+                    || error
+                        .downcast_ref::<config::ConfigValidationError>()
+                        .is_some()
+                {
                     "invalid_config"
                 } else {
                     "engine_failed"

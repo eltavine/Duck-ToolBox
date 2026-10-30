@@ -18,6 +18,10 @@ indexmap = { version = "2.13", features = ["serde"] }
 sha2 = "0.11.0"
 tempfile = "3.27.0"
 
+[dev-dependencies]
+jni = { version = "0.22.4", default-features = false }
+log = "0.4"
+
 [profile.release]
 lto = true
 strip = true

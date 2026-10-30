@@ -12,6 +12,7 @@ import { useFakerI18n } from "../i18n"
 import { useFakerEditor } from "../useFakerEditor"
 import ProfileBuilder from "./ProfileBuilder.vue"
 import ConfigSummary from "./ConfigSummary.vue"
+import { MAX_DRAFT_CHARACTERS } from "../draft"
 
 const { t } = useFakerI18n()
 const global = useI18n()
@@ -20,6 +21,7 @@ const {
   data,
   draft,
   dirty,
+  draftTooLarge,
   changed,
   preview,
   busy,
@@ -168,25 +170,32 @@ const state = computed(() => {
             {{ t("changed") }}
           </p>
           <fieldset :disabled="busy" class="flex min-w-0 flex-col gap-5">
-            <ProfileBuilder
-              @append="
-                (content) => {
-                  draft += content
-                }
-              "
-            />
+            <ProfileBuilder @append="editor.appendProfile" />
             <label for="faker-config" class="text-sm font-medium">{{ t("tomlLabel") }}</label>
             <Textarea
               id="faker-config"
               v-model="draft"
+              :maxlength="MAX_DRAFT_CHARACTERS"
+              :aria-invalid="draftTooLarge"
+              :aria-describedby="draftTooLarge ? 'faker-config-size' : undefined"
               dir="ltr"
               class="min-h-64 font-mono text-sm leading-6"
               spellcheck="false"
               autocapitalize="off"
               autocomplete="off"
             />
+            <p
+              v-if="draftTooLarge"
+              id="faker-config-size"
+              role="alert"
+              class="text-destructive text-sm leading-6"
+            >
+              {{ t("tooLarge") }}
+            </p>
             <div class="flex flex-wrap gap-3">
-              <Button @click="editor.action(editor.prepare)">{{ t("preview") }}</Button>
+              <Button :disabled="draftTooLarge" @click="editor.action(editor.prepare)">{{
+                t("preview")
+              }}</Button>
               <Button variant="outline" @click="fileInput?.click()">{{ t("importFile") }}</Button>
               <Button
                 v-if="data.legacy_available"

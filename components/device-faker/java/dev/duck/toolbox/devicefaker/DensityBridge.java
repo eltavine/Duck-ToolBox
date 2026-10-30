@@ -55,7 +55,7 @@ public final class DensityBridge {
                     .invoke(window, 0, user);
             } else {
                 int density = Integer.parseInt(args[2]);
-                if (density < 1 || density > 10000) throw new IllegalArgumentException("invalid density");
+                if (density < 1) throw new IllegalArgumentException("invalid density");
                 windowType.getMethod("setForcedDisplayDensityForUser", int.class, int.class, int.class)
                     .invoke(window, 0, density, user);
             }
@@ -65,6 +65,7 @@ public final class DensityBridge {
         String value = read(user);
         // AOSP uses either null or empty for an unset override; both mean reset.
         Integer density = value == null || value.isEmpty() ? null : Integer.valueOf(value);
+        if (density != null && density == 0) density = null;
         return new JSONObject().put("user", user).put("override", density == null ? JSONObject.NULL : density);
     }
     public static void main(String[] args) {

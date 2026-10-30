@@ -261,6 +261,20 @@ elif len(args) == 2 and args[0] == '--delete':
         self.assertEqual(self.properties()["ro.debuggable"], "1")
         self.assertEqual(self.properties()["ro.boot.vbmeta.size"], "4096")
 
+    def test_unstartable_embedded_manager_does_not_skip_other_property_stages(self):
+        manager = self.module / "device-faker/device-faker-engine"
+        manager.parent.mkdir()
+        for code in [126, 127]:
+            with self.subTest(code=code):
+                self.reset()
+                self.executable(manager, f"#!/bin/sh\nexit {code}\n")
+                self.run_hook("boot-completed.sh")
+                self.assert_applied()
+        self.reset()
+        self.executable(manager, "#!/bin/sh\nexit 1\n")
+        self.run_hook("boot-completed.sh")
+        self.assertEqual(self.properties(), INITIAL)
+
     def test_missing_resetprop_is_reported(self):
         (self.bin / "resetprop").unlink()
         result = self.run_hook("prop.sh", success=False)

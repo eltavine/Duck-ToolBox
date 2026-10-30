@@ -115,6 +115,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
       - uses: android-actions/setup-android@v4.0.4
         with:
           packages: 'ndk;30.0.16248370'

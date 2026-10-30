@@ -24,70 +24,31 @@ pub fn hook_build_fields(
     merged_config: &MergedAppConfig,
 ) -> anyhow::Result<()> {
     let completed = env
-        .with_env(|jenv| -> Result<bool, jni::errors::Error> {
+        .with_env(|jenv| -> anyhow::Result<bool> {
+            if jenv.exception_check() {
+                return Ok(false);
+            }
             let build_class = jenv.find_class(jni_str!("android/os/Build"))?;
 
-            if let Some(manufacturer) = field_str(&merged_config.manufacturer) {
-                set_build_field(jenv, &build_class, jni_str!("MANUFACTURER"), manufacturer)
-                    .map_err(|_e| jni::errors::Error::JniCall(jni::errors::JniError::Unknown))?;
+            for (field, value) in [
+                (jni_str!("MANUFACTURER"), &merged_config.manufacturer),
+                (jni_str!("BRAND"), &merged_config.brand),
+                (jni_str!("MODEL"), &merged_config.model),
+                (jni_str!("DEVICE"), &merged_config.device),
+                (jni_str!("PRODUCT"), &merged_config.product),
+                (jni_str!("HARDWARE"), &merged_config.hardware),
+                (jni_str!("BOARD"), &merged_config.board),
+                // SOC_MODEL exists starting at API 31; typed missing-field errors skip it.
+                (jni_str!("SOC_MODEL"), &merged_config.soc_model),
+                (jni_str!("FINGERPRINT"), &merged_config.fingerprint),
+                (jni_str!("ID"), &merged_config.build_id),
+                (jni_str!("DISPLAY"), &merged_config.display_id),
+            ] {
+                if let Some(value) = field_str(value) {
+                    set_build_field(jenv, &build_class, field, value)?;
+                }
             }
-
-            if let Some(brand) = field_str(&merged_config.brand) {
-                set_build_field(jenv, &build_class, jni_str!("BRAND"), brand)
-                    .map_err(|_e| jni::errors::Error::JniCall(jni::errors::JniError::Unknown))?;
-            }
-
-            if let Some(model) = field_str(&merged_config.model) {
-                set_build_field(jenv, &build_class, jni_str!("MODEL"), model)
-                    .map_err(|_e| jni::errors::Error::JniCall(jni::errors::JniError::Unknown))?;
-            }
-
-            if let Some(device) = field_str(&merged_config.device) {
-                set_build_field(jenv, &build_class, jni_str!("DEVICE"), device)
-                    .map_err(|_e| jni::errors::Error::JniCall(jni::errors::JniError::Unknown))?;
-            }
-
-            if let Some(product) = field_str(&merged_config.product) {
-                set_build_field(jenv, &build_class, jni_str!("PRODUCT"), product)
-                    .map_err(|_e| jni::errors::Error::JniCall(jni::errors::JniError::Unknown))?;
-            }
-
-            // HARDWARE 字段
-            if let Some(hardware) = field_str(&merged_config.hardware) {
-                set_build_field(jenv, &build_class, jni_str!("HARDWARE"), hardware)
-                    .map_err(|_e| jni::errors::Error::JniCall(jni::errors::JniError::Unknown))?;
-            }
-
-            // BOARD 字段
-            if let Some(board) = field_str(&merged_config.board) {
-                set_build_field(jenv, &build_class, jni_str!("BOARD"), board)
-                    .map_err(|_e| jni::errors::Error::JniCall(jni::errors::JniError::Unknown))?;
-            }
-
-            // SOC_MODEL 字段（API 31+ 存在；Build.SOC_MODEL 的属性来源是 ro.soc.model）
-            if let Some(soc_model) = field_str(&merged_config.soc_model) {
-                set_build_field(jenv, &build_class, jni_str!("SOC_MODEL"), soc_model)
-                    .map_err(|_e| jni::errors::Error::JniCall(jni::errors::JniError::Unknown))?;
-            }
-
-            if let Some(fingerprint) = field_str(&merged_config.fingerprint) {
-                set_build_field(jenv, &build_class, jni_str!("FINGERPRINT"), fingerprint)
-                    .map_err(|_e| jni::errors::Error::JniCall(jni::errors::JniError::Unknown))?;
-            }
-
-            if let Some(build_id) = field_str(&merged_config.build_id) {
-                set_build_field(jenv, &build_class, jni_str!("ID"), build_id)
-                    .map_err(|_e| jni::errors::Error::JniCall(jni::errors::JniError::Unknown))?;
-            }
-
-            // Build.DISPLAY 的属性来源是 ro.build.display.id（单一属性，无分区副本）
-            if let Some(display_id) = field_str(&merged_config.display_id) {
-                set_build_field(jenv, &build_class, jni_str!("DISPLAY"), display_id)
-                    .map_err(|_e| jni::errors::Error::JniCall(jni::errors::JniError::Unknown))?;
-            }
-
-            hook_version_fields(jenv, &build_class, merged_config)
-                .map_err(|_e| jni::errors::Error::JniCall(jni::errors::JniError::Unknown))?;
+            hook_version_fields(jenv, &build_class, merged_config)?;
 
             Ok(true)
         })
@@ -145,9 +106,14 @@ fn set_build_field(
     field_name: &JNIStr,
     value: &str,
 ) -> anyhow::Result<()> {
-    let _field_id = env
-        .get_static_field_id(build_class, field_name, jni_sig!("Ljava/lang/String;"))
-        .with_context(|| "Failed to get field ID".to_string())?;
+    if let Err(error) =
+        env.get_static_field_id(build_class, field_name, jni_sig!("Ljava/lang/String;"))
+    {
+        if matches!(error, jni::errors::Error::FieldNotFound { .. }) {
+            return Ok(());
+        }
+        return Err(error).context("Failed to get field ID");
+    }
 
     let new_value = env
         .new_string(value)
@@ -170,12 +136,19 @@ fn set_build_int_field(
     field_name: &JNIStr,
     value: i32,
 ) -> anyhow::Result<()> {
-    let _field_id = env
-        .get_static_field_id(build_class, field_name, jni_sig!("I"))
-        .with_context(|| "Failed to get field ID".to_string())?;
+    if let Err(error) = env.get_static_field_id(build_class, field_name, jni_sig!("I")) {
+        if matches!(error, jni::errors::Error::FieldNotFound { .. }) {
+            return Ok(());
+        }
+        return Err(error).context("Failed to get field ID");
+    }
 
     env.set_static_field(build_class, field_name, jni_sig!("I"), JValue::Int(value))
         .with_context(|| "Failed to set field".to_string())?;
 
     Ok(())
 }
+
+#[cfg(all(test, unix, not(target_os = "android")))]
+#[path = "hooks/tests.rs"]
+mod tests;

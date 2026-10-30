@@ -51,6 +51,13 @@ impl ZygiskModule for MyModule {
         mut env: EnvUnowned,
         args: &mut <V4 as ZygiskRaw>::AppSpecializeArgs,
     ) {
+        let pending = env
+            .with_env(|env| Ok::<_, jni::errors::Error>(env.exception_check()))
+            .resolve::<crate::jni_policy::ClearAndDefault>();
+        if pending {
+            api.set_option(ZygiskOption::DlCloseModuleLibrary);
+            return;
+        }
         if let Err(err) = self.handle_app_specialize(&mut api, &mut env, args) {
             error!("pre_app_specialize failed: {err:?}");
         }

@@ -209,9 +209,17 @@ fn run_boot(paths: &Paths, stages: impl FnOnce() -> Result<()>) -> Result<Value>
 }
 
 pub fn uninstall() -> Result<Value> {
-    let paths = Paths::discover()?;
-    stop(&paths)?;
+    uninstall_at(&Paths::discover()?)
+}
+fn uninstall_at(paths: &Paths) -> Result<Value> {
+    stop(paths)?;
     crate::density::recover(&paths.root, &mut crate::density::AndroidBridge)?;
+    if paths.file("cleanup-failed").exists() {
+        bail!(Error::new(
+            "recovery_pending",
+            "Global cleanup remains pending during uninstall"
+        ));
+    }
     // Runtime state is retained until the root manager has removed the native payload.
     Ok(json!({"enabled": false}))
 }

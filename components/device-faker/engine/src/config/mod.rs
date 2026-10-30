@@ -164,7 +164,11 @@ pub struct Config {
 
 impl Config {
     pub fn from_toml(content: &str) -> Result<Self> {
-        Ok(toml::from_str(content)?)
+        let value: toml::Value = toml::from_str(content)?;
+        if contains_nul(&value) {
+            return Err(ConfigValidationError.into());
+        }
+        Ok(value.try_into()?)
     }
 
     /// 查找包名对应的应用配置（优先）或模板配置
@@ -371,5 +375,24 @@ impl MergedAppConfig {
                 }
             }
         }
+    }
+}
+
+#[derive(Debug)]
+pub struct ConfigValidationError;
+impl std::fmt::Display for ConfigValidationError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("Configuration cannot contain NUL characters")
+    }
+}
+impl std::error::Error for ConfigValidationError {}
+fn contains_nul(value: &toml::Value) -> bool {
+    match value {
+        toml::Value::String(text) => text.contains('\0'),
+        toml::Value::Array(values) => values.iter().any(contains_nul),
+        toml::Value::Table(table) => table
+            .iter()
+            .any(|(key, value)| key.contains('\0') || contains_nul(value)),
+        _ => false,
     }
 }

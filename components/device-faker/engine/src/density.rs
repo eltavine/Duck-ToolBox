@@ -68,14 +68,22 @@ fn paths(root: &Path) -> (PathBuf, PathBuf) {
     let data = root.join("data/adb/duck-device-faker");
     (data.join("density.json"), data.join("density.lock"))
 }
-fn lock(path: &Path) -> Result<File> {
+struct DensityLock(File);
+impl Drop for DensityLock {
+    fn drop(&mut self) {
+        // An unrelated fork may inherit the descriptor until exec. Only this
+        // guard owns the transaction, so descriptor lifetime must not extend it.
+        let _ = self.0.unlock();
+    }
+}
+fn lock(path: &Path) -> Result<DensityLock> {
     let file = File::options()
         .write(true)
         .create(true)
         .truncate(false)
         .open(path)?;
     file.try_lock().context("density recovery is busy")?;
-    Ok(file)
+    Ok(DensityLock(file))
 }
 fn load(path: &Path) -> Result<Option<Lease>> {
     let file = match File::open(path) {
@@ -88,13 +96,21 @@ fn load(path: &Path) -> Result<Option<Lease>> {
     if bytes.len() > 4096 {
         bail!("invalid density recovery journal");
     }
-    Ok(Some(serde_json::from_slice(&bytes)?))
+    let mut lease: Lease = serde_json::from_slice(&bytes)?;
+    // Earlier records could capture Android's zero/unset sentinel verbatim.
+    if lease.before.density == Some(0) {
+        lease.before.density = None;
+    }
+    Ok(Some(lease))
 }
 fn restore_locked(path: &Path, bridge: &mut impl Bridge) -> Result<()> {
     let Some(lease) = load(path)? else {
         return Ok(());
     };
     let current = bridge.read(Some(lease.before.user))?;
+    if current.user != lease.before.user {
+        bail!("density recovery returned another user");
+    }
     // Preserve a later settings edit, including changes made by another root tool.
     if current.user == lease.before.user && current.density == Some(lease.after) {
         bridge.set(lease.before.user, lease.before.density)?;
@@ -119,6 +135,14 @@ pub fn apply(root: &Path, density: u32, generation: &str, bridge: &mut impl Brid
         bail!("density activation is disabled");
     }
     let before = bridge.read(None)?;
+    // The helper can restore only positive Java integer density overrides.
+    if before.user > i32::MAX as u32
+        || before
+            .density
+            .is_some_and(|value| value == 0 || value > i32::MAX as u32)
+    {
+        bail!("original density cannot be restored safely");
+    }
     if crate::gate::activation_at(root).as_deref() != Some(generation) {
         bail!("density activation was cancelled");
     }
@@ -146,6 +170,7 @@ mod tests {
         values: BTreeMap<u32, Option<u32>>,
         fail_after_write: bool,
         change_generation_on_read: Option<PathBuf>,
+        wrong_read_user: bool,
     }
     impl Bridge for Fake {
         fn read(&mut self, user: Option<u32>) -> Result<Value> {
@@ -156,7 +181,7 @@ mod tests {
             }
             let user = user.unwrap_or(self.current);
             Ok(Value {
-                user,
+                user: if self.wrong_read_user { user + 1 } else { user },
                 density: *self.values.get(&user).unwrap_or(&None),
             })
         }
@@ -198,6 +223,7 @@ mod tests {
                 values: BTreeMap::from([(0, Some(280)), (10, Some(360))]),
                 fail_after_write: false,
                 change_generation_on_read: None,
+                wrong_read_user: false,
             },
         )
     }
@@ -238,6 +264,7 @@ mod tests {
             values: bridge.values,
             fail_after_write: false,
             change_generation_on_read: None,
+            wrong_read_user: false,
         };
         recover(root.path(), &mut next).unwrap();
         assert_eq!(next.values[&0], None);
@@ -263,6 +290,83 @@ mod tests {
         apply(root.path(), 420, "next", &mut bridge).unwrap();
         recover(root.path(), &mut bridge).unwrap();
         assert_eq!(bridge.values[&0], Some(280));
+    }
+    #[test]
+    fn mismatched_user_readback_retains_recovery_and_never_writes_another_user() {
+        let (root, mut bridge) = fixture();
+        apply(root.path(), 420, "initial", &mut bridge).unwrap();
+        bridge.wrong_read_user = true;
+        assert!(recover(root.path(), &mut bridge).is_err());
+        assert!(paths(root.path()).0.exists());
+        assert_eq!(bridge.values[&0], Some(420));
+        assert_eq!(bridge.values[&10], Some(360));
+        bridge.wrong_read_user = false;
+        recover(root.path(), &mut bridge).unwrap();
+        assert_eq!(bridge.values[&0], Some(280));
+    }
+    #[test]
+    fn recovery_accepts_an_earlier_journal_with_a_zero_unset_baseline() {
+        let (root, mut bridge) = fixture();
+        fs::write(
+            paths(root.path()).0,
+            r#"{"before":{"user":0,"override":0},"after":420}"#,
+        )
+        .unwrap();
+        bridge.values.insert(0, Some(420));
+        recover(root.path(), &mut bridge).unwrap();
+        assert_eq!(bridge.values[&0], None);
+        assert!(!paths(root.path()).0.exists());
+    }
+    #[test]
+    fn an_unrestorable_baseline_is_rejected_before_any_density_change() {
+        let (root, mut bridge) = fixture();
+        bridge.values.insert(0, Some(u32::MAX));
+        assert!(apply(root.path(), 420, "initial", &mut bridge).is_err());
+        assert_eq!(bridge.values[&0], Some(u32::MAX));
+        assert!(!paths(root.path()).0.exists());
+    }
+    #[cfg(unix)]
+    #[test]
+    fn inherited_descriptors_do_not_extend_a_completed_density_transaction() {
+        const CHILD: &str = "DEVICE_FAKER_TEST_INHERITED_DENSITY_LOCK";
+        if std::env::var_os(CHILD).is_none() {
+            assert!(Command::new(std::env::current_exe().unwrap())
+                .args(["--exact", "density::tests::inherited_descriptors_do_not_extend_a_completed_density_transaction"])
+                .env(CHILD, "1").status().unwrap().success());
+            return;
+        }
+        let (root, _) = fixture();
+        let path = paths(root.path()).1;
+        let guard = lock(&path).unwrap();
+        let pid = unsafe { libc::fork() };
+        assert!(pid >= 0);
+        if pid == 0 {
+            // After a multithreaded fork, the child executes only async-signal-safe calls.
+            loop {
+                unsafe {
+                    libc::pause();
+                }
+            }
+        }
+        struct Reap(libc::pid_t);
+        impl Drop for Reap {
+            fn drop(&mut self) {
+                unsafe {
+                    libc::kill(self.0, libc::SIGKILL);
+                    while libc::waitpid(self.0, std::ptr::null_mut(), 0) < 0 {
+                        if std::io::Error::last_os_error().raw_os_error() != Some(libc::EINTR) {
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        let _child = Reap(pid);
+        drop(guard);
+        assert!(
+            lock(&path).is_ok(),
+            "child retains the descriptor but not transaction ownership"
+        );
     }
     #[test]
     fn the_recovery_record_is_private() {

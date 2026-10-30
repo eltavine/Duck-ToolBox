@@ -5,6 +5,7 @@ import { isDuckError } from "@/core/duckd"
 import { fakerApi } from "./api"
 import type { Preview } from "./api"
 import { useFakerI18n } from "./i18n"
+import { readDraft, MAX_CONFIG_BYTES, MAX_DRAFT_BYTES, type Draft } from "./draft"
 
 const errorCodes = [
   "engine_failed",
@@ -26,15 +27,16 @@ export function useFakerEditor() {
   const { t } = useFakerI18n()
   const status = useQuery({ queryKey: ["device-faker.status"], queryFn: fakerApi.status })
   const data = computed(() => status.data.value)
-  const stored = useSessionStorage<{ content: string; revision: string } | null>(
-    "duck-toolbox/device-faker/draft",
-    null,
-    { serializer: { read: (value) => JSON.parse(value), write: (value) => JSON.stringify(value) } },
-  )
+  const stored = useSessionStorage<Draft | null>("duck-toolbox/device-faker/draft", null, {
+    serializer: { read: readDraft, write: (value) => JSON.stringify(value) },
+  })
   const draft = ref("")
   const base = ref("")
   const baseRevision = ref("")
   const initialized = ref(false)
+  const draftTooLarge = computed(
+    () => new TextEncoder().encode(draft.value).length > MAX_CONFIG_BYTES,
+  )
   const dirty = computed(() => draft.value !== base.value)
   const changed = computed(() => !!data.value && baseRevision.value !== data.value.config.revision)
   const preview = ref<Preview | null>(null)
@@ -62,10 +64,7 @@ export function useFakerEditor() {
       if (!config) return
       if (!initialized.value) {
         const value = stored.value
-        const cached =
-          value && typeof value.content === "string" && typeof value.revision === "string"
-            ? value
-            : null
+        const cached = value && value.content !== config.content ? value : null
         base.value = config.content
         draft.value =
           typeof cached?.content === "string" && typeof cached.revision === "string"
@@ -83,10 +82,20 @@ export function useFakerEditor() {
   )
   watch(draft, () => {
     preview.value = null
-    if (initialized.value && new TextEncoder().encode(draft.value).length <= 48 * 1024) {
-      stored.value = dirty.value ? { content: draft.value, revision: baseRevision.value } : null
+    if (initialized.value) {
+      stored.value =
+        dirty.value && new TextEncoder().encode(draft.value).length <= MAX_DRAFT_BYTES
+          ? { content: draft.value, revision: baseRevision.value }
+          : null
     }
   })
+  function appendProfile(content: string) {
+    if (new TextEncoder().encode(draft.value + content).length > MAX_CONFIG_BYTES) {
+      error.value = t("tooLarge")
+      return
+    }
+    draft.value += content
+  }
   async function action(work: () => Promise<unknown>) {
     if (busy.value) return
     busy.value = true
@@ -113,7 +122,7 @@ export function useFakerEditor() {
   }
   async function prepare() {
     const content = draft.value
-    if (new TextEncoder().encode(content).length > 48 * 1024) {
+    if (new TextEncoder().encode(content).length > MAX_CONFIG_BYTES) {
       error.value = t("tooLarge")
       return
     }
@@ -197,6 +206,7 @@ export function useFakerEditor() {
     data,
     draft,
     dirty,
+    draftTooLarge,
     changed,
     preview,
     busy,
@@ -220,5 +230,6 @@ export function useFakerEditor() {
     disable,
     reload,
     loadFile,
+    appendProfile,
   }
 }

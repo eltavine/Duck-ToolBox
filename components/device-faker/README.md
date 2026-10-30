@@ -44,8 +44,8 @@ Property clones own their mappings and remain alive for the process lifetime.
 Unknown bionic layouts skip property-memory changes. Real bionic mappings are not
 unmapped, replaced with MAP_FIXED or owned by a foreign Rust mapping object.
 `hide_maps` is ignored with a warning. Build-field failures clear their JNI
-exceptions instead of throwing into application startup. Build fields unavailable
-on a device may stop subsequent field updates for that process.
+exceptions instead of throwing into application startup. Missing Build fields are skipped individually; other JNI failures stop that
+process’s hook, and preexisting exceptions remain pending.
 
 Global resetprop and display-density options require acknowledgement. Sessions
 bind package, Android user and PID start time; foreground identity is confirmed

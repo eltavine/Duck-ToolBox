@@ -211,3 +211,52 @@ fn boot_adapter_runs_legacy_then_integrity_then_fallback_before_readiness() {
     assert!(run_boot(&paths, || crate::boot::stages(&module)).is_err());
     assert!(!crate::gate::startup_ready_at(&paths.root));
 }
+
+#[test]
+fn nul_characters_are_rejected_before_a_property_plan_can_be_applied() {
+    for content in [
+        r#"[[apps]]
+package='com.app'
+model="bad\u0000value"
+"#,
+        r#"[[apps]]
+package='com.app'
+[apps.custom_props]
+"ro.bad\u0000key"='__DELETE__'
+"#,
+        r#"[templates.unused]
+model="bad\u0000value"
+"#,
+    ] {
+        assert!(
+            crate::config::Config::from_toml(content)
+                .unwrap_err()
+                .is::<crate::config::ConfigValidationError>()
+        );
+    }
+    assert!(
+        crate::config::Config::from_toml(
+            r#"[[apps]]
+package='com.app'
+model='literal\u0000text'
+"#
+        )
+        .is_ok()
+    );
+}
+
+#[test]
+fn uninstall_keeps_a_pending_global_cleanup_visible_to_the_shell() {
+    let (_root, paths) = fixture();
+    write(&paths.file("enabled"), "initial").unwrap();
+    write(
+        &paths.file("cleanup-failed"),
+        "boot-test:global_cleanup_pending",
+    )
+    .unwrap();
+    assert!(uninstall_at(&paths).is_err());
+    assert!(!paths.enabled().unwrap());
+    assert!(paths.file("cleanup-failed").exists());
+    fs::remove_file(paths.file("cleanup-failed")).unwrap();
+    assert!(uninstall_at(&paths).is_ok());
+}

@@ -139,3 +139,44 @@ for (const prerequisite of [
     await expect(page.getByText("Disabled for new app processes", { exact: true })).toBeVisible()
   })
 }
+
+test("preserves an oversized multilingual draft across navigation without allowing publication", async ({
+  page,
+  open,
+}) => {
+  await open("/device-faker", { locale: "en" })
+  const draft = '[[apps]]\npackage = "com.example.app"\nmodel = "' + "设备".repeat(12000) + '"\n'
+  await page.locator("#faker-config").fill(draft)
+  await expect(page.locator("#faker-config")).toHaveAttribute("aria-invalid", "true")
+  await expect(page.locator("#faker-config-size")).toBeVisible()
+  await page.evaluate(() => {
+    location.hash = "/system"
+  })
+  await expect(page.locator("#faker-config")).toHaveCount(0)
+  await page.evaluate(() => {
+    location.hash = "/device-faker"
+  })
+  await expect(page.locator("#faker-config")).toHaveValue(draft)
+  await expect(
+    page.getByRole("button", { name: "Validate and preview", exact: true }),
+  ).toBeDisabled()
+  await expect(page.getByRole("button", { name: "Apply configuration", exact: true })).toHaveCount(
+    0,
+  )
+  await expect(page.getByRole("button", { name: "Stop spoofing", exact: true })).toBeEnabled()
+})
+
+test("an identical cached configuration uses the current saved revision", async ({
+  page,
+  open,
+}) => {
+  await page.addInitScript(() =>
+    sessionStorage.setItem(
+      "duck-toolbox/device-faker/draft",
+      JSON.stringify({ content: "debug = false\n\n[templates]\n", revision: "old-revision" }),
+    ),
+  )
+  await open("/device-faker", { locale: "en" })
+  await expect(page.locator("#faker-config")).toHaveValue("debug = false\n\n[templates]\n")
+  await expect(page.getByText("Saved state changed.", { exact: false })).toHaveCount(0)
+})
