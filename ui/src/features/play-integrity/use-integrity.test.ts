@@ -5,6 +5,7 @@ import { defineComponent, h } from "vue"
 import type { SecurityPatchPreview, SecurityPatchTarget } from "@/core/features"
 import { notifyError } from "@/core/notify"
 import { integrityApi } from "./api"
+import { libraryApi } from "./library-api"
 import type { Preview } from "./api"
 import { useIntegrity } from "./use-integrity"
 
@@ -20,8 +21,11 @@ vi.mock("./api", () => ({
     taskStart: vi.fn(),
     taskStatus: vi.fn(),
     taskCancel: vi.fn(),
+    preview: vi.fn(),
+    importPreview: vi.fn(),
   },
 }))
+vi.mock("./library-api", () => ({ libraryApi: { profilePreview: vi.fn() } }))
 
 function deferred<T>() {
   let resolve!: (value: T) => void
@@ -214,3 +218,98 @@ it("keeps a completed job tracked when its patch preview outlives the page", asy
   expect(state.taskId.value).toBe("job")
   expect(state.preview.value).toBeNull()
 })
+
+for (const source of ["editor", "import", "profile"] as const) {
+  for (const outcome of ["edited", "replaced", "unmounted", "failed"] as const) {
+    it(`discards a ${outcome} ${source} preview response`, async () => {
+      const pending = deferred<Preview>()
+      const load =
+        source === "editor"
+          ? integrityApi.preview
+          : source === "import"
+            ? integrityApi.importPreview
+            : libraryApi.profilePreview
+      vi.mocked(load).mockReturnValue(pending.promise)
+      const state = await setup()
+      const request =
+        source === "editor"
+          ? state.previewContent()
+          : source === "import"
+            ? state.importSource("/source")
+            : state.previewProfile("snapshot")
+      if (outcome === "edited") state.content.value = "MODEL=New draft"
+      else if (outcome === "unmounted") cleanups.pop()!()
+      else await state.prepare(candidate("Later"))
+      if (outcome === "failed") pending.reject(new Error("Stale failure"))
+      else pending.resolve(candidate("Old"))
+      await request
+      expect(state.preview.value?.entries.MODEL ?? null).toBe(
+        outcome === "replaced" || outcome === "failed" ? "Later" : null,
+      )
+      expect(notifyError).not.toHaveBeenCalled()
+      expect(state.busy.value).toBe(false)
+    })
+  }
+}
+
+it("reports current request and patch failures while suppressing a dismissed patch failure", async () => {
+  const state = await setup()
+  vi.mocked(integrityApi.preview).mockRejectedValueOnce(new Error("Current request"))
+  await state.previewContent()
+  expect(notifyError).toHaveBeenLastCalledWith(
+    expect.objectContaining({ message: "Current request" }),
+  )
+  targets.push({
+    id: "keystore",
+    labelKey: "test",
+    preview: async () => {
+      throw new Error("Current patch")
+    },
+  })
+  vi.mocked(integrityApi.preview).mockResolvedValue(candidate("Current", "2026-10-05"))
+  await state.previewContent()
+  expect(notifyError).toHaveBeenLastCalledWith(
+    expect.objectContaining({ message: "Current patch" }),
+  )
+  const pending = deferred<SecurityPatchPreview | null>()
+  targets.splice(0, 1, { id: "keystore", labelKey: "test", preview: () => pending.promise })
+  const preparing = state.prepare(candidate("Old", "2026-10-05"))
+  state.clearPreview()
+  pending.reject(new Error("Dismissed patch"))
+  await preparing
+  expect(notifyError).toHaveBeenCalledTimes(2)
+})
+
+for (const failed of [false, true]) {
+  it(`ignores a replaced partition preview ${failed ? "error" : "result"}`, async () => {
+    const pending = deferred<SecurityPatchPreview | null>()
+    const initial: SecurityPatchPreview = {
+      backend: "test",
+      patch: "2026-10-05",
+      revision: "old",
+      changes: [],
+    }
+    let first = true
+    targets.push({
+      id: "keystore",
+      labelKey: "test",
+      preview: async () => {
+        if (first) {
+          first = false
+          return initial
+        }
+        return pending.promise
+      },
+    })
+    const state = await setup()
+    await state.prepare(candidate("Old", initial.patch))
+    const request = state.patchPreview("keystore", { vendor: "2026-09-05" })
+    await state.prepare(candidate("Later"))
+    if (failed) pending.reject(new Error("Stale partition error"))
+    else pending.resolve({ ...initial, revision: "changed" })
+    await request
+    expect(state.preview.value?.entries.MODEL).toBe("Later")
+    expect(state.patches.value).toEqual([])
+    expect(notifyError).not.toHaveBeenCalled()
+  })
+}

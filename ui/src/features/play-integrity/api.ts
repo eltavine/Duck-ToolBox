@@ -47,6 +47,7 @@ export const previewSchema = configSchema.extend({
       build: z.string(),
       fetched: z.number(),
       patch_known: z.boolean(),
+      identity_bound: z.boolean().optional(),
       source_revision: z.string().optional(),
       channel: z.enum(["release", "beta", "canary"]).optional(),
       incremental: z.string().optional(),

@@ -8,11 +8,10 @@ import { Field, FieldLabel } from "@/components/ui/field"
 import QueryState from "@/core/components/QueryState.vue"
 import ConfirmDialog from "@/core/components/ConfirmDialog.vue"
 import { notifyError, notifySuccess } from "@/core/notify"
-import type { Preview } from "../api"
 import { libraryApi } from "../library-api"
 import { useIntegrityI18n } from "../i18n"
-defineProps<{ content: string }>()
-const emit = defineEmits<{ preview: [value: Preview] }>()
+defineProps<{ content: string; preparing: boolean }>()
+const emit = defineEmits<{ preview: [id: string] }>()
 const { t } = useIntegrityI18n()
 const global = useI18n()
 const client = useQueryClient()
@@ -48,9 +47,6 @@ async function remove() {
     await client.invalidateQueries({ queryKey: ["play-integrity.profiles"] })
   })
 }
-async function preview(id: string) {
-  await work(async () => emit("preview", await libraryApi.profilePreview(id)))
-}
 function askRemove(id: string) {
   removal.value = id
   confirm.value = true
@@ -67,6 +63,7 @@ function askRemove(id: string) {
           variant="secondary"
           :disabled="
             busy ||
+            preparing ||
             profiles.isPending.value ||
             !!profiles.error.value ||
             !name.trim() ||
@@ -89,7 +86,7 @@ function askRemove(id: string) {
         <p class="text-muted-foreground mt-2 break-words">{{ profile.error }}</p>
         <Button
           variant="ghost"
-          :disabled="busy"
+          :disabled="busy || preparing"
           :aria-label="`${global.t('core.actions.remove')}: ${profile.id}`"
           @click="askRemove(profile.id)"
           >{{ global.t("core.actions.remove") }}</Button
@@ -124,14 +121,14 @@ function askRemove(id: string) {
         </div>
         <Button
           variant="secondary"
-          :disabled="busy"
+          :disabled="busy || preparing"
           :aria-label="`${t('preview')}: ${profile.name}`"
-          @click="preview(profile.id)"
+          @click="emit('preview', profile.id)"
           >{{ t("preview") }}</Button
         >
         <Button
           variant="ghost"
-          :disabled="busy"
+          :disabled="busy || preparing"
           :aria-label="`${global.t('core.actions.remove')}: ${profile.name}`"
           @click="askRemove(profile.id)"
           >{{ global.t("core.actions.remove") }}</Button

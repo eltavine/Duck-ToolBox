@@ -57,6 +57,7 @@ const strong = ref(true),
   list = ref(""),
   picker = ref(false)
 const source = ref("")
+watch(source, () => s.clearPreview(), { flush: "sync" })
 const tabs = [
   "status",
   "config",
@@ -306,7 +307,8 @@ async function importFile(event: Event) {
             <SettingDetails :title="t('profiles.title')" class="mt-4">
               <ProfileLibrary
                 :content="s.content.value"
-                @preview="(value) => s.action(() => s.prepare(value))"
+                :preparing="s.busy.value"
+                @preview="s.previewProfile"
               />
             </SettingDetails>
             <Button

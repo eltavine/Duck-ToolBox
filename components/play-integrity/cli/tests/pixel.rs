@@ -48,6 +48,77 @@ fn pixel_preview_and_snapshot_preserve_power_and_report_unknown_patch() {
     );
     assert_eq!(saved["ok"], true, "{saved}");
     assert_eq!(saved["data"]["profiles"][0]["provenance"]["build"], "ID.1");
+    assert_eq!(
+        saved["data"]["profiles"][0]["provenance"],
+        candidate["provenance"]
+    );
+    for field in [
+        "MODEL",
+        "DEVICE_INITIAL_SDK_INT",
+        "FINGERPRINT",
+        "INCREMENTAL",
+        "RELEASE",
+        "MANUFACTURER",
+        "ro.build.fingerprint",
+        "ro.product.model",
+        "ro.product.first_api_level",
+    ] {
+        let mut changed = candidate["entries"].clone();
+        changed[field] = if field.contains("api_level") || field == "DEVICE_INITIAL_SDK_INT" {
+            json!("35")
+        } else {
+            json!("Changed")
+        };
+        assert_eq!(
+            request(
+                root,
+                "profile-save",
+                json!({"name":"Changed","content":changed.to_string(),"provenance":candidate["provenance"]})
+            )["ok"],
+            false,
+            "{field}"
+        );
+    }
+    for field in [
+        "identity_bound",
+        "device",
+        "build",
+        "fingerprint",
+        "model",
+        "first_api_level",
+        "incremental",
+    ] {
+        let mut changed = candidate["provenance"].clone();
+        changed.as_object_mut().unwrap().remove(field);
+        assert_eq!(
+            request(
+                root,
+                "profile-save",
+                json!({"name":"Incomplete","content":candidate["json"],"provenance":changed})
+            )["ok"],
+            false,
+            "{field}"
+        );
+    }
+    let legacy = request(
+        root,
+        "profile-save",
+        json!({"name":"Legacy","content":candidate["json"],"provenance":{
+            "source":"https://flash.android.com/","device":"bluejay","build":"ID.1","fetched":candidate["provenance"]["fetched"],"patch_known":false
+        }}),
+    );
+    assert_eq!(legacy["ok"], true, "{legacy}");
+    let legacy = legacy["data"]["profiles"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|p| p["name"] == "Legacy")
+        .unwrap();
+    assert_eq!(legacy["provenance"]["identity_bound"], false);
+    assert_eq!(
+        request(root, "profile-preview", json!({"id":legacy["id"]}))["ok"],
+        true
+    );
     assert_eq!(request(root, "config", json!({})), before);
     assert_eq!(request(root, "power", json!({}))["data"]["enabled"], false);
     assert_eq!(

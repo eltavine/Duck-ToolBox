@@ -203,7 +203,8 @@
     "preview": "Visualizar impressão selecionada",
     "search": "Buscar modelo ou codinome",
     "noDevices": "Nenhum dispositivo encontrado. Limpe a busca para ver todos os modelos.",
-    "availability": "As compilações disponíveis dependem do serviço de metadados do Google. Um modelo listado não garante compilações disponíveis nem aprovação na verificação de integridade."
+    "availability": "As compilações disponíveis dependem do serviço de metadados do Google. Um modelo listado não garante compilações disponíveis nem aprovação na verificação de integridade.",
+    "legacySource": "Este registro de origem antigo identifica apenas o dispositivo e a compilação. Ele não vincula a impressão digital completa, o modelo ou a API de lançamento."
   },
   "quick": {
     "title": "Controles da impressão",

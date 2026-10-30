@@ -203,7 +203,8 @@
     "preview": "Anteprima dell’impronta selezionata",
     "search": "Cerca modello o nome in codice",
     "noDevices": "Nessun dispositivo corrispondente. Cancella la ricerca per vedere tutti i modelli.",
-    "availability": "Le build disponibili dipendono dal servizio di metadati di Google. Un modello elencato non garantisce build disponibili né il superamento della verifica di integrità."
+    "availability": "Le build disponibili dipendono dal servizio di metadati di Google. Un modello elencato non garantisce build disponibili né il superamento della verifica di integrità.",
+    "legacySource": "Questo vecchio record di origine identifica solo dispositivo e build. Non associa l’impronta completa, il modello o l’API al lancio."
   },
   "quick": {
     "title": "Controlli dell’impronta",

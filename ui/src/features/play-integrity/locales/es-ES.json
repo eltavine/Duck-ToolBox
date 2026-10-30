@@ -203,7 +203,8 @@
     "preview": "Revisar la huella seleccionada",
     "search": "Buscar modelo o nombre en clave",
     "noDevices": "No hay dispositivos coincidentes. Borra la búsqueda para ver todos los modelos.",
-    "availability": "Las compilaciones disponibles dependen del servicio de metadatos de Google. Que un modelo aparezca no garantiza compilaciones disponibles ni superar la comprobación de integridad."
+    "availability": "Las compilaciones disponibles dependen del servicio de metadatos de Google. Que un modelo aparezca no garantiza compilaciones disponibles ni superar la comprobación de integridad.",
+    "legacySource": "Este registro de origen antiguo solo identifica el dispositivo y la compilación. No vincula la huella completa, el modelo ni la API de lanzamiento."
   },
   "quick": {
     "title": "Controles de huella",

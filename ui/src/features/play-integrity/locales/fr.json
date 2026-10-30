@@ -203,7 +203,8 @@
     "preview": "Prévisualiser l’empreinte choisie",
     "search": "Rechercher un modèle ou un nom de code",
     "noDevices": "Aucun appareil correspondant. Effacez la recherche pour afficher tous les modèles.",
-    "availability": "Les versions disponibles dépendent du service de métadonnées de Google. La présence d’un modèle ne garantit ni la disponibilité d’une version ni la réussite du contrôle d’intégrité."
+    "availability": "Les versions disponibles dépendent du service de métadonnées de Google. La présence d’un modèle ne garantit ni la disponibilité d’une version ni la réussite du contrôle d’intégrité.",
+    "legacySource": "Cet ancien enregistrement de provenance identifie uniquement l’appareil et la version. Il ne lie pas l’empreinte complète, le modèle ni l’API de lancement."
   },
   "quick": {
     "title": "Réglages de l’empreinte",

@@ -203,7 +203,8 @@
     "preview": "Podgląd wybranego odcisku",
     "search": "Szukaj modelu lub nazwy kodowej",
     "noDevices": "Brak pasujących urządzeń. Wyczyść wyszukiwanie, aby zobaczyć wszystkie modele.",
-    "availability": "Dostępne kompilacje zależą od usługi metadanych Google. Obecność modelu na liście nie gwarantuje dostępności kompilacji ani pozytywnego wyniku kontroli integralności."
+    "availability": "Dostępne kompilacje zależą od usługi metadanych Google. Obecność modelu na liście nie gwarantuje dostępności kompilacji ani pozytywnego wyniku kontroli integralności.",
+    "legacySource": "Ten starszy zapis źródła wskazuje tylko urządzenie i kompilację. Nie wiąże pełnego odcisku, modelu ani API z chwili premiery."
   },
   "quick": {
     "title": "Ustawienia odcisku",

@@ -95,16 +95,29 @@ async function saveCandidate() {
       @preview="emit('patchPreview', patch.target.id, $event)"
     />
     <div v-if="preview.provenance" class="mt-4 rounded-xl border p-4">
-      <p dir="ltr" class="text-muted-foreground mb-3 text-sm break-all">
+      <p dir="ltr" class="text-muted-foreground mb-3 text-sm [overflow-wrap:anywhere]">
         {{ preview.provenance.source }} · {{ preview.provenance.build }}
+      </p>
+      <p
+        v-if="
+          preview.provenance.source === 'https://flash.android.com/' &&
+          preview.provenance.identity_bound !== true
+        "
+        role="status"
+        class="text-muted-foreground mb-3 text-sm break-words"
+      >
+        {{ t("pixel.legacySource") }}
       </p>
       <p
         v-if="preview.provenance.source_revision"
         dir="ltr"
-        class="text-muted-foreground mb-3 text-xs break-all"
+        class="text-muted-foreground mb-3 text-xs [overflow-wrap:anywhere]"
       >
         {{ preview.provenance.source_revision }} ·
-        {{ preview.provenance.channel ? t(`archive.${preview.provenance.channel}`) : "" }} ·
+        <bdi dir="auto">{{
+          preview.provenance.channel ? t(`archive.${preview.provenance.channel}`) : ""
+        }}</bdi>
+        ·
         {{ preview.provenance.security_patch }}
       </p>
       <Input

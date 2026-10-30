@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 //! Pixel release metadata; candidates are constructed locally and never applied here.
 use crate::pixel_devices::{DEFAULT, DEVICES};
-use crate::{Engine, config, files, network};
+use crate::{Engine, config, files, network, rules, text};
 use anyhow::{Result, bail};
 use serde_json::{Value, json};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
@@ -168,12 +168,67 @@ pub fn preview(engine: &Engine, input: &Value) -> Result<Value> {
     )?;
     config::migrate(&mut entries, true, false);
     let mut result = config::identity_preview(engine, entries)?;
-    result["provenance"] = json!({"source":SOURCE,"device":product,"build":build["id"],"fetched":cached["fetched"],"patch_known":false});
+    result["provenance"] = json!({"source":SOURCE,"device":product,"build":build["id"],"fetched":cached["fetched"],"patch_known":false,
+        "identity_bound":true,"fingerprint":expected,"incremental":build["incremental"],"model":model,"first_api_level":first_api});
     result["warnings"]
         .as_array_mut()
         .unwrap()
         .push(json!({"code":"pixel_patch_unknown","fields":[]}));
     Ok(result)
+}
+
+pub fn provenance(value: &Value, entries: &config::Entries) -> Result<Value> {
+    let product = text(value, "device")?;
+    let (_, model, first_api) = device(value)?;
+    if value["source"] != SOURCE
+        || value["patch_known"] != false
+        || value["identity_bound"] != true
+        || !value["fetched"].is_u64()
+        || value["model"] != model
+        || value["first_api_level"] != first_api
+    {
+        bail!("invalid Pixel identity provenance");
+    }
+    let build = text(value, "build")?;
+    let incremental = text(value, "incremental")?;
+    let expected = fingerprint(
+        product,
+        build,
+        incremental,
+        entries.get("RELEASE").map(String::as_str).unwrap_or(""),
+    )
+    .ok_or_else(|| anyhow::anyhow!("invalid Pixel provenance fingerprint"))?;
+    if value["fingerprint"] != expected {
+        bail!("Pixel provenance does not match the release identity");
+    }
+    for (field, expected) in [
+        ("MANUFACTURER", "Google"),
+        ("BRAND", "google"),
+        ("MODEL", model),
+        ("DEVICE", product),
+        ("PRODUCT", product),
+        ("ID", build),
+        ("INCREMENTAL", incremental),
+        ("FINGERPRINT", expected.as_str()),
+        ("TYPE", "user"),
+        ("TAGS", "release-keys"),
+        ("DEVICE_INITIAL_SDK_INT", &first_api.to_string()),
+    ] {
+        if entries.get(field).map(String::as_str) != Some(expected) {
+            bail!("Pixel provenance does not match the configuration: {field}");
+        }
+    }
+    for &(field, property) in rules::BUILD_PROPERTIES {
+        if let Some(prop) = entries.get(property)
+            && entries.get(field) != Some(prop)
+        {
+            bail!("Pixel snapshot has inconsistent paired fields: {field}");
+        }
+    }
+    Ok(
+        json!({"source":SOURCE,"device":product,"build":build,"fetched":value["fetched"],"patch_known":false,
+        "identity_bound":true,"fingerprint":expected,"incremental":incremental,"model":model,"first_api_level":first_api}),
+    )
 }
 
 #[cfg(test)]

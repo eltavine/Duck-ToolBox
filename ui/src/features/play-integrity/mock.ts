@@ -199,6 +199,15 @@ const mock: MockModule = {
           build: "RELEASE.1",
           fetched: Math.floor(Date.now() / 1000),
           patch_known: false,
+          ...(new URLSearchParams(location.search).has("legacy-pixel-source")
+            ? {}
+            : {
+                identity_bound: true,
+                fingerprint: `google/${device}/${device}:${release}/RELEASE.1/${incremental}:user/release-keys`,
+                incremental,
+                model: model.name,
+                first_api_level: model.api,
+              }),
         },
         warnings: [{ code: "pixel_patch_unknown", fields: [] }],
       }

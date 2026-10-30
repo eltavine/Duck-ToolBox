@@ -1,5 +1,25 @@
 import { expect, test } from "./fixtures"
 
+test("changing the device-file path invalidates an in-flight import preview", async ({
+  page,
+  open,
+}) => {
+  await open("/play-integrity/config", { query: { latency: "400" } })
+  await page.getByRole("button", { name: "Import, export and raw files", exact: true }).click()
+  const source = page.getByRole("textbox", { name: "Import device file", exact: true })
+  await expect(source).toHaveValue("/data/adb/play-integrity/custom.pif.json")
+  await source.fill("/data/local/tmp/first.prop")
+  const load = page.getByRole("button", { name: "Import device file", exact: true })
+  await load.click()
+  await expect(load).toBeDisabled()
+  await source.fill("/data/local/tmp/second.prop")
+  await expect(load).toBeEnabled()
+  await expect(page.getByRole("button", { name: "Apply configuration", exact: true })).toHaveCount(
+    0,
+  )
+  await expect(page.getByLabel("Configuration", { exact: true })).toHaveValue(/MODEL=Pixel 9 Pro/)
+})
+
 for (const directory of ["/data/adb/play-integrity", "/data/adb/pi-fixture"]) {
   test(`browses the engine data directory reported as ${directory}`, async ({ page, open }) => {
     await open("/play-integrity/config", {

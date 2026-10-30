@@ -203,7 +203,8 @@
     "preview": "Tinjau sidik jari terpilih",
     "search": "Cari model atau nama kode",
     "noDevices": "Tidak ada perangkat yang cocok. Hapus pencarian untuk melihat semua model.",
-    "availability": "Build yang tersedia bergantung pada layanan metadata Google. Model yang tercantum tidak menjamin ketersediaan build atau kelulusan pemeriksaan integritas."
+    "availability": "Build yang tersedia bergantung pada layanan metadata Google. Model yang tercantum tidak menjamin ketersediaan build atau kelulusan pemeriksaan integritas.",
+    "legacySource": "Catatan sumber lama ini hanya mengidentifikasi perangkat dan build. Sidik jari lengkap, model, dan API saat peluncuran belum terikat."
   },
   "quick": {
     "title": "Pengaturan sidik jari",

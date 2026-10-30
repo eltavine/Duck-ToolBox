@@ -147,8 +147,12 @@ leaves patch fields unset instead of inferring them from the build ID or release
 date. The first shipped API is device metadata, separate from the running OS SDK.
 
 Previews can include `provenance` (source, device, build, fetch time and whether an
-exact patch date is known). `profile-save` can retain this optional metadata with
-an immutable candidate snapshot. Provenance is descriptive and not a verified
+exact patch date is known). New official Pixel records also carry
+`identity_bound=true`, the complete fingerprint, incremental version, model and
+launch API. Snapshot save and read validate these against the identity fields and
+any paired properties. Older records without this binding remain readable and
+are identified as limited source records in the WebUI. `profile-save` can retain
+this optional metadata with an immutable candidate snapshot. Provenance is descriptive and not a verified
 integrity verdict. Official release metadata: <https://flash.android.com/>.
 Google also distinguishes release dates from patch dates at
 <https://developers.google.com/android/images>.

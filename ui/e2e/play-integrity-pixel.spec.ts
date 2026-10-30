@@ -88,6 +88,35 @@ test("fetches Pixel 6a by default and saves a candidate without applying", async
   await expect(page.getByText("Pixel 6a release", { exact: true })).toBeVisible()
 })
 
+for (const [locale, fetch, preview, warning] of [
+  [
+    "en",
+    "Fetch Pixel builds",
+    "Preview selected fingerprint",
+    "This older source record identifies only the device and build.",
+  ],
+  ["zh-CN", "获取 Pixel 构建", "预览所选指纹", "此旧版来源记录仅包含设备代号和构建号"],
+  [
+    "ar",
+    "جلب إصدارات Pixel",
+    "معاينة البصمة المحددة",
+    "يحدد سجل المصدر القديم هذا الجهاز والإصدار فقط.",
+  ],
+] as const) {
+  test(`keeps legacy Pixel provenance readable and identified in ${locale}`, async ({
+    page,
+    open,
+  }, testInfo) => {
+    await page.setViewportSize({ width: 320, height: 800 })
+    await open("/play-integrity/generate", { locale, query: { "legacy-pixel-source": "1" } })
+    await page.getByRole("button", { name: fetch, exact: true }).click()
+    await page.getByRole("button", { name: preview, exact: true }).click()
+    await expect(page.getByRole("status").filter({ hasText: warning })).toBeVisible()
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320)
+    await page.screenshot({ path: testInfo.outputPath("legacy-pixel-source.png"), fullPage: true })
+  })
+}
+
 test("prepares three overrides in a draft and shows pending process activation after apply", async ({
   page,
   open,

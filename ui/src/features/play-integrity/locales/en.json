@@ -203,7 +203,8 @@
     "preview": "Preview selected fingerprint",
     "search": "Search model or codename",
     "noDevices": "No matching devices. Clear the search to see all models.",
-    "availability": "Available release builds depend on Google’s metadata service. A listed model does not guarantee build availability or integrity acceptance."
+    "availability": "Available release builds depend on Google’s metadata service. A listed model does not guarantee build availability or integrity acceptance.",
+    "legacySource": "This older source record identifies only the device and build. It does not bind the complete fingerprint, model or launch API."
   },
   "quick": {
     "title": "Fingerprint controls",

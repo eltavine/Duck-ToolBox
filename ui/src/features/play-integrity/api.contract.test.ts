@@ -51,6 +51,18 @@ describe.skipIf(!hasDuckd || !existsSync(engine))(
       expect(candidate.entries.MODEL).toBe("Pixel 10a")
       expect(candidate.entries.DEVICE_INITIAL_SDK_INT).toBe("36")
       expect(candidate.entries.FINGERPRINT).toBe(builds[1]!.fingerprint)
+      expect(candidate.provenance?.identity_bound).toBe(true)
+      const saved = await libraryApi.saveProfile(
+        "Official release",
+        candidate.json,
+        candidate.provenance,
+      )
+      const restored = await libraryApi.profilePreview(saved.profiles[0]!.id)
+      expect(restored.provenance).toEqual(candidate.provenance)
+      const changed = JSON.stringify({ ...candidate.entries, FINGERPRINT: "Changed" })
+      await expect(
+        libraryApi.saveProfile("Changed", changed, candidate.provenance),
+      ).rejects.toThrow()
       expect(await integrityApi.config()).toEqual(before)
     })
     it("rejects a stale archive selection and retains archive provenance with snapshots", async () => {

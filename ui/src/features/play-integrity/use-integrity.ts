@@ -5,6 +5,7 @@ import { contributions } from "@/core/features"
 import type { SecurityPatchPreview, SecurityPatchTarget } from "@/core/features"
 import { notifyError, notifySuccess } from "@/core/notify"
 import { integrityApi } from "./api"
+import { libraryApi } from "./library-api"
 import type { Options, Preview, Task } from "./api"
 import { useIntegrityI18n } from "./i18n"
 
@@ -67,7 +68,7 @@ export function useIntegrity() {
     },
     { immediate: true },
   )
-  watch(content, clearPreview)
+  watch(content, clearPreview, { flush: "sync" })
   async function action(work: () => Promise<unknown>) {
     if (busy.value) return
     busy.value = true
@@ -93,7 +94,13 @@ export function useIntegrity() {
     const prepared: typeof patches.value = []
     if (value.suggested_patch) {
       for (const target of contributions("securityPatchTargets")) {
-        const patch = await target.preview(value.suggested_patch)
+        let patch: SecurityPatchPreview | null
+        try {
+          patch = await target.preview(value.suggested_patch)
+        } catch (error) {
+          if (disposed || generation !== previewGeneration) return
+          throw error
+        }
         if (disposed || generation !== previewGeneration) return
         if (patch) prepared.push({ target, preview: patch, selected: false })
       }
@@ -101,6 +108,18 @@ export function useIntegrity() {
     if (disposed || generation !== previewGeneration) return
     patches.value = prepared
     preview.value = value
+  }
+  async function requestPreview(load: () => Promise<Preview>) {
+    clearPreview()
+    const generation = previewGeneration
+    let value: Preview
+    try {
+      value = await load()
+    } catch (error) {
+      if (!disposed && generation === previewGeneration) throw error
+      return
+    }
+    if (!disposed && generation === previewGeneration) await prepare(value)
   }
   async function apply() {
     const candidate = preview.value
@@ -179,14 +198,24 @@ export function useIntegrity() {
       action(async () => {
         const item = patches.value.find((p) => p.target.id === id)
         if (!item) return
-        const next = await item.target.preview(item.preview.patch, partitions)
+        const generation = previewGeneration
+        let next: SecurityPatchPreview | null
+        try {
+          next = await item.target.preview(item.preview.patch, partitions)
+        } catch (error) {
+          if (disposed || generation !== previewGeneration) return
+          throw error
+        }
+        if (disposed || generation !== previewGeneration) return
         if (!next) throw new Error(t("patch.targetUnavailable"))
         item.preview = next
       }),
     previewContent: (migrate = false) =>
-      action(async () => prepare(await integrityApi.preview(content.value, "auto", migrate))),
+      action(() => requestPreview(() => integrityApi.preview(content.value, "auto", migrate))),
     importSource: (source: string) =>
-      action(async () => prepare(await integrityApi.importPreview(source))),
+      action(() => requestPreview(() => integrityApi.importPreview(source))),
+    previewProfile: (id: string) =>
+      action(() => requestPreview(() => libraryApi.profilePreview(id))),
     saveOptions: (list: string) =>
       action(async () => {
         await integrityApi.options({

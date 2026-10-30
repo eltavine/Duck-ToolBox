@@ -203,7 +203,8 @@
     "preview": "Gewählten Fingerprint prüfen",
     "search": "Modell oder Codename suchen",
     "noDevices": "Keine passenden Geräte. Suche leeren, um alle Modelle anzuzeigen.",
-    "availability": "Verfügbare Builds hängen vom Metadatendienst von Google ab. Ein aufgeführtes Modell garantiert weder verfügbare Builds noch das Bestehen der Integritätsprüfung."
+    "availability": "Verfügbare Builds hängen vom Metadatendienst von Google ab. Ein aufgeführtes Modell garantiert weder verfügbare Builds noch das Bestehen der Integritätsprüfung.",
+    "legacySource": "Dieser ältere Herkunftseintrag enthält nur Gerät und Build. Er bindet weder den vollständigen Fingerprint noch Modell oder Start-API."
   },
   "quick": {
     "title": "Fingerprint-Einstellungen",
