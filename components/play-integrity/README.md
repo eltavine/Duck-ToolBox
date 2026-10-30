@@ -124,7 +124,11 @@ the comparison does not establish injection or a Google Play Integrity verdict.
 ## Pixel release candidates and activation
 
 `pixel-devices` returns the supported device catalog with `bluejay` (Pixel 6a) as
-its default. `pixel-builds` accepts an optional `device` and retrieves release
+its default. It includes 39 Pixel phone, foldable and tablet identities through
+the Pixel 11 family; the WebUI searches model names and codenames. Launch API
+levels and sources are documented in [RULES.md](RULES.md). A listed identity does
+not guarantee that Google currently serves compatible release metadata.
+`pixel-builds` accepts an optional `device` and retrieves release
 metadata from Google's Android Flash Tool over certificate-verified HTTPS. It
 uses the public web client configuration at request time, allows no redirects,
 limits each request to five seconds and each response to 2 MiB, and retains at
@@ -132,7 +136,10 @@ most 40 builds per device. The private catalog expires after 24 hours. This web
 metadata interface can change independently of this engine; unsupported responses
 fail explicitly without modifying the applied configuration.
 
-`pixel-preview` accepts `device` and a fetched `build` identifier. It constructs a
+`pixel-preview` accepts `device`, a fetched `build` identifier, and its
+`incremental` version. Legacy requests without `incremental` require a unique
+build identifier. Selection changes and refetches invalidate previous previews.
+It constructs a
 release fingerprint and paired Build/property fields from that build, preserves
 existing explicit advanced options, and does not apply configuration or enable
 PIF. The metadata does not supply an exact security patch level, so the candidate

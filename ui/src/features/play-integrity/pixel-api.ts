@@ -26,6 +26,9 @@ export const pixelApi = {
     }),
   builds: (device: string) =>
     duckd(["play-integrity", "pixel-builds"], { input: { device }, schema: pixelCatalogSchema }),
-  preview: (device: string, build: string) =>
-    duckd(["play-integrity", "pixel-preview"], { input: { device, build }, schema: previewSchema }),
+  preview: (device: string, build: string, incremental?: string) =>
+    duckd(["play-integrity", "pixel-preview"], {
+      input: { device, build, incremental },
+      schema: previewSchema,
+    }),
 }

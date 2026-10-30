@@ -322,6 +322,7 @@ async function importFile(event: Event) {
         <PixelFingerprints
           v-if="section === 'generate'"
           @preview="(value) => s.action(() => s.prepare(value))"
+          @invalidate="s.clearPreview()"
         />
         <PixelArchive
           v-if="section === 'archive'"

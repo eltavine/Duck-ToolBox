@@ -200,7 +200,10 @@
     "fetch": "Ambil build Pixel",
     "loading": "Mengambil…",
     "patchUnknown": "Tanggal patch keamanan yang tepat tidak diketahui; tidak akan ditebak atau disinkronkan.",
-    "preview": "Tinjau sidik jari terpilih"
+    "preview": "Tinjau sidik jari terpilih",
+    "search": "Cari model atau nama kode",
+    "noDevices": "Tidak ada perangkat yang cocok. Hapus pencarian untuk melihat semua model.",
+    "availability": "Build yang tersedia bergantung pada layanan metadata Google. Model yang tercantum tidak menjamin ketersediaan build atau kelulusan pemeriksaan integritas."
   },
   "quick": {
     "title": "Pengaturan sidik jari",

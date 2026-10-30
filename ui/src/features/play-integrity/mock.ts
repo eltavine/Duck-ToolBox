@@ -22,6 +22,17 @@ let processRestart = false
 let rebootRequired = false
 let interrupted = new URLSearchParams(location.search).get("interrupted-transaction") === "1"
 const profiles: Awaited<ReturnType<typeof libraryApi.profiles>>["profiles"] = []
+const pixelDevices = [
+  { id: "cubs", name: "Pixel 11", api: 37 },
+  { id: "yogi", name: "Pixel 11 Pro Fold", api: 37 },
+  { id: "stallion", name: "Pixel 10a", api: 36 },
+  { id: "rango", name: "Pixel 10 Pro Fold", api: 36 },
+  { id: "felix", name: "Pixel Fold", api: 33 },
+  { id: "tangorpro", name: "Pixel Tablet", api: 33 },
+  { id: "bluejay", name: "Pixel 6a", api: 32 },
+  { id: "lynx", name: "Pixel 7a", api: 33 },
+  { id: "sailfish", name: "Pixel", api: 25 },
+]
 const profileContents = new Map<string, string>()
 const invalidProfiles = new URLSearchParams(location.search).has("corrupt-pif-library")
   ? [{ id: "a".repeat(64), error: "Invalid snapshot fixture" }]
@@ -153,34 +164,34 @@ const mock: MockModule = {
     },
     "play-integrity.pixel-devices": () => ({
       default: "bluejay",
-      devices: [
-        { id: "bluejay", name: "Pixel 6a" },
-        { id: "lynx", name: "Pixel 7a" },
-      ],
+      devices: pixelDevices,
     }),
     "play-integrity.pixel-builds": (_a, _f, input) => {
       const device = (input as { device: string }).device
+      const model = pixelDevices.find((item) => item.id === device)!
+      const release = model.api === 37 ? "17" : "16"
       return {
         device,
-        model: device === "bluejay" ? "Pixel 6a" : "Pixel 7a",
+        model: model.name,
         source: "https://flash.android.com/",
         fetched: Math.floor(Date.now() / 1000),
-        builds: [
-          {
-            id: "RELEASE.1",
-            incremental: "1234",
-            release: "16",
-            notes: "",
-            fingerprint: `google/${device}/${device}:16/RELEASE.1/1234:user/release-keys`,
-          },
-        ],
+        builds: ["1234", "1233"].map((incremental) => ({
+          id: "RELEASE.1",
+          incremental,
+          release,
+          notes: "",
+          fingerprint: `google/${device}/${device}:${release}/RELEASE.1/${incremental}:user/release-keys`,
+        })),
       }
     },
     "play-integrity.pixel-preview": (_a, _f, input) => {
       const device = (input as { device: string }).device
+      const model = pixelDevices.find((item) => item.id === device)!
+      const release = model.api === 37 ? "17" : "16"
+      const incremental = (input as { incremental?: string }).incremental ?? "1234"
       return {
         ...preview(
-          `MODEL=${device === "bluejay" ? "Pixel 6a" : "Pixel 7a"}\nDEVICE=${device}\nID=RELEASE.1\nFINGERPRINT=google/${device}/${device}:16/RELEASE.1/1234:user/release-keys\n`,
+          `MODEL=${model.name}\nDEVICE=${device}\nDEVICE_INITIAL_SDK_INT=${model.api}\nID=RELEASE.1\nFINGERPRINT=google/${device}/${device}:${release}/RELEASE.1/${incremental}:user/release-keys\n`,
         ),
         provenance: {
           source: "https://flash.android.com/",

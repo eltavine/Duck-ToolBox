@@ -200,7 +200,10 @@
     "fetch": "Lấy bản dựng Pixel",
     "loading": "Đang lấy…",
     "patchUnknown": "Không rõ ngày bản vá bảo mật chính xác; không suy đoán hay đồng bộ ngày.",
-    "preview": "Xem trước dấu vân tay đã chọn"
+    "preview": "Xem trước dấu vân tay đã chọn",
+    "search": "Tìm theo mẫu máy hoặc tên mã",
+    "noDevices": "Không có thiết bị phù hợp. Xóa tìm kiếm để xem tất cả mẫu máy.",
+    "availability": "Các bản dựng có sẵn phụ thuộc vào dịch vụ siêu dữ liệu của Google. Mẫu máy có trong danh sách không đảm bảo có bản dựng hoặc vượt qua kiểm tra tính toàn vẹn."
   },
   "quick": {
     "title": "Thiết lập dấu vân tay",

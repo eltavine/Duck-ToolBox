@@ -14,6 +14,7 @@ mod operations;
 mod paths;
 mod pixel;
 mod pixel_archive;
+mod pixel_devices;
 mod power;
 mod reports;
 mod rules;

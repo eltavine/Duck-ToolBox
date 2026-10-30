@@ -200,7 +200,10 @@
     "fetch": "Pixel-Builds abrufen",
     "loading": "Wird abgerufen…",
     "patchUnknown": "Das genaue Sicherheitspatchdatum ist unbekannt und wird weder geschätzt noch synchronisiert.",
-    "preview": "Gewählten Fingerprint prüfen"
+    "preview": "Gewählten Fingerprint prüfen",
+    "search": "Modell oder Codename suchen",
+    "noDevices": "Keine passenden Geräte. Suche leeren, um alle Modelle anzuzeigen.",
+    "availability": "Verfügbare Builds hängen vom Metadatendienst von Google ab. Ein aufgeführtes Modell garantiert weder verfügbare Builds noch das Bestehen der Integritätsprüfung."
   },
   "quick": {
     "title": "Fingerprint-Einstellungen",

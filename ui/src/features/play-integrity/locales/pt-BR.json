@@ -200,7 +200,10 @@
     "fetch": "Buscar compilações Pixel",
     "loading": "Buscando…",
     "patchUnknown": "A data exata do patch é desconhecida; não será estimada nem sincronizada.",
-    "preview": "Visualizar impressão selecionada"
+    "preview": "Visualizar impressão selecionada",
+    "search": "Buscar modelo ou codinome",
+    "noDevices": "Nenhum dispositivo encontrado. Limpe a busca para ver todos os modelos.",
+    "availability": "As compilações disponíveis dependem do serviço de metadados do Google. Um modelo listado não garante compilações disponíveis nem aprovação na verificação de integridade."
   },
   "quick": {
     "title": "Controles da impressão",

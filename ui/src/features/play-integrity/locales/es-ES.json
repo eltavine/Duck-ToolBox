@@ -200,7 +200,10 @@
     "fetch": "Obtener compilaciones Pixel",
     "loading": "Obteniendo…",
     "patchUnknown": "Se desconoce la fecha exacta del parche; no se deduce ni se sincroniza.",
-    "preview": "Revisar la huella seleccionada"
+    "preview": "Revisar la huella seleccionada",
+    "search": "Buscar modelo o nombre en clave",
+    "noDevices": "No hay dispositivos coincidentes. Borra la búsqueda para ver todos los modelos.",
+    "availability": "Las compilaciones disponibles dependen del servicio de metadatos de Google. Que un modelo aparezca no garantiza compilaciones disponibles ni superar la comprobación de integridad."
   },
   "quick": {
     "title": "Controles de huella",

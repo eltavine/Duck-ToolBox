@@ -200,7 +200,10 @@
     "fetch": "取得 Pixel 建構",
     "loading": "取得中…",
     "patchUnknown": "無法確認精確安全修補日期，不推測或同步日期。",
-    "preview": "預覽所選指紋"
+    "preview": "預覽所選指紋",
+    "search": "搜尋型號或代號",
+    "noDevices": "沒有符合的裝置。清空搜尋可查看全部機型。",
+    "availability": "可取得的發布版本取決於 Google 中繼資料服務。列出機型不代表一定有可用版本或能通過完整性檢查。"
   },
   "quick": {
     "title": "指紋快速設定",

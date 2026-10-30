@@ -200,7 +200,10 @@
     "fetch": "Pobierz kompilacje Pixel",
     "loading": "Pobieranie…",
     "patchUnknown": "Dokładna data poprawki jest nieznana. Nie będzie zgadywana ani synchronizowana.",
-    "preview": "Podgląd wybranego odcisku"
+    "preview": "Podgląd wybranego odcisku",
+    "search": "Szukaj modelu lub nazwy kodowej",
+    "noDevices": "Brak pasujących urządzeń. Wyczyść wyszukiwanie, aby zobaczyć wszystkie modele.",
+    "availability": "Dostępne kompilacje zależą od usługi metadanych Google. Obecność modelu na liście nie gwarantuje dostępności kompilacji ani pozytywnego wyniku kontroli integralności."
   },
   "quick": {
     "title": "Ustawienia odcisku",

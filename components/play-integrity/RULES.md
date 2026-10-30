@@ -1,6 +1,6 @@
 # Play Integrity 配置规则与实现边界
 
-核对日期：2026-10-30。上游引擎固定为 `23ec56c2440c4fd1a5e893a23ef7861d6366a828`。
+核对日期：2026-10-31。上游引擎固定为 `23ec56c2440c4fd1a5e893a23ef7861d6366a828`。
 本文记录可复核的规则依据、兼容选择及验证边界，不提供可保证通过的设备配置。
 
 ## 判定的依据
@@ -162,6 +162,15 @@ WebUI 的真实后端契约与浏览器流程覆盖预览、字段编辑、导�
 ## 增量配置与诊断契约
 
 - 正式版 Pixel 获取默认选择 Pixel 6a，按设备及具体构建生成候选。Google 官方元数据来源不代表服务端认可；不维护“唯一可用机型”名单。精确 SPL 缺失时留空，禁止从构建编号或发布日期猜测补丁日期。
+- 设备目录覆盖初代至 Pixel 11 系列的 39 款手机、折叠机与 Pixel Tablet，支持型号及代号搜索。
+  代号对照 [AOSP 设备表](https://source.android.com/docs/setup/reference/build-numbers#device-code-names)
+  与 [Google 设备目录](https://docs.cloud.google.com/developer-device-platform/device-catalog)；
+  首发 Android 版本对照 [Google 当前机型规格](https://support.google.com/pixelphone/answer/7158570)、
+  [早期机型规格](https://support.google.com/pixelphone/answer/16043605)及 [API 对照表](https://source.android.com/docs/setup/reference/build-numbers#platform-code-names-versions-api-levels-and-ndk-releases)。
+  Pixel 10a 的真实首发 API 为 36，Pixel 11 系列为 37；此处不套用 Canary 的兼容映射。
+  Flash Tool 返回的现存最早构建和云设备当前 SDK 均不能直接当作首发 API：例如现存 Pixel 6a 元数据可能从 Android 16 开始，首发 API 仍为 32。
+  只在用户请求时获取对应设备的可用发布元数据，保留最多 40 个可解析构建；目录列出机型不保证 Google 始终提供构建。
+  构建选择同时核对构建号及增量版本；旧调用省略增量版本时仅接受唯一匹配。切换机型、构建或重新获取时立即清除旧预览。
 - 三项快捷配置只修改草稿开关。Play 商店仅替换 FINGERPRINT，SDK 兼容模式优先于商店指纹替换；两者同时设置时预览给出提示。
 - 补丁参与者可接受 `partitions`，键为 system、vendor、boot，值为各自的 YYYY-MM-DD。只映射选中分区；省略时保留原有统一日期契约。所有格式、备份、写入与恢复仍由 keystore 适配器管理。
 - 原生观测是进程初始化时的一次读回，不持续监控。管理端校验配置 SHA-256、启动标识、存活 PID、进程名及启动时间；日志不可用时保持未知，不将保存配置或 hook 安装成功等同于实际判定。

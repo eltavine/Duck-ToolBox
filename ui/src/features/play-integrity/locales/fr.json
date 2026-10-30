@@ -200,7 +200,10 @@
     "fetch": "Récupérer les versions Pixel",
     "loading": "Récupération…",
     "patchUnknown": "La date exacte du correctif est inconnue ; elle ne sera ni déduite ni synchronisée.",
-    "preview": "Prévisualiser l’empreinte choisie"
+    "preview": "Prévisualiser l’empreinte choisie",
+    "search": "Rechercher un modèle ou un nom de code",
+    "noDevices": "Aucun appareil correspondant. Effacez la recherche pour afficher tous les modèles.",
+    "availability": "Les versions disponibles dépendent du service de métadonnées de Google. La présence d’un modèle ne garantit ni la disponibilité d’une version ni la réussite du contrôle d’intégrité."
   },
   "quick": {
     "title": "Réglages de l’empreinte",

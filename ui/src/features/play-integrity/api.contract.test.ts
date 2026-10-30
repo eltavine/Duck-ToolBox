@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { duckd } from "@/core/duckd"
 import { z } from "zod"
-import { existsSync, readFileSync, writeFileSync } from "node:fs"
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import path from "node:path"
 import { afterEach, describe, expect, it } from "vitest"
 import { CONTRACT, hasDuckd, installHost } from "@/core/testing/host"
@@ -9,6 +9,7 @@ import type { Host } from "@/core/testing/host"
 import { integrityApi } from "./api"
 import { libraryApi } from "./library-api"
 import { archiveCatalogSchema, pixelArchiveApi } from "./pixel-archive-api"
+import { pixelApi } from "./pixel-api"
 
 const repository = path.resolve(import.meta.dirname, "../../../..")
 const engine =
@@ -21,6 +22,37 @@ describe.skipIf(!hasDuckd || !existsSync(engine))(
   "Play Integrity adapter against the standalone engine",
   CONTRACT,
   () => {
+    it("exposes the complete Pixel catalog and selects an exact incremental without applying", async () => {
+      host = installHost()
+      const devices = await pixelApi.devices()
+      expect(devices.default).toBe("bluejay")
+      expect(devices.devices).toHaveLength(39)
+      expect(devices.devices).toContainEqual({ id: "stallion", name: "Pixel 10a" })
+      expect(devices.devices).toContainEqual({ id: "yogi", name: "Pixel 11 Pro Fold" })
+      const before = await integrityApi.config()
+      const builds = ["123", "456"].map((incremental) => ({
+        id: "TEST.1",
+        incremental,
+        release: "16",
+        fingerprint: `google/stallion/stallion:16/TEST.1/${incremental}:user/release-keys`,
+      }))
+      mkdirSync(host.path("/data/adb/play-integrity"), { recursive: true })
+      writeFileSync(
+        host.path("/data/adb/play-integrity/pixel-stallion.json"),
+        JSON.stringify({
+          source: "https://flash.android.com/",
+          device: "stallion",
+          fetched: Math.floor(Date.now() / 1000),
+          builds,
+        }),
+      )
+      await expect(pixelApi.preview("stallion", "TEST.1")).rejects.toThrow()
+      const candidate = await pixelApi.preview("stallion", "TEST.1", "456")
+      expect(candidate.entries.MODEL).toBe("Pixel 10a")
+      expect(candidate.entries.DEVICE_INITIAL_SDK_INT).toBe("36")
+      expect(candidate.entries.FINGERPRINT).toBe(builds[1]!.fingerprint)
+      expect(await integrityApi.config()).toEqual(before)
+    })
     it("rejects a stale archive selection and retains archive provenance with snapshots", async () => {
       const provenance = {
         source: "https://github.com/VictorGabriel7Dev/build.prop" as const,

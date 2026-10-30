@@ -1,5 +1,70 @@
 import { expect, test } from "./fixtures"
 
+test("searches new, fold, tablet and legacy Pixel models by name or codename", async ({
+  page,
+  open,
+}) => {
+  await open("/play-integrity/generate")
+  const search = page.getByRole("searchbox", { name: "Search model or codename", exact: true })
+  const device = page.getByRole("combobox", { name: "Pixel device", exact: true })
+  for (const [query, model] of [
+    [" YOGI ", "Pixel 11 Pro Fold"],
+    ["10a", "Pixel 10a"],
+    ["felix", "Pixel Fold"],
+    ["Tablet", "Pixel Tablet"],
+    ["sailfish", "Pixel"],
+  ]) {
+    await search.fill(query!)
+    await device.click()
+    await expect(page.getByRole("option")).toHaveCount(1)
+    await page.keyboard.press("ArrowDown")
+    await page.keyboard.press("Enter")
+    await expect(device).toHaveText(model!)
+  }
+  await search.fill("unknown-device")
+  await expect(page.getByRole("status").filter({ hasText: "No matching devices" })).toBeVisible()
+  await expect(device).toBeDisabled()
+  await expect(device).toHaveText("Pixel")
+  await search.fill("")
+  await expect(device).toBeEnabled()
+})
+
+test("changing device, incremental or refetching invalidates the previous Pixel candidate", async ({
+  page,
+  open,
+}) => {
+  await open("/play-integrity/generate")
+  const fetch = page.getByRole("button", { name: "Fetch Pixel builds", exact: true })
+  const preview = page.getByRole("button", { name: "Preview selected fingerprint", exact: true })
+  const apply = page.getByRole("button", { name: "Apply configuration", exact: true })
+  await fetch.click()
+  await preview.click()
+  await expect(apply).toBeVisible()
+  await page
+    .getByRole("searchbox", { name: "Search model or codename", exact: true })
+    .fill("stallion")
+  await page.getByRole("combobox", { name: "Pixel device", exact: true }).click()
+  await page.getByRole("option", { name: "Pixel 10a · stallion", exact: true }).click()
+  await expect(apply).toHaveCount(0)
+  await expect(preview).toHaveCount(0)
+  await fetch.click()
+  await preview.click()
+  await expect(page.getByRole("cell", { name: "Pixel 10a", exact: true }).first()).toBeVisible()
+  await expect(apply).toBeVisible()
+  await page.getByRole("combobox", { name: "Release build", exact: true }).click()
+  await page.getByRole("option", { name: "RELEASE.1 / 1233 · Android 16", exact: true }).click()
+  await expect(apply).toHaveCount(0)
+  await preview.click()
+  await expect(
+    page.getByRole("cell", {
+      name: "google/stallion/stallion:16/RELEASE.1/1233:user/release-keys",
+      exact: true,
+    }),
+  ).toBeVisible()
+  await fetch.click()
+  await expect(apply).toHaveCount(0)
+})
+
 test("fetches Pixel 6a by default and saves a candidate without applying", async ({
   page,
   open,
