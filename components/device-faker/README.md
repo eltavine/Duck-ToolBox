@@ -6,6 +6,19 @@ are retained. This is a normal source component; no Git submodule initialization
 or additional root-manager module is needed. The manager and Java density helper
 use the same license. The MIT `duckd` adapter uses a bounded process interface.
 
+## Dependency licensing
+
+Redistribution permission remains unconfirmed for the linked `prop-rs` and
+`prop-rs-android` dependencies from KernelSU2/ksu_props at
+`ddb6ee7294467f7f25bad2118e9e24eee104144b`. That revision contains no license
+text or package license declaration; its upstream 5ec1cff/resetprop-rs also
+provides no identified license. The Device Faker GPL grant does not establish
+permission for these separately authored dependencies. Obtain an applicable
+license from their rights holders or replace them with an implementation whose
+redistribution terms are established before distributing the linked binaries.
+
+## Build and verification
+
 ```sh
 cargo test --locked --manifest-path components/device-faker/manager/Cargo.toml --target-dir target/device-faker-manager
 python3 scripts/test-device-faker.py

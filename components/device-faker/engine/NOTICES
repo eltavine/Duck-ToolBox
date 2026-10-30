@@ -13,3 +13,20 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with device_faker. If not, see <https://www.gnu.org/licenses/>.
+
+Modified 2026-10-30 for Duck ToolBox: embedded engine and management process;
+combined Zygisk callback routing; ordered boot/property initialization; bounded
+platform commands; process identity and foreground checks; conditional property
+restoration, density recovery and global-session ownership; JNI field compatibility
+and owned property mappings. The original copyright and license notices above
+remain applicable.
+
+The Device Faker adaptations, management process and Java density helper are
+licensed under GPL-3.0-or-later. The combined Zygisk library links the GPL-3.0-only
+Play Integrity engine and dispatcher and is distributed under GPL-3.0-only.
+Dependencies retain their own copyright and license notices. The root MIT license
+does not replace these component terms.
+
+Corresponding source, build scripts and locked dependency sources accompany the
+module in webroot/licenses/corresponding-source.tar.gz. SOURCE.txt identifies the
+exact build commit and build instructions.

@@ -51,3 +51,10 @@ original GPL license, NOTICES and copyrights are retained. Adaptations, the
 management CLI and density helper use GPL-3.0-or-later. The composite
 dispatcher uses GPL-3.0-only, matching the linked PI engine.
 See [the component documentation](components/device-faker/README.md).
+
+Redistribution permission for Device Faker's linked `prop-rs` and `prop-rs-android`
+dependencies is unresolved. Their pinned KernelSU2/ksu_props revision
+`ddb6ee7294467f7f25bad2118e9e24eee104144b` has no license text or package license
+declaration. The component GPL notices do not supply that missing permission.
+Resolve the dependency terms or replace those dependencies before distributing
+the combined library. See the component documentation for the recorded scope.
