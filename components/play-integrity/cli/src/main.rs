@@ -13,6 +13,7 @@ mod observation;
 mod operations;
 mod paths;
 mod pixel;
+mod pixel_archive;
 mod power;
 mod reports;
 mod rules;
@@ -178,6 +179,8 @@ async fn main() {
                     "pixel-devices" => Ok(pixel::devices()),
                     "pixel-builds" => pixel::builds(&engine, &request).await,
                     "pixel-preview" => pixel::preview(&engine, &request),
+                    "pixel-archive-catalog" => pixel_archive::catalog(&engine).await,
+                    "pixel-archive-preview" => pixel_archive::preview(&engine, &request).await,
                     _ => operations::run(&engine, &operation, request),
                 }
             }

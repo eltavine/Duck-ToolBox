@@ -9,7 +9,8 @@
     "generate": "Sidik perangkat",
     "compatibility": "Kompatibilitas",
     "diagnostics": "Diagnosis",
-    "license": "Lisensi"
+    "license": "Lisensi",
+    "archive": "Pustaka properti Pixel"
   },
   "enabled": "Aktifkan mesin",
   "preview": "Pratinjau perubahan",
@@ -223,5 +224,22 @@
     "boot": "Patch Boot",
     "preview": "Perbarui pratinjau patch",
     "draft": "Tinjau perubahan partisi sebelum memilih sinkronisasi."
+  },
+  "archive": {
+    "title": "Pustaka properti Pixel",
+    "help": "Pilih perangkat dan kanal dari arsip komunitas untuk meninjau konfigurasi PI. Tanggal patch berasal dari build yang dipilih. Hash boot hanya sebagai referensi; penerimaan perlu diuji pada perangkat.",
+    "source": "Sumber komunitas",
+    "fetch": "Ambil pustaka properti",
+    "channel": "Kanal rilis",
+    "release": "Stabil",
+    "beta": "Beta",
+    "canary": "Canary",
+    "build": "Build",
+    "patch": "Patch keamanan",
+    "digest": "Hash boot (referensi)",
+    "updated": "Arsip diperbarui",
+    "preview": "Pratinjau konfigurasi arsip",
+    "details": "Detail sumber",
+    "revision": "Commit sumber"
   }
 }

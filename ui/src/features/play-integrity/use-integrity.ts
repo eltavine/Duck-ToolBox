@@ -46,6 +46,13 @@ export function useIntegrity() {
   const log = ref("")
   let timer: ReturnType<typeof setTimeout> | undefined
   let disposed = false
+  let previewGeneration = 0
+  let taskGeneration = 0
+  function clearPreview() {
+    previewGeneration++
+    preview.value = null
+    patches.value = []
+  }
   watch(
     config.data,
     (value, previous) => {
@@ -60,10 +67,7 @@ export function useIntegrity() {
     },
     { immediate: true },
   )
-  watch(content, () => {
-    preview.value = null
-    patches.value = []
-  })
+  watch(content, clearPreview)
   async function action(work: () => Promise<unknown>) {
     if (busy.value) return
     busy.value = true
@@ -84,14 +88,19 @@ export function useIntegrity() {
     ])
   }
   async function prepare(value: Preview) {
-    preview.value = value
-    patches.value = []
+    clearPreview()
+    const generation = previewGeneration
+    const prepared: typeof patches.value = []
     if (value.suggested_patch) {
       for (const target of contributions("securityPatchTargets")) {
         const patch = await target.preview(value.suggested_patch)
-        if (patch) patches.value.push({ target, preview: patch, selected: false })
+        if (disposed || generation !== previewGeneration) return
+        if (patch) prepared.push({ target, preview: patch, selected: false })
       }
     }
+    if (disposed || generation !== previewGeneration) return
+    patches.value = prepared
+    preview.value = value
   }
   async function apply() {
     const candidate = preview.value
@@ -128,7 +137,7 @@ export function useIntegrity() {
       task.value = await integrityApi.taskStatus(taskId.value)
       if (task.value.state === "completed" && task.value.result) {
         taskId.value = ""
-        await prepare(task.value.result)
+        if (taskGeneration === previewGeneration) await prepare(task.value.result)
       } else if (task.value.state !== "running") {
         taskId.value = ""
       } else timer = setTimeout(() => void poll(), 1000)
@@ -140,6 +149,7 @@ export function useIntegrity() {
   if (taskId.value) void poll()
   onScopeDispose(() => {
     disposed = true
+    clearPreview()
     if (timer) clearTimeout(timer)
   })
   return {
@@ -160,6 +170,7 @@ export function useIntegrity() {
     refresh,
     apply,
     prepare,
+    clearPreview,
     patchPreview: (id: string, partitions: Record<string, string>) =>
       action(async () => {
         const item = patches.value.find((p) => p.target.id === id)
@@ -186,6 +197,8 @@ export function useIntegrity() {
       }),
     generate: (strong: boolean, match: boolean) =>
       action(async () => {
+        clearPreview()
+        taskGeneration = previewGeneration
         task.value = await integrityApi.taskStart(strong, match)
         taskId.value = task.value.id
         void poll()

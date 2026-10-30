@@ -43,6 +43,12 @@ def check_source_checkout(commit, root=ROOT):
     ).strip()
     if dirty:
         raise ValueError("Corresponding-source checkout contains unpublished changes: " + dirty)
+    components = subprocess.check_output(
+        ["git", "ls-tree", "-r", commit, "--", "components/play-integrity", "components/device-faker", "components/zygisk-runtime"],
+        cwd=root, text=True,
+    )
+    if any(line.startswith("160000 ") for line in components.splitlines()):
+        raise ValueError("Embedded components must contain source files, not Git submodules")
 
 
 def validate_source_archive(archive, commit, root=ROOT):
@@ -207,8 +213,6 @@ def main():
         name += f"-{code}-canary"
         values = {"version": f"{version} ({code}-canary)", "versionCode": code}
         metadata = "\n".join(f"{key}={values[key]}" if (key := line.partition("=")[0]) in values else line for line in metadata.splitlines()) + "\n"
-    if args.channel is None:
-        name += "-play-integrity"
     archive = ROOT / (args.output or f"dist/{name}.zip")
     archive.parent.mkdir(parents=True, exist_ok=True)
     source_archive = MODULE / "webroot/licenses/corresponding-source.tar.gz"

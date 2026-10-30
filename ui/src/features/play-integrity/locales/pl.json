@@ -9,7 +9,8 @@
     "generate": "Odciski palca",
     "compatibility": "Zgodność",
     "diagnostics": "Diagnostyka",
-    "license": "Licencje"
+    "license": "Licencje",
+    "archive": "Biblioteka właściwości Pixel"
   },
   "enabled": "Włącz silnik",
   "preview": "Podgląd zmian",
@@ -223,5 +224,22 @@
     "boot": "Poprawka Boot",
     "preview": "Odśwież podgląd poprawek",
     "draft": "Przejrzyj zmiany partycji przed wybraniem synchronizacji."
+  },
+  "archive": {
+    "title": "Biblioteka właściwości Pixel",
+    "help": "Wybierz urządzenie i kanał z archiwum społeczności, aby podejrzeć konfigurację PI. Daty poprawek pochodzą z wybranej kompilacji. Skrót rozruchu służy jako odniesienie; akceptacja wymaga testów na urządzeniu.",
+    "source": "Źródło społeczności",
+    "fetch": "Pobierz bibliotekę właściwości",
+    "channel": "Kanał wydania",
+    "release": "Stabilny",
+    "beta": "Beta",
+    "canary": "Canary",
+    "build": "Kompilacja",
+    "patch": "Poprawka zabezpieczeń",
+    "digest": "Skrót rozruchu (odniesienie)",
+    "updated": "Aktualizacja archiwum",
+    "preview": "Podgląd konfiguracji z archiwum",
+    "details": "Szczegóły źródła",
+    "revision": "Commit źródłowy"
   }
 }

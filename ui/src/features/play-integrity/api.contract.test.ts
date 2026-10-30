@@ -8,6 +8,7 @@ import { CONTRACT, hasDuckd, installHost } from "@/core/testing/host"
 import type { Host } from "@/core/testing/host"
 import { integrityApi } from "./api"
 import { libraryApi } from "./library-api"
+import { archiveCatalogSchema, pixelArchiveApi } from "./pixel-archive-api"
 
 const repository = path.resolve(import.meta.dirname, "../../../..")
 const engine =
@@ -20,6 +21,68 @@ describe.skipIf(!hasDuckd || !existsSync(engine))(
   "Play Integrity adapter against the standalone engine",
   CONTRACT,
   () => {
+    it("rejects a stale archive selection and retains archive provenance with snapshots", async () => {
+      const provenance = {
+        source: "https://github.com/VictorGabriel7Dev/build.prop" as const,
+        source_revision: "a".repeat(40),
+        device: "bluejay",
+        channel: "release" as const,
+        build: "ARCHIVE.1",
+        incremental: "1234",
+        security_patch: "2026-10-05",
+        fetched: Math.floor(Date.now() / 1000),
+        patch_known: true,
+        vbmeta_digest: "b".repeat(64),
+        file_sha256: "c".repeat(64),
+        fingerprint: "google/bluejay/bluejay:17/ARCHIVE.1/1234:user/release-keys",
+        model: "Pixel 6a",
+        first_api_level: 32,
+      }
+      const catalog = archiveCatalogSchema.parse({
+        source: provenance.source,
+        source_revision: provenance.source_revision,
+        fetched: provenance.fetched,
+        generated: "2026-10-30T00:00:00Z",
+        devices: {
+          bluejay: {
+            model: "Pixel 6a",
+            first_api_level: 32,
+            channels: {
+              release: {
+                latest: "bluejay/bluejay_1234.prop",
+                build: provenance.build,
+                incremental: provenance.incremental,
+                security_patch: provenance.security_patch,
+                android: "17",
+                vbmeta_digest: provenance.vbmeta_digest,
+              },
+            },
+          },
+        },
+      })
+      host = installHost({
+        files: { "/data/adb/play-integrity/pixel-archive.json": JSON.stringify(catalog) },
+      })
+      await integrityApi.disable()
+      const before = await integrityApi.config()
+      await expect(
+        pixelArchiveApi.preview(
+          { ...catalog, source_revision: "d".repeat(40) },
+          "bluejay",
+          "release",
+        ),
+      ).rejects.toThrow(/changed or expired/)
+      const candidate = await integrityApi.preview(
+        `MODEL=Pixel 6a\nDEVICE=bluejay\nID=ARCHIVE.1\nINCREMENTAL=1234\nSECURITY_PATCH=2026-10-05\nFINGERPRINT=${provenance.fingerprint}\nDEVICE_INITIAL_SDK_INT=32`,
+      )
+      const saved = await libraryApi.saveProfile("Community archive", candidate.json, provenance)
+      expect(saved.profiles[0]!.provenance).toEqual(provenance)
+      const restored = await libraryApi.profilePreview(saved.profiles[0]!.id)
+      expect(restored.provenance).toEqual(provenance)
+      expect(restored.entries).toEqual(candidate.entries)
+      expect(await integrityApi.config()).toEqual(before)
+      expect((await integrityApi.power()).enabled).toBe(false)
+    })
     it("retains independent partition dates and skips a single-date keystore update", async () => {
       host = installHost()
       const content = "SECURITY_PATCH=2026-10-05\nro.vendor.build.security_patch=2026-09-05"

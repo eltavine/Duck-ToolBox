@@ -84,6 +84,7 @@ case "$phase" in
     . "$PIF_ENGINE_SCRIPTS/post-fs-data.sh"
     ;;
   late)
+    [ "$(getprop sys.boot_completed)" = "1" ] || exit 1
     [ ! -f /data/adb/disable_prop_handler ] || exit 0
     set +eu
     . "$PIF_ENGINE_SCRIPTS/service.sh"

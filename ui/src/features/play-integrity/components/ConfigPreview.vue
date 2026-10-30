@@ -62,8 +62,13 @@ async function saveCandidate() {
         >
       </p>
     </div>
-    <div class="overflow-x-auto rounded-xl border border-border/70">
-      <table class="w-full text-start text-xs">
+    <div
+      tabindex="0"
+      role="region"
+      :aria-label="t('preview')"
+      class="overflow-x-auto rounded-xl border border-border/70 focus-visible:outline-2 focus-visible:outline-offset-2"
+    >
+      <table class="w-full min-w-[32rem] text-start text-xs">
         <thead class="bg-muted/60">
           <tr>
             <th class="p-2 text-start">{{ t("field") }}</th>
@@ -90,8 +95,17 @@ async function saveCandidate() {
       @preview="emit('patchPreview', patch.target.id, $event)"
     />
     <div v-if="preview.provenance" class="mt-4 rounded-xl border p-4">
-      <p dir="ltr" class="text-muted-foreground mb-3 text-sm">
+      <p dir="ltr" class="text-muted-foreground mb-3 text-sm break-all">
         {{ preview.provenance.source }} · {{ preview.provenance.build }}
+      </p>
+      <p
+        v-if="preview.provenance.source_revision"
+        dir="ltr"
+        class="text-muted-foreground mb-3 text-xs break-all"
+      >
+        {{ preview.provenance.source_revision }} ·
+        {{ preview.provenance.channel ? t(`archive.${preview.provenance.channel}`) : "" }} ·
+        {{ preview.provenance.security_patch }}
       </p>
       <Input
         v-model="profileName"

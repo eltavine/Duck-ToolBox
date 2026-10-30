@@ -9,11 +9,13 @@ export default defineFeature({
   icon: ShieldEllipsis,
   order: 15,
   contributes: { homeWidgets: [RecoveryNotice] },
-  routes: ["", "config", "generate", "compatibility", "diagnostics", "license"].map((section) => ({
-    path: section,
-    component: () => import("./pages/IntegrityPage.vue"),
-    props: { section: section || "status" },
-    meta: { titleKey: `playIntegrity.nav.${section || "status"}`, backTo: "/" },
-  })),
+  routes: ["", "config", "generate", "archive", "compatibility", "diagnostics", "license"].map(
+    (section) => ({
+      path: section,
+      component: () => import("./pages/IntegrityPage.vue"),
+      props: { section: section || "status" },
+      meta: { titleKey: `playIntegrity.nav.${section || "status"}`, backTo: "/" },
+    }),
+  ),
   messages: localeFiles(import.meta.glob("./locales/*.json")),
 })

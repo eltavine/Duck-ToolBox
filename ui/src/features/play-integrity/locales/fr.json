@@ -9,7 +9,8 @@
     "generate": "Empreintes",
     "compatibility": "Compatibilité",
     "diagnostics": "Diagnostic",
-    "license": "Licences"
+    "license": "Licences",
+    "archive": "Bibliothèque de propriétés Pixel"
   },
   "enabled": "Activer le moteur",
   "preview": "Aperçu des modifications",
@@ -223,5 +224,22 @@
     "boot": "Correctif Boot",
     "preview": "Actualiser l’aperçu des correctifs",
     "draft": "Prévisualisez les modifications des partitions avant de sélectionner la synchronisation."
+  },
+  "archive": {
+    "title": "Bibliothèque de propriétés Pixel",
+    "help": "Choisissez un appareil et un canal dans les archives communautaires pour prévisualiser la configuration PI. Les dates de correctifs proviennent de la version choisie. Le hachage de démarrage est indicatif ; des tests sur appareil sont nécessaires.",
+    "source": "Source communautaire",
+    "fetch": "Charger la bibliothèque",
+    "channel": "Canal de publication",
+    "release": "Stable",
+    "beta": "Bêta",
+    "canary": "Canary",
+    "build": "Version",
+    "patch": "Correctif de sécurité",
+    "digest": "Hachage de démarrage (référence)",
+    "updated": "Mise à jour des archives",
+    "preview": "Prévisualiser la configuration des archives",
+    "details": "Détails de la source",
+    "revision": "Commit source"
   }
 }

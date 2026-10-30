@@ -9,7 +9,8 @@
     "generate": "设备指纹",
     "compatibility": "兼容设置",
     "diagnostics": "诊断",
-    "license": "许可证"
+    "license": "许可证",
+    "archive": "Pixel 属性库"
   },
   "enabled": "启用引擎",
   "preview": "预览变更",
@@ -223,5 +224,22 @@
     "boot": "Boot 补丁",
     "preview": "更新补丁预览",
     "draft": "分区修改尚未预览，请先更新预览，再选择同步。"
+  },
+  "archive": {
+    "title": "Pixel 属性库",
+    "help": "从社区属性库选择机型和渠道，预览 PI 配置。补丁日期取自所选构建，启动哈希仅供查看；是否通过仍需真机测试。",
+    "source": "社区来源",
+    "fetch": "获取属性库",
+    "channel": "发布渠道",
+    "release": "稳定版",
+    "beta": "测试版",
+    "canary": "Canary",
+    "build": "构建版本",
+    "patch": "安全补丁",
+    "digest": "启动哈希（参考）",
+    "updated": "属性库更新时间",
+    "preview": "预览属性库配置",
+    "details": "来源详情",
+    "revision": "来源提交版本"
   }
 }

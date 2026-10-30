@@ -9,7 +9,8 @@
     "generate": "Impronte",
     "compatibility": "Compatibilità",
     "diagnostics": "Diagnostica",
-    "license": "Licenze"
+    "license": "Licenze",
+    "archive": "Libreria proprietà Pixel"
   },
   "enabled": "Abilita motore",
   "preview": "Anteprima modifiche",
@@ -223,5 +224,22 @@
     "boot": "Patch Boot",
     "preview": "Aggiorna anteprima patch",
     "draft": "Controlla le modifiche delle partizioni prima di selezionare la sincronizzazione."
+  },
+  "archive": {
+    "title": "Libreria proprietà Pixel",
+    "help": "Seleziona dispositivo e canale dall’archivio della comunità per visualizzare la configurazione PI. Le date delle patch provengono dalla build scelta. L’hash di avvio è solo indicativo; servono prove sul dispositivo.",
+    "source": "Fonte della comunità",
+    "fetch": "Scarica libreria proprietà",
+    "channel": "Canale di rilascio",
+    "release": "Stabile",
+    "beta": "Beta",
+    "canary": "Canary",
+    "build": "Build",
+    "patch": "Patch di sicurezza",
+    "digest": "Hash di avvio (riferimento)",
+    "updated": "Archivio aggiornato",
+    "preview": "Anteprima configurazione archivio",
+    "details": "Dettagli della fonte",
+    "revision": "Commit sorgente"
   }
 }

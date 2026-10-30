@@ -66,6 +66,21 @@ class SourceCheckoutTest(unittest.TestCase):
             with self.subTest(value=value), self.assertRaisesRegex(ValueError, "invalid"):
                 package.check_source_checkout(value)
 
+    def test_rejects_an_embedded_component_replaced_by_a_git_submodule(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            git(root, "init", "-q")
+            (root / "source.rs").write_text("component source")
+            git(root, "add", ".")
+            git(root, "-c", "user.name=CI", "-c", "user.email=ci@example.invalid", "commit", "-qm", "Source")
+            commit = git(root, "rev-parse", "HEAD")
+            git(root, "update-index", "--add", "--cacheinfo", f"160000,{commit},components/play-integrity")
+            git(root, "-c", "user.name=CI", "-c", "user.email=ci@example.invalid", "commit", "-qm", "Gitlink fixture")
+            # Materialize the empty submodule path so status is clean.
+            (root / "components/play-integrity").mkdir(parents=True)
+            with self.assertRaisesRegex(ValueError, "not Git submodules"):
+                package.check_source_checkout(git(root, "rev-parse", "HEAD"), root)
+
 
 class DistributionIntegrityTest(unittest.TestCase):
     def test_rejects_source_changes_even_with_a_matching_commit_marker(self):

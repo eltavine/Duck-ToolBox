@@ -9,7 +9,8 @@
     "generate": "裝置指紋",
     "compatibility": "相容設定",
     "diagnostics": "診斷",
-    "license": "授權條款"
+    "license": "授權條款",
+    "archive": "Pixel 屬性庫"
   },
   "enabled": "啟用引擎",
   "preview": "預覽變更",
@@ -223,5 +224,22 @@
     "boot": "Boot 修補",
     "preview": "更新修補預覽",
     "draft": "分割區修改尚未預覽，請先更新預覽再選取同步。"
+  },
+  "archive": {
+    "title": "Pixel 屬性庫",
+    "help": "從社群屬性庫選擇機型和頻道，預覽 PI 設定。修補日期取自所選版本，啟動雜湊僅供查看；是否通過仍需實機測試。",
+    "source": "社群來源",
+    "fetch": "取得屬性庫",
+    "channel": "發布頻道",
+    "release": "穩定版",
+    "beta": "測試版",
+    "canary": "Canary",
+    "build": "建構版本",
+    "patch": "安全性修補程式",
+    "digest": "啟動雜湊（參考）",
+    "updated": "屬性庫更新時間",
+    "preview": "預覽屬性庫設定",
+    "details": "來源詳情",
+    "revision": "來源提交版本"
   }
 }

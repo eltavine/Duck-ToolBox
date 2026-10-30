@@ -139,6 +139,12 @@ fn provenance(input: &Value) -> Result<Value> {
     let Some(value) = input.get("provenance").filter(|v| !v.is_null()) else {
         return Ok(Value::Null);
     };
+    if value["source"] == crate::pixel_archive::SOURCE {
+        return crate::pixel_archive::provenance(
+            value,
+            &config::parse(text(input, "content")?, "auto")?,
+        );
+    }
     if value["source"] != "https://flash.android.com/"
         || !value["fetched"].is_u64()
         || value["patch_known"] != false

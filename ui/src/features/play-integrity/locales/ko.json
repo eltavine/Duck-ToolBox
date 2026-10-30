@@ -9,7 +9,8 @@
     "generate": "기기 지문",
     "compatibility": "호환성",
     "diagnostics": "진단",
-    "license": "라이선스"
+    "license": "라이선스",
+    "archive": "Pixel 속성 라이브러리"
   },
   "enabled": "엔진 사용",
   "preview": "변경 미리 보기",
@@ -223,5 +224,22 @@
     "boot": "Boot 패치",
     "preview": "패치 미리 보기 갱신",
     "draft": "파티션 변경을 미리 본 뒤 동기화를 선택하세요."
+  },
+  "archive": {
+    "title": "Pixel 속성 라이브러리",
+    "help": "커뮤니티 자료에서 기기와 채널을 선택하여 PI 설정을 미리 봅니다. 패치 날짜는 선택한 빌드의 값입니다. 부팅 해시는 참고용이며 통과 여부는 실제 기기에서 확인해야 합니다.",
+    "source": "커뮤니티 출처",
+    "fetch": "속성 라이브러리 가져오기",
+    "channel": "출시 채널",
+    "release": "안정 버전",
+    "beta": "베타",
+    "canary": "Canary",
+    "build": "빌드",
+    "patch": "보안 패치",
+    "digest": "부팅 해시 (참고)",
+    "updated": "자료 업데이트",
+    "preview": "라이브러리 설정 미리 보기",
+    "details": "출처 세부 정보",
+    "revision": "소스 커밋"
   }
 }

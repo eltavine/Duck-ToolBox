@@ -9,7 +9,8 @@
     "generate": "Fingerabdrücke",
     "compatibility": "Kompatibilität",
     "diagnostics": "Diagnose",
-    "license": "Lizenzen"
+    "license": "Lizenzen",
+    "archive": "Pixel-Eigenschaftsbibliothek"
   },
   "enabled": "Engine aktivieren",
   "preview": "Änderungen prüfen",
@@ -223,5 +224,22 @@
     "boot": "Boot-Patch",
     "preview": "Patch-Vorschau aktualisieren",
     "draft": "Partitionsänderungen vor Auswahl der Synchronisierung erneut prüfen."
+  },
+  "archive": {
+    "title": "Pixel-Eigenschaftsbibliothek",
+    "help": "Gerät und Kanal im Community-Archiv auswählen, um die PI-Konfiguration vorzuschauen. Patchdaten stammen aus dem gewählten Build. Der Boot-Hash dient als Referenz; die Akzeptanz muss am Gerät getestet werden.",
+    "source": "Community-Quelle",
+    "fetch": "Eigenschaftsbibliothek abrufen",
+    "channel": "Veröffentlichungskanal",
+    "release": "Stabil",
+    "beta": "Beta",
+    "canary": "Canary",
+    "build": "Build",
+    "patch": "Sicherheitspatch",
+    "digest": "Boot-Hash (Referenz)",
+    "updated": "Archiv aktualisiert",
+    "preview": "Archivkonfiguration anzeigen",
+    "details": "Quelldetails",
+    "revision": "Quell-Commit"
   }
 }

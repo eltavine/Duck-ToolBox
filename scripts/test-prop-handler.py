@@ -121,6 +121,13 @@ elif len(args) == 2 and args[0] == '--delete':
         self.run_hook("boot-completed.sh")
         self.assert_applied()
 
+    def test_premature_boot_completed_hook_preserves_every_property(self):
+        self.executable(self.bin / "getprop", "#!/bin/sh\nprintf 0\n")
+        before = self.properties()
+        result = self.run_hook("boot-completed.sh", success=False)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(self.properties(), before)
+
     def test_active_engine_preserves_late_oem_ordering_and_fills_avb_defaults(self):
         for mode in ["full", "scripts-only"]:
             with self.subTest(mode=mode):

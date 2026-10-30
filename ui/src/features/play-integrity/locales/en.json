@@ -9,7 +9,8 @@
     "generate": "Fingerprints",
     "compatibility": "Compatibility",
     "diagnostics": "Diagnostics",
-    "license": "Licenses"
+    "license": "Licenses",
+    "archive": "Pixel property library"
   },
   "enabled": "Enable the engine",
   "preview": "Preview changes",
@@ -223,5 +224,22 @@
     "boot": "Boot patch",
     "preview": "Update patch preview",
     "draft": "Partition edits are not previewed. Update the preview before selecting synchronization."
+  },
+  "archive": {
+    "title": "Pixel property library",
+    "help": "Select a device and channel from the community archive to preview a PI configuration. Patch dates come from the selected build. Boot hash is shown for reference only; acceptance requires device testing.",
+    "source": "Community source",
+    "fetch": "Fetch property library",
+    "channel": "Release channel",
+    "release": "Stable",
+    "beta": "Beta",
+    "canary": "Canary",
+    "build": "Build",
+    "patch": "Security patch",
+    "digest": "Boot hash (reference)",
+    "updated": "Archive updated",
+    "preview": "Preview archive configuration",
+    "details": "Source details",
+    "revision": "Source commit"
   }
 }

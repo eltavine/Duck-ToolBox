@@ -2,12 +2,13 @@
 
 Duck ToolBox's independently written management code remains under the root MIT
 license. The Play Integrity engine is a separate program distributed in the same
-installation archive. Its native library is loaded by Zygisk into selected Android
+installation archive and a regular embedded source directory, without a Git submodule.
+Its native library is loaded by Zygisk into selected Android
 processes; it is not linked into the `duckd` management executable. Management uses
 the documented engine CLI and configuration formats.
 
 All code derived from Play Integrity Fork, including translated or adapted code,
-is kept in the independently built `components/play-integrity` project under GPLv3,
+is kept in the `components/play-integrity` source component under GPLv3,
 except dependencies with their own notices. See its LICENSE, NOTICE and UPSTREAM.json.
 The root MIT license does not replace those terms.
 

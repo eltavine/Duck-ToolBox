@@ -9,7 +9,8 @@
     "generate": "Huellas",
     "compatibility": "Compatibilidad",
     "diagnostics": "Diagnóstico",
-    "license": "Licencias"
+    "license": "Licencias",
+    "archive": "Biblioteca de propiedades Pixel"
   },
   "enabled": "Activar motor",
   "preview": "Vista previa",
@@ -223,5 +224,22 @@
     "boot": "Parche Boot",
     "preview": "Actualizar vista previa de parches",
     "draft": "Revisa los cambios de particiones antes de seleccionar la sincronización."
+  },
+  "archive": {
+    "title": "Biblioteca de propiedades Pixel",
+    "help": "Selecciona un dispositivo y canal del archivo comunitario para previsualizar la configuración PI. Las fechas de parches corresponden a la compilación elegida. El hash de arranque es informativo; la aceptación requiere pruebas en el dispositivo.",
+    "source": "Fuente comunitaria",
+    "fetch": "Obtener biblioteca",
+    "channel": "Canal de publicación",
+    "release": "Estable",
+    "beta": "Beta",
+    "canary": "Canary",
+    "build": "Compilación",
+    "patch": "Parche de seguridad",
+    "digest": "Hash de arranque (referencia)",
+    "updated": "Archivo actualizado",
+    "preview": "Previsualizar configuración del archivo",
+    "details": "Detalles de la fuente",
+    "revision": "Commit de origen"
   }
 }

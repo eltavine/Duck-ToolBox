@@ -9,7 +9,7 @@ defineProps<{ title: string }>()
     <CollapsibleTrigger as-child>
       <Button
         variant="ghost"
-        class="group min-h-11 w-full justify-between px-3 text-start whitespace-normal"
+        class="group min-h-12 w-full justify-between px-3 text-start whitespace-normal"
       >
         <span>{{ title }}</span
         ><ChevronDown

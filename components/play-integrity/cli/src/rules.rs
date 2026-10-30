@@ -68,7 +68,7 @@ pub fn suggested_patch(entries: &BTreeMap<String, String>) -> Option<&str> {
     system_patch(entries).filter(|date| partition_conflicts(entries, date).is_empty())
 }
 
-fn valid_patch_date(value: &str) -> bool {
+pub fn valid_patch_date(value: &str) -> bool {
     let bytes = value.as_bytes();
     if bytes.len() != 10
         || bytes[4] != b'-'
