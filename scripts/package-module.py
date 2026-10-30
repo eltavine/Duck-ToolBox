@@ -170,7 +170,7 @@ def main():
     with source_archive.open("rb") as stream:
         digest = hashlib.file_digest(stream, "sha256").hexdigest()
     source_archive.with_suffix(".gz.sha256").write_text(digest + "  " + source_archive.name + "\n")
-    with zipfile.ZipFile(archive, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=6) as output:
+    with zipfile.ZipFile(archive, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=6, strict_timestamps=False) as output:
         for path in sorted(MODULE.rglob("*")):
             if path.is_file():
                 if path == MODULE / "module.prop" and args.channel:
