@@ -36,7 +36,11 @@ pub fn output(mut command: Command) -> Result<Vec<u8>> {
     })();
     #[cfg(unix)]
     {
-        if let Ok(group) = i32::try_from(child.id()) {
+        if waited.is_err()
+            && let Ok(group) = i32::try_from(child.id())
+        {
+            // The successful try_wait path has reaped the child: its PID can be reused.
+            // Only kill the group while an error/timeout leaves our child unreaped.
             // SAFETY: only the positive owned process-group id is negated.
             if group > 0 {
                 unsafe {
