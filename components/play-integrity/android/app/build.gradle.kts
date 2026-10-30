@@ -37,6 +37,8 @@ android {
                 arguments += "-DANDROID_STL=none"
                 arguments += "-DPIF_VENDOR_DIR=${System.getenv("PIF_VENDOR_DIR") ?: ""}"
                 arguments += "-DCMAKE_BUILD_TYPE=Release"
+                arguments += "-DDUCK_RUNTIME_DIR=${System.getenv("DUCK_RUNTIME_DIR") ?: ""}"
+                arguments += "-DDUCK_FAKER_LIBRARY=${System.getenv("DUCK_FAKER_LIBRARY") ?: ""}"
 
                 cppFlags += "-std=c++23"
                 cppFlags += "-fno-exceptions"
@@ -47,11 +49,18 @@ android {
         }
     }
 
+    System.getenv("DUCK_FAKER_JAVA")?.takeIf { it.isNotBlank() }?.let { source ->
+        sourceSets.getByName("main").java.srcDir(source)
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            System.getenv("DUCK_FAKER_JAVA")?.takeIf { it.isNotBlank() }?.let { source ->
+                proguardFiles(file(source).resolve("../proguard-rules.pro"))
+            }
         }
     }
 

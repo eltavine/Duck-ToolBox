@@ -61,5 +61,9 @@ fi
 ui_print " "
 ui_print "! Duck ToolBox is not part of Tricky Store, TEESimulator or OhMyKeymint."
 ui_print "  Do not report its issues to those projects."
+# shellcheck source=device-faker.sh
+. "$MODPATH/device-faker.sh"
+setup_device_faker || abort "! Device Faker payload setup failed."
+ui_print "- Embedded Device Faker prepared; reboot before enabling it in the WebUI."
 ui_print "- Installation complete."
 ui_print " "

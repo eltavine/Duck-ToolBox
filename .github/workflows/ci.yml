@@ -57,7 +57,7 @@ jobs:
         run: cargo test --workspace --locked
       - name: Every feature builds on its own
         run: |
-          for feature in rkp rkp-device tee-attestation device-ids tricky-store play-integrity kernel-modules zram linux-env system; do
+          for feature in rkp rkp-device tee-attestation device-ids tricky-store play-integrity device-faker kernel-modules zram linux-env system; do
             echo "::group::duckd with only ${feature}"
             cargo check --locked --package duckd --no-default-features --features "${feature}"
             echo "::endgroup::"
@@ -94,10 +94,13 @@ jobs:
           python3 scripts/test-play-integrity-java.py
           python3 scripts/test-play-integrity-scripts.py
           python3 scripts/test-prop-handler.py
+          python3 scripts/test-zygisk-runtime.py
       - name: Engine scripts
         run: shellcheck -s bash --severity=error components/play-integrity/scripts/*.sh
       - name: Build engine and commit-pinned source notice
         run: python3 scripts/build-play-integrity.py
+      - name: Bundle corresponding source with locked dependencies
+        run: python3 scripts/source-bundle.py --commit "$GITHUB_SHA" --output module/webroot/licenses/corresponding-source.tar.gz
       - uses: actions/upload-artifact@v7
         with:
           name: play-integrity
@@ -105,6 +108,41 @@ jobs:
             module/play-integrity
             module/zygisk
             module/licenses/play-integrity
+            module/webroot/licenses/corresponding-source.tar.gz
+
+  device-faker:
+    name: Embedded Device Faker engine
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: android-actions/setup-android@v4.0.4
+        with:
+          packages: 'ndk;30.0.16248370'
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: components/device-faker/manager -> ../../../target/device-faker-manager
+      - name: Manager format, lint and tests
+        run: |
+          cargo fmt --manifest-path components/device-faker/manager/Cargo.toml --check
+          cargo clippy --locked --manifest-path components/device-faker/manager/Cargo.toml --target-dir target/device-faker-manager --all-targets -- -D warnings
+          cargo test --locked --manifest-path components/device-faker/manager/Cargo.toml --target-dir target/device-faker-manager
+          python3 scripts/test-device-faker.py
+      - name: Build ARM64 native engine and manager
+        run: python3 scripts/build-device-faker.py --lint-native
+      - uses: actions/upload-artifact@v7
+        with:
+          name: device-faker
+          path: |
+            module/device-faker
+            module/licenses/device-faker
 
   android-backend:
     name: Android backend build
@@ -175,6 +213,7 @@ jobs:
       - name: Type-check and bundle
         env:
           VITE_PIF_SOURCE_COMMIT: ${{ github.sha }}
+          VITE_DEVICE_FAKER_SOURCE_COMMIT: ${{ github.sha }}
         run: pnpm build
       - name: Upload WebUI bundle
         uses: actions/upload-artifact@v7
@@ -194,6 +233,7 @@ jobs:
         run: |
           cargo build --locked --package duckd
           cargo build --locked --manifest-path components/play-integrity/Cargo.toml --target-dir target/pif-engine
+          cargo build --locked --manifest-path components/device-faker/manager/Cargo.toml --target-dir target/device-faker-manager
       - uses: pnpm/action-setup@v6
         with:
           package_json_file: ui/package.json
@@ -250,7 +290,9 @@ jobs:
       - name: Telegram notification tests
         run: python3 -m unittest discover -s .github/workflows/scripts -p 'test_*.py'
       - name: Installer platform and API guards
-        run: python3 scripts/test-module-install.py
+        run: |
+          python3 scripts/test-module-install.py
+          python3 scripts/test-device-faker.py
       - name: Corresponding-source checkout guards
         run: python3 scripts/test-play-integrity-package.py
       - name: ShellCheck
@@ -269,7 +311,7 @@ jobs:
   package:
     name: Package module
     runs-on: ubuntu-latest
-    needs: [line-limit, rust, android-backend, play-integrity, webui, contract, e2e, module]
+    needs: [line-limit, rust, android-backend, play-integrity, device-faker, webui, contract, e2e, module]
     permissions:
       contents: write
     environment: ${{ (github.event_name == 'push' || inputs.stable) && 'Telegram' || '' }}
@@ -292,6 +334,11 @@ jobs:
         with:
           name: play-integrity
           path: module
+      - name: Download Device Faker engine
+        uses: actions/download-artifact@v8
+        with:
+          name: device-faker
+          path: module
       - name: Assemble module
         run: |
           version="$(sed -n 's/^version=//p' module/module.prop)"
@@ -302,15 +349,13 @@ jobs:
           else
             code="$(git rev-list --count HEAD)"
             # Canary builds count commits, so every push is newer than the one before.
-            sed -i "s/^versionCode=.*/versionCode=${code}/" module/module.prop
             name="${MODULE_ID}-${version}-${code}-canary"
             version="${version} (${code}-canary)"
-            sed -i "s/^version=.*/version=${version}/" module/module.prop
           fi
           install -m 0755 artifact/bin/duckd module/bin/duckd
           cp README.md CHANGELOG.md module/
           mkdir -p dist
-          python3 scripts/package-module.py --binary module/bin/duckd --output "dist/${name}.zip"
+          python3 scripts/package-module.py --binary module/bin/duckd --channel "${RELEASE_CHANNEL}" --output "dist/${name}.zip"
           {
             echo "MODULE_VERSION=${version}"
             echo "RELEASE_TAG=${tag}"
@@ -358,6 +403,7 @@ jobs:
             } > "${notes_file}"
             release_flags=(--prerelease --latest=false)
           fi
+          printf '\nGPLv3 Device Faker corresponding source (build commit): https://github.com/%s/tree/%s/components/device-faker\n' "${GITHUB_REPOSITORY}" "${GITHUB_SHA}" >> "${notes_file}"
           printf '\nGPLv3 Play Integrity corresponding source (build commit): https://github.com/%s/tree/%s/components/play-integrity\n' "${GITHUB_REPOSITORY}" "${GITHUB_SHA}" >> "${notes_file}"
           gh release create "${tag}" "${MODULE_PATH}" \
             --target "${GITHUB_SHA}" \

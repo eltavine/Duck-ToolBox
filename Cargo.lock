@@ -595,6 +595,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "duck-device-faker"
+version = "0.2.1-Stable"
+dependencies = [
+ "anyhow",
+ "clap",
+ "duck-core",
+ "libc",
+ "serde_json",
+ "tempfile",
+]
+
+[[package]]
 name = "duck-device-ids"
 version = "0.2.1-Stable"
 dependencies = [
@@ -829,6 +841,7 @@ dependencies = [
  "anyhow",
  "clap",
  "duck-core",
+ "duck-device-faker",
  "duck-device-ids",
  "duck-kernel-modules",
  "duck-linux-env",

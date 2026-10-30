@@ -237,6 +237,7 @@ fn features_manifest_lists_every_registered_tool() {
             "device-ids",
             "tricky-store",
             "play-integrity",
+            "device-faker",
             "system",
             "kernel-modules",
             "zram",

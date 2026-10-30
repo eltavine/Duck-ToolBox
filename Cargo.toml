@@ -23,6 +23,7 @@ duck-kernel-modules = { path = "crates/duck-kernel-modules" }
 duck-zram = { path = "crates/duck-zram" }
 duck-linux-env = { path = "crates/duck-linux-env" }
 duck-play-integrity = { path = "crates/duck-play-integrity" }
+duck-device-faker = { path = "crates/duck-device-faker" }
 duck-tricky-store = { path = "crates/duck-tricky-store" }
 
 aes = "0.9.3"

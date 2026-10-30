@@ -45,3 +45,20 @@ target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE
     PIF_MODULE_DIR="${PIF_MODULE_DIR}"
     PIF_DATA_DIR="${PIF_DATA_DIR}"
 )
+
+set(DUCK_RUNTIME_DIR "" CACHE PATH "Embedded Zygisk composition source")
+set(DUCK_FAKER_LIBRARY "" CACHE FILEPATH "ARM64 Device Faker static library")
+if(DUCK_RUNTIME_DIR)
+    target_sources(${CMAKE_PROJECT_NAME} PRIVATE
+        ${DUCK_RUNTIME_DIR}/entry.cpp ${DUCK_RUNTIME_DIR}/engine.cpp ${DUCK_RUNTIME_DIR}/channel.cpp)
+    target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+    target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE DUCK_EMBEDDED_ENGINES=1)
+    if(CMAKE_ANDROID_ARCH_ABI STREQUAL "arm64-v8a")
+        if(NOT EXISTS "${DUCK_FAKER_LIBRARY}")
+            message(FATAL_ERROR "Build the embedded Device Faker static library first")
+        endif()
+        target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE DUCK_HAS_DEVICE_FAKER=1)
+        target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE "${DUCK_FAKER_LIBRARY}" dl m)
+        target_link_options(${CMAKE_PROJECT_NAME} PRIVATE -Wl,--exclude-libs,ALL)
+    endif()
+endif()
