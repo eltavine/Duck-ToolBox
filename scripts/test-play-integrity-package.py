@@ -17,6 +17,9 @@ import unittest
 spec = importlib.util.spec_from_file_location("package_module", Path(__file__).with_name("package-module.py"))
 package = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(package)
+build_spec = importlib.util.spec_from_file_location("build_device_faker", Path(__file__).with_name("build-device-faker.py"))
+build_faker = importlib.util.module_from_spec(build_spec)
+build_spec.loader.exec_module(build_faker)
 
 
 def git(root, *args):
@@ -111,6 +114,45 @@ class DistributionIntegrityTest(unittest.TestCase):
                     package.write_module_archive(module, archive)
             self.assertEqual(archive.read_bytes(), before)
             self.assertEqual(list(root.glob("*.zip")), [archive])
+
+
+class DependencyLicenseTest(unittest.TestCase):
+    def test_root_license_does_not_supply_dependency_permission(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "LICENSE").write_text("Root project MIT license")
+            crate = root / "dependency"
+            crate.mkdir()
+            dependency = {"name": "unlicensed", "version": "1.0", "license": None,
+                          "license_file": None, "manifest_path": str(crate / "Cargo.toml")}
+            missing = build_faker.unlicensed_dependencies({"packages": [dependency]})
+            self.assertEqual(missing, ["unlicensed@1.0"])
+            with self.assertRaisesRegex(ValueError, "unlicensed@1.0"):
+                package.validate_dependency_licenses({"unlicensed_dependencies": missing})
+
+    def test_declared_license_file_must_exist_and_contain_text(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            crate = root / "crate"
+            crate.mkdir()
+            dependency = {"name": "custom-license", "version": "1.0", "license": None,
+                          "license_file": "../COPYING", "manifest_path": str(crate / "Cargo.toml")}
+            metadata = {"packages": [dependency]}
+            for content in [None, " \n", "Redistribution permission and original copyright"]:
+                if content is not None:
+                    (root / "COPYING").write_text(content)
+                missing = build_faker.unlicensed_dependencies(metadata)
+                self.assertEqual(missing, [] if content and content.strip() else ["custom-license@1.0"])
+            dependency["license_file"] = None
+            dependency["license"] = "MIT OR Apache-2.0"
+            self.assertEqual(build_faker.unlicensed_dependencies(metadata), [])
+            package.validate_dependency_licenses({"unlicensed_dependencies": []})
+
+    def test_older_or_invalid_build_metadata_cannot_skip_the_check(self):
+        for value in [{}, {"unlicensed_dependencies": None},
+                      {"unlicensed_dependencies": ""}, {"unlicensed_dependencies": [False]}]:
+            with self.subTest(value=value), self.assertRaisesRegex(ValueError, "rebuild"):
+                package.validate_dependency_licenses(value)
 
 
 class ShellEntrypointTest(unittest.TestCase):

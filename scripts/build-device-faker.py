@@ -34,6 +34,20 @@ def prepare_native():
     return source
 
 
+def unlicensed_dependencies(metadata):
+    missing = []
+    for package in metadata["packages"]:
+        if (package.get("license") or "").strip():
+            continue
+        license_file = package.get("license_file")
+        if license_file:
+            path = Path(package["manifest_path"]).parent / license_file
+            if path.is_file() and path.read_bytes().strip():
+                continue
+        missing.append(f'{package["name"]}@{package["version"]}')
+    return sorted(set(missing))
+
+
 def notices(payload, source, commit):
     destination = ROOT / "module/licenses/device-faker"
     if destination.exists():
@@ -42,15 +56,23 @@ def notices(payload, source, commit):
     shutil.copy2(SOURCE / "LICENSE", destination / "GPL-3.0.txt")
     shutil.copy2(SOURCE / "NOTICES", destination / "NOTICE")
     shutil.copy2(ENGINE / "UPSTREAM_REVISION", destination / "UPSTREAM_REVISION")
+    missing = set()
     for manifest in [source / "Cargo.toml", ENGINE / "manager/Cargo.toml"]:
         metadata = json.loads(subprocess.check_output(
             ["cargo", "metadata", "--locked", "--format-version=1", "--manifest-path", str(manifest)], cwd=ROOT,
         ))
+        missing.update(unlicensed_dependencies(metadata))
         for package in metadata["packages"]:
             parent = Path(package["manifest_path"]).parent
             for path in parent.iterdir():
                 if path.is_file() and path.name.upper().startswith(("LICENSE", "NOTICE", "COPYING")):
                     target = destination / "dependencies" / f'{package["name"]}-{package["version"]}' / path.name
+                    target.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(path, target)
+            if package.get("license_file"):
+                path = parent / package["license_file"]
+                if path.is_file():
+                    target = destination / "dependencies" / f'{package["name"]}-{package["version"]}' / "declared-license.txt"
                     target.parent.mkdir(parents=True, exist_ok=True)
                     shutil.copy2(path, target)
     (destination / "SOURCE.txt").write_text(
@@ -60,6 +82,7 @@ def notices(payload, source, commit):
         "Included source archive: webroot/licenses/corresponding-source.tar.gz\n"
         "All engine source is included in this repository. Run the build script.\n"
     )
+    return sorted(missing)
 
 
 def main():
@@ -106,10 +129,11 @@ def main():
         TARGET / "native/aarch64-linux-android/release/libzygisk.a", static)
     shutil.copy2(ROOT / "target/device-faker-manager/aarch64-linux-android/release/device-faker-engine", payload / "device-faker-engine")
     (payload / "device-faker-engine").chmod(0o755)
-    notices(payload, source, commit)
+    missing = notices(payload, source, commit)
     files = [p for p in payload.rglob("*") if p.is_file()]
     (payload / "build.json").write_text(json.dumps({
         "upstream_revision": revision, "source_commit": commit,
+        "unlicensed_dependencies": missing,
         "files": {p.relative_to(ROOT / "module").as_posix(): hashlib.sha256(p.read_bytes()).hexdigest() for p in files},
     }, indent=2) + "\n")
 

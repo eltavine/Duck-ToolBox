@@ -89,10 +89,19 @@ def write_module_archive(module, archive, metadata=None):
         candidate.unlink(missing_ok=True)
 
 
+def validate_dependency_licenses(manifest):
+    missing = manifest.get("unlicensed_dependencies")
+    if not isinstance(missing, list) or any(not isinstance(name, str) or not name for name in missing):
+        raise ValueError("Missing Device Faker dependency license metadata; rebuild the engine")
+    if missing:
+        raise ValueError("Device Faker dependencies have no declared license: " + ", ".join(missing))
+
+
 def validate_device_faker():
     payload = MODULE / "device-faker"
     require(payload / "build.json")
     manifest = json.loads((payload / "build.json").read_text())
+    validate_dependency_licenses(manifest)
     source = ROOT / "components/device-faker"
     revision = (source / "UPSTREAM_REVISION").read_text().strip()
     if manifest.get("upstream_revision") != revision:

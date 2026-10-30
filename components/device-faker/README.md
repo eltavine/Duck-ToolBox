@@ -16,6 +16,11 @@ provides no identified license. The Device Faker GPL grant does not establish
 permission for these separately authored dependencies. Obtain an applicable
 license from their rights holders or replace them with an implementation whose
 redistribution terms are established before distributing the linked binaries.
+The engine build records dependencies without a declared license or nonempty
+license file. Module packaging rejects such a build, including older build
+metadata without this check. Passing this check only establishes the presence
+of a declaration; it does not establish license compatibility or permission
+for code beyond that declaration's scope.
 
 ## Build and verification
 
