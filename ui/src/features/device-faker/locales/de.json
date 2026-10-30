@@ -76,5 +76,6 @@
     "config_too_large": "Die Konfiguration darf höchstens 48 KiB groß sein.",
     "density_range": "DPI: 120–640",
     "startup_failed": "Kompatibilitätsprüfung beim Start fehlgeschlagen. Modulprotokolle prüfen, Konflikte beheben und neu starten."
-  }
+  },
+  "globalRecoveryReboot": "Eine globale Eigenschaftssitzung ist unvollständig; der Wiederherstellungsprozess wurde beendet. Spoofing stoppen und vor dem erneuten Aktivieren neu starten. Bleibt die Warnung nach dem Neustart bestehen, prüfen Sie die Wiederherstellungsdaten."
 }

@@ -260,3 +260,22 @@ fn uninstall_keeps_a_pending_global_cleanup_visible_to_the_shell() {
     fs::remove_file(paths.file("cleanup-failed")).unwrap();
     assert!(uninstall_at(&paths).is_ok());
 }
+
+#[test]
+fn startup_cannot_overwrite_a_same_boot_orphan_but_clears_a_previous_boot() {
+    let (_root, paths) = boot_fixture();
+    let marker = crate::global_marker::path(&paths.root);
+    write(&marker, "boot-test\n2000000000\n42\ninitial\n").unwrap();
+    assert!(
+        run_boot(&paths, || panic!(
+            "orphaned globals must not become a new baseline"
+        ))
+        .is_err()
+    );
+    assert!(marker.exists());
+    assert!(!crate::gate::startup_ready_at(&paths.root));
+    write(&marker, "previous-boot\n2000000000\n42\ninitial\n").unwrap();
+    run_boot(&paths, || Ok(())).unwrap();
+    assert!(!marker.exists());
+    assert!(crate::gate::startup_ready_at(&paths.root));
+}

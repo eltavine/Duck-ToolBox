@@ -35,7 +35,9 @@ class NativeGate(unittest.TestCase):
     def test_parent_flags_boot_order_and_standalone_conflict(self):
         with tempfile.TemporaryDirectory() as directory:
             binary = Path(directory) / 'gate-test'
-            subprocess.run(['rustc','--edition=2024','--test',str(ROOT/'components/device-faker/engine/src/toolbox.rs'),'-o',str(binary)],check=True)
+            source = Path(directory) / 'gate.rs'
+            source.write_text(''.join('#[allow(dead_code)]\n#[path = "' + str(ROOT/'components/device-faker/engine/src'/file) + '"] mod ' + name + ';\n' for name,file in [('gate','toolbox.rs'),('global_marker','global_marker.rs'),('process_identity','process_identity.rs')]))
+            subprocess.run(['rustc','--edition=2024','--test',str(source),'-o',str(binary)],check=True)
             subprocess.run([str(binary)],check=True,timeout=10)
     @unittest.skipUnless(shutil.which('rustc'), 'Rust compiler unavailable')
     def test_mapping_permissions_and_bounded_context_names(self):

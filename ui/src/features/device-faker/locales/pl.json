@@ -76,5 +76,6 @@
     "config_too_large": "Konfiguracja nie może przekraczać 48 KiB.",
     "density_range": "DPI: 120–640",
     "startup_failed": "Kontrola zgodności przy uruchamianiu nie powiodła się. Sprawdź dzienniki modułu, usuń konflikty i uruchom ponownie."
-  }
+  },
+  "globalRecoveryReboot": "Sesja właściwości globalnych nie została ukończona, a proces przywracania zakończył się. Zatrzymaj podszywanie i uruchom urządzenie ponownie przed włączeniem. Jeśli ostrzeżenie pozostaje po ponownym uruchomieniu, sprawdź dane przywracania."
 }

@@ -10,16 +10,21 @@ mod config;
 mod density;
 mod document;
 mod error;
+#[cfg(test)]
+#[path = "../../engine/src/focus.rs"]
+mod focus;
 #[allow(dead_code)]
 #[path = "../../engine/src/toolbox.rs"]
 mod gate;
+#[allow(dead_code)]
+#[path = "../../engine/src/global_marker.rs"]
+mod global_marker;
 #[cfg(all(test, unix, not(target_os = "android")))]
 #[path = "../../engine/src/hooks.rs"]
 mod hooks;
 #[cfg(all(test, unix, not(target_os = "android")))]
 #[path = "../../engine/src/jni_policy.rs"]
 mod jni_policy;
-#[cfg(test)]
 #[allow(dead_code)]
 #[path = "../../engine/src/process_identity.rs"]
 mod process_identity;

@@ -76,5 +76,6 @@
     "config_too_large": "設定不可超過 48 KiB。",
     "density_range": "DPI: 120–640",
     "startup_failed": "啟動相容檢查失敗。請查看模組記錄，解決衝突後重新啟動。"
-  }
+  },
+  "globalRecoveryReboot": "全域屬性工作階段尚未完成，原還原程序已結束。請停止偽裝並重新啟動後再啟用。 若重新啟動後仍有此提示，請檢查還原記錄。"
 }

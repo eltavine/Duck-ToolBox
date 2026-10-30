@@ -52,7 +52,11 @@ bind package, Android user and PID start time; foreground identity is confirmed
 through the window manager. Cleanup restores only values still owned by the
 session, preserving later external edits. The density helper uses explicit user
 IDs and a private durable recovery journal. Failed recovery blocks enabling and
-retains recovery data. The watchdog interval is 500 ms, with bounded platform
+retains recovery data. Foreground global-property sessions publish an ownership marker first. Companion
+loss or PID reuse blocks new injection until reboot; original global-property
+backups remain in companion memory. Foreground queries have one monitor; session mutations remain serialized, and
+Binder callbacks only notify the monitor. Display 0 focus authorizes changes;
+conflicting unscoped focus cannot activate a global profile. The watchdog interval is 500 ms, with bounded platform
 commands; it is not a cleanup deadline. Reboot if global cleanup remains pending.
 
 ## Process contract, version 1

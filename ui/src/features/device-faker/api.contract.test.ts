@@ -80,4 +80,25 @@ describe.skipIf(!hasDuckd)("Device Faker real process contract", CONTRACT, () =>
     })
     expect((await fakerApi.status()).enabled).toBe(false)
   })
+  it("blocks a lost global owner and keeps its recovery marker after stop", async () => {
+    host = installHost({
+      files: {
+        "/proc/sys/kernel/random/boot_id": "contract-boot",
+        "/data/adb/duck-device-faker/enabled": "initial",
+        "/data/adb/duck-device-faker/global-active": "contract-boot\n2000000000\n123\ninitial\n",
+        "/data/adb/duck-device-faker/config/config.toml": content,
+      },
+    })
+    const status = await fakerApi.status()
+    expect(status).toMatchObject({
+      enabled: true,
+      cleanup_pending: true,
+      global_recovery_requires_reboot: true,
+    })
+    await expect(
+      fakerApi.enable(status.config.revision, status.stop_revision),
+    ).rejects.toMatchObject({ code: "engine_error" })
+    expect(await fakerApi.disable()).toMatchObject({ enabled: false })
+    expect((await fakerApi.status()).global_recovery_requires_reboot).toBe(true)
+  })
 })

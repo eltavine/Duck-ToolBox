@@ -13,12 +13,11 @@ pub fn start_at(root: &Path, pid: u32) -> Option<u64> {
     parse(&text)
 }
 fn parse(text: &str) -> Option<u64> {
-    text.rsplit_once(')')?
-        .1
-        .split_whitespace()
-        .nth(19)?
-        .parse()
-        .ok()
+    let mut fields = text.rsplit_once(')')?.1.split_whitespace();
+    if matches!(fields.next()?, "Z" | "X" | "x") {
+        return None;
+    }
+    fields.nth(18)?.parse().ok()
 }
 #[cfg(test)]
 mod tests {
@@ -32,5 +31,7 @@ mod tests {
             Some(54321)
         );
         assert!(parse("123 (incomplete)").is_none());
+        fields[0] = "Z";
+        assert!(parse(&format!("123 (zombie) {}", fields.join(" "))).is_none());
     }
 }

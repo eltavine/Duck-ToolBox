@@ -76,5 +76,6 @@
     "config_too_large": "A configuração não pode exceder 48 KiB.",
     "density_range": "DPI: 120–640",
     "startup_failed": "Falha nas verificações de compatibilidade ao iniciar. Consulte os registros do módulo, resolva os conflitos e reinicie."
-  }
+  },
+  "globalRecoveryReboot": "Uma sessão de propriedades globais está incompleta e seu processo de restauração terminou. Pare a simulação e reinicie antes de ativar novamente. Se o aviso continuar após reiniciar, verifique os registros de restauração."
 }

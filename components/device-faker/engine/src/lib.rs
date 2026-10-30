@@ -7,8 +7,10 @@ mod density;
 mod fg_observer;
 #[cfg(target_os = "android")]
 mod file_logger;
+mod focus;
 #[path = "toolbox.rs"]
 mod gate;
+mod global_marker;
 mod hooks;
 mod jni_policy;
 mod process_identity;

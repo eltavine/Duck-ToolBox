@@ -107,7 +107,8 @@ fn status(paths: &Paths) -> Result<Value> {
     let installed = paths.module("duck-toolbox");
     Ok(json!({
         "enabled": paths.enabled()?, "stop_revision": paths.stop_revision()?,
-        "cleanup_pending": paths.file("cleanup-failed").exists() || (!paths.enabled()? && paths.file("density.json").exists()),
+        "cleanup_pending": paths.file("cleanup-failed").exists() || (!paths.enabled()? && paths.file("density.json").exists()) || (crate::global_marker::path(&paths.root).exists() && !crate::gate::enabled_at(&paths.root)),
+        "global_recovery_requires_reboot": crate::global_marker::requires_reboot(&paths.root),
         "parent_active": paths.active("duck-toolbox"),
         "startup_ready": crate::gate::startup_ready_at(&paths.root),
         "startup_failed": read(&paths.file("startup-failed"),64)?.is_some_and(|failed|read(&paths.root.join("proc/sys/kernel/random/boot_id"),64).ok().flatten().is_some_and(|boot| failed==boot.trim())),
@@ -188,6 +189,7 @@ fn run_boot(paths: &Paths, stages: impl FnOnce() -> Result<()>) -> Result<Value>
             fs::remove_file(paths.file("ready"))?;
         }
         crate::density::recover(&paths.root, &mut crate::density::AndroidBridge)?;
+        crate::global_marker::prepare_boot(&paths.root)?;
         stages()?;
         // Direct nonpersistent properties are recreated by init on each boot.
         // A same-boot failure remains owned by its companion and must not be cleared here.
@@ -214,7 +216,7 @@ pub fn uninstall() -> Result<Value> {
 fn uninstall_at(paths: &Paths) -> Result<Value> {
     stop(paths)?;
     crate::density::recover(&paths.root, &mut crate::density::AndroidBridge)?;
-    if paths.file("cleanup-failed").exists() {
+    if paths.file("cleanup-failed").exists() || crate::global_marker::path(&paths.root).exists() {
         bail!(Error::new(
             "recovery_pending",
             "Global cleanup remains pending during uninstall"
@@ -239,7 +241,8 @@ fn stop(paths: &Paths) -> Result<Value> {
     write(&paths.file("stop"), &revision)?;
     let cleanup_pending = crate::density::recover(&paths.root, &mut crate::density::AndroidBridge)
         .is_err()
-        || paths.file("cleanup-failed").exists();
+        || paths.file("cleanup-failed").exists()
+        || crate::global_marker::path(&paths.root).exists();
     Ok(json!({"enabled": false, "stop_revision": revision,"cleanup_pending":cleanup_pending}))
 }
 pub fn request(operation: &str, input: &Value) -> Result<Value> {
@@ -303,7 +306,10 @@ pub fn request(operation: &str, input: &Value) -> Result<Value> {
             Ok(snapshot(&before))
         }
         "enable" => {
-            if paths.file("cleanup-failed").exists() || paths.file("density.json").exists() {
+            if paths.file("cleanup-failed").exists()
+                || paths.file("density.json").exists()
+                || crate::global_marker::path(&paths.root).exists()
+            {
                 bail!(Error::new(
                     "recovery_pending",
                     "Global recovery is still pending"

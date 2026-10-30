@@ -242,6 +242,7 @@ fn apply_resetprop_session(
         package: request.package_name.clone(),
         generation: request.generation,
         attempted: HashSet::new(),
+        claimed_global: false,
         app_pid: request.pid,
         start: request.start,
         unknown_since: None,

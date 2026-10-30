@@ -180,3 +180,31 @@ test("an identical cached configuration uses the current saved revision", async 
   await expect(page.locator("#faker-config")).toHaveValue("debug = false\n\n[templates]\n")
   await expect(page.getByText("Saved state changed.", { exact: false })).toHaveCount(0)
 })
+
+for (const locale of ["en", "zh-CN", "ar", "de"]) {
+  test(`lost global ownership stays readable and cannot be enabled in ${locale}`, async ({
+    page,
+    open,
+  }) => {
+    await page.setViewportSize({ width: 320, height: 900 })
+    await open("/device-faker", {
+      locale,
+      query: { "faker-enabled": "1", "faker-orphaned-global": "1" },
+    })
+    await page.evaluate(() => {
+      document.documentElement.style.fontSize = "200%"
+    })
+    await expect(page.getByRole("alert")).toHaveCount(1)
+    await expect(page.getByRole("alert")).toBeVisible()
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+    ).toBe(true)
+    if (locale === "en" || locale === "ar")
+      await page.getByRole("alert").screenshot({ path: `/tmp/duck-global-recovery-${locale}.png` })
+    const buttons = page.locator("section").first().getByRole("button")
+    await expect(buttons.nth(0)).toBeDisabled()
+    await expect(buttons.nth(1)).toBeEnabled()
+    await buttons.nth(1).click()
+    await expect(page.getByRole("alert")).toBeVisible()
+  })
+}

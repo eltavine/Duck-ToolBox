@@ -14,6 +14,7 @@ pub(super) struct Session {
     pub(super) start: u64,
     pub(super) generation: String,
     pub(super) attempted: HashSet<String>,
+    pub(super) claimed_global: bool,
     pub(super) unknown_since: Option<Instant>,
     pub(super) closing: bool,
     /// 本次伪装规格（来自 Apply 请求）
@@ -49,20 +50,43 @@ static FG_OBSERVER_STARTED: OnceLock<()> = OnceLock::new();
 /// 首次 Apply 时惰性启动前台源线程（UidObserver → 轮询兜底）。
 pub(super) fn spawn_fg_observer_once() {
     FG_OBSERVER_STARTED.get_or_init(|| {
-        let sink: crate::fg_observer::FgSink = std::sync::Arc::new(|_pkg: &str| {
-            if SESSION.lock().unwrap().is_some() {
-                handle_fg_event(&crate::fg_observer::confirmed_fg());
-            }
+        let (sender, receiver) = std::sync::mpsc::sync_channel(1);
+        let sink: crate::fg_observer::FgSink = std::sync::Arc::new(move || {
+            // Binder callbacks only notify; they never run dumpsys or mutate global state.
+            let _ = sender.try_send(());
         });
         crate::fg_observer::spawn_fg_source(sink);
-        // A stop or disabled parent must restore a global session even without a focus event.
-        std::thread::spawn(|| {
+        std::thread::spawn(move || {
+            let mut last = Instant::now() - Duration::from_secs(1);
             loop {
-                std::thread::sleep(Duration::from_millis(500));
-                if SESSION.lock().unwrap().is_none() {
-                    continue;
+                if matches!(
+                    receiver.recv_timeout(Duration::from_millis(500)),
+                    Err(std::sync::mpsc::RecvTimeoutError::Disconnected)
+                ) {
+                    std::thread::sleep(Duration::from_millis(500));
                 }
-                let observed = crate::fg_observer::confirmed_fg();
+                while receiver.try_recv().is_ok() {}
+                let wait = Duration::from_millis(200).saturating_sub(last.elapsed());
+                std::thread::sleep(wait);
+                last = Instant::now();
+                let needs_focus = {
+                    let guard = SESSION.lock().unwrap();
+                    let Some(session) = guard.as_ref() else {
+                        continue;
+                    };
+                    crate::gate::activation_at(std::path::Path::new("/")).as_deref()
+                        == Some(session.generation.as_str())
+                        && !session.closing
+                        && crate::process_identity::start_at(
+                            std::path::Path::new("/"),
+                            session.app_pid,
+                        ) == Some(session.start)
+                };
+                let observed = if needs_focus {
+                    crate::fg_observer::confirmed_fg()
+                } else {
+                    "-".into()
+                };
                 handle_fg_event(&observed);
             }
         });
@@ -181,8 +205,15 @@ fn activate_session(sess: &mut Session) {
     };
     sess.originals = originals;
     sess.attempted.clear();
-    // A partial apply must still enter the cleanup path with its original baseline.
     sess.activated = true;
+    if (!sess.spec.props.is_empty() || !sess.spec.delete_props.is_empty())
+        && let Err(error) = claim_global(&sess.generation, &mut sess.claimed_global)
+    {
+        error!("global ownership could not be published: {error}");
+        deactivate_session(sess, "ownership failed");
+        sess.closing = true;
+        return;
+    }
     if let Err(error) = apply_props_batch(
         &sess.spec.props,
         &sess.spec.delete_props,
@@ -212,7 +243,14 @@ pub(super) fn deactivate_session(sess: &mut Session, _focused: &str) -> bool {
         &sess.attempted,
     );
     let density = restore_density();
-    let restored = props.is_ok() && density.is_ok();
+    let mut restored = props.is_ok() && density.is_ok();
+    if restored && sess.claimed_global {
+        restored =
+            crate::global_marker::release(std::path::Path::new("/"), &sess.generation).is_ok();
+        if restored {
+            sess.claimed_global = false;
+        }
+    }
     sess.closing = !restored;
     if restored {
         sess.activated = false;

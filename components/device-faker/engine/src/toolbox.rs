@@ -72,6 +72,7 @@ pub fn activation_at(root: &Path) -> Option<String> {
         Err(_) => false,
     };
     (acknowledged
+        && crate::global_marker::permits(root, &token)
         && !root
             .join("data/adb/duck-device-faker/cleanup-failed")
             .exists()

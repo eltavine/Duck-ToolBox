@@ -167,3 +167,18 @@ pub(super) fn restore_density() -> anyhow::Result<()> {
         &mut crate::density::AndroidBridge,
     )
 }
+
+pub(super) fn claim_global(generation: &str, claimed: &mut bool) -> anyhow::Result<()> {
+    use std::io::Write;
+    let root = std::path::Path::new("/");
+    let path = crate::global_marker::path(root);
+    let parent = path.parent().unwrap();
+    let text = crate::global_marker::encode(root, generation)?;
+    let mut file = tempfile::NamedTempFile::new_in(parent)?;
+    file.write_all(text.as_bytes())?;
+    file.as_file().sync_all()?;
+    file.persist_noclobber(&path)?;
+    *claimed = true;
+    std::fs::File::open(parent)?.sync_all()?;
+    Ok(())
+}

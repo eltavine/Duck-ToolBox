@@ -49,6 +49,7 @@ const prerequisitesReady = computed(
     data.value.payload_installed &&
     data.value.startup_ready &&
     !data.value.cleanup_pending &&
+    !data.value.global_recovery_requires_reboot &&
     !data.value.startup_failed &&
     !!data.value.config.summary?.targets.length,
 )
@@ -127,7 +128,14 @@ const state = computed(() => {
           {{ t("conflict") }}
         </p>
         <p
-          v-if="data.cleanup_pending"
+          v-if="data.global_recovery_requires_reboot"
+          role="alert"
+          class="bg-muted rounded-2xl p-4 text-sm leading-6 [overflow-wrap:anywhere]"
+        >
+          {{ t("globalRecoveryReboot") }}
+        </p>
+        <p
+          v-else-if="data.cleanup_pending"
           role="alert"
           class="bg-muted rounded-2xl p-4 text-sm leading-6"
         >

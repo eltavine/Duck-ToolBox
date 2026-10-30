@@ -50,7 +50,15 @@ Global-property cleanup tracks attempted writes and compares the current value
 with the applied value before
 restoring. This avoids overwriting a later external edit, but global-property
 backup is companion-process state: companion crashes and power loss can lose that
-backup. A reboot may be required. Cleanup failure markers identify their boot; a
+backup. Before the first global-property write of a foreground session, a private atomic `global-active` marker
+records boot ID, companion PID/start time and enable generation. A missing/dead,
+zombie or reused owner blocks further injection and enabling; it does not create
+a replacement backup from the remaining spoofed values. The marker is removed only
+after successful cleanup by that owner, or during initialization of a new boot.
+Same-boot unfinished ownership blocks late initialization before property writes.
+Corrupt markers fail closed and are retained for manual inspection. The marker
+is ownership evidence, not a persistent copy of the original property values.
+A reboot may be required. Cleanup failure markers identify their boot; a
 successful boot pass clears an older boot’s global marker after density recovery.
 Density recovery requires a readback for the exact recorded user. A mismatched
 user leaves the journal intact and performs no restore write. The pre-mutation
@@ -62,6 +70,16 @@ The density helper uses explicit user IDs, following the window manager interfac
 at AOSP frameworks/base
 [`99b01a65cc4c104933788b3143285ab6bae65827`](https://android.googlesource.com/platform/frameworks/base/+/99b01a65cc4c104933788b3143285ab6bae65827/services/core/java/com/android/server/wm/WindowManagerShellCommand.java).
 Package/user, PID start time and confirmed focused window gate global activation.
+One session monitor owns foreground observations. Session state and mutations are
+serialized by their ownership mutex; Binder callbacks only send bounded,
+coalesced notifications. Periodic checks remain active if observer registration
+fails. Queries are rate limited to at most one every 200 ms, with a normal 500 ms
+period. This is a scheduling bound, not a device performance measurement.
+Window dumps are filtered before the 64 KiB output limit is applied. On the
+[AOSP display dump layout](https://android.googlesource.com/platform/frameworks/base/+/99b01a65cc4c104933788b3143285ab6bae65827/services/core/java/com/android/server/wm/DisplayContent.java),
+only display 0 can authorize the global profile because the density helper targets
+display 0. Unscoped conflicting focuses, missing users and null focus remain unknown;
+a previous focused activity does not override an explicit null current focus.
 The Android helper preserves positive integer overrides without an arbitrary
 upper threshold, and normalizes the zero/unset sentinel to reset. These semantics
 follow the [AOSP window manager implementation](https://android.googlesource.com/platform/frameworks/base/+/99b01a65cc4c104933788b3143285ab6bae65827/services/core/java/com/android/server/wm/WindowManagerService.java).

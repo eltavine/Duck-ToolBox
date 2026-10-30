@@ -76,5 +76,6 @@
     "config_too_large": "配置不能超过 48 KiB。",
     "density_range": "DPI: 120–640",
     "startup_failed": "启动兼容检查失败。请查看模块日志，解决冲突后重启。"
-  }
+  },
+  "globalRecoveryReboot": "全局属性会话尚未完成，原恢复进程已退出。请停止伪装并重启后再启用。 若重启后仍有此提示，请检查恢复记录。"
 }

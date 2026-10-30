@@ -76,5 +76,6 @@
     "config_too_large": "Configuration must be at most 48 KiB.",
     "density_range": "DPI: 120–640",
     "startup_failed": "Startup compatibility checks failed. Review module logs, resolve conflicts and restart."
-  }
+  },
+  "globalRecoveryReboot": "An unfinished global-property session has no live recovery owner. Stop spoofing and reboot before enabling again. If the warning remains after reboot, inspect the recovery records."
 }

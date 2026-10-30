@@ -33,7 +33,9 @@ const mock: MockModule = {
       parent_active: !parameters.has("faker-parent-disabled"),
       startup_ready: !new URLSearchParams(location.search).has("faker-startup-pending"),
       startup_failed: new URLSearchParams(location.search).has("faker-startup-failed"),
-      cleanup_pending: new URLSearchParams(location.search).has("faker-cleanup-pending"),
+      cleanup_pending:
+        parameters.has("faker-cleanup-pending") || parameters.has("faker-orphaned-global"),
+      global_recovery_requires_reboot: parameters.has("faker-orphaned-global"),
       payload_installed: true,
       payload_active: !parameters.has("faker-parent-disabled"),
       payload_pending: false,

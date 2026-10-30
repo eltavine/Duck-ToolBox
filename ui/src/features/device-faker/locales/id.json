@@ -76,5 +76,6 @@
     "config_too_large": "Konfigurasi maksimal 48 KiB.",
     "density_range": "DPI: 120–640",
     "startup_failed": "Pemeriksaan kompatibilitas saat mulai gagal. Periksa log modul, atasi konflik, lalu mulai ulang."
-  }
+  },
+  "globalRecoveryReboot": "Sesi properti global belum selesai dan proses pemulihannya telah berhenti. Hentikan penyamaran dan mulai ulang sebelum mengaktifkan lagi. Jika peringatan tetap muncul setelah mulai ulang, periksa catatan pemulihan."
 }
