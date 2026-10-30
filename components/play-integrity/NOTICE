@@ -27,6 +27,12 @@ validated identity and partition patch dates, with source metadata in snapshots.
 Late OEM property updates require boot completion. Existing CLI, injection,
 compatibility, configuration, recovery and diagnostic capabilities are retained.
 
+Modified 2026-10-31: the official Pixel catalog covers 39 phone, foldable and
+tablet identities. Official release snapshots bind the complete fingerprint,
+incremental version, model, launch API and paired properties. Older source
+records remain readable and are identified as incomplete identity records.
+Preview requests reject superseded responses while retaining current errors.
+
 Original PIF concepts and mechanisms are credited upstream to kdrag0n's ProtonAOSP
 and Universal SafetyNet Fix. Boot scripts derive from Displax's USNF MOD fork.
 See upstream history for the original contributions. Existing copyright and

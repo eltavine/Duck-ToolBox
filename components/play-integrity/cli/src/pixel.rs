@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-only
+// Modified 2026-10-31: retain complete release identities in compatible snapshots.
 //! Pixel release metadata; candidates are constructed locally and never applied here.
 use crate::pixel_devices::{DEFAULT, DEVICES};
 use crate::{Engine, config, files, network, rules, text};

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 // Modified 2026-10-24: private, bounded configuration snapshots and user-reported tests.
+// Modified 2026-10-31: validate bound Pixel identities and retain legacy source records.
 use crate::{Engine, config, files, text};
 use anyhow::{Result, bail};
 use serde::{Deserialize, Serialize};
