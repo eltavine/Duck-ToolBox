@@ -187,3 +187,30 @@ it("ignores a cancelled old job's response after another job becomes current", a
   expect(state.taskId.value).toBe("new")
   expect(state.task.value?.state).toBe("running")
 })
+
+it("keeps a completed job tracked when its patch preview outlives the page", async () => {
+  const patch = deferred<SecurityPatchPreview | null>()
+  targets.push({ id: "keystore", labelKey: "test", preview: () => patch.promise })
+  vi.mocked(integrityApi.taskStart).mockResolvedValue({
+    id: "job",
+    state: "running",
+    result: null,
+    error: null,
+    output: "",
+  })
+  vi.mocked(integrityApi.taskStatus).mockResolvedValue({
+    id: "job",
+    state: "completed",
+    result: candidate("Generated", "2026-10-05"),
+    error: null,
+    output: "",
+  })
+  const state = await setup()
+  await state.generate(true, false)
+  await flushPromises()
+  cleanups.pop()!()
+  patch.resolve(null)
+  await flushPromises()
+  expect(state.taskId.value).toBe("job")
+  expect(state.preview.value).toBeNull()
+})

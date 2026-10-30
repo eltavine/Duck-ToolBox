@@ -76,9 +76,11 @@ async function preview() {
     <div class="flex min-w-0 flex-col gap-4" :aria-busy="busy">
       <a
         href="https://github.com/VictorGabriel7Dev/build.prop"
-        class="text-primary flex min-h-12 w-fit max-w-full items-center break-all rounded-md text-sm underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2"
+        :aria-label="`${t('archive.source')}: VictorGabriel7Dev/build.prop`"
+        class="text-primary flex min-h-12 w-fit max-w-full flex-col items-start justify-center gap-1 break-all rounded-md text-sm underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2"
         @click.prevent="openExternal('https://github.com/VictorGabriel7Dev/build.prop')"
-        >{{ t("archive.source") }} · <bdi dir="ltr">VictorGabriel7Dev/build.prop</bdi></a
+        ><span>{{ t("archive.source") }}</span
+        ><bdi dir="ltr">VictorGabriel7Dev/build.prop</bdi></a
       >
       <Button
         :variant="catalog ? 'outline' : 'default'"

@@ -99,6 +99,10 @@ for (const [locale, fetch, preview] of [
     await open("/play-integrity/archive", { locale })
     await page.getByRole("button", { name: fetch, exact: true }).click()
     await page.getByRole("button", { name: preview, exact: true }).click()
+    const repository = await page
+      .getByText("VictorGabriel7Dev/build.prop", { exact: true })
+      .boundingBox()
+    expect(repository!.height).toBeLessThanOrEqual(24)
     await expect(
       page.getByRole("cell", { name: "DEVICE_INITIAL_SDK_INT", exact: true }),
     ).toBeVisible()

@@ -139,8 +139,8 @@ export function useIntegrity() {
       if (disposed || taskId.value !== id) return
       task.value = result
       if (task.value.state === "completed" && task.value.result) {
-        taskId.value = ""
         if (taskGeneration === previewGeneration) await prepare(task.value.result)
+        if (!disposed && taskId.value === id) taskId.value = ""
       } else if (task.value.state !== "running") {
         taskId.value = ""
       } else timer = setTimeout(() => void poll(), 1000)
