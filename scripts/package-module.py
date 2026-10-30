@@ -9,6 +9,7 @@ import struct
 import subprocess
 import sys
 import zipfile
+import tarfile
 
 ROOT = Path(__file__).resolve().parents[1]
 MODULE = ROOT / "module"
@@ -35,16 +36,44 @@ def check_source_checkout(commit, root=ROOT):
         raise ValueError("Engine source commit differs from the packaging checkout")
     dirty = subprocess.check_output(
         ["git", "status", "--porcelain", "--untracked-files=all", "--",
-         "components/play-integrity", "scripts"],
+         "components/play-integrity", "components/device-faker", "components/zygisk-runtime", "module", "scripts", "ui/src/features/device-faker", "ui/src/features/play-integrity"],
         cwd=root, text=True,
     ).strip()
     if dirty:
         raise ValueError("Corresponding-source checkout contains unpublished changes: " + dirty)
 
 
+def validate_device_faker():
+    payload = MODULE / "device-faker"
+    require(payload / "build.json")
+    manifest = json.loads((payload / "build.json").read_text())
+    source = ROOT / "components/device-faker"
+    revision = (source / "UPSTREAM_REVISION").read_text().strip()
+    if manifest.get("upstream_revision") != revision:
+        raise ValueError("Device Faker source revision differs from recorded provenance")
+    check_source_checkout(manifest.get("source_commit"))
+    for name in ["device-faker/device-faker-engine"]:
+        if name not in manifest["files"]:
+            raise ValueError("Missing Device Faker artifact hash: " + name)
+        elf(MODULE / name, 2, 183)
+    for name, digest in manifest["files"].items():
+        path = MODULE / name
+        require(path)
+        if hashlib.sha256(path.read_bytes()).hexdigest() != digest:
+            raise ValueError("Device Faker artifact hash mismatch: " + name)
+    for name in ["GPL-3.0.txt", "NOTICE", "UPSTREAM_REVISION", "SOURCE.txt"]:
+        require(MODULE / "licenses/device-faker" / name)
+    source_url = f"https://github.com/eltavine/Duck-ToolBox/tree/{manifest['source_commit']}/components/device-faker"
+    if source_url not in (MODULE / "licenses/device-faker/SOURCE.txt").read_text():
+        raise ValueError("Device Faker corresponding-source notice does not match its build commit")
+    if not any(source_url.encode() in path.read_bytes() for path in (MODULE / "webroot").rglob("*.js")):
+        raise ValueError("WebUI Device Faker corresponding-source commit is missing or mismatched")
+
+
 def validate():
     require(MODULE / "webroot/index.html")
     require(MODULE / "play-integrity/build.json")
+    validate_device_faker()
     manifest = json.loads((MODULE / "play-integrity/build.json").read_text())
     upstream = json.loads((ROOT / "components/play-integrity/UPSTREAM.json").read_text())
     if manifest["upstream_revision"] != upstream["revision"]:
@@ -83,8 +112,11 @@ def validate():
         for path in (MODULE / "webroot").rglob("*.js")
     ):
         raise ValueError("WebUI corresponding-source commit is missing or mismatched")
-    if any(MODULE.rglob("play-integrity-source.tar.gz")):
-        raise ValueError("Legacy corresponding-source archive must not be bundled")
+    embedded = manifest.get("embedded")
+    if not embedded or embedded.get("api") != 4 or embedded.get("device_faker_revision") != (ROOT / "components/device-faker/UPSTREAM_REVISION").read_text().strip():
+        raise ValueError("Root Zygisk payload does not contain the recorded embedded engine")
+    if any(path != MODULE / "module.prop" for path in MODULE.rglob("module.prop")):
+        raise ValueError("The installable module must not contain a second root-manager module")
 
 
 def main():
@@ -101,7 +133,7 @@ def main():
         shutil.copy2(binary, destination)
     for name in ["README.md", "CHANGELOG.md", "THIRD_PARTY_NOTICES.md"]:
         shutil.copy2(ROOT / name, MODULE / name)
-    for binary_path in [MODULE / "bin/duckd", MODULE / "play-integrity/pif-engine"]:
+    for binary_path in [MODULE / "bin/duckd", MODULE / "play-integrity/pif-engine", MODULE / "device-faker/device-faker-engine"]:
         if binary_path.exists():
             binary_path.chmod(0o755)
     require(MODULE / "play-integrity/build.json")
@@ -122,6 +154,22 @@ def main():
         name += "-play-integrity"
     archive = ROOT / (args.output or f"dist/{name}.zip")
     archive.parent.mkdir(parents=True, exist_ok=True)
+    source_archive = MODULE / "webroot/licenses/corresponding-source.tar.gz"
+    commit = json.loads((MODULE / "play-integrity/build.json").read_text())["source_commit"]
+    if not source_archive.exists():
+        subprocess.run([sys.executable, str(ROOT / "scripts/source-bundle.py"),
+                        "--commit", commit, "--output", str(source_archive), "--offline"], check=True)
+    with tarfile.open(source_archive) as source:
+        prefix = "Duck-ToolBox-source/"
+        if source.extractfile(prefix + "SOURCE_COMMIT").read().decode().strip() != commit:
+            raise ValueError("Corresponding-source archive differs from the binary commit")
+        for name in ["components/device-faker/engine/src/lib.rs", "components/device-faker/manager/src/main.rs",
+                     "components/zygisk-runtime/entry.cpp", "components/play-integrity/Cargo.lock",
+                     "scripts/build-play-integrity.py", "third-party/native/shadowhook/.revision"]:
+            source.getmember(prefix + name)
+    with source_archive.open("rb") as stream:
+        digest = hashlib.file_digest(stream, "sha256").hexdigest()
+    source_archive.with_suffix(".gz.sha256").write_text(digest + "  " + source_archive.name + "\n")
     with zipfile.ZipFile(archive, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=6) as output:
         for path in sorted(MODULE.rglob("*")):
             if path.is_file():

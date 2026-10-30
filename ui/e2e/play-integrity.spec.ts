@@ -22,9 +22,7 @@ test("previews arbitrary configuration before applying and exposes GPL notices",
   await expect(page.getByLabel("Configuration", { exact: true })).toHaveValue(/EXTRA=preserved/)
   await page.getByRole("button", { name: "GPLv3", exact: true }).click()
   await expect(page.getByText(/GNU GENERAL PUBLIC LICENSE/)).toBeVisible()
-  await expect(
-    page.getByRole("button", { name: "Corresponding source", exact: true }),
-  ).toBeVisible()
+  await expect(page.getByRole("link", { name: "Corresponding source", exact: true })).toBeVisible()
 })
 test("generates a candidate without replacing the saved configuration", async ({ page, open }) => {
   await open("/play-integrity/generate")

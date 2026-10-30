@@ -1,0 +1,10 @@
+{
+  "repository": "https://github.com/Seyud/device_faker",
+  "revision": "71e778404a8b1ded3271aa09f936f688141d6b31",
+  "license": "GPL-3.0-or-later",
+  "changes": [
+    "Embedded static engine with one toolbox Zygisk entry",
+    "Toolbox state and startup gates",
+    "Separated configuration and companion responsibilities"
+  ]
+}

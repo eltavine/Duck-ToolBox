@@ -26,6 +26,9 @@ class SourceCheckoutTest(unittest.TestCase):
             scripts = root / "scripts"
             engine.mkdir(parents=True)
             scripts.mkdir()
+            faker = root / "components/device-faker/manager"
+            faker.mkdir(parents=True)
+            (faker / "main.rs").write_text("faker source")
             source = engine / "main.rs"
             source.write_text("original")
             (scripts / "build-play-integrity.py").write_text("build")
@@ -45,6 +48,9 @@ class SourceCheckoutTest(unittest.TestCase):
                 package.check_source_checkout(commit, root)
             (scripts / "new-build-step.py").unlink()
             package.check_source_checkout(commit, root)
+            (faker / "main.rs").write_text("unpublished faker source")
+            with self.assertRaisesRegex(ValueError, "unpublished"):
+                package.check_source_checkout(commit, root)
 
     def test_rejects_invalid_commit_identifiers(self):
         for value in (None, "", "main", "a" * 39, "z" * 40):

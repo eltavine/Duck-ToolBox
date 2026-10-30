@@ -11,14 +11,18 @@ is kept in the independently built `components/play-integrity` project under GPL
 except dependencies with their own notices. See its LICENSE, NOTICE and UPSTREAM.json.
 The root MIT license does not replace those terms.
 
-Binary distributions include `licenses/play-integrity`, dependency notices,
-build metadata and a `SOURCE.txt` link pinned to the exact build commit. The
-feature footer links directly to `components/play-integrity` at that commit.
-The repository also contains the build script that fetches pinned dependencies
-and applies the recorded ShadowHook change. No duplicate source archive is
-included in the installable module or uploaded as a separate release asset.
-The matching Git source and build materials must remain publicly accessible
-for as long as object code is distributed.
+Binary distributions include both engine licenses, dependency notices, build
+metadata and source revision identifiers. `webroot/licenses/corresponding-source.tar.gz`
+contains the exact committed source plus Cargo-vendored dependencies and pinned
+native dependencies. Keep that archive with redistributed binaries, including local
+builds whose Git commit has not been published. The feature footers download this
+archive. Build scripts and lockfiles are included.
+
+The composite Zygisk library statically links the Play Integrity and Device Faker
+engines and the callback dispatcher. This combined library is distributed under
+GPL-3.0-only; original dependency licenses and copyright notices still apply.
+The `duckd` executable communicates with the separate management processes and does
+not link either GPL engine. The root MIT license does not replace component terms.
 
 Existing third-party notices, including `module/licenses/rkp-v1-oracle.txt`, remain
 applicable to their respective components.
@@ -39,3 +43,11 @@ The separate static ARM64 Tini executable is pinned to upstream v0.19.0 and its
 SHA-256 in `components/linux-env/tini.json`; its original copyright and MIT license
 are included in `module/licenses/tini-MIT.txt`. It is copied into each environment's
 private runtime mount and is not linked into `duckd`.
+
+Device Faker source is embedded under `components/device-faker/engine`, derived
+from Seyud/device_faker at the revision in `UPSTREAM_REVISION`. It is a normal
+source directory, without a Git submodule or separate root-manager module. The
+original GPL license, NOTICES and copyrights are retained. Adaptations, the
+management CLI and density helper use GPL-3.0-or-later. The composite
+dispatcher uses GPL-3.0-only, matching the linked PI engine.
+See [the component documentation](components/device-faker/README.md).

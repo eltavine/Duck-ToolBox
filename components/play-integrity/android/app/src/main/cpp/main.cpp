@@ -59,5 +59,12 @@ private:
     pif::PropertyHook hooks;
     pif::JavaInjection java;
 };
+#ifdef DUCK_EMBEDDED_ENGINES
+extern "C" void duck_pif_module_entry(zygisk::internal::api_table *table, JNIEnv *env) {
+    zygisk::internal::entry_impl<PlayIntegrityFix>(table, env);
+}
+extern "C" void duck_pif_companion(int fd) { pif::companion(fd); }
+#else
 REGISTER_ZYGISK_MODULE(PlayIntegrityFix)
 REGISTER_ZYGISK_COMPANION(pif::companion)
+#endif

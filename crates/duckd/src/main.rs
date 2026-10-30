@@ -28,6 +28,8 @@ static FEATURES: &[&dyn Feature] = &[
     &duck_tricky_store::FEATURE,
     #[cfg(feature = "play-integrity")]
     &duck_play_integrity::FEATURE,
+    #[cfg(feature = "device-faker")]
+    &duck_device_faker::FEATURE,
     #[cfg(feature = "system")]
     &duck_system::FEATURE,
     #[cfg(feature = "kernel-modules")]

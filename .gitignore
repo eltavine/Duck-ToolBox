@@ -55,3 +55,10 @@ components/play-integrity/android/build/
 /module/CHANGELOG.md
 /module/THIRD_PARTY_NOTICES.md
 *.kate-swp
+
+# Device Faker engine payloads
+/module/device-faker/
+/module/licenses/device-faker/
+/components/device-faker/manager/target/
+
+/components/device-faker/engine/target/

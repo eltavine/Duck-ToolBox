@@ -15,6 +15,7 @@ class InstallGuards(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix="duck-install-guard-") as directory:
             root = Path(directory)
             shutil.copy2(ROOT / "module/customize.sh", root / "customize.sh")
+            shutil.copy2(ROOT / "module/device-faker.sh", root / "device-faker.sh")
             (root / "util_functions.sh").write_text('''
 DATA_ROOT="$TEST_RUNTIME"
 repair_runtime() { mkdir -p "$TEST_RUNTIME"; touch "$TEST_RUNTIME/prepared"; }

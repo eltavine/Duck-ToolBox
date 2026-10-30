@@ -8,11 +8,22 @@ TSPA_DIR="/data/adb/modules/tsupport-advance"
 TSPA_FLAG="/storage/emulated/0/stop-tspa-auto-target"
 
 # Late pass for props the system sets after post-fs-data.
-sh "$MODPATH/prop.sh"
+props_ready=true
+sh "$MODPATH/prop.sh" || props_ready=false
 if [ -x "$MODPATH/play-integrity/pif-engine" ]; then
   PIF_ENGINE_MODULE="$MODPATH/play-integrity" \
     "$MODPATH/play-integrity/pif-engine" stage late >/dev/null 2>&1 \
-    || sh "$MODPATH/prop.sh" --fallback
+    || sh "$MODPATH/prop.sh" --fallback || props_ready=false
+fi
+
+# Per-process snapshots start only after the late system/PIF property pass.
+if [ -x "$MODPATH/device-faker/device-faker-engine" ]; then
+  if [ "$props_ready" = true ]; then
+    "$MODPATH/device-faker/device-faker-engine" stage ready >/dev/null 2>&1 \
+      || "$MODPATH/device-faker/device-faker-engine" stage blocked >/dev/null 2>&1 || true
+  else
+    "$MODPATH/device-faker/device-faker-engine" stage blocked >/dev/null 2>&1 || true
+  fi
 fi
 
 "$DUCKCTL" tricky-store entry apply >/dev/null 2>&1 || true

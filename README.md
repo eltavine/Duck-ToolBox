@@ -15,6 +15,18 @@ changed, removed or added on its own.
   selected scripts-only mode can run without a fingerprint. A separate stop control works
   during tasks, invalid configuration and pending recovery; configuration is retained. The management code remains MIT; see [licensing boundaries](THIRD_PARTY_NOTICES.md).
 
+- **Device Faker**: per-app device profiles and reusable templates from
+  [Seyud/device_faker](https://github.com/Seyud/device_faker), embedded as a normal source component.
+  The WebUI edits TOML, builds template/app drafts, previews file or standalone-config
+  imports, reports conflicting assignments and restores the previous configuration.
+  Configuration and power controls are independent; empty defaults target no apps.
+  Its GPLv3 engine shares the toolbox’s single Zygisk library with PI,
+  with explicit callback ordering and parent disable/removal gates. Reboot after installation.
+  Requires Zygisk and ARM64 apps. Global property/DPI options require acknowledgement;
+  process-local changes require an app restart, and failed global cleanup needs reboot.
+  Online template downloads are not embedded. Actual injection needs device validation.
+  See [build, lifecycle and protocol](components/device-faker/README.md).
+
 - **Tricky Store manager**: a complete port of KOWX712's
   [Tricky Addon: Update Target List](https://github.com/KOWX712/Tricky-Addon-Update-Target-List),
   for whichever keystore module is active:
@@ -363,7 +375,8 @@ pnpm locales:import <Tricky-Addon>/webui/public/locales/strings   # refresh tran
 On Windows, `pwsh ./scripts/build.ps1 -PackageModule` builds everything with `cargo-ndk`
 and writes the module zip to `dist/`.
 The Windows helper pins the WebUI to the current Git commit automatically. For
-manual WebUI builds set `VITE_PIF_SOURCE_COMMIT` to `git rev-parse HEAD` before
+manual WebUI builds set both `VITE_PIF_SOURCE_COMMIT` and
+`VITE_DEVICE_FAKER_SOURCE_COMMIT` to `git rev-parse HEAD` before
 running `pnpm build`; the module packager refuses moving-branch source links.
 
 The bundled Play Integrity engine additionally requires JDK 21, Android SDK / Build
@@ -383,9 +396,10 @@ Channel metadata is written into each ZIP without changing `module/module.prop`.
 Nightly packages use the repository's commit-count version code and `canary` suffix.
 Both release channels retain the GPLv3 license and dependency notices. The engine
 build records its exact Git commit, and packaging rejects a dirty or mismatched
-source checkout or WebUI source link. The installable ZIP does not include a
-second copy of the source. The WebUI, module license notice, Telegram notification
-and Release notes link to the matching commit under `components/play-integrity`.
+source checkout or WebUI source link. The installable ZIP includes `webroot/licenses/corresponding-source.tar.gz`,
+with the exact source commit, locked Rust dependencies and pinned native build
+materials. Both feature footers offer this source download; Git URLs identify
+the build revision even for a local commit that has not been pushed.
 The pinned build/dependency script is `scripts/build-play-integrity.py`.
 See [the rule review](components/play-integrity/RULES.md) for original sources
 and required device validation.

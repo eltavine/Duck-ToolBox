@@ -1,0 +1,320 @@
+use crate::document::{self, EMPTY, MAX_CONFIG, inspect, revision, snapshot};
+use crate::error::Error;
+use anyhow::{Context as _, Result, bail};
+use serde_json::{Value, json};
+use std::{
+    fs::{self, File},
+    io::{Read, Write},
+    path::{Path, PathBuf},
+};
+
+pub struct Paths {
+    root: PathBuf,
+    data: PathBuf,
+}
+impl Paths {
+    fn discover() -> Result<Self> {
+        let root =
+            PathBuf::from(std::env::var_os("DEVICE_FAKER_SYSROOT").unwrap_or_else(|| "/".into()));
+        let data = root.join("data/adb/duck-device-faker");
+        if !root.is_absolute() {
+            bail!("sysroot must be absolute");
+        }
+        Ok(Self { root, data })
+    }
+    fn file(&self, name: &str) -> PathBuf {
+        self.data.join(name)
+    }
+    fn module(&self, id: &str) -> PathBuf {
+        self.root.join("data/adb/modules").join(id)
+    }
+    fn active(&self, id: &str) -> bool {
+        let dir = self.module(id);
+        dir.join("module.prop").is_file()
+            && !dir.join("disable").exists()
+            && !dir.join("remove").exists()
+    }
+    fn content(&self) -> Result<String> {
+        Ok(read(&self.file("config/config.toml"), MAX_CONFIG)?.unwrap_or_else(|| EMPTY.into()))
+    }
+    fn stop_revision(&self) -> Result<String> {
+        Ok(read(&self.file("stop"), 256)?.unwrap_or_else(|| "initial".into()))
+    }
+    fn enabled(&self) -> Result<bool> {
+        Ok(read(&self.file("enabled"), 256)?
+            .is_some_and(|token| self.stop_revision().is_ok_and(|stop| stop == token)))
+    }
+    fn lock(&self) -> Result<File> {
+        private_dir(&self.data)?;
+        let lock = File::options()
+            .create(true)
+            .truncate(false)
+            .write(true)
+            .open(self.file("lock"))?;
+        lock.try_lock()
+            .context("another Device Faker write is running")?;
+        Ok(lock)
+    }
+}
+fn read(path: &Path, limit: usize) -> Result<Option<String>> {
+    let file = match File::open(path) {
+        Ok(file) => file,
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(None),
+        Err(e) => return Err(e.into()),
+    };
+    let mut bytes = Vec::new();
+    file.take(limit as u64 + 1).read_to_end(&mut bytes)?;
+    if bytes.len() > limit {
+        bail!("file exceeds {limit} bytes: {}", path.display());
+    }
+    Ok(Some(String::from_utf8(bytes)?))
+}
+fn private_dir(path: &Path) -> Result<()> {
+    fs::create_dir_all(path)?;
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        fs::set_permissions(path, fs::Permissions::from_mode(0o700))?;
+    }
+    Ok(())
+}
+fn write(path: &Path, content: &str) -> Result<()> {
+    let parent = path.parent().context("missing parent directory")?;
+    private_dir(parent)?;
+    let mut file = tempfile::NamedTempFile::new_in(parent)?;
+    file.write_all(content.as_bytes())?;
+    file.as_file().sync_all()?;
+    file.persist(path)?;
+    File::open(parent)?.sync_all()?;
+    Ok(())
+}
+fn required<'a>(input: &'a Value, key: &str) -> Result<&'a str> {
+    input[key]
+        .as_str()
+        .with_context(|| format!("missing string: {key}"))
+}
+fn matches_revision(input: &Value, content: &str) -> Result<()> {
+    if required(input, "revision")? != revision(content) {
+        bail!(Error::new(
+            "configuration_changed",
+            "Saved configuration changed; preview again"
+        ));
+    }
+    Ok(())
+}
+fn status(paths: &Paths) -> Result<Value> {
+    let config = snapshot(&paths.content()?);
+    let installed = paths.module("duck-toolbox");
+    Ok(json!({
+        "enabled": paths.enabled()?, "stop_revision": paths.stop_revision()?,
+        "cleanup_pending": paths.file("cleanup-failed").exists() || (!paths.enabled()? && paths.file("density.json").exists()),
+        "parent_active": paths.active("duck-toolbox"),
+        "startup_ready": crate::gate::startup_ready_at(&paths.root),
+        "startup_failed": read(&paths.file("startup-failed"),64)?.is_some_and(|failed|read(&paths.root.join("proc/sys/kernel/random/boot_id"),64).ok().flatten().is_some_and(|boot| failed==boot.trim())),
+        "payload_installed": installed.join("zygisk/arm64-v8a.so").is_file(),
+        "payload_active": paths.active("duck-toolbox"),
+        "payload_pending": paths.root.join("data/adb/modules_update/duck-toolbox/module.prop").is_file(),
+        "conflict": crate::gate::standalone_conflict_at(&paths.root), "injection_verified": false,
+        "legacy_available": paths.root.join("data/adb/device_faker/config/config.toml").is_file(),
+        "config": config, "upstream_revision": include_str!("../../UPSTREAM_REVISION").trim(),
+    }))
+}
+pub fn setup() -> Result<Value> {
+    let paths = Paths::discover()?;
+    let _lock = paths.lock()?;
+    if paths.file("ready").exists() {
+        fs::remove_file(paths.file("ready"))?;
+    }
+    if !paths.file("config/config.toml").exists() {
+        write(&paths.file("config/config.toml"), EMPTY)?;
+    }
+    Ok(json!({"ready": true}))
+}
+pub fn blocked() -> Result<Value> {
+    let paths = Paths::discover()?;
+    if paths.file("ready").exists() {
+        fs::remove_file(paths.file("ready"))?;
+    }
+    let boot = read(&paths.root.join("proc/sys/kernel/random/boot_id"), 64)?
+        .context("boot identity unavailable")?;
+    write(&paths.file("startup-failed"), boot.trim())?;
+    Ok(json!({"startup_ready":false}))
+}
+
+pub fn ready() -> Result<Value> {
+    let paths = Paths::discover()?;
+    let boot = read(&paths.root.join("proc/sys/kernel/random/boot_id"), 64)?
+        .context("boot identity unavailable")?;
+    if !paths.active("duck-toolbox") {
+        bail!("parent module is not active");
+    }
+    crate::density::recover(&paths.root, &mut crate::density::AndroidBridge)?;
+    let token = format!("{}:{}", boot.trim(), crate::gate::BUILD);
+    write(&paths.file("ready"), &token)?;
+    if paths.file("startup-failed").exists() {
+        fs::remove_file(paths.file("startup-failed"))?;
+    }
+    Ok(json!({"startup_ready":true}))
+}
+
+pub fn uninstall() -> Result<Value> {
+    let paths = Paths::discover()?;
+    stop(&paths)?;
+    crate::density::recover(&paths.root, &mut crate::density::AndroidBridge)?;
+    // Runtime state is retained until the root manager has removed the native payload.
+    Ok(json!({"enabled": false}))
+}
+fn stop(paths: &Paths) -> Result<Value> {
+    private_dir(&paths.data)?;
+    let token = tempfile::NamedTempFile::new_in(&paths.data)?;
+    let token_name = token
+        .path()
+        .file_name()
+        .context("missing stop token")?
+        .to_string_lossy()
+        .into_owned();
+    let clock = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)?
+        .as_nanos();
+    let revision = format!("{token_name}-{clock:x}");
+    write(&paths.file("stop"), &revision)?;
+    let cleanup_pending = crate::density::recover(&paths.root, &mut crate::density::AndroidBridge)
+        .is_err()
+        || paths.file("cleanup-failed").exists();
+    Ok(json!({"enabled": false, "stop_revision": revision,"cleanup_pending":cleanup_pending}))
+}
+pub fn request(operation: &str, input: &Value) -> Result<Value> {
+    let paths = Paths::discover()?;
+    if operation == "disable" {
+        return stop(&paths);
+    }
+    if operation == "status" {
+        return status(&paths);
+    }
+    if operation == "config" {
+        return Ok(snapshot(&paths.content()?));
+    }
+    if operation == "import-preview" {
+        let content = read(
+            &paths.root.join("data/adb/device_faker/config/config.toml"),
+            MAX_CONFIG,
+        )?
+        .context("upstream configuration does not exist")?;
+        return preview(&paths, &content);
+    }
+    if operation == "preview" {
+        return preview(&paths, required(input, "content")?);
+    }
+    if operation == "restore-preview" {
+        let current = paths.content()?;
+        let before = backup_content(&paths, &current)?;
+        return preview(&paths, &before);
+    }
+    let _lock = paths.lock()?;
+    match operation {
+        "apply" => {
+            let content = required(input, "content")?;
+            let summary = inspect(content)?;
+            if summary["global_effects"] == true && input["acknowledge_global"] != true {
+                bail!(Error::new(
+                    "global_ack_required",
+                    "Global changes require acknowledgement"
+                ));
+            }
+            let before = paths.content()?;
+            matches_revision(input, &before)?;
+            write(
+                &paths.file("backup.json"),
+                &json!({"before": before, "after": revision(content)}).to_string(),
+            )?;
+            write(&paths.file("config/config.toml"), content)?;
+            Ok(snapshot(content))
+        }
+        "restore" => {
+            let current = paths.content()?;
+            matches_revision(input, &current)?;
+            let before = backup_content(&paths, &current)?;
+            if inspect(&before)?["global_effects"] == true && input["acknowledge_global"] != true {
+                bail!(Error::new(
+                    "global_ack_required",
+                    "Global changes require acknowledgement"
+                ));
+            }
+            write(&paths.file("config/config.toml"), &before)?;
+            Ok(snapshot(&before))
+        }
+        "enable" => {
+            if paths.file("cleanup-failed").exists() || paths.file("density.json").exists() {
+                bail!(Error::new(
+                    "recovery_pending",
+                    "Global recovery is still pending"
+                ));
+            }
+            let stop = paths.stop_revision()?;
+            if required(input, "stop_revision")? != stop {
+                bail!(Error::new(
+                    "power_changed",
+                    "The stop state changed; refresh before enabling"
+                ));
+            }
+            let content = paths.content()?;
+            matches_revision(input, &content)?;
+            if inspect(&content)?["targets"]
+                .as_array()
+                .is_none_or(|targets| targets.is_empty())
+            {
+                bail!(Error::new(
+                    "no_targets",
+                    "Configure an application before enabling"
+                ));
+            }
+            if crate::gate::standalone_conflict_at(&paths.root) {
+                bail!(Error::new(
+                    "standalone_conflict",
+                    "Disable standalone Device Faker and reboot first"
+                ));
+            }
+            if !paths.active("duck-toolbox")
+                || !crate::gate::startup_ready_at(&paths.root)
+                || !paths
+                    .module("duck-toolbox")
+                    .join("zygisk/arm64-v8a.so")
+                    .is_file()
+            {
+                bail!(Error::new(
+                    "startup_not_ready",
+                    "The embedded engine is not ready; finish installation and reboot first"
+                ));
+            }
+            write(&paths.file("enabled"), &stop)?;
+            // A concurrent disable changes stop after this snapshot; the native gate compares both files.
+            Ok(json!({"enabled": paths.enabled()?, "stop_revision": paths.stop_revision()?}))
+        }
+        _ => bail!("unsupported operation: {operation}"),
+    }
+}
+fn backup_content(paths: &Paths, current: &str) -> Result<String> {
+    let backup: Value = serde_json::from_str(
+        &read(&paths.file("backup.json"), MAX_CONFIG * 2 + 4096)?.ok_or_else(|| {
+            Error::new("backup_missing", "No previous configuration is available")
+        })?,
+    )?;
+    if backup["after"] != revision(current) {
+        bail!(Error::new(
+            "backup_stale",
+            "The backup belongs to another configuration"
+        ));
+    }
+    let content = required(&backup, "before")?;
+    inspect(content)?;
+    Ok(content.into())
+}
+
+fn preview(paths: &Paths, content: &str) -> Result<Value> {
+    let summary = document::inspect(content)?;
+    Ok(json!({"content": content, "revision": revision(&paths.content()?), "summary": summary}))
+}
+
+#[cfg(test)]
+#[path = "tests.rs"]
+mod tests;

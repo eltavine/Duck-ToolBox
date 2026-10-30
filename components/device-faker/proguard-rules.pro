@@ -1,0 +1,1 @@
+-keep class dev.duck.toolbox.devicefaker.DensityBridge { public static void main(java.lang.String[]); }

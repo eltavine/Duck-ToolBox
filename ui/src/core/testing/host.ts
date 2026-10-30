@@ -114,6 +114,14 @@ export function installHost(device: Device = {}): Host {
     symlinkSync(engine, path.join(module, "play-integrity/pif-engine"))
   }
 
+  const faker =
+    process.env.DEVICE_FAKER_ENGINE_BIN ??
+    path.join(repository, "target/device-faker-manager/debug/device-faker-engine")
+  if (existsSync(faker)) {
+    mkdirSync(path.join(module, "device-faker"), { recursive: true })
+    symlinkSync(faker, path.join(module, "device-faker/device-faker-engine"))
+  }
+
   const props = Object.entries(device.props ?? {}).map(([key, value]) => `${key}=${value}\n`)
   write(path.join(tools, "props.txt"), props.join(""))
   write(path.join(tools, "user.txt"), (device.userPackages ?? []).join("\n") + "\n")

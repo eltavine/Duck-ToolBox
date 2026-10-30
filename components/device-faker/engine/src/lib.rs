@@ -1,0 +1,391 @@
+mod bounded;
+mod companion;
+mod config;
+mod cow_props;
+mod density;
+#[cfg(target_os = "android")]
+mod fg_observer;
+#[cfg(target_os = "android")]
+mod file_logger;
+#[path = "toolbox.rs"]
+mod gate;
+mod hooks;
+mod jni_policy;
+mod process_identity;
+mod prop_backend;
+
+use std::{
+    collections::{HashMap, HashSet},
+    fs,
+    path::Path,
+};
+
+use anyhow::Context;
+use companion::{handle_companion_request, spoof_system_props_via_companion};
+use config::Config;
+use hooks::hook_build_fields;
+use jni::EnvUnowned;
+use log::{LevelFilter, error, info, warn};
+use zygisk_api::{
+    ZygiskModule,
+    api::{V4, ZygiskApi, v4::ZygiskOption},
+    raw::ZygiskRaw,
+};
+
+const CONFIG_PATH: &str = "/data/adb/duck-device-faker/config/config.toml";
+
+#[derive(Default)]
+struct MyModule;
+
+impl ZygiskModule for MyModule {
+    type Api = V4;
+
+    fn on_load(&self, _api: ZygiskApi<V4>, _env: EnvUnowned) {
+        #[cfg(target_os = "android")]
+        file_logger::init_buffer_only();
+    }
+
+    fn pre_app_specialize(
+        &self,
+        mut api: ZygiskApi<V4>,
+        mut env: EnvUnowned,
+        args: &mut <V4 as ZygiskRaw>::AppSpecializeArgs,
+    ) {
+        if let Err(err) = self.handle_app_specialize(&mut api, &mut env, args) {
+            error!("pre_app_specialize failed: {err:?}");
+        }
+    }
+
+    fn post_app_specialize(
+        &self,
+        mut api: ZygiskApi<V4>,
+        _env: EnvUnowned,
+        _args: &<V4 as ZygiskRaw>::AppSpecializeArgs,
+    ) {
+        api.set_option(ZygiskOption::DlCloseModuleLibrary);
+    }
+
+    fn pre_server_specialize(
+        &self,
+        mut api: ZygiskApi<V4>,
+        _env: EnvUnowned,
+        _args: &mut <V4 as ZygiskRaw>::ServerSpecializeArgs,
+    ) {
+        api.set_option(ZygiskOption::DlCloseModuleLibrary);
+    }
+}
+
+impl MyModule {
+    fn handle_app_specialize(
+        &self,
+        api: &mut ZygiskApi<V4>,
+        env: &mut EnvUnowned,
+        args: &mut <V4 as ZygiskRaw>::AppSpecializeArgs,
+    ) -> anyhow::Result<()> {
+        let result = self.do_handle_app_specialize(api, env, args);
+
+        // 在 pre_app_specialize 退出前统一 flush，确保 on_load + specialize 期间
+        // 产生的所有日志都能发给 companion 落盘。
+        if let Err(e) = flush_log_buffer_to_companion(api) {
+            // 这里不能用 error!，否则会产生新的日志又无法 flush。
+            // 静默失败，日志将丢失。
+            let _ = e;
+        }
+
+        result
+    }
+
+    fn do_handle_app_specialize(
+        &self,
+        api: &mut ZygiskApi<V4>,
+        env: &mut EnvUnowned,
+        args: &mut <V4 as ZygiskRaw>::AppSpecializeArgs,
+    ) -> anyhow::Result<()> {
+        let package_name = Self::extract_package_name(env, args)?;
+        let user_id = Self::extract_android_user_id(args);
+        let package_with_user = format!("{package_name}@{user_id}");
+
+        // companion 侧现在自己管理会话状态和恢复逻辑；
+        // Zygisk 模块侧不再需要跨应用恢复（ACTIVE_RESET_SESSION 已移除）。
+
+        let config = match load_config() {
+            Ok(Some(cfg)) => cfg,
+            Ok(None) => {
+                api.set_option(ZygiskOption::DlCloseModuleLibrary);
+                return Ok(());
+            }
+            Err(err) => {
+                error!("Failed to load config: {err:#}");
+                api.set_option(ZygiskOption::DlCloseModuleLibrary);
+                return Ok(());
+            }
+        };
+
+        configure_log_level(config.debug);
+
+        if config.debug {
+            info!(
+                "Config loaded with {} apps and {} templates",
+                config.apps.len(),
+                config.templates.len()
+            );
+        }
+
+        // 同一包名被多个模板声明时，只有书写顺序最先的那个生效，其余被静默丢弃。
+        // 这是最常见的「配了 A 机型却生效了 B 机型」成因，必须留痕。
+        // 注意：非 debug 下日志级别为 Off，此告警只在 debug = true 时落盘；
+        // 用户侧的主要提示在 WebUI（保存/列表处）。
+        if config.debug {
+            for key in [package_with_user.as_str(), package_name.as_str()] {
+                let claimants = config.conflicting_templates_for_package(key);
+                if claimants.len() > 1 {
+                    warn!(
+                        "Package {key} is claimed by {} templates [{}]; only '{}' takes effect, \
+                         the rest are silently ignored. Assign a package to at most one template.",
+                        claimants.len(),
+                        claimants.join(", "),
+                        claimants[0]
+                    );
+                }
+            }
+        }
+
+        let merged = config
+            .get_merged_config(&package_with_user)
+            .or_else(|| config.get_merged_config(&package_name));
+
+        let Some(mut merged) = merged else {
+            if config.debug {
+                info!("App {package_name} (user {user_id}) not in config, unloading module");
+            }
+            api.set_option(ZygiskOption::DlCloseModuleLibrary);
+            return Ok(());
+        };
+
+        if merged.force_denylist_unmount {
+            api.set_option(ZygiskOption::ForceDenylistUnmount);
+            if config.debug {
+                info!("Force denylist unmount enabled for {package_name}");
+            }
+        }
+
+        // ── 统一执行流（按需调度）──────────────────────────────────────────
+        // ① JNI 字段覆写（始终执行）
+        hook_build_fields(env, &merged)?;
+        if config.debug {
+            info!("Build fields faked successfully");
+        }
+
+        // ①-bis 清除 /proc/self/maps 中匹配模式的属性映射（anti-detection）
+        if !merged.hide_maps.is_empty() {
+            warn!("hide_maps ignored: bionic retains property-area pointers");
+            merged.hide_maps.clear();
+        }
+
+        // ② COW 属性伪造（per-process，覆盖 native 读取，零模块驻留）
+        //    companion_resetprop = true 时跳过 COW，全部交给 companion resetprop（全局生效）
+        let (prop_map, explicit_props) = Config::build_merged_property_map_with_explicit(&merged);
+        if config.debug {
+            info!(
+                "Property map: {} entries ({} explicit custom_props)",
+                prop_map.len(),
+                explicit_props.len()
+            );
+        }
+
+        if merged.companion_resetprop {
+            // 全属性走 companion resetprop（getprop 和进程内读取一致）。
+            //
+            // 同时在进程内做一遍 COW（hybrid）：
+            //   1. 消除 D1 冷启动窗口 —— 全局 properties 要等 `FG == 包名` 事件才 apply，
+            //      在这之前 app 早期读取会看到真值；进程内 patch 发生在
+            //      `pre_app_specialize`，早于任何 app 代码。
+            //   2. 修复「app 域不可读的属性区」（如 HyperOS 的 vendor_default_prop）：
+            //      companion 写得进文件但 app 读不到，只有进程内私有副本可见。
+            //   3. COW 克隆会把被克隆节点的 `context_` 改写成 app 可读 context
+            //      （见 `PropBackend::repoint_area_and_relabel`），否则 bionic 在
+            //      specialize 后的 SELinux 复查会 munmap 掉克隆（真机实测）。
+            // 全局与进程内写的是同一批值，getprop 与进程内读取仍然一致。
+            let _ = cow_props::apply_cow_spoof(&prop_map, &explicit_props);
+
+            let delete_props = Config::build_delete_props_list(&merged);
+            if !prop_map.is_empty() || !delete_props.is_empty() || merged.dpi.is_some() {
+                if let Err(e) = spoof_system_props_via_companion(
+                    api,
+                    &prop_map,
+                    &explicit_props,
+                    &delete_props,
+                    &package_with_user,
+                    merged.dpi,
+                    config.debug,
+                ) {
+                    error!("Companion resetprop (full) failed: {e:?}");
+                } else if config.debug {
+                    info!(
+                        "Companion resetprop (full): {} set + {} delete for {package_name}",
+                        prop_map.len(),
+                        delete_props.len()
+                    );
+                }
+            }
+        } else {
+            // 严格 COW：COW 无法处理的属性不再降级为全局 resetprop——
+            // 自动 fallback 会修改全局属性（getprop/其他 app 可见），破坏
+            // COW 模式的 per-process 隔离承诺。需要全局生效（getprop 子进程
+            // 可见、__DELETE__ 删除属性）时显式开启 companion_resetprop。
+            let unfound_props = match cow_props::apply_cow_spoof(&prop_map, &explicit_props) {
+                Ok(unfound) => unfound,
+                Err(e) => {
+                    error!("COW spoof failed: {e:?}");
+                    Vec::new()
+                }
+            };
+
+            for (key, value) in &unfound_props {
+                warn!(
+                    "Strict COW cannot apply '{key}' ({} bytes) for {package_name}; \
+                     enable companion_resetprop for global fallback",
+                    value.len()
+                );
+            }
+
+            let delete_props = Config::build_delete_props_list(&merged);
+            for key in &delete_props {
+                warn!(
+                    "Strict COW cannot delete '{key}' for {package_name}; \
+                     enable companion_resetprop to use __DELETE__"
+                );
+            }
+
+            // dpi 与属性伪装无关（companion 经 wm density 修改全局 settings），
+            // 配置了仍走 companion。
+            if merged.dpi.is_some() {
+                let empty: HashMap<String, String> = HashMap::new();
+                let no_explicit: HashSet<String> = HashSet::new();
+                if let Err(e) = spoof_system_props_via_companion(
+                    api,
+                    &empty,
+                    &no_explicit,
+                    &[],
+                    &package_with_user,
+                    merged.dpi,
+                    config.debug,
+                ) {
+                    error!("Companion dpi failed: {e:?}");
+                } else if config.debug {
+                    info!("Companion dpi applied for {package_name}");
+                }
+            }
+        }
+
+        // ②-bis 不可读 context 的进程内合成（S4）
+        //   有些属性区对 app 域不可读（如 HyperOS 的 vendor_default_prop）：companion
+        //   全局 resetprop 写得进文件但 app 读不到，严格 COW 也会因「路由区未映射」
+        //   跳过。这里对 custom_props 里**显式**写出的这类 key，在进程内合成匿名
+        //   属性区并挂到对应 context 节点，使 SystemProperties.get 在本进程可见。
+        //   两种模式都执行：它只补「本进程永远读不到」的缺口，不改任何真实映射。
+        if let Err(e) =
+            cow_props::apply_unreadable_ctx_synth(&prop_map, &explicit_props, &merged.hide_maps)
+        {
+            warn!("Unreadable-context property synth failed: {e:#}");
+        }
+
+        // ③ DlClose（始终执行）
+        api.set_option(ZygiskOption::DlCloseModuleLibrary);
+        Ok(())
+    }
+
+    fn extract_android_user_id(args: &<V4 as ZygiskRaw>::AppSpecializeArgs) -> u32 {
+        // Android 的 app UID = userId * 100000 + appId
+        // 这里的 userId 对应 /data/user/<userId>/... 里的数字
+        const AID_USER_OFFSET: u32 = 100_000;
+        let uid = *args.uid;
+        if uid <= 0 {
+            return 0;
+        }
+        (uid as u32) / AID_USER_OFFSET
+    }
+
+    fn extract_package_name(
+        env: &mut EnvUnowned,
+        args: &<V4 as ZygiskRaw>::AppSpecializeArgs,
+    ) -> anyhow::Result<String> {
+        let result: String = env
+            .with_env(|_jenv| -> Result<String, jni::errors::Error> {
+                let app_data_dir = args.app_data_dir.to_string();
+
+                if let Some(package) = app_data_dir.rsplit('/').next()
+                    && !package.is_empty()
+                {
+                    return Ok(package.to_string());
+                }
+
+                let nice_name = args.nice_name.to_string();
+
+                let mut nice_name: String = nice_name;
+                if let Some(idx) = nice_name.find(':') {
+                    nice_name.truncate(idx);
+                }
+
+                Ok(nice_name)
+            })
+            .resolve::<crate::jni_policy::ClearAndDefault>();
+        Ok(result)
+    }
+}
+
+fn load_config() -> anyhow::Result<Option<Config>> {
+    if !gate::enabled() {
+        return Ok(None);
+    }
+    if !Path::new(CONFIG_PATH).exists() {
+        return Ok(None);
+    }
+
+    use std::io::Read;
+    let mut config_content = String::new();
+    fs::File::open(CONFIG_PATH)?
+        .take(48 * 1024 + 1)
+        .read_to_string(&mut config_content)
+        .with_context(|| format!("Failed to read config at {CONFIG_PATH}"))?;
+    anyhow::ensure!(
+        config_content.len() <= 48 * 1024,
+        "Configuration exceeds 48 KiB"
+    );
+    let config = Config::from_toml(&config_content)?;
+    Ok(Some(config))
+}
+
+fn configure_log_level(debug_enabled: bool) {
+    let level = if debug_enabled {
+        LevelFilter::Info
+    } else {
+        // 非 debug 不打印任何日志（Error 也不落盘）。
+        LevelFilter::Off
+    };
+    log::set_max_level(level);
+}
+
+fn flush_log_buffer_to_companion(api: &mut ZygiskApi<V4>) -> anyhow::Result<()> {
+    let lines = file_logger::drain_lines();
+    if lines.is_empty() {
+        return Ok(());
+    }
+
+    let request = companion::CompanionRequest::WriteLog(companion::WriteLogRequest { lines });
+    let response = companion::send_companion_command(api, &request)?;
+    if response.status != 0 {
+        anyhow::bail!(
+            response
+                .message
+                .unwrap_or_else(|| "companion write log failed".to_string())
+        );
+    }
+    Ok(())
+}
+
+// Note: The register_module macro should handle the EnvUnowned properly
+// The unwrap_unchecked issue is a macro expansion problem in jni 0.22
+// We'll let the macro handle this internally
+zygisk_api::register_module!(MyModule);
+zygisk_api::register_companion!(handle_companion_request);
