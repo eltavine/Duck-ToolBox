@@ -9,7 +9,8 @@
     "generate": "Fingerabdrücke",
     "compatibility": "Kompatibilität",
     "diagnostics": "Diagnose",
-    "license": "Lizenzen"
+    "license": "Lizenzen",
+    "archive": "Pixel-Eigenschaftsbibliothek"
   },
   "enabled": "Engine aktivieren",
   "preview": "Änderungen prüfen",
@@ -199,7 +200,11 @@
     "fetch": "Pixel-Builds abrufen",
     "loading": "Wird abgerufen…",
     "patchUnknown": "Das genaue Sicherheitspatchdatum ist unbekannt und wird weder geschätzt noch synchronisiert.",
-    "preview": "Gewählten Fingerprint prüfen"
+    "preview": "Gewählten Fingerprint prüfen",
+    "search": "Modell oder Codename suchen",
+    "noDevices": "Keine passenden Geräte. Suche leeren, um alle Modelle anzuzeigen.",
+    "availability": "Verfügbare Builds hängen vom Metadatendienst von Google ab. Ein aufgeführtes Modell garantiert weder verfügbare Builds noch das Bestehen der Integritätsprüfung.",
+    "legacySource": "Dieser ältere Herkunftseintrag enthält nur Gerät und Build. Er bindet weder den vollständigen Fingerprint noch Modell oder Start-API."
   },
   "quick": {
     "title": "Fingerprint-Einstellungen",
@@ -222,6 +227,26 @@
     "vendor": "Vendor-Patch",
     "boot": "Boot-Patch",
     "preview": "Patch-Vorschau aktualisieren",
-    "draft": "Partitionsänderungen vor Auswahl der Synchronisierung erneut prüfen."
+    "draft": "Partitionsänderungen vor Auswahl der Synchronisierung erneut prüfen.",
+    "multipleTargets": "Es kann jeweils nur ein Keystore-Backend synchronisiert werden.",
+    "targetUnavailable": "Das Keystore-Backend ist nicht mehr aktiv. Aktualisieren Sie die Vorschau."
+  },
+  "archive": {
+    "title": "Pixel-Eigenschaftsbibliothek",
+    "help": "Gerät und Kanal im Community-Archiv auswählen, um die PI-Konfiguration vorzuschauen. Patchdaten stammen aus dem gewählten Build. Der Boot-Hash dient als Referenz; die Akzeptanz muss am Gerät getestet werden.",
+    "source": "Community-Quelle",
+    "fetch": "Eigenschaftsbibliothek abrufen",
+    "channel": "Veröffentlichungskanal",
+    "release": "Stabil",
+    "beta": "Beta",
+    "canary": "Canary",
+    "build": "Build",
+    "patch": "Sicherheitspatch",
+    "digest": "Boot-Hash (Referenz)",
+    "updated": "Archiv aktualisiert",
+    "preview": "Archivkonfiguration anzeigen",
+    "details": "Quelldetails",
+    "revision": "Quell-Commit",
+    "preparing": "Konfiguration wird vorbereitet…"
   }
 }

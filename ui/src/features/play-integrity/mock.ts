@@ -1,6 +1,7 @@
 import type { MockModule } from "@/core/mock"
 import { MockFailure } from "@/core/mock"
-import type { Options } from "./api"
+import type { Options, Preview } from "./api"
+import type { ArchiveCatalog, ArchiveChannel } from "./pixel-archive-api"
 import { identityPairs } from "./fields"
 import type { libraryApi } from "./library-api"
 
@@ -21,6 +22,17 @@ let processRestart = false
 let rebootRequired = false
 let interrupted = new URLSearchParams(location.search).get("interrupted-transaction") === "1"
 const profiles: Awaited<ReturnType<typeof libraryApi.profiles>>["profiles"] = []
+const pixelDevices = [
+  { id: "cubs", name: "Pixel 11", api: 37 },
+  { id: "yogi", name: "Pixel 11 Pro Fold", api: 37 },
+  { id: "stallion", name: "Pixel 10a", api: 36 },
+  { id: "rango", name: "Pixel 10 Pro Fold", api: 36 },
+  { id: "felix", name: "Pixel Fold", api: 33 },
+  { id: "tangorpro", name: "Pixel Tablet", api: 33 },
+  { id: "bluejay", name: "Pixel 6a", api: 32 },
+  { id: "lynx", name: "Pixel 7a", api: 33 },
+  { id: "sailfish", name: "Pixel", api: 25 },
+]
 const profileContents = new Map<string, string>()
 const invalidProfiles = new URLSearchParams(location.search).has("corrupt-pif-library")
   ? [{ id: "a".repeat(64), error: "Invalid snapshot fixture" }]
@@ -33,6 +45,37 @@ const options: Options = {
   skipdelprop: false,
   skippersistprop: false,
   skipmatchdevice: false,
+}
+const archive: ArchiveCatalog = {
+  source: "https://github.com/VictorGabriel7Dev/build.prop",
+  source_revision: "a".repeat(40),
+  fetched: Math.floor(Date.now() / 1000),
+  generated: "2026-10-30T00:00:00Z",
+  devices: Object.fromEntries(
+    ["bluejay", "lynx"].map((id) => [
+      id,
+      {
+        model: id === "bluejay" ? "Pixel 6a" : "Pixel 7a",
+        first_api_level: id === "bluejay" ? 32 : 33,
+        channels: Object.fromEntries(
+          (["release", "beta", "canary"] as const)
+            .filter((channel) => id !== "lynx" || channel === "release")
+            .map((channel) => [
+              channel,
+              {
+                latest: `${id}/${id}${channel === "release" ? "" : `_${channel}`}_5678.prop`,
+                build:
+                  channel === "canary" ? "CANARY.1" : channel === "beta" ? "BETA.1" : "ARCHIVE.1",
+                incremental: "5678",
+                security_patch: "2026-10-05",
+                android: "17",
+                vbmeta_digest: "b".repeat(64),
+              },
+            ]),
+        ),
+      },
+    ]),
+  ),
 }
 const entries = (value: string) =>
   Object.fromEntries(
@@ -73,36 +116,82 @@ function preview(value: string) {
 const mock: MockModule = {
   feature: { id: "play-integrity", contract: 1 },
   handlers: {
+    "play-integrity.pixel-archive-catalog": () => {
+      if (new URLSearchParams(location.search).has("archive-offline"))
+        throw new MockFailure("engine_error", "Archive unavailable")
+      return archive
+    },
+    "play-integrity.pixel-archive-preview": (_a, _f, input) => {
+      const value = input as {
+        device: string
+        channel: ArchiveChannel
+        source_revision: string
+        build: string
+        incremental: string
+      }
+      const device = archive.devices[value.device]
+      const build = device?.channels[value.channel]
+      if (
+        !build ||
+        value.source_revision !== archive.source_revision ||
+        value.build !== build.build ||
+        value.incremental !== build.incremental
+      )
+        throw new MockFailure("engine_error", "Archive selection changed")
+      const product = value.channel === "release" ? value.device : `${value.device}_beta`
+      const fingerprint = `google/${product}/${value.device}:${value.channel === "canary" ? "CANARY" : "17"}/${build.build}/${build.incremental}:user/release-keys`
+      return {
+        ...preview(
+          `MODEL=${device!.model}\nDEVICE=${value.device}\nPRODUCT=${product}\nID=${build.build}\nINCREMENTAL=${build.incremental}\nFINGERPRINT=${fingerprint}\nSECURITY_PATCH=${build.security_patch}\nDEVICE_INITIAL_SDK_INT=${device!.first_api_level}\nspoofProvider=0\n`,
+        ),
+        provenance: {
+          source: archive.source,
+          source_revision: archive.source_revision,
+          device: value.device,
+          build: build.build,
+          fetched: archive.fetched,
+          patch_known: true,
+          channel: value.channel,
+          incremental: build.incremental,
+          security_patch: build.security_patch,
+          vbmeta_digest: build.vbmeta_digest,
+          file_sha256: "c".repeat(64),
+          fingerprint,
+          model: device!.model,
+          first_api_level: device!.first_api_level,
+        },
+      }
+    },
     "play-integrity.pixel-devices": () => ({
       default: "bluejay",
-      devices: [
-        { id: "bluejay", name: "Pixel 6a" },
-        { id: "lynx", name: "Pixel 7a" },
-      ],
+      devices: pixelDevices,
     }),
     "play-integrity.pixel-builds": (_a, _f, input) => {
       const device = (input as { device: string }).device
+      const model = pixelDevices.find((item) => item.id === device)!
+      const release = model.api === 37 ? "17" : "16"
       return {
         device,
-        model: device === "bluejay" ? "Pixel 6a" : "Pixel 7a",
+        model: model.name,
         source: "https://flash.android.com/",
         fetched: Math.floor(Date.now() / 1000),
-        builds: [
-          {
-            id: "RELEASE.1",
-            incremental: "1234",
-            release: "16",
-            notes: "",
-            fingerprint: `google/${device}/${device}:16/RELEASE.1/1234:user/release-keys`,
-          },
-        ],
+        builds: ["1234", "1233"].map((incremental) => ({
+          id: "RELEASE.1",
+          incremental,
+          release,
+          notes: "",
+          fingerprint: `google/${device}/${device}:${release}/RELEASE.1/${incremental}:user/release-keys`,
+        })),
       }
     },
     "play-integrity.pixel-preview": (_a, _f, input) => {
       const device = (input as { device: string }).device
+      const model = pixelDevices.find((item) => item.id === device)!
+      const release = model.api === 37 ? "17" : "16"
+      const incremental = (input as { incremental?: string }).incremental ?? "1234"
       return {
         ...preview(
-          `MODEL=${device === "bluejay" ? "Pixel 6a" : "Pixel 7a"}\nDEVICE=${device}\nID=RELEASE.1\nFINGERPRINT=google/${device}/${device}:16/RELEASE.1/1234:user/release-keys\n`,
+          `MODEL=${model.name}\nDEVICE=${device}\nDEVICE_INITIAL_SDK_INT=${model.api}\nID=RELEASE.1\nFINGERPRINT=google/${device}/${device}:${release}/RELEASE.1/${incremental}:user/release-keys\n`,
         ),
         provenance: {
           source: "https://flash.android.com/",
@@ -110,6 +199,15 @@ const mock: MockModule = {
           build: "RELEASE.1",
           fetched: Math.floor(Date.now() / 1000),
           patch_known: false,
+          ...(new URLSearchParams(location.search).has("legacy-pixel-source")
+            ? {}
+            : {
+                identity_bound: true,
+                fingerprint: `google/${device}/${device}:${release}/RELEASE.1/${incremental}:user/release-keys`,
+                incremental,
+                model: model.name,
+                first_api_level: model.api,
+              }),
         },
         warnings: [{ code: "pixel_patch_unknown", fields: [] }],
       }
@@ -138,14 +236,25 @@ const mock: MockModule = {
       invalid_profiles: [...invalidProfiles],
     }),
     "play-integrity.profile-save": (_args, _flags, input) => {
-      const value = input as { name: string; content: string }
+      const value = input as { name: string; content: string; provenance?: Preview["provenance"] }
       const id = String(Date.now())
-      profiles.unshift({ id, name: value.name, created: Date.now() / 1000, revision })
+      profiles.unshift({
+        id,
+        name: value.name,
+        created: Date.now() / 1000,
+        revision,
+        provenance: value.provenance,
+      })
       profileContents.set(id, value.content)
       return { profiles: [...profiles], invalid_profiles: [...invalidProfiles] }
     },
-    "play-integrity.profile-preview": (_args, _flags, input) =>
-      preview(profileContents.get((input as { id: string }).id) ?? ""),
+    "play-integrity.profile-preview": (_args, _flags, input) => {
+      const id = (input as { id: string }).id
+      return {
+        ...preview(profileContents.get(id) ?? ""),
+        provenance: profiles.find((item) => item.id === id)?.provenance,
+      }
+    },
     "play-integrity.profile-delete": (_args, _flags, input) => {
       const id = (input as { id: string }).id
       const index = profiles.findIndex((p) => p.id === id)

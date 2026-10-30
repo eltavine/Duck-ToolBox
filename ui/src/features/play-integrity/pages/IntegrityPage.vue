@@ -23,6 +23,7 @@ import { useCopy } from "@/core/links"
 import { notifyError } from "@/core/notify"
 import EnginePower from "../components/EnginePower.vue"
 import PixelFingerprints from "../components/PixelFingerprints.vue"
+import PixelArchive from "../components/PixelArchive.vue"
 import RecoveryNotice from "../components/RecoveryNotice.vue"
 import ConfigFields from "../components/ConfigFields.vue"
 import SettingDetails from "../components/SettingDetails.vue"
@@ -56,7 +57,16 @@ const strong = ref(true),
   list = ref(""),
   picker = ref(false)
 const source = ref("")
-const tabs = ["status", "config", "generate", "compatibility", "diagnostics", "license"] as const
+watch(source, () => s.clearPreview(), { flush: "sync" })
+const tabs = [
+  "status",
+  "config",
+  "generate",
+  "archive",
+  "compatibility",
+  "diagnostics",
+  "license",
+] as const
 const fields = ref<Record<string, string> | null>(null)
 const rawEditor = ref(false)
 async function editFields() {
@@ -297,7 +307,8 @@ async function importFile(event: Event) {
             <SettingDetails :title="t('profiles.title')" class="mt-4">
               <ProfileLibrary
                 :content="s.content.value"
-                @preview="(value) => s.action(() => s.prepare(value))"
+                :preparing="s.busy.value"
+                @preview="s.previewProfile"
               />
             </SettingDetails>
             <Button
@@ -313,6 +324,12 @@ async function importFile(event: Event) {
         <PixelFingerprints
           v-if="section === 'generate'"
           @preview="(value) => s.action(() => s.prepare(value))"
+          @invalidate="s.clearPreview()"
+        />
+        <PixelArchive
+          v-if="section === 'archive'"
+          @preview="(value) => s.action(() => s.prepare(value))"
+          @invalidate="s.clearPreview()"
         />
         <SectionCard
           v-if="section === 'generate'"
@@ -350,6 +367,13 @@ async function importFile(event: Event) {
               :disabled="s.busy.value"
               @click="s.cancel()"
               >{{ global.t("core.actions.cancel") }}</Button
+            >
+            <Button
+              v-if="s.task.value?.state === 'completed' && s.task.value.result"
+              variant="outline"
+              :disabled="s.busy.value"
+              @click="s.action(() => s.prepare(s.task.value!.result!))"
+              >{{ t("preview") }}</Button
             >
           </div>
           <p v-if="s.task.value" role="status" class="mt-3 text-sm">
@@ -447,7 +471,7 @@ async function importFile(event: Event) {
         >
       </QueryState>
       <ConfigPreview
-        v-if="s.preview.value && (section === 'config' || section === 'generate')"
+        v-if="s.preview.value && ['config', 'generate', 'archive'].includes(section)"
         :preview="s.preview.value"
         :patches="s.patches.value"
         :busy="
@@ -464,7 +488,7 @@ async function importFile(event: Event) {
             if (patch) patch.selected = selected
           }
         "
-        @close="s.preview.value = null"
+        @close="s.clearPreview()"
       />
       <div v-if="s.backup.value" class="flex gap-2">
         <Button variant="outline" :disabled="s.busy.value" @click="s.restart()">{{

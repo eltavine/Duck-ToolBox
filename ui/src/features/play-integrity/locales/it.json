@@ -9,7 +9,8 @@
     "generate": "Impronte",
     "compatibility": "Compatibilità",
     "diagnostics": "Diagnostica",
-    "license": "Licenze"
+    "license": "Licenze",
+    "archive": "Libreria proprietà Pixel"
   },
   "enabled": "Abilita motore",
   "preview": "Anteprima modifiche",
@@ -199,7 +200,11 @@
     "fetch": "Scarica build Pixel",
     "loading": "Caricamento…",
     "patchUnknown": "La data esatta della patch è sconosciuta e non viene stimata né sincronizzata.",
-    "preview": "Anteprima dell’impronta selezionata"
+    "preview": "Anteprima dell’impronta selezionata",
+    "search": "Cerca modello o nome in codice",
+    "noDevices": "Nessun dispositivo corrispondente. Cancella la ricerca per vedere tutti i modelli.",
+    "availability": "Le build disponibili dipendono dal servizio di metadati di Google. Un modello elencato non garantisce build disponibili né il superamento della verifica di integrità.",
+    "legacySource": "Questo vecchio record di origine identifica solo dispositivo e build. Non associa l’impronta completa, il modello o l’API al lancio."
   },
   "quick": {
     "title": "Controlli dell’impronta",
@@ -222,6 +227,26 @@
     "vendor": "Patch Vendor",
     "boot": "Patch Boot",
     "preview": "Aggiorna anteprima patch",
-    "draft": "Controlla le modifiche delle partizioni prima di selezionare la sincronizzazione."
+    "draft": "Controlla le modifiche delle partizioni prima di selezionare la sincronizzazione.",
+    "multipleTargets": "È possibile sincronizzare un solo backend keystore alla volta.",
+    "targetUnavailable": "Il backend keystore non è più attivo. Aggiorna l’anteprima."
+  },
+  "archive": {
+    "title": "Libreria proprietà Pixel",
+    "help": "Seleziona dispositivo e canale dall’archivio della comunità per visualizzare la configurazione PI. Le date delle patch provengono dalla build scelta. L’hash di avvio è solo indicativo; servono prove sul dispositivo.",
+    "source": "Fonte della comunità",
+    "fetch": "Scarica libreria proprietà",
+    "channel": "Canale di rilascio",
+    "release": "Stabile",
+    "beta": "Beta",
+    "canary": "Canary",
+    "build": "Build",
+    "patch": "Patch di sicurezza",
+    "digest": "Hash di avvio (riferimento)",
+    "updated": "Archivio aggiornato",
+    "preview": "Anteprima configurazione archivio",
+    "details": "Dettagli della fonte",
+    "revision": "Commit sorgente",
+    "preparing": "Preparazione della configurazione…"
   }
 }

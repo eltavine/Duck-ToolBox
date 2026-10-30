@@ -13,13 +13,28 @@ Rule review preserves explicit SDK choices, defaults new Provider compatibility 
 labels Canary heuristics, removes shell evaluation and checks root-runtime evidence.
 Build value conversion preserves normalized JSON booleans; generator process groups
 are reaped on cancellation, limits, errors and normal completion.
-Standalone output preserves permissions on existing external directories.
+File migration output preserves permissions on existing external directories.
 Companion exchanges share a monotonic deadline, invalid UTF-8 is rejected, JNI text
 uses standard UTF-8 decoding, and empty stop tokens cannot acknowledge shutdown.
 Configuration lock guards explicitly release ownership despite inherited descriptors.
 Named configuration snapshots and manual test observations use bounded private
 storage. Read-only system/configuration comparison never infers runtime values or
 server verdicts. Snapshot selection always produces a fresh application preview.
+
+Modified 2026-10-30: the component is built only into Duck ToolBox's composite
+Zygisk payload. Pixel archive downloads use an immutable source revision,
+validated identity and partition patch dates, with source metadata in snapshots.
+Late OEM property updates require boot completion. Existing CLI, injection,
+compatibility, configuration, recovery and diagnostic capabilities are retained.
+
+Modified 2026-10-31: the official Pixel catalog covers 39 phone, foldable and
+tablet identities. Official release snapshots bind the complete fingerprint,
+incremental version, model, launch API and paired properties. Older source
+records remain readable and are identified as incomplete identity records.
+Preview requests reject superseded responses while retaining current errors.
+Subprocess groups are stopped before reaping releases their numeric identity;
+externally reaped children are never signalled through a stale numeric PID.
+Delayed generator starts retain their task identifier after page disposal.
 
 Original PIF concepts and mechanisms are credited upstream to kdrag0n's ProtonAOSP
 and Universal SafetyNet Fix. Boot scripts derive from Displax's USNF MOD fork.

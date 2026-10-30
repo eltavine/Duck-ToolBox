@@ -9,7 +9,8 @@
     "generate": "Huellas",
     "compatibility": "Compatibilidad",
     "diagnostics": "Diagnóstico",
-    "license": "Licencias"
+    "license": "Licencias",
+    "archive": "Biblioteca de propiedades Pixel"
   },
   "enabled": "Activar motor",
   "preview": "Vista previa",
@@ -199,7 +200,11 @@
     "fetch": "Obtener compilaciones Pixel",
     "loading": "Obteniendo…",
     "patchUnknown": "Se desconoce la fecha exacta del parche; no se deduce ni se sincroniza.",
-    "preview": "Revisar la huella seleccionada"
+    "preview": "Revisar la huella seleccionada",
+    "search": "Buscar modelo o nombre en clave",
+    "noDevices": "No hay dispositivos coincidentes. Borra la búsqueda para ver todos los modelos.",
+    "availability": "Las compilaciones disponibles dependen del servicio de metadatos de Google. Que un modelo aparezca no garantiza compilaciones disponibles ni superar la comprobación de integridad.",
+    "legacySource": "Este registro de origen antiguo solo identifica el dispositivo y la compilación. No vincula la huella completa, el modelo ni la API de lanzamiento."
   },
   "quick": {
     "title": "Controles de huella",
@@ -222,6 +227,26 @@
     "vendor": "Parche Vendor",
     "boot": "Parche Boot",
     "preview": "Actualizar vista previa de parches",
-    "draft": "Revisa los cambios de particiones antes de seleccionar la sincronización."
+    "draft": "Revisa los cambios de particiones antes de seleccionar la sincronización.",
+    "multipleTargets": "Solo se puede sincronizar un backend de keystore a la vez.",
+    "targetUnavailable": "El backend de keystore ya no está activo. Actualiza la vista previa."
+  },
+  "archive": {
+    "title": "Biblioteca de propiedades Pixel",
+    "help": "Selecciona un dispositivo y canal del archivo comunitario para previsualizar la configuración PI. Las fechas de parches corresponden a la compilación elegida. El hash de arranque es informativo; la aceptación requiere pruebas en el dispositivo.",
+    "source": "Fuente comunitaria",
+    "fetch": "Obtener biblioteca",
+    "channel": "Canal de publicación",
+    "release": "Estable",
+    "beta": "Beta",
+    "canary": "Canary",
+    "build": "Compilación",
+    "patch": "Parche de seguridad",
+    "digest": "Hash de arranque (referencia)",
+    "updated": "Archivo actualizado",
+    "preview": "Previsualizar configuración del archivo",
+    "details": "Detalles de la fuente",
+    "revision": "Commit de origen",
+    "preparing": "Preparando configuración…"
   }
 }

@@ -6,8 +6,7 @@ import tempfile
 import unittest
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-STANDALONE = (SCRIPT_DIR / "android").is_dir()
-ENGINE = SCRIPT_DIR if STANDALONE else SCRIPT_DIR.parent / "components/play-integrity"
+ENGINE = SCRIPT_DIR.parent / "components/play-integrity"
 
 
 class BuildValues(unittest.TestCase):

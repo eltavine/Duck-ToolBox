@@ -9,7 +9,8 @@
     "generate": "Fingerprints",
     "compatibility": "Compatibility",
     "diagnostics": "Diagnostics",
-    "license": "Licenses"
+    "license": "Licenses",
+    "archive": "Pixel property library"
   },
   "enabled": "Enable the engine",
   "preview": "Preview changes",
@@ -199,7 +200,11 @@
     "fetch": "Fetch Pixel builds",
     "loading": "Fetching…",
     "patchUnknown": "Exact security patch date is unavailable. No patch date is inferred or synchronized.",
-    "preview": "Preview selected fingerprint"
+    "preview": "Preview selected fingerprint",
+    "search": "Search model or codename",
+    "noDevices": "No matching devices. Clear the search to see all models.",
+    "availability": "Available release builds depend on Google’s metadata service. A listed model does not guarantee build availability or integrity acceptance.",
+    "legacySource": "This older source record identifies only the device and build. It does not bind the complete fingerprint, model or launch API."
   },
   "quick": {
     "title": "Fingerprint controls",
@@ -222,6 +227,26 @@
     "vendor": "Vendor patch",
     "boot": "Boot patch",
     "preview": "Update patch preview",
-    "draft": "Partition edits are not previewed. Update the preview before selecting synchronization."
+    "draft": "Partition edits are not previewed. Update the preview before selecting synchronization.",
+    "multipleTargets": "Only one keystore backend can be synchronized at a time.",
+    "targetUnavailable": "The keystore backend is no longer active. Refresh the configuration preview."
+  },
+  "archive": {
+    "title": "Pixel property library",
+    "help": "Select a device and channel from the community archive to preview a PI configuration. Patch dates come from the selected build. Boot hash is shown for reference only; acceptance requires device testing.",
+    "source": "Community source",
+    "fetch": "Fetch property library",
+    "channel": "Release channel",
+    "release": "Stable",
+    "beta": "Beta",
+    "canary": "Canary",
+    "build": "Build",
+    "patch": "Security patch",
+    "digest": "Boot hash (reference)",
+    "updated": "Archive updated",
+    "preview": "Preview archive configuration",
+    "details": "Source details",
+    "revision": "Source commit",
+    "preparing": "Preparing configuration…"
   }
 }

@@ -7,10 +7,18 @@ use std::{
 };
 
 pub fn output(command: Command) -> Result<Vec<u8>> {
-    capture(command, terminate)
+    output_with_timeout(command, Duration::from_secs(5))
 }
 
-fn capture(mut command: Command, terminate_owned: impl FnOnce(&mut Child)) -> Result<Vec<u8>> {
+pub fn output_with_timeout(command: Command, timeout: Duration) -> Result<Vec<u8>> {
+    capture(command, timeout, terminate)
+}
+
+fn capture(
+    mut command: Command,
+    timeout: Duration,
+    terminate_owned: impl FnOnce(&mut Child),
+) -> Result<Vec<u8>> {
     let mut stdout = tempfile::tempfile()?;
     let stderr = tempfile::tempfile()?;
     #[cfg(unix)]
@@ -23,7 +31,7 @@ fn capture(mut command: Command, terminate_owned: impl FnOnce(&mut Child)) -> Re
         .stdout(stdout.try_clone()?)
         .stderr(stderr.try_clone()?)
         .spawn()?;
-    let deadline = Instant::now() + Duration::from_secs(5);
+    let deadline = Instant::now() + timeout;
     let mut owned_child = true;
     let waited = (|| -> Result<_> {
         loop {
@@ -83,6 +91,22 @@ fn terminate(child: &mut Child) {
 mod tests {
     use super::*;
     #[test]
+    fn a_custom_deadline_still_terminates_an_owned_blocked_command() {
+        let mut command = Command::new("/bin/sh");
+        command.args(["-c", "sleep 30"]);
+        let started = Instant::now();
+        let mut terminated = false;
+        assert!(
+            capture(command, Duration::from_millis(50), |child| {
+                terminated = true;
+                terminate(child);
+            })
+            .is_err()
+        );
+        assert!(terminated);
+        assert!(started.elapsed() < Duration::from_secs(2));
+    }
+    #[test]
     fn an_externally_reaped_child_fails_without_signalling_an_unowned_pid() {
         const CHILD: &str = "DEVICE_FAKER_TEST_EXTERNAL_REAPER";
         if std::env::var_os(CHILD).is_some() {
@@ -92,7 +116,10 @@ mod tests {
             }
             let mut command = Command::new("/bin/sh");
             command.args(["-c", "exit 0"]);
-            let error = capture(command, |_| panic!("must not signal after ECHILD")).unwrap_err();
+            let error = capture(command, Duration::from_secs(5), |_| {
+                panic!("must not signal after ECHILD")
+            })
+            .unwrap_err();
             assert_eq!(
                 error
                     .downcast_ref::<std::io::Error>()

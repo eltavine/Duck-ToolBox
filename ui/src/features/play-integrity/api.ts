@@ -47,6 +47,16 @@ export const previewSchema = configSchema.extend({
       build: z.string(),
       fetched: z.number(),
       patch_known: z.boolean(),
+      identity_bound: z.boolean().optional(),
+      source_revision: z.string().optional(),
+      channel: z.enum(["release", "beta", "canary"]).optional(),
+      incremental: z.string().optional(),
+      security_patch: z.string().optional(),
+      vbmeta_digest: z.string().optional(),
+      file_sha256: z.string().optional(),
+      fingerprint: z.string().optional(),
+      model: z.string().optional(),
+      first_api_level: z.number().optional(),
     })
     .optional(),
 })

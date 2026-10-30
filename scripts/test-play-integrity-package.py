@@ -66,6 +66,21 @@ class SourceCheckoutTest(unittest.TestCase):
             with self.subTest(value=value), self.assertRaisesRegex(ValueError, "invalid"):
                 package.check_source_checkout(value)
 
+    def test_rejects_an_embedded_component_replaced_by_a_git_submodule(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            git(root, "init", "-q")
+            (root / "source.rs").write_text("component source")
+            git(root, "add", ".")
+            git(root, "-c", "user.name=CI", "-c", "user.email=ci@example.invalid", "commit", "-qm", "Source")
+            commit = git(root, "rev-parse", "HEAD")
+            git(root, "update-index", "--add", "--cacheinfo", f"160000,{commit},components/play-integrity")
+            git(root, "-c", "user.name=CI", "-c", "user.email=ci@example.invalid", "commit", "-qm", "Gitlink fixture")
+            # Materialize the empty submodule path so status is clean.
+            (root / "components/play-integrity").mkdir(parents=True)
+            with self.assertRaisesRegex(ValueError, "not Git submodules"):
+                package.check_source_checkout(git(root, "rev-parse", "HEAD"), root)
+
 
 class DistributionIntegrityTest(unittest.TestCase):
     def test_rejects_source_changes_even_with_a_matching_commit_marker(self):
@@ -153,6 +168,37 @@ class DependencyLicenseTest(unittest.TestCase):
                       {"unlicensed_dependencies": ""}, {"unlicensed_dependencies": [False]}]:
             with self.subTest(value=value), self.assertRaisesRegex(ValueError, "rebuild"):
                 package.validate_dependency_licenses(value)
+
+
+class NoticePreservationTest(unittest.TestCase):
+    def test_exact_copies_pass_and_missing_or_truncated_notices_are_rejected(self):
+        with tempfile.TemporaryDirectory() as directory:
+            module = Path(directory)
+            source = package.ROOT
+            def copy(original, delivered):
+                target = module / delivered
+                target.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(source / original, target)
+            for name in ["LICENSE", "THIRD_PARTY_NOTICES.md"]:
+                copy(name, name)
+            for name in ["LICENSE", "NOTICE", "README.md", "RULES.md", "UPSTREAM.json"]:
+                copy("components/play-integrity/" + name,
+                     "licenses/play-integrity/" + ("GPL-3.0.txt" if name == "LICENSE" else name))
+            shutil.copytree(source / "components/play-integrity/licenses", module / "licenses/play-integrity", dirs_exist_ok=True)
+            for original, name in [("engine/LICENSE", "GPL-3.0.txt"), ("engine/NOTICES", "NOTICE"), ("UPSTREAM_REVISION", "UPSTREAM_REVISION")]:
+                copy("components/device-faker/" + original, "licenses/device-faker/" + name)
+            package.validate_component_notices(module=module)
+            for relative in ["LICENSE", "licenses/play-integrity/NOTICE", "licenses/play-integrity/zygisk-ISC.txt", "licenses/device-faker/NOTICE"]:
+                path = module / relative
+                original = path.read_bytes()
+                for changed in [b"", b"truncated notice"]:
+                    path.write_bytes(changed)
+                    with self.assertRaisesRegex(ValueError, "altered component notice"):
+                        package.validate_component_notices(module=module)
+                path.unlink()
+                with self.assertRaisesRegex(ValueError, "Missing or altered"):
+                    package.validate_component_notices(module=module)
+                path.write_bytes(original)
 
 
 class ShellEntrypointTest(unittest.TestCase):

@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { Button } from "@/components/ui/button"
 import { ref } from "vue"
+import { useI18n } from "vue-i18n"
+import { isRtl } from "@/core/i18n"
 import { useQueryClient } from "@tanstack/vue-query"
 import { Input } from "@/components/ui/input"
 import { libraryApi } from "../library-api"
@@ -22,6 +24,19 @@ const emit = defineEmits<{
   patchPreview: [id: string, partitions: Record<string, string>]
 }>()
 const { t } = useIntegrityI18n()
+const global = useI18n()
+function formatDate(value: string | null) {
+  if (!value) return "—"
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return value
+  const date = new Date(`${value}T00:00:00Z`)
+  if (!Number.isFinite(date.getTime()) || date.toISOString().slice(0, 10) !== value) return value
+  return new Intl.DateTimeFormat(global.locale.value, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  }).format(date)
+}
 const profileName = ref("")
 const saving = ref(false)
 const client = useQueryClient()
@@ -42,9 +57,10 @@ async function saveCandidate() {
 </script>
 <template>
   <SectionCard :title="t('preview')" :description="t('previewHelp')">
-    <p v-if="preview.metadata" class="mb-3 text-sm">
-      {{ t("dates") }}: {{ preview.metadata.released ?? "—" }} →
-      {{ preview.metadata.estimated_expiry ?? "—" }}
+    <p v-if="preview.metadata" class="mb-3 text-sm break-words">
+      {{ t("dates") }}: <bdi>{{ formatDate(preview.metadata.released) }}</bdi>
+      <span>{{ isRtl(global.locale.value) ? "←" : "→" }}</span>
+      <bdi>{{ formatDate(preview.metadata.estimated_expiry) }}</bdi>
     </p>
     <div
       v-if="preview.warnings.length"
@@ -62,8 +78,13 @@ async function saveCandidate() {
         >
       </p>
     </div>
-    <div class="overflow-x-auto rounded-xl border border-border/70">
-      <table class="w-full text-start text-xs">
+    <div
+      tabindex="0"
+      role="region"
+      :aria-label="t('preview')"
+      class="overflow-x-auto rounded-xl border border-border/70 focus-visible:outline-2 focus-visible:outline-offset-2"
+    >
+      <table class="w-full min-w-[32rem] text-start text-xs">
         <thead class="bg-muted/60">
           <tr>
             <th class="p-2 text-start">{{ t("field") }}</th>
@@ -90,8 +111,30 @@ async function saveCandidate() {
       @preview="emit('patchPreview', patch.target.id, $event)"
     />
     <div v-if="preview.provenance" class="mt-4 rounded-xl border p-4">
-      <p dir="ltr" class="text-muted-foreground mb-3 text-sm">
+      <p dir="ltr" class="text-muted-foreground mb-3 text-sm [overflow-wrap:anywhere]">
         {{ preview.provenance.source }} · {{ preview.provenance.build }}
+      </p>
+      <p
+        v-if="
+          preview.provenance.source === 'https://flash.android.com/' &&
+          preview.provenance.identity_bound !== true
+        "
+        role="status"
+        class="text-muted-foreground mb-3 text-sm break-words"
+      >
+        {{ t("pixel.legacySource") }}
+      </p>
+      <p
+        v-if="preview.provenance.source_revision"
+        dir="ltr"
+        class="text-muted-foreground mb-3 text-xs [overflow-wrap:anywhere]"
+      >
+        {{ preview.provenance.source_revision }} ·
+        <bdi dir="auto">{{
+          preview.provenance.channel ? t(`archive.${preview.provenance.channel}`) : ""
+        }}</bdi>
+        ·
+        {{ preview.provenance.security_patch }}
       </p>
       <Input
         v-model="profileName"

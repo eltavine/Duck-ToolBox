@@ -39,6 +39,8 @@ pub enum Command {
     PixelDevices,
     PixelBuilds(Input),
     PixelPreview(Input),
+    PixelArchiveCatalog,
+    PixelArchivePreview(Input),
     ProfileList,
     ProfileSave(Input),
     ProfilePreview(Input),
@@ -69,6 +71,16 @@ fn run(command: Command, ctx: &Context) -> CommandResult {
         Command::PixelDevices => ("pixel-devices", "play-integrity.pixel-devices", None),
         Command::PixelBuilds(v) => ("pixel-builds", "play-integrity.pixel-builds", Some(v)),
         Command::PixelPreview(v) => ("pixel-preview", "play-integrity.pixel-preview", Some(v)),
+        Command::PixelArchiveCatalog => (
+            "pixel-archive-catalog",
+            "play-integrity.pixel-archive-catalog",
+            None,
+        ),
+        Command::PixelArchivePreview(v) => (
+            "pixel-archive-preview",
+            "play-integrity.pixel-archive-preview",
+            Some(v),
+        ),
         Command::ProfileList => ("profile-list", "play-integrity.profile-list", None),
         Command::ProfileSave(v) => ("profile-save", "play-integrity.profile-save", Some(v)),
         Command::ProfilePreview(v) => {

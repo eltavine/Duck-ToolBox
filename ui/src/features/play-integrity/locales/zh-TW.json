@@ -9,7 +9,8 @@
     "generate": "裝置指紋",
     "compatibility": "相容設定",
     "diagnostics": "診斷",
-    "license": "授權條款"
+    "license": "授權條款",
+    "archive": "Pixel 屬性庫"
   },
   "enabled": "啟用引擎",
   "preview": "預覽變更",
@@ -199,7 +200,11 @@
     "fetch": "取得 Pixel 建構",
     "loading": "取得中…",
     "patchUnknown": "無法確認精確安全修補日期，不推測或同步日期。",
-    "preview": "預覽所選指紋"
+    "preview": "預覽所選指紋",
+    "search": "搜尋型號或代號",
+    "noDevices": "沒有符合的裝置。清空搜尋可查看全部機型。",
+    "availability": "可取得的發布版本取決於 Google 中繼資料服務。列出機型不代表一定有可用版本或能通過完整性檢查。",
+    "legacySource": "此舊版來源紀錄僅包含裝置代號和版本編號，未綁定完整指紋、型號或首發 API。"
   },
   "quick": {
     "title": "指紋快速設定",
@@ -222,6 +227,26 @@
     "vendor": "Vendor 修補",
     "boot": "Boot 修補",
     "preview": "更新修補預覽",
-    "draft": "分割區修改尚未預覽，請先更新預覽再選取同步。"
+    "draft": "分割區修改尚未預覽，請先更新預覽再選取同步。",
+    "multipleTargets": "一次只能同步一個 keystore 後端。",
+    "targetUnavailable": "keystore 後端已無法使用，請重新預覽設定。"
+  },
+  "archive": {
+    "title": "Pixel 屬性庫",
+    "help": "從社群屬性庫選擇機型和頻道，預覽 PI 設定。修補日期取自所選版本，啟動雜湊僅供查看；是否通過仍需實機測試。",
+    "source": "社群來源",
+    "fetch": "取得屬性庫",
+    "channel": "發布頻道",
+    "release": "穩定版",
+    "beta": "測試版",
+    "canary": "Canary",
+    "build": "建構版本",
+    "patch": "安全性修補程式",
+    "digest": "啟動雜湊（參考）",
+    "updated": "屬性庫更新時間",
+    "preview": "預覽屬性庫設定",
+    "details": "來源詳情",
+    "revision": "來源提交版本",
+    "preparing": "正在準備設定…"
   }
 }

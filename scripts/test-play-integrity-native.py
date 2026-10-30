@@ -8,11 +8,10 @@ import subprocess
 import tempfile
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-STANDALONE = (SCRIPT_DIR / "android").is_dir()
-ROOT = SCRIPT_DIR if STANDALONE else SCRIPT_DIR.parent
-ENGINE = ROOT if STANDALONE else ROOT / "components/play-integrity"
+ROOT = SCRIPT_DIR.parent
+ENGINE = ROOT / "components/play-integrity"
 SOURCE = ENGINE / "android/app/src/main/cpp"
-VENDOR = ENGINE / "vendor" if STANDALONE else ROOT / "target/play-integrity/vendor"
+VENDOR = ROOT / "third-party/native" if (ROOT / "third-party/native").is_dir() else ROOT / "target/play-integrity/vendor"
 TARGET = ROOT / "target/play-integrity/native-tests"
 TARGET.parent.mkdir(parents=True, exist_ok=True)
 with tempfile.TemporaryDirectory(prefix="pif-native-fixture-") as fixture:

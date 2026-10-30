@@ -9,7 +9,8 @@
     "generate": "Sidik perangkat",
     "compatibility": "Kompatibilitas",
     "diagnostics": "Diagnosis",
-    "license": "Lisensi"
+    "license": "Lisensi",
+    "archive": "Pustaka properti Pixel"
   },
   "enabled": "Aktifkan mesin",
   "preview": "Pratinjau perubahan",
@@ -199,7 +200,11 @@
     "fetch": "Ambil build Pixel",
     "loading": "Mengambil…",
     "patchUnknown": "Tanggal patch keamanan yang tepat tidak diketahui; tidak akan ditebak atau disinkronkan.",
-    "preview": "Tinjau sidik jari terpilih"
+    "preview": "Tinjau sidik jari terpilih",
+    "search": "Cari model atau nama kode",
+    "noDevices": "Tidak ada perangkat yang cocok. Hapus pencarian untuk melihat semua model.",
+    "availability": "Build yang tersedia bergantung pada layanan metadata Google. Model yang tercantum tidak menjamin ketersediaan build atau kelulusan pemeriksaan integritas.",
+    "legacySource": "Catatan sumber lama ini hanya mengidentifikasi perangkat dan build. Sidik jari lengkap, model, dan API saat peluncuran belum terikat."
   },
   "quick": {
     "title": "Pengaturan sidik jari",
@@ -222,6 +227,26 @@
     "vendor": "Patch Vendor",
     "boot": "Patch Boot",
     "preview": "Perbarui pratinjau patch",
-    "draft": "Tinjau perubahan partisi sebelum memilih sinkronisasi."
+    "draft": "Tinjau perubahan partisi sebelum memilih sinkronisasi.",
+    "multipleTargets": "Hanya satu backend keystore yang dapat disinkronkan dalam satu waktu.",
+    "targetUnavailable": "Backend keystore tidak lagi aktif. Perbarui pratinjau."
+  },
+  "archive": {
+    "title": "Pustaka properti Pixel",
+    "help": "Pilih perangkat dan kanal dari arsip komunitas untuk meninjau konfigurasi PI. Tanggal patch berasal dari build yang dipilih. Hash boot hanya sebagai referensi; penerimaan perlu diuji pada perangkat.",
+    "source": "Sumber komunitas",
+    "fetch": "Ambil pustaka properti",
+    "channel": "Kanal rilis",
+    "release": "Stabil",
+    "beta": "Beta",
+    "canary": "Canary",
+    "build": "Build",
+    "patch": "Patch keamanan",
+    "digest": "Hash boot (referensi)",
+    "updated": "Arsip diperbarui",
+    "preview": "Pratinjau konfigurasi arsip",
+    "details": "Detail sumber",
+    "revision": "Commit sumber",
+    "preparing": "Menyiapkan konfigurasi…"
   }
 }

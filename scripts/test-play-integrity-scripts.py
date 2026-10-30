@@ -6,15 +6,16 @@ import subprocess
 import tempfile
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-ENGINE = SCRIPT_DIR if (SCRIPT_DIR / "android").is_dir() else SCRIPT_DIR.parent / "components/play-integrity"
+ENGINE = SCRIPT_DIR.parent / "components/play-integrity"
 SCRIPTS = ENGINE / "scripts"
 
 
-def run(script, root, **environment):
-    subprocess.run(["sh", "-c", script], check=True, env={
+def run(script, root, expected_exit=0, **environment):
+    result = subprocess.run(["sh", "-c", script], env={
         **os.environ, "PIF_ENGINE_DATA": str(root), "PIF_ENGINE_SCRIPTS": str(SCRIPTS),
         "PIF_ENGINE_ROOT": str(root / "module"), **environment,
     })
+    assert result.returncode == expected_exit, result.returncode
 
 
 with tempfile.TemporaryDirectory(prefix="pif-shell-test-") as directory:
@@ -35,6 +36,15 @@ resetprop() { printf '%s' "$4" > "$PIF_ENGINE_DATA/restored"; }
     assert (root / "restored").read_text() == payload
     assert not (root / "must-not-exist").exists()
     (root / "uninstall.sh").unlink()
+
+    # Direct lifecycle requests cannot perform the late pass before boot completion.
+    run('''
+getprop() { printf 0; }
+resetprop() { printf unexpected > "$PIF_ENGINE_DATA/premature-late"; }
+set -- late
+. "$PIF_ENGINE_SCRIPTS/stage.sh"
+''', root, expected_exit=1, PIF_ENGINE_MODE="full")
+    assert not (root / "premature-late").exists()
     (root / "uninstall.sh").write_text('false\nprintf unexpected > "$PIF_ENGINE_DATA/continued"\n')
     recovery = subprocess.run(["sh", str(SCRIPTS / "stage.sh"), "cleanup"], env={
         **os.environ, "PIF_ENGINE_DATA": str(root), "PIF_ENGINE_SCRIPTS": str(SCRIPTS),

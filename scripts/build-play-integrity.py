@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build the independent GPL engine with commit-pinned source references."""
+"""Build the embedded Play Integrity component and composite module payload."""
 import argparse
 import hashlib
 import json
@@ -12,10 +12,9 @@ import tarfile
 import urllib.request
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-STANDALONE = (SCRIPT_DIR / "android").is_dir()
-ROOT = SCRIPT_DIR if STANDALONE else SCRIPT_DIR.parent
-ENGINE = ROOT if STANDALONE else ROOT / "components/play-integrity"
-VENDOR = ENGINE / "vendor" if STANDALONE else (ROOT / "third-party/native" if (ROOT / "third-party/native").is_dir() else ROOT / "target/play-integrity/vendor")
+ROOT = SCRIPT_DIR.parent
+ENGINE = ROOT / "components/play-integrity"
+VENDOR = ROOT / "third-party/native" if (ROOT / "third-party/native").is_dir() else ROOT / "target/play-integrity/vendor"
 DEPENDENCIES = {
     "json": ("nlohmann/json", "55f93686c01528224f448c19128836e7df245f72"),
     "local_cxa_atexit_finalize_impl": (
@@ -61,8 +60,6 @@ def dependencies():
 
 def source_revision():
     """The exact Git revision used for this engine build, not a moving branch."""
-    if STANDALONE:
-        return None
     marker = ROOT / "SOURCE_COMMIT"
     if marker.is_file():
         return marker.read_text().strip()
@@ -97,11 +94,10 @@ def main():
         "AR_aarch64_linux_android": str(toolchain / ("llvm-ar.exe" if os.name == "nt" else "llvm-ar")),
     })
     run("cargo", "build", "--locked", "--release", "--manifest-path", ENGINE / "Cargo.toml", "--target-dir", ROOT / "target/pif-engine", "--target", target, env=env)
-    if not STANDALONE:
-        run(sys.executable, ROOT / "scripts/build-device-faker.py", "--sdk", args.sdk)
-        env.update({"DUCK_RUNTIME_DIR": str(ROOT / "components/zygisk-runtime"),
-                    "DUCK_FAKER_LIBRARY": str(ROOT / "target/device-faker/libdevicefaker.a"),
-                    "DUCK_FAKER_JAVA": str(ROOT / "components/device-faker/java")})
+    run(sys.executable, ROOT / "scripts/build-device-faker.py", "--sdk", args.sdk)
+    env.update({"DUCK_RUNTIME_DIR": str(ROOT / "components/zygisk-runtime"),
+                "DUCK_FAKER_LIBRARY": str(ROOT / "target/device-faker/libdevicefaker.a"),
+                "DUCK_FAKER_JAVA": str(ROOT / "components/device-faker/java")})
     wrapper = ENGINE / "android/gradlew"
     gradle_command = [wrapper.with_suffix(".bat")] if os.name == "nt" else ["sh", wrapper]
     run(*gradle_command, "--no-daemon", "assembleRelease", cwd=wrapper.parent, env=env)
@@ -153,7 +149,7 @@ def main():
     (payload / "build.json").write_text(json.dumps({
         "upstream_revision": json.loads((ENGINE / "UPSTREAM.json").read_text())["revision"],
         "source_commit": commit,
-        "embedded": {"api": 4, "device_faker_revision": (ROOT / "components/device-faker/UPSTREAM_REVISION").read_text().strip()} if not STANDALONE else None,
+        "embedded": {"api": 4, "device_faker_revision": (ROOT / "components/device-faker/UPSTREAM_REVISION").read_text().strip()},
         "files": {p.relative_to(ROOT / "module").as_posix(): hashlib.sha256(p.read_bytes()).hexdigest() for p in artifacts},
     }, indent=2) + "\n")
 

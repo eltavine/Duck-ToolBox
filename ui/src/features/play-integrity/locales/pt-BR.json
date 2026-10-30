@@ -9,7 +9,8 @@
     "generate": "Impressões",
     "compatibility": "Compatibilidade",
     "diagnostics": "Diagnóstico",
-    "license": "Licenças"
+    "license": "Licenças",
+    "archive": "Biblioteca de propriedades Pixel"
   },
   "enabled": "Ativar mecanismo",
   "preview": "Prévia das alterações",
@@ -199,7 +200,11 @@
     "fetch": "Buscar compilações Pixel",
     "loading": "Buscando…",
     "patchUnknown": "A data exata do patch é desconhecida; não será estimada nem sincronizada.",
-    "preview": "Visualizar impressão selecionada"
+    "preview": "Visualizar impressão selecionada",
+    "search": "Buscar modelo ou codinome",
+    "noDevices": "Nenhum dispositivo encontrado. Limpe a busca para ver todos os modelos.",
+    "availability": "As compilações disponíveis dependem do serviço de metadados do Google. Um modelo listado não garante compilações disponíveis nem aprovação na verificação de integridade.",
+    "legacySource": "Este registro de origem antigo identifica apenas o dispositivo e a compilação. Ele não vincula a impressão digital completa, o modelo ou a API de lançamento."
   },
   "quick": {
     "title": "Controles da impressão",
@@ -222,6 +227,26 @@
     "vendor": "Patch Vendor",
     "boot": "Patch Boot",
     "preview": "Atualizar prévia dos patches",
-    "draft": "Revise as alterações das partições antes de selecionar a sincronização."
+    "draft": "Revise as alterações das partições antes de selecionar a sincronização.",
+    "multipleTargets": "Só é possível sincronizar um backend de keystore por vez.",
+    "targetUnavailable": "O backend de keystore não está mais ativo. Atualize a prévia."
+  },
+  "archive": {
+    "title": "Biblioteca de propriedades Pixel",
+    "help": "Selecione dispositivo e canal do arquivo da comunidade para visualizar a configuração PI. As datas de patch vêm da compilação escolhida. O hash de inicialização é apenas uma referência; a aceitação exige testes no dispositivo.",
+    "source": "Fonte da comunidade",
+    "fetch": "Buscar biblioteca de propriedades",
+    "channel": "Canal de lançamento",
+    "release": "Estável",
+    "beta": "Beta",
+    "canary": "Canary",
+    "build": "Compilação",
+    "patch": "Patch de segurança",
+    "digest": "Hash de inicialização (referência)",
+    "updated": "Arquivo atualizado",
+    "preview": "Visualizar configuração do arquivo",
+    "details": "Detalhes da fonte",
+    "revision": "Commit de origem",
+    "preparing": "Preparando configuração…"
   }
 }

@@ -1,30 +1,16 @@
 // SPDX-License-Identifier: GPL-3.0-only
+// Modified 2026-10-31: retain complete release identities in compatible snapshots.
 //! Pixel release metadata; candidates are constructed locally and never applied here.
-use crate::{Engine, config, files, network};
+use crate::pixel_devices::{DEFAULT, DEVICES};
+use crate::{Engine, config, files, network, rules, text};
 use anyhow::{Result, bail};
 use serde_json::{Value, json};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 const SOURCE: &str = "https://flash.android.com/";
-const DEVICES: &[(&str, &str, u32)] = &[
-    ("bluejay", "Pixel 6a", 32),
-    ("oriole", "Pixel 6", 31),
-    ("raven", "Pixel 6 Pro", 31),
-    ("panther", "Pixel 7", 33),
-    ("cheetah", "Pixel 7 Pro", 33),
-    ("lynx", "Pixel 7a", 33),
-    ("shiba", "Pixel 8", 34),
-    ("husky", "Pixel 8 Pro", 34),
-    ("akita", "Pixel 8a", 34),
-    ("tokay", "Pixel 9", 34),
-    ("caiman", "Pixel 9 Pro", 34),
-    ("komodo", "Pixel 9 Pro XL", 34),
-    ("comet", "Pixel 9 Pro Fold", 34),
-    ("tegu", "Pixel 9a", 35),
-];
 fn device(input: &Value) -> Result<(&'static str, &'static str, u32)> {
     let id = match input.get("device") {
-        None => "bluejay",
+        None => DEFAULT,
         Some(value) => value
             .as_str()
             .ok_or_else(|| anyhow::anyhow!("device must be text"))?,
@@ -36,7 +22,7 @@ fn device(input: &Value) -> Result<(&'static str, &'static str, u32)> {
         .ok_or_else(|| anyhow::anyhow!("unsupported Pixel device"))
 }
 pub fn devices() -> Value {
-    json!({"default":"bluejay","devices":DEVICES.iter().map(|(id,name,_)|json!({"id":id,"name":name})).collect::<Vec<_>>()})
+    json!({"default":DEFAULT,"devices":DEVICES.iter().map(|(id,name,_)|json!({"id":id,"name":name})).collect::<Vec<_>>()})
 }
 fn token(value: &str) -> bool {
     !value.is_empty()
@@ -144,10 +130,26 @@ pub fn preview(engine: &Engine, input: &Value) -> Result<Value> {
     {
         bail!("Pixel catalog expired; fetch builds again");
     }
-    let build = cached["builds"]
+    let incremental = input
+        .get("incremental")
+        .map(|v| {
+            v.as_str()
+                .ok_or_else(|| anyhow::anyhow!("incremental must be text"))
+        })
+        .transpose()?;
+    let mut matches = cached["builds"]
         .as_array()
-        .and_then(|list| list.iter().find(|b| b["id"] == input["build"]))
+        .into_iter()
+        .flatten()
+        .filter(|b| {
+            b["id"] == input["build"] && incremental.is_none_or(|value| b["incremental"] == value)
+        });
+    let build = matches
+        .next()
         .ok_or_else(|| anyhow::anyhow!("select a fetched Pixel build"))?;
+    if matches.next().is_some() {
+        bail!("ambiguous Pixel build; select its incremental version");
+    }
     let expected = fingerprint(
         product,
         crate::text(build, "id")?,
@@ -166,22 +168,68 @@ pub fn preview(engine: &Engine, input: &Value) -> Result<Value> {
         "prop",
     )?;
     config::migrate(&mut entries, true, false);
-    let previous = config::current(engine)?;
-    for (key, _) in config::ADVANCED {
-        if let Some(value) = previous["entries"][*key].as_str() {
-            entries.insert((*key).into(), value.into());
-        }
-    }
-    let mut result = config::preview(
-        engine,
-        &json!({"content":config::serialize(&entries,"json")?,"format":"json"}),
-    )?;
-    result["provenance"] = json!({"source":SOURCE,"device":product,"build":build["id"],"fetched":cached["fetched"],"patch_known":false});
+    let mut result = config::identity_preview(engine, entries)?;
+    result["provenance"] = json!({"source":SOURCE,"device":product,"build":build["id"],"fetched":cached["fetched"],"patch_known":false,
+        "identity_bound":true,"fingerprint":expected,"incremental":build["incremental"],"model":model,"first_api_level":first_api});
     result["warnings"]
         .as_array_mut()
         .unwrap()
         .push(json!({"code":"pixel_patch_unknown","fields":[]}));
     Ok(result)
+}
+
+pub fn provenance(value: &Value, entries: &config::Entries) -> Result<Value> {
+    let product = text(value, "device")?;
+    let (_, model, first_api) = device(value)?;
+    if value["source"] != SOURCE
+        || value["patch_known"] != false
+        || value["identity_bound"] != true
+        || !value["fetched"].is_u64()
+        || value["model"] != model
+        || value["first_api_level"] != first_api
+    {
+        bail!("invalid Pixel identity provenance");
+    }
+    let build = text(value, "build")?;
+    let incremental = text(value, "incremental")?;
+    let expected = fingerprint(
+        product,
+        build,
+        incremental,
+        entries.get("RELEASE").map(String::as_str).unwrap_or(""),
+    )
+    .ok_or_else(|| anyhow::anyhow!("invalid Pixel provenance fingerprint"))?;
+    if value["fingerprint"] != expected {
+        bail!("Pixel provenance does not match the release identity");
+    }
+    for (field, expected) in [
+        ("MANUFACTURER", "Google"),
+        ("BRAND", "google"),
+        ("MODEL", model),
+        ("DEVICE", product),
+        ("PRODUCT", product),
+        ("ID", build),
+        ("INCREMENTAL", incremental),
+        ("FINGERPRINT", expected.as_str()),
+        ("TYPE", "user"),
+        ("TAGS", "release-keys"),
+        ("DEVICE_INITIAL_SDK_INT", &first_api.to_string()),
+    ] {
+        if entries.get(field).map(String::as_str) != Some(expected) {
+            bail!("Pixel provenance does not match the configuration: {field}");
+        }
+    }
+    for &(field, property) in rules::BUILD_PROPERTIES {
+        if let Some(prop) = entries.get(property)
+            && entries.get(field) != Some(prop)
+        {
+            bail!("Pixel snapshot has inconsistent paired fields: {field}");
+        }
+    }
+    Ok(
+        json!({"source":SOURCE,"device":product,"build":build,"fetched":value["fetched"],"patch_known":false,
+        "identity_bound":true,"fingerprint":expected,"incremental":incremental,"model":model,"first_api_level":first_api}),
+    )
 }
 
 #[cfg(test)]

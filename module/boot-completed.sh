@@ -2,6 +2,9 @@
 # Runs once boot has completed and `pm` works (KernelSU and APatch call it directly; on
 # Magisk service.sh does). Nothing here may block or fail the boot.
 
+# Do not run the OEM-sensitive pass when a caller reaches this hook prematurely.
+[ "$(getprop sys.boot_completed)" = "1" ] || exit 1
+
 MODPATH=${0%/*}
 DUCKCTL="$MODPATH/bin/duckctl.sh"
 TSPA_DIR="/data/adb/modules/tsupport-advance"

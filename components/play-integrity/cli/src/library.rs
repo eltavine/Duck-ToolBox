@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 // Modified 2026-10-24: private, bounded configuration snapshots and user-reported tests.
+// Modified 2026-10-31: validate bound Pixel identities and retain legacy source records.
 use crate::{Engine, config, files, text};
 use anyhow::{Result, bail};
 use serde::{Deserialize, Serialize};
@@ -139,11 +140,25 @@ fn provenance(input: &Value) -> Result<Value> {
     let Some(value) = input.get("provenance").filter(|v| !v.is_null()) else {
         return Ok(Value::Null);
     };
+    if value["source"] == crate::pixel_archive::SOURCE {
+        return crate::pixel_archive::provenance(
+            value,
+            &config::parse(text(input, "content")?, "auto")?,
+        );
+    }
     if value["source"] != "https://flash.android.com/"
         || !value["fetched"].is_u64()
         || value["patch_known"] != false
+        || value.get("identity_bound").is_some_and(|v| !v.is_boolean())
     {
         bail!("invalid fingerprint provenance");
+    }
+    if value["identity_bound"] == true
+        || ["fingerprint", "model", "first_api_level", "incremental"]
+            .iter()
+            .any(|key| value.get(key).is_some())
+    {
+        return crate::pixel::provenance(value, &config::parse(text(input, "content")?, "auto")?);
     }
     let device = field(value, "device", 80, true)?;
     let build = field(value, "build", 80, true)?;
@@ -152,7 +167,7 @@ fn provenance(input: &Value) -> Result<Value> {
         bail!("provenance does not match the configuration");
     }
     Ok(
-        json!({"source":"https://flash.android.com/","device":device,"build":build,"fetched":value["fetched"],"patch_known":false}),
+        json!({"source":"https://flash.android.com/","device":device,"build":build,"fetched":value["fetched"],"patch_known":false,"identity_bound":false}),
     )
 }
 pub fn delete_profile(engine: &Engine, input: &Value) -> Result<Value> {

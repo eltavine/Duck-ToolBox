@@ -1,5 +1,94 @@
 import { expect, test } from "./fixtures"
 
+test.describe("Canary date-only metadata", () => {
+  test.use({ timezoneId: "America/Los_Angeles" })
+  for (const [locale, generate, released, expiry] of [
+    ["en", "Generate fingerprint", "Oct 1, 2026", "Nov 12, 2026"],
+    ["zh-CN", "生成指纹", "2026年10月1日", "2026年11月12日"],
+    ["ar", "إنشاء بصمة", "1 أكتوبر 2026", "12 نوفمبر 2026"],
+  ] as const) {
+    test(`localizes dates without shifting the release day in ${locale}`, async ({
+      page,
+      open,
+    }, testInfo) => {
+      await page.setViewportSize({ width: 320, height: 800 })
+      await open("/play-integrity/generate", { locale })
+      await page.getByRole("button", { name: generate, exact: true }).click()
+      await expect(page.getByText(released, { exact: true })).toBeVisible()
+      await expect(page.getByText(expiry, { exact: true })).toBeVisible()
+      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+        320,
+      )
+      await page.screenshot({ path: testInfo.outputPath("canary-dates.png"), fullPage: true })
+    })
+  }
+})
+
+test("searches new, fold, tablet and legacy Pixel models by name or codename", async ({
+  page,
+  open,
+}) => {
+  await open("/play-integrity/generate")
+  const search = page.getByRole("searchbox", { name: "Search model or codename", exact: true })
+  const device = page.getByRole("combobox", { name: "Pixel device", exact: true })
+  for (const [query, model] of [
+    [" YOGI ", "Pixel 11 Pro Fold"],
+    ["10a", "Pixel 10a"],
+    ["felix", "Pixel Fold"],
+    ["Tablet", "Pixel Tablet"],
+    ["sailfish", "Pixel"],
+  ]) {
+    await search.fill(query!)
+    await device.click()
+    await expect(page.getByRole("option")).toHaveCount(1)
+    await page.keyboard.press("ArrowDown")
+    await page.keyboard.press("Enter")
+    await expect(device).toHaveText(model!)
+  }
+  await search.fill("unknown-device")
+  await expect(page.getByRole("status").filter({ hasText: "No matching devices" })).toBeVisible()
+  await expect(device).toBeDisabled()
+  await expect(device).toHaveText("Pixel")
+  await search.fill("")
+  await expect(device).toBeEnabled()
+})
+
+test("changing device, incremental or refetching invalidates the previous Pixel candidate", async ({
+  page,
+  open,
+}) => {
+  await open("/play-integrity/generate")
+  const fetch = page.getByRole("button", { name: "Fetch Pixel builds", exact: true })
+  const preview = page.getByRole("button", { name: "Preview selected fingerprint", exact: true })
+  const apply = page.getByRole("button", { name: "Apply configuration", exact: true })
+  await fetch.click()
+  await preview.click()
+  await expect(apply).toBeVisible()
+  await page
+    .getByRole("searchbox", { name: "Search model or codename", exact: true })
+    .fill("stallion")
+  await page.getByRole("combobox", { name: "Pixel device", exact: true }).click()
+  await page.getByRole("option", { name: "Pixel 10a · stallion", exact: true }).click()
+  await expect(apply).toHaveCount(0)
+  await expect(preview).toHaveCount(0)
+  await fetch.click()
+  await preview.click()
+  await expect(page.getByRole("cell", { name: "Pixel 10a", exact: true }).first()).toBeVisible()
+  await expect(apply).toBeVisible()
+  await page.getByRole("combobox", { name: "Release build", exact: true }).click()
+  await page.getByRole("option", { name: "RELEASE.1 / 1233 · Android 16", exact: true }).click()
+  await expect(apply).toHaveCount(0)
+  await preview.click()
+  await expect(
+    page.getByRole("cell", {
+      name: "google/stallion/stallion:16/RELEASE.1/1233:user/release-keys",
+      exact: true,
+    }),
+  ).toBeVisible()
+  await fetch.click()
+  await expect(apply).toHaveCount(0)
+})
+
 test("fetches Pixel 6a by default and saves a candidate without applying", async ({
   page,
   open,
@@ -22,6 +111,35 @@ test("fetches Pixel 6a by default and saves a candidate without applying", async
   await page.getByRole("button", { name: "Saved configurations", exact: true }).click()
   await expect(page.getByText("Pixel 6a release", { exact: true })).toBeVisible()
 })
+
+for (const [locale, fetch, preview, warning] of [
+  [
+    "en",
+    "Fetch Pixel builds",
+    "Preview selected fingerprint",
+    "This older source record identifies only the device and build.",
+  ],
+  ["zh-CN", "获取 Pixel 构建", "预览所选指纹", "此旧版来源记录仅包含设备代号和构建号"],
+  [
+    "ar",
+    "جلب إصدارات Pixel",
+    "معاينة البصمة المحددة",
+    "يحدد سجل المصدر القديم هذا الجهاز والإصدار فقط.",
+  ],
+] as const) {
+  test(`keeps legacy Pixel provenance readable and identified in ${locale}`, async ({
+    page,
+    open,
+  }, testInfo) => {
+    await page.setViewportSize({ width: 320, height: 800 })
+    await open("/play-integrity/generate", { locale, query: { "legacy-pixel-source": "1" } })
+    await page.getByRole("button", { name: fetch, exact: true }).click()
+    await page.getByRole("button", { name: preview, exact: true }).click()
+    await expect(page.getByRole("status").filter({ hasText: warning })).toBeVisible()
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320)
+    await page.screenshot({ path: testInfo.outputPath("legacy-pixel-source.png"), fullPage: true })
+  })
+}
 
 test("prepares three overrides in a draft and shows pending process activation after apply", async ({
   page,

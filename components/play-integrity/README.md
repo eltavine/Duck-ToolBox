@@ -1,22 +1,25 @@
 # Play Integrity Engine
 
-An independently built GPLv3 derivative of Play Integrity Fork, fixed to revision
-`23ec56c2440c4fd1a5e893a23ef7861d6366a828`. See NOTICE, LICENSE and UPSTREAM.json.
-It can run without the Duck ToolBox management executable or WebUI.
+A GPLv3 source component embedded in Duck ToolBox, derived from Play Integrity
+Fork at revision `23ec56c2440c4fd1a5e893a23ef7861d6366a828`.
+See NOTICE, LICENSE and UPSTREAM.json. It is a regular source directory, with no
+Git submodule or separate root-manager installation. Its CLI remains the process
+boundary for the toolbox adapters and boot hooks, including direct shell use.
 
 ## Build and installation
 
 Requires Python 3.12+, Rust 1.89+, JDK 21, Android SDK 37, Build Tools 37.0.0 and NDK
 30.0.16248370. From the containing repository run
-`python3 scripts/build-play-integrity.py`. The standalone source archive includes
-the same build script, pinned native dependencies and engine source. The two
-Zygisk libraries, classes.dex, scripts and arm64 CLI form the engine payload.
+`python3 scripts/build-play-integrity.py`. The complete corresponding-source archive
+includes the same build script, pinned native dependencies and all component source.
+The root Zygisk libraries compose PI and Device Faker; classes.dex, scripts and
+the arm64 CLI are included in the single installable Duck ToolBox module.
 The host CLI and tests build with `cargo test --manifest-path Cargo.toml` here.
 
 Root managers load `zygisk/arm64-v8a.so` and `zygisk/armeabi-v7a.so`. By default
 the payload directory is `/data/adb/modules/duck-toolbox/play-integrity`; the data
 directory is `/data/adb/play-integrity`. Native builds may override PIF_MODULE_DIR
-and PIF_DATA_DIR for a standalone installation. The CLI accepts PIF_ENGINE_MODULE,
+and PIF_DATA_DIR for build/test fixtures. The CLI accepts PIF_ENGINE_MODULE,
 PIF_ENGINE_DATA and PIF_ENGINE_SYSROOT; all must be absolute paths.
 
 Call `pif-engine stage setup`, `stage early`, `stage late` and `stage uninstall`
@@ -24,9 +27,9 @@ from the corresponding root-manager lifecycle. The late stage must run after
 boot completion. No network request occurs at boot. Enabling is the default;
 an absent or empty configuration keeps full-mode injection and global compatibility
 scripts idle. Explicitly saving `mode=scripts-only` permits compatibility scripts
-without a fingerprint. Enabling without a configuration also reserves the
-sensitive-property handler, so the legacy handler does not apply overlapping
-properties instead; the independent boot-hash setting retains its existing behavior.
+without a fingerprint. Without a configuration, the original property handler
+retains ownership; explicit scripts-only mode can take ownership without a
+fingerprint. The independent boot-hash setting retains its existing behavior.
 
 ## Public process interface (version 1)
 
@@ -121,7 +124,11 @@ the comparison does not establish injection or a Google Play Integrity verdict.
 ## Pixel release candidates and activation
 
 `pixel-devices` returns the supported device catalog with `bluejay` (Pixel 6a) as
-its default. `pixel-builds` accepts an optional `device` and retrieves release
+its default. It includes 39 Pixel phone, foldable and tablet identities through
+the Pixel 11 family; the WebUI searches model names and codenames. Launch API
+levels and sources are documented in [RULES.md](RULES.md). A listed identity does
+not guarantee that Google currently serves compatible release metadata.
+`pixel-builds` accepts an optional `device` and retrieves release
 metadata from Google's Android Flash Tool over certificate-verified HTTPS. It
 uses the public web client configuration at request time, allows no redirects,
 limits each request to five seconds and each response to 2 MiB, and retains at
@@ -129,7 +136,10 @@ most 40 builds per device. The private catalog expires after 24 hours. This web
 metadata interface can change independently of this engine; unsupported responses
 fail explicitly without modifying the applied configuration.
 
-`pixel-preview` accepts `device` and a fetched `build` identifier. It constructs a
+`pixel-preview` accepts `device`, a fetched `build` identifier, and its
+`incremental` version. Legacy requests without `incremental` require a unique
+build identifier. Selection changes and refetches invalidate previous previews.
+It constructs a
 release fingerprint and paired Build/property fields from that build, preserves
 existing explicit advanced options, and does not apply configuration or enable
 PIF. The metadata does not supply an exact security patch level, so the candidate
@@ -137,11 +147,41 @@ leaves patch fields unset instead of inferring them from the build ID or release
 date. The first shipped API is device metadata, separate from the running OS SDK.
 
 Previews can include `provenance` (source, device, build, fetch time and whether an
-exact patch date is known). `profile-save` can retain this optional metadata with
-an immutable candidate snapshot. Provenance is descriptive and not a verified
+exact patch date is known). New official Pixel records also carry
+`identity_bound=true`, the complete fingerprint, incremental version, model and
+launch API. Snapshot save and read validate these against the identity fields and
+any paired properties. Older records without this binding remain readable and
+are identified as limited source records in the WebUI. `profile-save` can retain
+this optional metadata with an immutable candidate snapshot. Provenance is descriptive and not a verified
 integrity verdict. Official release metadata: <https://flash.android.com/>.
 Google also distinguishes release dates from patch dates at
 <https://developers.google.com/android/images>.
+
+The separate **Pixel property library** tab uses the community archive at
+<https://github.com/VictorGabriel7Dev/build.prop>. `pixel-archive-catalog` resolves
+the repository's main commit from its public Atom feed, validates `index.json`,
+and stores a private catalog for up to 24 hours. `pixel-archive-preview` accepts
+`source_revision`, `device`,
+`channel` (`release`, `beta`, `canary`), `build` and `incremental` from that catalog.
+It downloads the selected property file at the same commit, checks its product
+identity, build, patch date, launch API and vbmeta digest against the index, and
+imports only identity fields and available system/vendor/boot patch dates into a candidate.
+The product partition's fingerprint is used even when the system partition has
+a generic fingerprint; Canary product suffixes and release codenames are preserved.
+Explicit advanced options remain intact. Missing channels are unavailable.
+
+Each HTTPS request validates certificates, disallows redirects, times out after
+five seconds and caps the commit feed at 256 KiB and index/property bodies
+at 64 KiB. Errors leave the applied configuration unchanged. No archive scripts
+are downloaded or executed. There is no boot-time fetch. The existing Google
+metadata source remains independently available.
+
+Archive provenance retains the commit, channel, build, incremental version,
+patch date, property-file SHA-256 and vbmeta digest with saved snapshots. These
+values describe the source, not an authenticated integrity verdict. The boot hash
+is shown for reference and never applied by this import. Previewing or saving a
+candidate does not enable PIF; applying and optional keystore patch synchronization
+use the existing explicit preview/transaction flow.
 
 Configuration application records a durable process restart requirement before
 publication. Keystore patch transactions conservatively record a device reboot

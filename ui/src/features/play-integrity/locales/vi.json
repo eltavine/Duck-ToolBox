@@ -9,7 +9,8 @@
     "generate": "Dấu vân tay",
     "compatibility": "Tương thích",
     "diagnostics": "Chẩn đoán",
-    "license": "Giấy phép"
+    "license": "Giấy phép",
+    "archive": "Thư viện thuộc tính Pixel"
   },
   "enabled": "Bật bộ máy",
   "preview": "Xem trước thay đổi",
@@ -199,7 +200,11 @@
     "fetch": "Lấy bản dựng Pixel",
     "loading": "Đang lấy…",
     "patchUnknown": "Không rõ ngày bản vá bảo mật chính xác; không suy đoán hay đồng bộ ngày.",
-    "preview": "Xem trước dấu vân tay đã chọn"
+    "preview": "Xem trước dấu vân tay đã chọn",
+    "search": "Tìm theo mẫu máy hoặc tên mã",
+    "noDevices": "Không có thiết bị phù hợp. Xóa tìm kiếm để xem tất cả mẫu máy.",
+    "availability": "Các bản dựng có sẵn phụ thuộc vào dịch vụ siêu dữ liệu của Google. Mẫu máy có trong danh sách không đảm bảo có bản dựng hoặc vượt qua kiểm tra tính toàn vẹn.",
+    "legacySource": "Bản ghi nguồn cũ này chỉ xác định thiết bị và bản dựng. Chưa liên kết toàn bộ dấu vân tay, mẫu máy hoặc API khi ra mắt."
   },
   "quick": {
     "title": "Thiết lập dấu vân tay",
@@ -222,6 +227,26 @@
     "vendor": "Bản vá Vendor",
     "boot": "Bản vá Boot",
     "preview": "Cập nhật xem trước bản vá",
-    "draft": "Xem trước thay đổi phân vùng trước khi chọn đồng bộ."
+    "draft": "Xem trước thay đổi phân vùng trước khi chọn đồng bộ.",
+    "multipleTargets": "Chỉ có thể đồng bộ một phần phụ trợ keystore mỗi lần.",
+    "targetUnavailable": "Phần phụ trợ keystore không còn hoạt động. Hãy làm mới bản xem trước."
+  },
+  "archive": {
+    "title": "Thư viện thuộc tính Pixel",
+    "help": "Chọn thiết bị và kênh từ kho cộng đồng để xem trước cấu hình PI. Ngày bản vá lấy từ bản dựng đã chọn. Mã băm khởi động chỉ để tham khảo; cần kiểm tra trên thiết bị thực.",
+    "source": "Nguồn cộng đồng",
+    "fetch": "Tải thư viện thuộc tính",
+    "channel": "Kênh phát hành",
+    "release": "Ổn định",
+    "beta": "Beta",
+    "canary": "Canary",
+    "build": "Bản dựng",
+    "patch": "Bản vá bảo mật",
+    "digest": "Mã băm khởi động (tham khảo)",
+    "updated": "Kho được cập nhật",
+    "preview": "Xem trước cấu hình từ kho",
+    "details": "Chi tiết nguồn",
+    "revision": "Bản sửa đổi nguồn",
+    "preparing": "Đang chuẩn bị cấu hình…"
   }
 }

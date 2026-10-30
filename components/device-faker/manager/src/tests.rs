@@ -212,6 +212,32 @@ fn boot_adapter_runs_legacy_then_integrity_then_fallback_before_readiness() {
     assert!(!crate::gate::startup_ready_at(&paths.root));
 }
 
+#[cfg(unix)]
+#[test]
+fn slow_integrity_boot_finishes_before_readiness_without_premature_fallback() {
+    use std::os::unix::fs::PermissionsExt;
+    let (_root, paths) = boot_fixture();
+    let module = paths.module("duck-toolbox");
+    write(
+        &module.join("prop.sh"),
+        "printf 'prop %s\\n' \"$*\" >> \"${0%/*}/order\"\n",
+    )
+    .unwrap();
+    let engine = module.join("play-integrity/pif-engine");
+    write(
+        &engine,
+        "#!/bin/sh\nsleep 5.2\nprintf 'integrity complete\\n' >> \"$PIF_ENGINE_MODULE/../order\"\n",
+    )
+    .unwrap();
+    fs::set_permissions(&engine, fs::Permissions::from_mode(0o755)).unwrap();
+    run_boot(&paths, || crate::boot::stages(&module)).unwrap();
+    assert!(crate::gate::startup_ready_at(&paths.root));
+    assert_eq!(
+        fs::read_to_string(module.join("order")).unwrap(),
+        "prop \nintegrity complete\n"
+    );
+}
+
 #[test]
 fn nul_characters_are_rejected_before_a_property_plan_can_be_applied() {
     for content in [

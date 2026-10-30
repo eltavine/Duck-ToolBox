@@ -9,7 +9,8 @@
     "generate": "设备指纹",
     "compatibility": "兼容设置",
     "diagnostics": "诊断",
-    "license": "许可证"
+    "license": "许可证",
+    "archive": "Pixel 属性库"
   },
   "enabled": "启用引擎",
   "preview": "预览变更",
@@ -199,7 +200,11 @@
     "fetch": "获取 Pixel 构建",
     "loading": "获取中…",
     "patchUnknown": "无法确定精确安全补丁日期，不推测或同步补丁日期。",
-    "preview": "预览所选指纹"
+    "preview": "预览所选指纹",
+    "search": "搜索型号或代号",
+    "noDevices": "没有匹配的设备。清空搜索可查看全部机型。",
+    "availability": "可获取的发布构建取决于 Google 元数据服务。列出机型不代表一定有可用构建或能通过完整性检查。",
+    "legacySource": "此旧版来源记录仅包含设备代号和构建号，未绑定完整指纹、型号或首发 API。"
   },
   "quick": {
     "title": "指纹快捷配置",
@@ -222,6 +227,26 @@
     "vendor": "Vendor 补丁",
     "boot": "Boot 补丁",
     "preview": "更新补丁预览",
-    "draft": "分区修改尚未预览，请先更新预览，再选择同步。"
+    "draft": "分区修改尚未预览，请先更新预览，再选择同步。",
+    "multipleTargets": "一次只能同步一个 keystore 后端。",
+    "targetUnavailable": "keystore 后端已不可用，请重新预览配置。"
+  },
+  "archive": {
+    "title": "Pixel 属性库",
+    "help": "从社区属性库选择机型和渠道，预览 PI 配置。补丁日期取自所选构建，启动哈希仅供查看；是否通过仍需真机测试。",
+    "source": "社区来源",
+    "fetch": "获取属性库",
+    "channel": "发布渠道",
+    "release": "稳定版",
+    "beta": "测试版",
+    "canary": "Canary",
+    "build": "构建版本",
+    "patch": "安全补丁",
+    "digest": "启动哈希（参考）",
+    "updated": "属性库更新时间",
+    "preview": "预览属性库配置",
+    "details": "来源详情",
+    "revision": "来源提交版本",
+    "preparing": "正在准备配置…"
   }
 }
