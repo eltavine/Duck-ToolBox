@@ -166,16 +166,7 @@ pub fn preview(engine: &Engine, input: &Value) -> Result<Value> {
         "prop",
     )?;
     config::migrate(&mut entries, true, false);
-    let previous = config::current(engine)?;
-    for (key, _) in config::ADVANCED {
-        if let Some(value) = previous["entries"][*key].as_str() {
-            entries.insert((*key).into(), value.into());
-        }
-    }
-    let mut result = config::preview(
-        engine,
-        &json!({"content":config::serialize(&entries,"json")?,"format":"json"}),
-    )?;
+    let mut result = config::identity_preview(engine, entries)?;
     result["provenance"] = json!({"source":SOURCE,"device":product,"build":build["id"],"fetched":cached["fetched"],"patch_known":false});
     result["warnings"]
         .as_array_mut()

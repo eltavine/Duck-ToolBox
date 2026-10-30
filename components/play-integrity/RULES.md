@@ -126,6 +126,8 @@ UTC 生成时间、设备、渠道、文件路径、构建、增量版本、精�
 首发 API 不作为当前 SDK 或 board API 的推断依据。system、vendor、boot 补丁分别保留；
 SHA-256／SHA-512 vbmeta 摘要仅作来源参考，不随 PI 候选写入全局属性或 keystore 策略。
 来源快照核对完整指纹、型号、首发 API 与对应属性，避免修改后的配置仍标记为原始构建。
+官方及社区 Pixel 候选都在同一配置写锁下读取高级选项并生成预览基线；
+锁忙或未遵守锁的外部写入改变版本时拒绝候选，避免把旧选项配上新版本后覆盖更新。
 
 页面沿用语义色、统一圆角和间距，参考 [M3 Expressive 的视觉层级](https://design.google/library/expressive-material-design-google-research)、
 [Material 无障碍触控尺寸](https://developer.android.com/develop/ui/compose/accessibility/api-defaults#minimum-touch-target-sizes)
@@ -134,6 +136,10 @@ SHA-256／SHA-512 vbmeta 摘要仅作来源参考，不随 PI 候选写入全局
 渠道、错误标题与日期按界面语言显示，技术字符串保持方向隔离。
 候选及补丁预览只在准备完整后发布；关闭或更新选择使旧请求失效。
 较早生成任务完成后不覆盖后来选中的候选，结果保留供用户重新预览。
+轮询和取消响应还须匹配当前存活页面及任务 ID；过期响应不清空新任务标识，
+不发布旧候选，也不显示已经失效的错误提示。获取目录与准备配置分别报告状态。
+打包时逐字节核对主项目、PI、Device Faker 及随源码保留的依赖声明，
+缺失或被截断的声明不能仅凭文件名存在而通过校验。
 
 独立 Rust 测试覆盖未知字段、API 值保留、Provider 默认值、只读规则诊断、shell 元字符迁移、Zygisk 误判、超时与取消。
 生成进程独立持有子孙进程组；取消、超时、输出超限、异常及正常完成后均终止残留进程，候选配置不会自动发布。

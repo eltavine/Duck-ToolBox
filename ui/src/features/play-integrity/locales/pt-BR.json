@@ -223,7 +223,9 @@
     "vendor": "Patch Vendor",
     "boot": "Patch Boot",
     "preview": "Atualizar prévia dos patches",
-    "draft": "Revise as alterações das partições antes de selecionar a sincronização."
+    "draft": "Revise as alterações das partições antes de selecionar a sincronização.",
+    "multipleTargets": "Só é possível sincronizar um backend de keystore por vez.",
+    "targetUnavailable": "O backend de keystore não está mais ativo. Atualize a prévia."
   },
   "archive": {
     "title": "Biblioteca de propriedades Pixel",
@@ -240,6 +242,7 @@
     "updated": "Arquivo atualizado",
     "preview": "Visualizar configuração do arquivo",
     "details": "Detalhes da fonte",
-    "revision": "Commit de origem"
+    "revision": "Commit de origem",
+    "preparing": "Preparando configuração…"
   }
 }

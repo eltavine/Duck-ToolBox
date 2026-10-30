@@ -3,6 +3,7 @@ import { flushPromises, mount } from "@vue/test-utils"
 import { afterEach, beforeEach, expect, it, vi } from "vitest"
 import { defineComponent, h } from "vue"
 import type { SecurityPatchPreview, SecurityPatchTarget } from "@/core/features"
+import { notifyError } from "@/core/notify"
 import { integrityApi } from "./api"
 import type { Preview } from "./api"
 import { useIntegrity } from "./use-integrity"
@@ -18,15 +19,18 @@ vi.mock("./api", () => ({
     transactionStatus: vi.fn(async () => ({ pending: false })),
     taskStart: vi.fn(),
     taskStatus: vi.fn(),
+    taskCancel: vi.fn(),
   },
 }))
 
 function deferred<T>() {
   let resolve!: (value: T) => void
-  const promise = new Promise<T>((done) => {
+  let reject!: (cause: unknown) => void
+  const promise = new Promise<T>((done, fail) => {
     resolve = done
+    reject = fail
   })
-  return { promise, resolve }
+  return { promise, resolve, reject }
 }
 const candidate = (model: string, patch: string | null = null): Preview => ({
   content: `MODEL=${model}`,
@@ -128,4 +132,58 @@ it("retains a finished generator result without overwriting a later archive sele
   await flushPromises()
   expect(state.preview.value?.entries.MODEL).toBe("Archive")
   expect(state.task.value?.result?.entries.MODEL).toBe("Generated")
+})
+
+for (const stale of ["unmounted", "replaced", "failed"] as const) {
+  it(`ignores a ${stale} polling request without clearing the tracked job`, async () => {
+    const pending = deferred<Awaited<ReturnType<typeof integrityApi.taskStatus>>>()
+    vi.mocked(integrityApi.taskStart).mockResolvedValue({
+      id: "old",
+      state: "running",
+      result: null,
+      error: null,
+      output: "",
+    })
+    vi.mocked(integrityApi.taskStatus).mockReturnValue(pending.promise)
+    const state = await setup()
+    await state.generate(true, false)
+    if (stale === "unmounted") cleanups.pop()!()
+    else state.taskId.value = "new"
+    if (stale === "failed") pending.reject(new Error("Late failure"))
+    else
+      pending.resolve({
+        id: "old",
+        state: "completed",
+        result: candidate("Old"),
+        error: null,
+        output: "",
+      })
+    await flushPromises()
+    expect(state.taskId.value).toBe(stale === "unmounted" ? "old" : "new")
+    expect(state.task.value?.state).toBe("running")
+    expect(state.preview.value).toBeNull()
+    expect(notifyError).not.toHaveBeenCalled()
+  })
+}
+
+it("ignores a cancelled old job's response after another job becomes current", async () => {
+  const status = deferred<Awaited<ReturnType<typeof integrityApi.taskStatus>>>()
+  const cancelled = deferred<Awaited<ReturnType<typeof integrityApi.taskCancel>>>()
+  vi.mocked(integrityApi.taskStart).mockResolvedValue({
+    id: "old",
+    state: "running",
+    result: null,
+    error: null,
+    output: "",
+  })
+  vi.mocked(integrityApi.taskStatus).mockReturnValue(status.promise)
+  vi.mocked(integrityApi.taskCancel).mockReturnValue(cancelled.promise)
+  const state = await setup()
+  await state.generate(true, false)
+  const request = state.cancel()
+  state.taskId.value = "new"
+  cancelled.resolve({ id: "old", state: "cancelled", result: null, error: null, output: "" })
+  await request
+  expect(state.taskId.value).toBe("new")
+  expect(state.task.value?.state).toBe("running")
 })

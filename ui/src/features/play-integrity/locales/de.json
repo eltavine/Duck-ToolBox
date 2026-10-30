@@ -223,7 +223,9 @@
     "vendor": "Vendor-Patch",
     "boot": "Boot-Patch",
     "preview": "Patch-Vorschau aktualisieren",
-    "draft": "Partitionsänderungen vor Auswahl der Synchronisierung erneut prüfen."
+    "draft": "Partitionsänderungen vor Auswahl der Synchronisierung erneut prüfen.",
+    "multipleTargets": "Es kann jeweils nur ein Keystore-Backend synchronisiert werden.",
+    "targetUnavailable": "Das Keystore-Backend ist nicht mehr aktiv. Aktualisieren Sie die Vorschau."
   },
   "archive": {
     "title": "Pixel-Eigenschaftsbibliothek",
@@ -240,6 +242,7 @@
     "updated": "Archiv aktualisiert",
     "preview": "Archivkonfiguration anzeigen",
     "details": "Quelldetails",
-    "revision": "Quell-Commit"
+    "revision": "Quell-Commit",
+    "preparing": "Konfiguration wird vorbereitet…"
   }
 }

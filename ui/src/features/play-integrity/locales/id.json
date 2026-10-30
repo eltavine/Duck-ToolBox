@@ -223,7 +223,9 @@
     "vendor": "Patch Vendor",
     "boot": "Patch Boot",
     "preview": "Perbarui pratinjau patch",
-    "draft": "Tinjau perubahan partisi sebelum memilih sinkronisasi."
+    "draft": "Tinjau perubahan partisi sebelum memilih sinkronisasi.",
+    "multipleTargets": "Hanya satu backend keystore yang dapat disinkronkan dalam satu waktu.",
+    "targetUnavailable": "Backend keystore tidak lagi aktif. Perbarui pratinjau."
   },
   "archive": {
     "title": "Pustaka properti Pixel",
@@ -240,6 +242,7 @@
     "updated": "Arsip diperbarui",
     "preview": "Pratinjau konfigurasi arsip",
     "details": "Detail sumber",
-    "revision": "Commit sumber"
+    "revision": "Commit sumber",
+    "preparing": "Menyiapkan konfigurasi…"
   }
 }

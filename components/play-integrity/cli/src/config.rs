@@ -264,9 +264,53 @@ pub fn preview(engine: &Engine, input: &Value) -> Result<Value> {
     )
 }
 
+/// Preserve applied advanced options and the preview baseline in one write-lock scope.
+pub fn identity_preview(engine: &Engine, mut entries: Entries) -> Result<Value> {
+    let _lock = files::Lock::acquire(&engine.data)?;
+    let previous = current(engine)?;
+    for (key, _) in ADVANCED {
+        if let Some(value) = previous["entries"][*key].as_str() {
+            entries.insert((*key).into(), value.into());
+        }
+    }
+    let result = preview(
+        engine,
+        &json!({"content":serialize(&entries,"json")?,"format":"json"}),
+    )?;
+    if result["revision"] != previous["revision"] {
+        bail!("configuration changed while preparing the candidate; preview again");
+    }
+    Ok(result)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn identity_preview_preserves_advanced_options_and_uses_the_same_revision() {
+        let root = tempfile::tempdir().unwrap();
+        let engine = Engine {
+            data: root.path().join("data"),
+            module: root.path().join("module"),
+            sysroot: root.path().join("sys"),
+        };
+        files::atomic(
+            &engine.data.join("custom.pif.json"),
+            br#"{"MODEL":"Saved","spoofProps":"0","spoofProvider":"1"}"#,
+        )
+        .unwrap();
+        let before = current(&engine).unwrap();
+        let mut entries = parse("MODEL=Candidate", "prop").unwrap();
+        migrate(&mut entries, true, false);
+        let result = identity_preview(&engine, entries.clone()).unwrap();
+        assert_eq!(result["entries"]["MODEL"], "Candidate");
+        assert_eq!(result["entries"]["spoofProps"], "0");
+        assert_eq!(result["entries"]["spoofProvider"], "1");
+        assert_eq!(result["revision"], before["revision"]);
+        assert_eq!(current(&engine).unwrap(), before);
+        let _lock = files::Lock::acquire(&engine.data).unwrap();
+        assert!(identity_preview(&engine, entries).is_err());
+    }
     #[test]
     fn legacy_and_unknown_fields_survive_migration() {
         let mut e=parse("{\n// old\n\"FINGERPRINT\":\"google/p/d:16/ID/123:user/release-keys\",\"EXTRA\":\"https://a/b\",\"VERBOSE_LOGS\":\"2\"}","json").unwrap();

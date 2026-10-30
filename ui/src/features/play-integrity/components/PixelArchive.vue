@@ -25,7 +25,8 @@ const global = useI18n()
 const catalog = ref<ArchiveCatalog | null>(null)
 const device = ref("bluejay")
 const channel = ref<ArchiveChannel>("release")
-const busy = ref(false)
+const operation = ref<"catalog" | "preview" | null>(null)
+const busy = computed(() => operation.value !== null)
 const error = shallowRef<unknown>(null)
 const selectedDevice = computed(() => catalog.value?.devices[device.value])
 const selectedBuild = computed(() => selectedDevice.value?.channels[channel.value])
@@ -41,7 +42,7 @@ watch(selectedDevice, (value) => {
 })
 async function fetchCatalog() {
   if (busy.value) return
-  busy.value = true
+  operation.value = "catalog"
   error.value = null
   emit("invalidate")
   catalog.value = null
@@ -53,12 +54,12 @@ async function fetchCatalog() {
   } catch (cause) {
     if (active) error.value = cause
   } finally {
-    busy.value = false
+    operation.value = null
   }
 }
 async function preview() {
   if (busy.value || !catalog.value || !selectedBuild.value) return
-  busy.value = true
+  operation.value = "preview"
   emit("invalidate")
   try {
     const value = await pixelArchiveApi.preview(catalog.value, device.value, channel.value)
@@ -66,7 +67,7 @@ async function preview() {
   } catch (cause) {
     if (active) notifyError(cause)
   } finally {
-    busy.value = false
+    operation.value = null
   }
 }
 </script>
@@ -84,7 +85,7 @@ async function preview() {
         class="self-start"
         :disabled="busy"
         @click="fetchCatalog"
-        >{{ busy ? t("pixel.loading") : t("archive.fetch") }}</Button
+        >{{ operation === "catalog" ? t("pixel.loading") : t("archive.fetch") }}</Button
       >
       <div v-if="error" class="rounded-xl border border-destructive/30 bg-destructive/5 p-4">
         <p role="alert" class="text-destructive text-sm break-words">{{ errorTitle(error) }}</p>
@@ -93,7 +94,7 @@ async function preview() {
         }}</Button>
       </div>
       <p v-if="busy" role="status" aria-live="polite" class="text-muted-foreground text-sm">
-        {{ t("pixel.loading") }}
+        {{ operation === "preview" ? t("archive.preparing") : t("pixel.loading") }}
       </p>
       <template v-if="catalog">
         <Field>
@@ -145,7 +146,7 @@ async function preview() {
           }}</time>
         </p>
         <Button class="self-start" :disabled="busy || !selectedBuild" @click="preview">{{
-          t("archive.preview")
+          operation === "preview" ? t("archive.preparing") : t("archive.preview")
         }}</Button>
         <SettingDetails :title="t('archive.details')">
           <dl class="grid min-w-0 gap-4 text-sm">

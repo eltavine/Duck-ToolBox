@@ -170,6 +170,37 @@ class DependencyLicenseTest(unittest.TestCase):
                 package.validate_dependency_licenses(value)
 
 
+class NoticePreservationTest(unittest.TestCase):
+    def test_exact_copies_pass_and_missing_or_truncated_notices_are_rejected(self):
+        with tempfile.TemporaryDirectory() as directory:
+            module = Path(directory)
+            source = package.ROOT
+            def copy(original, delivered):
+                target = module / delivered
+                target.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(source / original, target)
+            for name in ["LICENSE", "THIRD_PARTY_NOTICES.md"]:
+                copy(name, name)
+            for name in ["LICENSE", "NOTICE", "README.md", "RULES.md", "UPSTREAM.json"]:
+                copy("components/play-integrity/" + name,
+                     "licenses/play-integrity/" + ("GPL-3.0.txt" if name == "LICENSE" else name))
+            shutil.copytree(source / "components/play-integrity/licenses", module / "licenses/play-integrity", dirs_exist_ok=True)
+            for original, name in [("engine/LICENSE", "GPL-3.0.txt"), ("engine/NOTICES", "NOTICE"), ("UPSTREAM_REVISION", "UPSTREAM_REVISION")]:
+                copy("components/device-faker/" + original, "licenses/device-faker/" + name)
+            package.validate_component_notices(module=module)
+            for relative in ["LICENSE", "licenses/play-integrity/NOTICE", "licenses/play-integrity/zygisk-ISC.txt", "licenses/device-faker/NOTICE"]:
+                path = module / relative
+                original = path.read_bytes()
+                for changed in [b"", b"truncated notice"]:
+                    path.write_bytes(changed)
+                    with self.assertRaisesRegex(ValueError, "altered component notice"):
+                        package.validate_component_notices(module=module)
+                path.unlink()
+                with self.assertRaisesRegex(ValueError, "Missing or altered"):
+                    package.validate_component_notices(module=module)
+                path.write_bytes(original)
+
+
 class ShellEntrypointTest(unittest.TestCase):
     def fixture(self, root):
         scripts = root / "scripts"

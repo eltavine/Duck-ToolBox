@@ -223,7 +223,9 @@
     "vendor": "Patch Vendor",
     "boot": "Patch Boot",
     "preview": "Aggiorna anteprima patch",
-    "draft": "Controlla le modifiche delle partizioni prima di selezionare la sincronizzazione."
+    "draft": "Controlla le modifiche delle partizioni prima di selezionare la sincronizzazione.",
+    "multipleTargets": "È possibile sincronizzare un solo backend keystore alla volta.",
+    "targetUnavailable": "Il backend keystore non è più attivo. Aggiorna l’anteprima."
   },
   "archive": {
     "title": "Libreria proprietà Pixel",
@@ -240,6 +242,7 @@
     "updated": "Archivio aggiornato",
     "preview": "Anteprima configurazione archivio",
     "details": "Dettagli della fonte",
-    "revision": "Commit sorgente"
+    "revision": "Commit sorgente",
+    "preparing": "Preparazione della configurazione…"
   }
 }

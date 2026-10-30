@@ -223,7 +223,9 @@
     "vendor": "Vendor 패치",
     "boot": "Boot 패치",
     "preview": "패치 미리 보기 갱신",
-    "draft": "파티션 변경을 미리 본 뒤 동기화를 선택하세요."
+    "draft": "파티션 변경을 미리 본 뒤 동기화를 선택하세요.",
+    "multipleTargets": "한 번에 하나의 키 저장소 백엔드만 동기화할 수 있습니다.",
+    "targetUnavailable": "키 저장소 백엔드가 비활성화되었습니다. 설정을 다시 미리 보세요."
   },
   "archive": {
     "title": "Pixel 속성 라이브러리",
@@ -240,6 +242,7 @@
     "updated": "자료 업데이트",
     "preview": "라이브러리 설정 미리 보기",
     "details": "출처 세부 정보",
-    "revision": "소스 커밋"
+    "revision": "소스 커밋",
+    "preparing": "설정 준비 중…"
   }
 }

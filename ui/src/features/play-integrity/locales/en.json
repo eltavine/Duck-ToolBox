@@ -223,7 +223,9 @@
     "vendor": "Vendor patch",
     "boot": "Boot patch",
     "preview": "Update patch preview",
-    "draft": "Partition edits are not previewed. Update the preview before selecting synchronization."
+    "draft": "Partition edits are not previewed. Update the preview before selecting synchronization.",
+    "multipleTargets": "Only one keystore backend can be synchronized at a time.",
+    "targetUnavailable": "The keystore backend is no longer active. Refresh the configuration preview."
   },
   "archive": {
     "title": "Pixel property library",
@@ -240,6 +242,7 @@
     "updated": "Archive updated",
     "preview": "Preview archive configuration",
     "details": "Source details",
-    "revision": "Source commit"
+    "revision": "Source commit",
+    "preparing": "Preparing configuration…"
   }
 }

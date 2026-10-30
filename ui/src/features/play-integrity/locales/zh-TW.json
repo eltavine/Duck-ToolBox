@@ -223,7 +223,9 @@
     "vendor": "Vendor 修補",
     "boot": "Boot 修補",
     "preview": "更新修補預覽",
-    "draft": "分割區修改尚未預覽，請先更新預覽再選取同步。"
+    "draft": "分割區修改尚未預覽，請先更新預覽再選取同步。",
+    "multipleTargets": "一次只能同步一個 keystore 後端。",
+    "targetUnavailable": "keystore 後端已無法使用，請重新預覽設定。"
   },
   "archive": {
     "title": "Pixel 屬性庫",
@@ -240,6 +242,7 @@
     "updated": "屬性庫更新時間",
     "preview": "預覽屬性庫設定",
     "details": "來源詳情",
-    "revision": "來源提交版本"
+    "revision": "來源提交版本",
+    "preparing": "正在準備設定…"
   }
 }

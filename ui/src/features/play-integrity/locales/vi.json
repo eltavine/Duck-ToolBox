@@ -223,7 +223,9 @@
     "vendor": "Bản vá Vendor",
     "boot": "Bản vá Boot",
     "preview": "Cập nhật xem trước bản vá",
-    "draft": "Xem trước thay đổi phân vùng trước khi chọn đồng bộ."
+    "draft": "Xem trước thay đổi phân vùng trước khi chọn đồng bộ.",
+    "multipleTargets": "Chỉ có thể đồng bộ một phần phụ trợ keystore mỗi lần.",
+    "targetUnavailable": "Phần phụ trợ keystore không còn hoạt động. Hãy làm mới bản xem trước."
   },
   "archive": {
     "title": "Thư viện thuộc tính Pixel",
@@ -240,6 +242,7 @@
     "updated": "Kho được cập nhật",
     "preview": "Xem trước cấu hình từ kho",
     "details": "Chi tiết nguồn",
-    "revision": "Bản sửa đổi nguồn"
+    "revision": "Bản sửa đổi nguồn",
+    "preparing": "Đang chuẩn bị cấu hình…"
   }
 }

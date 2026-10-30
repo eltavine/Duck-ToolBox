@@ -223,7 +223,9 @@
     "vendor": "Correctif Vendor",
     "boot": "Correctif Boot",
     "preview": "Actualiser l’aperçu des correctifs",
-    "draft": "Prévisualisez les modifications des partitions avant de sélectionner la synchronisation."
+    "draft": "Prévisualisez les modifications des partitions avant de sélectionner la synchronisation.",
+    "multipleTargets": "Un seul backend de keystore peut être synchronisé à la fois.",
+    "targetUnavailable": "Le backend de keystore n’est plus actif. Actualisez l’aperçu."
   },
   "archive": {
     "title": "Bibliothèque de propriétés Pixel",
@@ -240,6 +242,7 @@
     "updated": "Mise à jour des archives",
     "preview": "Prévisualiser la configuration des archives",
     "details": "Détails de la source",
-    "revision": "Commit source"
+    "revision": "Commit source",
+    "preparing": "Préparation de la configuration…"
   }
 }

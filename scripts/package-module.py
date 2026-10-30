@@ -103,6 +103,25 @@ def validate_dependency_licenses(manifest):
         raise ValueError("Device Faker dependencies have no declared license: " + ", ".join(missing))
 
 
+def validate_component_notices(root=ROOT, module=MODULE):
+    """Copied notices must retain the exact source texts from the build checkout."""
+    pairs = [(root / "LICENSE", module / "LICENSE"),
+             (root / "THIRD_PARTY_NOTICES.md", module / "THIRD_PARTY_NOTICES.md")]
+    for name in ["LICENSE", "NOTICE", "README.md", "RULES.md", "UPSTREAM.json"]:
+        pairs.append((root / "components/play-integrity" / name,
+                      module / "licenses/play-integrity" / ("GPL-3.0.txt" if name == "LICENSE" else name)))
+    for name, source in [("GPL-3.0.txt", "engine/LICENSE"), ("NOTICE", "engine/NOTICES"),
+                         ("UPSTREAM_REVISION", "UPSTREAM_REVISION")]:
+        pairs.append((root / "components/device-faker" / source, module / "licenses/device-faker" / name))
+    licenses = root / "components/play-integrity/licenses"
+    for source in licenses.rglob("*"):
+        if source.is_file():
+            pairs.append((source, module / "licenses/play-integrity" / source.relative_to(licenses)))
+    for source, delivered in pairs:
+        if not delivered.is_file() or delivered.read_bytes() != source.read_bytes():
+            raise ValueError("Missing or altered component notice: " + str(delivered))
+
+
 def validate_device_faker():
     payload = MODULE / "device-faker"
     require(payload / "build.json")
@@ -134,6 +153,7 @@ def validate_device_faker():
 def validate():
     require(MODULE / "webroot/index.html")
     require(MODULE / "play-integrity/build.json")
+    validate_component_notices()
     validate_device_faker()
     manifest = json.loads((MODULE / "play-integrity/build.json").read_text())
     upstream = json.loads((ROOT / "components/play-integrity/UPSTREAM.json").read_text())

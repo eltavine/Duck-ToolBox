@@ -223,7 +223,9 @@
     "vendor": "Poprawka Vendor",
     "boot": "Poprawka Boot",
     "preview": "Odśwież podgląd poprawek",
-    "draft": "Przejrzyj zmiany partycji przed wybraniem synchronizacji."
+    "draft": "Przejrzyj zmiany partycji przed wybraniem synchronizacji.",
+    "multipleTargets": "Jednocześnie można synchronizować tylko jeden backend magazynu kluczy.",
+    "targetUnavailable": "Backend magazynu kluczy nie jest już aktywny. Odśwież podgląd."
   },
   "archive": {
     "title": "Biblioteka właściwości Pixel",
@@ -240,6 +242,7 @@
     "updated": "Aktualizacja archiwum",
     "preview": "Podgląd konfiguracji z archiwum",
     "details": "Szczegóły źródła",
-    "revision": "Commit źródłowy"
+    "revision": "Commit źródłowy",
+    "preparing": "Przygotowywanie konfiguracji…"
   }
 }

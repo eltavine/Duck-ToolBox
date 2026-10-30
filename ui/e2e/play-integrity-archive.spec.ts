@@ -138,3 +138,18 @@ test("archive controls have 48px touch targets and align in a dark desktop layou
   await expect(page.getByText("Boot hash (reference)", { exact: true })).toBeVisible()
   await page.screenshot({ path: testInfo.outputPath("pixel-library-dark.png"), fullPage: true })
 })
+
+for (const [locale, fetch, preview, preparing] of [
+  ["en", "Fetch property library", "Preview archive configuration", "Preparing configuration…"],
+  ["zh-CN", "获取属性库", "预览属性库配置", "正在准备配置…"],
+] as const) {
+  test(`archive preview announces its own progress in ${locale}`, async ({ page, open }) => {
+    await open("/play-integrity/archive", { locale, query: { latency: "400" } })
+    await page.getByRole("button", { name: fetch, exact: true }).click()
+    await page.getByRole("button", { name: preview, exact: true }).click()
+    await expect(page.getByRole("status").filter({ hasText: preparing })).toBeVisible()
+    await expect(page.getByRole("button", { name: fetch, exact: true })).toBeDisabled()
+    await expect(page.getByRole("button", { name: preparing, exact: true })).toBeDisabled()
+    await expect(page.getByRole("button", { name: preview, exact: true })).toBeEnabled()
+  })
+}

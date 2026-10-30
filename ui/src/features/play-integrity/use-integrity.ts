@@ -106,7 +106,7 @@ export function useIntegrity() {
     const candidate = preview.value
     if (!candidate) return
     const selected = patches.value.filter((item) => item.selected)
-    if (selected.length > 1) throw new Error("Only one active keystore participant is supported")
+    if (selected.length > 1) throw new Error(t("patch.multipleTargets"))
     const patch = selected[0]
     try {
       const applied = await integrityApi.applyTransaction(
@@ -133,8 +133,11 @@ export function useIntegrity() {
   }
   async function poll() {
     if (disposed || !taskId.value) return
+    const id = taskId.value
     try {
-      task.value = await integrityApi.taskStatus(taskId.value)
+      const result = await integrityApi.taskStatus(id)
+      if (disposed || taskId.value !== id) return
+      task.value = result
       if (task.value.state === "completed" && task.value.result) {
         taskId.value = ""
         if (taskGeneration === previewGeneration) await prepare(task.value.result)
@@ -142,6 +145,7 @@ export function useIntegrity() {
         taskId.value = ""
       } else timer = setTimeout(() => void poll(), 1000)
     } catch (error) {
+      if (disposed || taskId.value !== id) return
       notifyError(error)
       taskId.value = ""
     }
@@ -176,7 +180,7 @@ export function useIntegrity() {
         const item = patches.value.find((p) => p.target.id === id)
         if (!item) return
         const next = await item.target.preview(item.preview.patch, partitions)
-        if (!next) throw new Error("Keystore backend is no longer active")
+        if (!next) throw new Error(t("patch.targetUnavailable"))
         item.preview = next
       }),
     previewContent: (migrate = false) =>
@@ -205,7 +209,10 @@ export function useIntegrity() {
       }),
     cancel: () =>
       action(async () => {
-        if (taskId.value) task.value = await integrityApi.taskCancel(taskId.value)
+        const id = taskId.value
+        if (!id) return
+        const result = await integrityApi.taskCancel(id)
+        if (!disposed && taskId.value === id) task.value = result
       }),
     restore: () =>
       action(async () => {
