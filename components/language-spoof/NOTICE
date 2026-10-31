@@ -5,8 +5,8 @@ with the component and does not link the native engine.
 
 The native component statically links LSPlant and DexBuilder under LGPL-3.0,
 and parallel-hashmap under Apache-2.0. Their original notices remain applicable.
-Source revisions are pinned in scripts/build-play-integrity.py. The versioned source
-archive includes these dependency sources and the reproducible build instructions.
+Source revisions and dependency retrieval are pinned in scripts/build-play-integrity.py.
+The packaged Play Integrity SOURCE.txt links to that script at the exact build commit.
 
 The ART prefix resolver adapts xDL's symbol lookup under its MIT license:
 Copyright (c) 2020-2025 HexHacking Team. The existing pinned ShadowHook/xDL source

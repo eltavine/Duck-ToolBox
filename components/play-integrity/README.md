@@ -10,8 +10,9 @@ boundary for the toolbox adapters and boot hooks, including direct shell use.
 
 Requires Python 3.12+, Rust 1.89+, JDK 21, Android SDK 37, Build Tools 37.0.0 and NDK
 30.0.16248370. From the containing repository run
-`python3 scripts/build-play-integrity.py`. The complete corresponding-source archive
-includes the same build script, pinned native dependencies and all component source.
+`python3 scripts/build-play-integrity.py`. The WebUI source link and packaged
+SOURCE.txt identify the exact build commit. The repository contains the component
+source, lockfiles and build scripts that retrieve the pinned native dependencies.
 The root Zygisk libraries compose PI and Device Faker; classes.dex, scripts and
 the arm64 CLI are included in the single installable Duck ToolBox module.
 The host CLI and tests build with `cargo test --manifest-path Cargo.toml` here.

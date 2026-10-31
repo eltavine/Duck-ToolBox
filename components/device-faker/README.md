@@ -6,23 +6,6 @@ are retained. This is a normal source component; no Git submodule initialization
 or additional root-manager module is needed. The manager and Java density helper
 use the same license. The MIT `duckd` adapter uses a bounded process interface.
 
-## Dependency licensing
-
-Redistribution permission remains unconfirmed for the linked `prop-rs` and
-`prop-rs-android` dependencies from KernelSU2/ksu_props at
-`ddb6ee7294467f7f25bad2118e9e24eee104144b`. That revision contains no license
-text or package license declaration; its upstream 5ec1cff/resetprop-rs also
-provides no identified license. The Device Faker GPL grant does not establish
-permission for these separately authored dependencies. Obtain an applicable
-license from their rights holders or replace them with an implementation whose
-redistribution terms are established before distributing the linked binaries.
-The engine build records dependencies without a declared license or nonempty
-license file. Module packaging warns about those recorded dependencies and
-continues, retaining the original notices and corresponding source. Missing or
-invalid license metadata still requires rebuilding the engine. This warning does
-not resolve the missing redistribution permission. The presence of a declaration
-alone does not establish license compatibility or permission beyond its scope.
-
 ## Build and verification
 
 ```sh
@@ -35,8 +18,8 @@ python3 scripts/build-play-integrity.py
 The combined build invokes `build-device-faker.py`, then links the ARM64 static
 engine into the toolbox’s one Zygisk library. ARM32 retains PI support only.
 Requirements: Rust 1.89+, Android Rust target, Python 3.12+, JDK 21, Android SDK /
-Build Tools 37 and NDK 30.0.16248370. Lockfiles and pinned dependency revisions are
-part of the corresponding-source archive included in the installation ZIP.
+Build Tools 37 and NDK 30.0.16248370. The WebUI source link and packaged SOURCE.txt
+identify the exact build commit, including lockfiles and pinned dependency revisions.
 
 ## Lifecycle and compatibility
 

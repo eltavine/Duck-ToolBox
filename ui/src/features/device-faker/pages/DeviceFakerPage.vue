@@ -274,9 +274,8 @@ const state = computed(() => {
         <div class="flex flex-wrap gap-2">
           <a
             class="inline-flex min-h-12 items-center px-4 text-sm underline"
-            href="./licenses/corresponding-source.tar.gz"
-            download
-            :data-source="sourceUrl"
+            :href="sourceUrl"
+            @click.prevent="openExternal(sourceUrl)"
             >{{ t("source") }}<ArrowUpRight aria-hidden="true"
           /></a>
           <Button

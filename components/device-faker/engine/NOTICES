@@ -34,6 +34,5 @@ Play Integrity engine and dispatcher and is distributed under GPL-3.0-only.
 Dependencies retain their own copyright and license notices. The root MIT license
 does not replace these component terms.
 
-Corresponding source, build scripts and locked dependency sources accompany the
-module in webroot/licenses/corresponding-source.tar.gz. SOURCE.txt identifies the
-exact build commit and build instructions.
+SOURCE.txt identifies the exact build commit and links to the corresponding
+source, build scripts and dependency lockfiles in the repository.

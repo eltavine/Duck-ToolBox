@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """Validate and package the module, including the separately licensed engine."""
 import argparse
-import io
 import os
 import tempfile
 import hashlib
@@ -12,7 +11,6 @@ import struct
 import subprocess
 import sys
 import zipfile
-import tarfile
 import warnings
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -52,25 +50,12 @@ def check_source_checkout(commit, root=ROOT):
         raise ValueError("Embedded components must contain source files, not Git submodules")
 
 
-def validate_source_archive(archive, commit, root=ROOT):
-    tracked = subprocess.check_output(["git", "archive", "--format=tar", commit], cwd=root)
-    with tarfile.open(archive) as delivered, tarfile.open(fileobj=io.BytesIO(tracked)) as expected:
-        prefix = "Duck-ToolBox-source/"
-        marker = delivered.extractfile(prefix + "SOURCE_COMMIT")
-        if marker is None or marker.read().decode().strip() != commit:
-            raise ValueError("Corresponding-source archive differs from the binary commit")
-        for member in expected:
-            if not member.isfile():
-                continue
-            original = expected.extractfile(member).read()
-            actual_member = delivered.getmember(prefix + member.name)
-            if not actual_member.isfile():
-                raise ValueError("Corresponding-source entry is not a regular file: " + member.name)
-            actual = delivered.extractfile(actual_member).read()
-            # Cargo vendor adds source replacement tables to the committed config.
-            matches = actual.startswith(original + b"\n") if member.name == ".cargo/config.toml" else actual == original
-            if not matches or (actual_member.mode & 0o111) != (member.mode & 0o111):
-                raise ValueError("Corresponding-source file differs from the build commit: " + member.name)
+def remove_source_archives(module):
+    for relative in ["webroot/licenses/corresponding-source.tar.gz",
+                     "webroot/licenses/play-integrity-source.tar.gz",
+                     "licenses/play-integrity-source.tar.gz"]:
+        for suffix in ["", ".sha256"]:
+            (module / (relative + suffix)).unlink(missing_ok=True)
 
 
 def write_module_archive(module, archive, metadata=None):
@@ -201,7 +186,7 @@ def validate():
         raise ValueError("Corresponding-source notice does not match the engine commit")
     # The WebUI must link to the same immutable commit embedded in build.json.
     if not any(
-        manifest["source_commit"].encode() in path.read_bytes()
+        source_url.encode() in path.read_bytes()
         for path in (MODULE / "webroot").rglob("*.js")
     ):
         raise ValueError("WebUI corresponding-source commit is missing or mismatched")
@@ -233,10 +218,9 @@ def main():
     require(MODULE / "play-integrity/build.json")
     if not args.validate_only:
         subprocess.run([sys.executable, str(ROOT / "scripts/prepare-linux-env.py")], check=True)
+    remove_source_archives(MODULE)
     validate()
     if args.validate_only:
-        validate_source_archive(MODULE / "webroot/licenses/corresponding-source.tar.gz",
-                                json.loads((MODULE / "play-integrity/build.json").read_text())["source_commit"])
         return
     version = next(line.split("=", 1)[1] for line in (MODULE / "module.prop").read_text().splitlines() if line.startswith("version="))
     metadata = (MODULE / "module.prop").read_text()
@@ -248,15 +232,6 @@ def main():
         metadata = "\n".join(f"{key}={values[key]}" if (key := line.partition("=")[0]) in values else line for line in metadata.splitlines()) + "\n"
     archive = ROOT / (args.output or f"dist/{name}.zip")
     archive.parent.mkdir(parents=True, exist_ok=True)
-    source_archive = MODULE / "webroot/licenses/corresponding-source.tar.gz"
-    commit = json.loads((MODULE / "play-integrity/build.json").read_text())["source_commit"]
-    if not source_archive.exists():
-        subprocess.run([sys.executable, str(ROOT / "scripts/source-bundle.py"),
-                        "--commit", commit, "--output", str(source_archive), "--offline"], check=True)
-    validate_source_archive(source_archive, commit)
-    with source_archive.open("rb") as stream:
-        digest = hashlib.file_digest(stream, "sha256").hexdigest()
-    source_archive.with_suffix(".gz.sha256").write_text(digest + "  " + source_archive.name + "\n")
     write_module_archive(MODULE, archive, metadata if args.channel else None)
     print(archive)
 

@@ -154,7 +154,7 @@ def main():
         shutil.copy2(ROOT / "components/language-spoof" / name, language_notices / name)
     # Maven dependencies' license texts are kept with the source component.
     shutil.copytree(ENGINE / "licenses", notices, dirs_exist_ok=True)
-    # Packaging includes the exact committed source and locked dependencies.
+    # Source links identify the same immutable commit as the engine payload.
     commit = source_revision()
     if commit:
         source_url = f"https://github.com/eltavine/Duck-ToolBox/tree/{commit}/components/play-integrity"
@@ -163,7 +163,6 @@ def main():
             f"{source_url}\n"
             "Build and dependency retrieval script:\n"
             f"https://github.com/eltavine/Duck-ToolBox/blob/{commit}/scripts/build-play-integrity.py\n"
-            "Included source archive: webroot/licenses/corresponding-source.tar.gz\n"
             "This script retrieves pinned dependency sources and applies the recorded ShadowHook change.\n"
         )
     (notices.parent / "play-integrity-source.tar.gz").unlink(missing_ok=True)

@@ -79,7 +79,6 @@ def notices(payload, source, commit):
         f"Corresponding GPLv3 source and adaptations (Git commit {commit}):\n"
         f"https://github.com/eltavine/Duck-ToolBox/tree/{commit}/components/device-faker\n"
         f"Build script: https://github.com/eltavine/Duck-ToolBox/blob/{commit}/scripts/build-device-faker.py\n"
-        "Included source archive: webroot/licenses/corresponding-source.tar.gz\n"
         "All engine source is included in this repository. Run the build script.\n"
     )
     return sorted(missing)

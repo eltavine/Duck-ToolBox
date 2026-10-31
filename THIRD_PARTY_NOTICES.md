@@ -12,12 +12,10 @@ is kept in the `components/play-integrity` source component under GPLv3,
 except dependencies with their own notices. See its LICENSE, NOTICE and UPSTREAM.json.
 The root MIT license does not replace those terms.
 
-Binary distributions include both engine licenses, dependency notices, build
-metadata and source revision identifiers. `webroot/licenses/corresponding-source.tar.gz`
-contains the exact committed source plus Cargo-vendored dependencies and pinned
-native dependencies. Keep that archive with redistributed binaries, including local
-builds whose Git commit has not been published. The feature footers download this
-archive. Build scripts and lockfiles are included.
+Binary distributions include engine licenses, dependency notices, build metadata
+and source revision identifiers. The Play Integrity and Device Faker source links
+point to the exact build commit in this repository. Build scripts and lockfiles
+record the dependency versions used by that commit.
 
 The composite Zygisk library statically links the Play Integrity and Device Faker
 engines and the callback dispatcher. This combined library is distributed under
@@ -28,9 +26,10 @@ not link either GPL engine. The root MIT license does not replace component term
 The language spoofing component in `components/language-spoof` also joins the GPL
 composite library. It statically links the pinned LSPlant and DexBuilder sources
 under LGPL-3.0 and parallel-hashmap under Apache-2.0. A small MIT-licensed adaptation
-of the existing xDL symbol lookup supplies ART prefix resolution. Original notices,
-licenses and dependency sources accompany the combined library; see the component's
-NOTICE and README. The MIT `duck-misc` management crate does not link this component.
+of the existing xDL symbol lookup supplies ART prefix resolution. Original notices
+and licenses accompany the combined library. Source revisions and retrieval
+instructions are recorded in the component's NOTICE and README. The MIT
+`duck-misc` management crate does not link this component.
 
 Existing third-party notices, including `module/licenses/rkp-v1-oracle.txt`, remain
 applicable to their respective components.
@@ -60,12 +59,7 @@ management CLI and density helper use GPL-3.0-or-later. The composite
 dispatcher uses GPL-3.0-only, matching the linked PI engine.
 See [the component documentation](components/device-faker/README.md).
 
-Redistribution permission for Device Faker's linked `prop-rs` and `prop-rs-android`
-dependencies is unresolved. Their pinned KernelSU2/ksu_props revision
-`ddb6ee7294467f7f25bad2118e9e24eee104144b` has no license text or package license
-declaration. The component GPL notices do not supply that missing permission.
-Resolve the dependency terms or replace those dependencies before distributing
-the combined library. See the component documentation for the recorded scope.
-Module packaging warns about recorded missing dependency license declarations
-without stopping assembly. It still rejects missing or invalid dependency license
-metadata. The warning does not establish redistribution permission.
+Device Faker links `prop-rs` and `prop-rs-android` from KernelSU2/ksu_props at
+`ddb6ee7294467f7f25bad2118e9e24eee104144b`. That revision has no license text or
+package license declaration. The component GPL notices do not replace dependency
+license terms.

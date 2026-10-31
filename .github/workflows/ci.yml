@@ -100,8 +100,6 @@ jobs:
         run: shellcheck -s bash --severity=error components/play-integrity/scripts/*.sh
       - name: Build engine and commit-pinned source notice
         run: python3 scripts/build-play-integrity.py
-      - name: Bundle corresponding source with locked dependencies
-        run: python3 scripts/source-bundle.py --commit "$GITHUB_SHA" --output module/webroot/licenses/corresponding-source.tar.gz
       - uses: actions/upload-artifact@v7
         with:
           name: play-integrity
@@ -110,7 +108,6 @@ jobs:
             module/zygisk
             module/licenses/play-integrity
             module/licenses/language-spoof
-            module/webroot/licenses/corresponding-source.tar.gz
 
   device-faker:
     name: Embedded Device Faker engine

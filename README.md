@@ -403,10 +403,8 @@ Channel metadata is written into each ZIP without changing `module/module.prop`.
 Nightly packages use the repository's commit-count version code and `canary` suffix.
 Both release channels retain the GPLv3 license and dependency notices. The engine
 build records its exact Git commit, and packaging rejects a dirty or mismatched
-source checkout or WebUI source link. The installable ZIP includes `webroot/licenses/corresponding-source.tar.gz`,
-with the exact source commit, locked Rust dependencies and pinned native build
-materials. Both feature footers offer this source download; Git URLs identify
-the build revision even for a local commit that has not been pushed.
+source checkout or WebUI source link. Both feature footers link to the source at
+the exact build commit, including the build scripts and dependency lockfiles.
 The pinned build/dependency script is `scripts/build-play-integrity.py`.
 See [the rule review](components/play-integrity/RULES.md) for original sources
 and required device validation.

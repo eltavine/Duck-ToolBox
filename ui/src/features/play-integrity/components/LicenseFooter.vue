@@ -27,9 +27,8 @@ const sourceUrl = `https://github.com/eltavine/Duck-ToolBox/tree/${sourceCommit}
       <Button variant="link" size="sm" @click="show = !show">GPLv3</Button>
       <a
         class="inline-flex min-h-12 items-center px-3 underline"
-        href="./licenses/corresponding-source.tar.gz"
-        download
-        :data-source="sourceUrl"
+        :href="sourceUrl"
+        @click.prevent="openExternal(sourceUrl)"
         >{{ t("source") }}</a
       >
     </div>

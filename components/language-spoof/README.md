@@ -47,7 +47,8 @@ The stable LSPlant 6.4 documentation covers only through Android 15 DP1. The pin
 upstream revision used here documents Android 5–17 and requires NDK r30, libcxx modules
 and CMake 3.28 or newer; the combined build uses the installed SDK CMake 4.1.2. LSPlant,
 DexBuilder and parallel-hashmap revisions are explicit in the build script. Their
-LGPL-3.0 and Apache-2.0 licenses and sources accompany distributions.
+LGPL-3.0 and Apache-2.0 licenses accompany distributions; the build script retrieves
+the pinned sources, and packaged source links identify the exact build commit.
 
 Run `python3 scripts/build-play-integrity.py` for the ARM32/ARM64 release build,
 `python3 scripts/test-language-spoof.py` for native selection/transport and host-JVM

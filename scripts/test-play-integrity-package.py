@@ -1,9 +1,6 @@
 #!/usr/bin/env python3
 """Corresponding-source links must identify the exact published Git checkout."""
 import importlib.util
-import io
-import tarfile
-import copy
 import os
 import zipfile
 from unittest.mock import patch
@@ -102,32 +99,28 @@ class DistributionIntegrityTest(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, "language contract"):
                     package.validate_language_contract(invalid, module)
 
-    def test_rejects_source_changes_even_with_a_matching_commit_marker(self):
+    def test_repackaging_removes_legacy_source_archives_but_preserves_notices(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            git(root, "init", "-q")
-            (root / "source.rs").write_text("committed source")
-            git(root, "add", ".")
-            git(root, "-c", "user.name=CI", "-c", "user.email=ci@example.invalid", "commit", "-qm", "Source")
-            commit = git(root, "rev-parse", "HEAD")
-            raw = subprocess.check_output(["git", "archive", commit], cwd=root)
-            archive = root / "source.tar.gz"
-            for corrupt in [False, True]:
-                with tarfile.open(archive, "w:gz") as output, tarfile.open(fileobj=io.BytesIO(raw)) as tracked:
-                    for member in tracked:
-                        entry = copy.copy(member)
-                        entry.name = "Duck-ToolBox-source/" + member.name
-                        data = b"altered source" if corrupt else tracked.extractfile(member).read()
-                        entry.size = len(data)
-                        output.addfile(entry, io.BytesIO(data))
-                    marker = tarfile.TarInfo("Duck-ToolBox-source/SOURCE_COMMIT")
-                    marker.size = len(commit)
-                    output.addfile(marker, io.BytesIO(commit.encode()))
-                if corrupt:
-                    with self.assertRaisesRegex(ValueError, "file differs"):
-                        package.validate_source_archive(archive, commit, root)
-                else:
-                    package.validate_source_archive(archive, commit, root)
+            module = root / "module"
+            notices = module / "licenses/play-integrity/SOURCE.txt"
+            notices.parent.mkdir(parents=True)
+            notices.write_text("https://github.com/eltavine/Duck-ToolBox/tree/" + "a" * 40)
+            legacy = ["webroot/licenses/corresponding-source.tar.gz",
+                      "webroot/licenses/play-integrity-source.tar.gz",
+                      "licenses/play-integrity-source.tar.gz"]
+            for relative in legacy:
+                for suffix in ["", ".sha256"]:
+                    path = module / (relative + suffix)
+                    path.parent.mkdir(parents=True, exist_ok=True)
+                    path.write_bytes(b"obsolete archive")
+            package.remove_source_archives(module)
+            package.remove_source_archives(module)
+            archive = root / "module.zip"
+            package.write_module_archive(module, archive)
+            with zipfile.ZipFile(archive) as output:
+                self.assertEqual(output.namelist(), ["licenses/play-integrity/SOURCE.txt"])
+                self.assertEqual(output.read(output.namelist()[0]), notices.read_bytes())
 
     def test_failed_packaging_preserves_the_previous_complete_archive(self):
         with tempfile.TemporaryDirectory() as directory:

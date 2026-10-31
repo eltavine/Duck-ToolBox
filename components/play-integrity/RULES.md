@@ -103,7 +103,7 @@ Android 13 及以上的 Basic 要求证明的 root of trust 由 Google 提供；
 源码组件以普通目录嵌入主仓库，构建入口为 `scripts/build-play-integrity.py`。
 根 Zygisk 库统一组合 PI 与 Device Faker，安装包只有一个 `module.prop`；
 构建拒绝缺少组合运行时的独立 native 入口，打包拒绝组件被替换为 Git gitlink。
-GPL 与依赖许可证、原始版权、NOTICE、固定来源版本及完整对应源码归档均保留。
+GPL 与依赖许可证、原始版权、NOTICE 及固定来源版本均保留；源码入口指向构建提交。
 CLI 的预览、配置、生成、迁移、备份恢复、关闭和诊断能力仍通过进程契约提供。
 
 Linux／Android common 的 [bootconfig 初始化](https://android.googlesource.com/kernel/common/+/e99406ef2429696d82cc58f2d5c24721c5a2e133/init/main.c)
