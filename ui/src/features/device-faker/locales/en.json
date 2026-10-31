@@ -78,5 +78,6 @@
     "startup_failed": "Startup compatibility checks failed. Review module logs, resolve conflicts and restart."
   },
   "globalRecoveryReboot": "An unfinished global-property session has no live recovery owner. Stop spoofing and reboot before enabling again. If the warning remains after reboot, inspect the recovery records.",
-  "blocked": "Enabled; waiting for required conditions"
+  "blocked": "Enabled; waiting for required conditions",
+  "globalPropsHelp": "Global property profiles support only {prefix} keys. Use private COW mode for mutable properties."
 }

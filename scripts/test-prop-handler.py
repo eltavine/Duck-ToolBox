@@ -292,12 +292,16 @@ elif len(args) == 2 and args[0] == '--delete':
         boot_id = self.root / "sys/proc/sys/kernel/random/boot_id"
         boot_id.parent.mkdir(parents=True)
         boot_id.write_text("boot-prop-test\n")
-        result = subprocess.run([str(FAKER_ENGINE), "stage", "boot"], env={
-            **self.env, "DEVICE_FAKER_SYSROOT": str(self.root / "sys"),
-        }, text=True, capture_output=True, timeout=20)
-        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertTrue(json.loads(result.stdout)["data"]["startup_ready"])
-        self.assert_applied()
+        for stage in ["boot", "ready"]:
+            with self.subTest(stage=stage):
+                self.reset()
+                (self.adb / "duck-device-faker/ready").unlink(missing_ok=True)
+                result = subprocess.run([str(FAKER_ENGINE), "stage", stage], env={
+                    **self.env, "DEVICE_FAKER_SYSROOT": str(self.root / "sys"),
+                }, text=True, capture_output=True, timeout=20)
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertTrue(json.loads(result.stdout)["data"]["startup_ready"])
+                self.assert_applied()
 
     def test_unstartable_embedded_manager_does_not_skip_other_property_stages(self):
         manager = self.module / "device-faker/device-faker-engine"

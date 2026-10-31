@@ -6,8 +6,20 @@ use serde::Deserialize;
 pub const DPI_MIN: u32 = 120;
 pub const DPI_MAX: u32 = 640;
 
-pub(super) fn valid_dpi(value: Option<u32>) -> Option<u32> {
-    value.filter(|dpi| (DPI_MIN..=DPI_MAX).contains(dpi))
+pub(super) fn validate_numbers(sdk: Option<NumberSetting>, dpi: Option<u32>) -> Result<()> {
+    use super::ConfigValidationError;
+    if dpi.is_some_and(|dpi| !(DPI_MIN..=DPI_MAX).contains(&dpi)) {
+        return Err(ConfigValidationError::DensityRange.into());
+    }
+    if sdk
+        .and_then(NumberSetting::value)
+        .is_some_and(|sdk| sdk == 0 || sdk > i32::MAX as u32)
+    {
+        return Err(
+            ConfigValidationError::Invalid("SDK_INT must be a positive Java integer").into(),
+        );
+    }
+    Ok(())
 }
 
 /// `ro.product.*` 会按属性来源顺序读取不同分区的副本。模板字段必须同步这些副本，

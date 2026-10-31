@@ -13,6 +13,7 @@ vi.mock("./api", () => ({
     importPreview: vi.fn(),
     restorePreview: vi.fn(),
     enable: vi.fn(),
+    apply: vi.fn(),
     disable: vi.fn(),
   },
 }))
@@ -103,6 +104,38 @@ it("does not publish a preview after its page is closed", async () => {
   pending.resolve(candidate)
   await requesting
   expect(editor.preview.value).toBeNull()
+})
+it("a save acknowledgement preserves edits made while it was pending", async () => {
+  const { editor } = await setup()
+  editor.preview.value = candidate
+  const pending = deferred<Awaited<ReturnType<typeof fakerApi.apply>>>()
+  vi.mocked(fakerApi.apply).mockReturnValue(pending.promise)
+  const applying = editor.apply()
+  editor.draft.value = content + "# later edit\n"
+  const saved = { ...candidate, revision: "new-revision", error: null }
+  vi.mocked(fakerApi.status).mockResolvedValue({ ...(await fakerApi.status()), config: saved })
+  pending.resolve(saved)
+  await applying
+  expect(editor.draft.value).toBe(content + "# later edit\n")
+  expect(editor.dirty.value).toBe(true)
+  expect(JSON.parse(sessionStorage.getItem("duck-toolbox/device-faker/draft")!)).toEqual({
+    content: editor.draft.value,
+    revision: "new-revision",
+  })
+})
+
+it("a save completing after navigation cannot clear the next page's draft", async () => {
+  const { editor, wrapper } = await setup()
+  editor.preview.value = candidate
+  const pending = deferred<Awaited<ReturnType<typeof fakerApi.apply>>>()
+  vi.mocked(fakerApi.apply).mockReturnValue(pending.promise)
+  const applying = editor.apply()
+  wrapper.unmount()
+  const nextDraft = JSON.stringify({ content: "# another page", revision: "saved" })
+  sessionStorage.setItem("duck-toolbox/device-faker/draft", nextDraft)
+  pending.resolve({ ...candidate, revision: "new-revision", error: null })
+  await applying
+  expect(sessionStorage.getItem("duck-toolbox/device-faker/draft")).toBe(nextDraft)
 })
 it("retains an acknowledged stop when status readback fails", async () => {
   const { editor } = await setup()

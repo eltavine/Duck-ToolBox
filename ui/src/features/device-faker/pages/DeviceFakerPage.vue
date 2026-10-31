@@ -174,9 +174,18 @@ const state = computed(() => {
           :title="t('profiles')"
           ><ConfigSummary :summary="data.config.summary"
         /></SectionCard>
-        <p v-if="data.config.error" role="alert" class="text-destructive px-4 text-sm">
-          {{ t("errors.invalid_config") }}
-        </p>
+        <div v-if="data.config.error" role="alert" class="text-destructive min-w-0 px-4 text-sm">
+          <p>{{ t("errors.invalid_config") }}</p>
+          <details class="mt-2">
+            <summary class="flex min-h-12 cursor-pointer items-center underline">
+              {{ global.t("core.actions.details") }}
+            </summary>
+            <pre
+              dir="ltr"
+              class="text-muted-foreground overflow-auto whitespace-pre-wrap [overflow-wrap:anywhere]"
+              >{{ data.config.error }}</pre>
+          </details>
+        </div>
         <SectionCard
           plain
           content-class="bg-card text-card-foreground rounded-2xl p-[16px]"
@@ -199,13 +208,18 @@ const state = computed(() => {
           </p>
           <fieldset :disabled="busy" class="flex min-w-0 flex-col gap-5">
             <ProfileBuilder @append="editor.appendProfile" />
+            <p id="faker-property-help" class="text-muted-foreground text-sm leading-6">
+              {{ t("globalPropsHelp", { prefix: "\u2066ro.*\u2069" }) }}
+            </p>
             <label for="faker-config" class="text-sm font-medium">{{ t("tomlLabel") }}</label>
             <Textarea
               id="faker-config"
               v-model="draft"
               :maxlength="MAX_DRAFT_CHARACTERS"
               :aria-invalid="draftTooLarge"
-              :aria-describedby="draftTooLarge ? 'faker-config-size' : undefined"
+              :aria-describedby="
+                draftTooLarge ? 'faker-property-help faker-config-size' : 'faker-property-help'
+              "
               dir="ltr"
               class="min-h-64 font-mono text-sm leading-6"
               spellcheck="false"

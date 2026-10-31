@@ -78,5 +78,6 @@
     "startup_failed": "Échec des vérifications de compatibilité au démarrage. Consultez les journaux du module, résolvez les conflits et redémarrez."
   },
   "globalRecoveryReboot": "Une session de propriétés globales est inachevée et son processus de restauration est arrêté. Arrêtez la simulation puis redémarrez avant de la réactiver. Si l’avertissement persiste après le redémarrage, vérifiez les données de restauration.",
-  "blocked": "Activé ; en attente des conditions requises"
+  "blocked": "Activé ; en attente des conditions requises",
+  "globalPropsHelp": "Les profils de propriétés globales acceptent uniquement les clés {prefix}. Utilisez le mode COW privé pour les propriétés modifiables."
 }

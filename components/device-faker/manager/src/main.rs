@@ -25,6 +25,9 @@ mod hooks;
 #[cfg(all(test, unix, not(target_os = "android")))]
 #[path = "../../engine/src/jni_policy.rs"]
 mod jni_policy;
+#[cfg(test)]
+#[path = "../../engine/src/log_buffer.rs"]
+mod log_buffer;
 #[allow(dead_code)]
 #[path = "../../engine/src/process_identity.rs"]
 mod process_identity;
@@ -70,8 +73,7 @@ fn execute() -> Result<Value> {
             state::request(operation, &input)
         }
         ["stage", "setup"] => state::setup(),
-        ["stage", "boot"] => state::boot(),
-        ["stage", "ready"] => state::ready(),
+        ["stage", "boot" | "ready"] => state::boot(),
         ["stage", "blocked"] => state::blocked(),
         ["stage", "uninstall"] => state::uninstall(),
         _ => bail!(

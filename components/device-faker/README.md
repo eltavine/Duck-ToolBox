@@ -54,6 +54,10 @@ unmapped, replaced with MAP_FIXED or owned by a foreign Rust mapping object.
 `hide_maps` is ignored with a warning. Build-field failures clear their JNI
 exceptions instead of throwing into application startup. Missing Build fields are skipped individually; other JNI failures stop that
 process’s hook, and preexisting exceptions remain pending.
+Shared parsing validates SDK/DPI numbers even in unused templates before any JNI
+change. Global property profiles accept only `ro.*` keys: the pinned direct writer
+does not implement current AOSP mutable-reader backup semantics. Non-`ro.*`
+properties require private COW mode; global deletion has the same key restriction.
 
 Global resetprop and display-density options require acknowledgement. Sessions
 bind package, Android user and PID start time; foreground identity is confirmed
@@ -89,8 +93,8 @@ host fixture root. It is not a native injection override.
 | disable | Publishes a stop token without waiting for configuration parsing or its lock |
 
 `stage boot` owns the ordered property/PI pass and readiness publication;
-`stage setup` creates empty defaults; `stage ready` recovers density and publishes
-readiness; `stage blocked` records startup failure; `stage uninstall` attempts
+`stage setup` creates empty defaults; `stage ready` is a compatibility alias for
+the complete ordered boot transaction; `stage blocked` records startup failure; `stage uninstall` attempts
 cleanup and preserves unresolved recovery data.
 
 Status always reports `injection_verified: false`. Host tests and cross-compilation

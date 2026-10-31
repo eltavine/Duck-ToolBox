@@ -168,9 +168,6 @@ fn blocked_at(paths: &Paths) -> Result<Value> {
     Ok(json!({"startup_ready":false}))
 }
 
-pub fn ready() -> Result<Value> {
-    ready_at(&Paths::discover()?)
-}
 fn ready_at(paths: &Paths) -> Result<Value> {
     let boot = read(&paths.root.join("proc/sys/kernel/random/boot_id"), 64)?
         .context("boot identity unavailable")?;

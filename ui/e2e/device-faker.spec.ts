@@ -4,6 +4,44 @@ import { readFileSync } from "node:fs"
 test.use({ deviceScaleFactor: 1 })
 
 for (const locale of ["en", "zh-CN", "ar"]) {
+  for (const theme of ["light", "dark"] as const) {
+    test(`saved configuration errors remain actionable in ${locale} / ${theme}`, async ({
+      page,
+      open,
+    }) => {
+      await page.setViewportSize({ width: 320, height: 900 })
+      await open("/device-faker", { locale, theme, query: { "faker-invalid-config": "1" } })
+      await page.evaluate(() => {
+        document.documentElement.style.fontSize = "200%"
+      })
+      const alert = page.getByRole("alert").filter({ has: page.locator("details") })
+      const details = alert.locator("summary")
+      await details.focus()
+      await page.keyboard.press("Enter")
+      const diagnostic = alert.locator("pre")
+      await expect(diagnostic).toBeVisible()
+      await expect(diagnostic).toContainText("line 1, column 8")
+      await expect(diagnostic).toHaveAttribute("dir", "ltr")
+      expect((await details.boundingBox())!.height).toBeGreaterThanOrEqual(48)
+      await expect(page.locator("#faker-config")).toHaveValue("invalid[")
+      await expect(page.locator("#faker-config")).toHaveAttribute(
+        "aria-describedby",
+        "faker-property-help",
+      )
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+        true,
+      )
+      if (locale === "ar") {
+        await alert.screenshot({
+          path: `/tmp/duck-faker-config-error-ar-${theme}.png`,
+          animations: "disabled",
+        })
+      }
+    })
+  }
+}
+
+for (const locale of ["en", "zh-CN", "ar"]) {
   test(`mixed template names and global confirmation remain readable in ${locale}`, async ({
     page,
     open,

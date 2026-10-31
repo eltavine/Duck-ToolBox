@@ -49,6 +49,10 @@ pub(super) fn new_resetprop() -> anyhow::Result<ResetProp> {
 }
 
 pub(super) fn apply_resetprop(key: &str, value: &str) -> anyhow::Result<()> {
+    anyhow::ensure!(
+        key.starts_with("ro."),
+        "global mutable property writes are unsupported"
+    );
     let rp = new_resetprop()?;
 
     // ksu_props ≥ ddb6ee7：`set()` 原地支持任意长度的新值（≥ PROP_VALUE_MAX 时内部
@@ -63,6 +67,10 @@ pub(super) fn apply_resetprop(key: &str, value: &str) -> anyhow::Result<()> {
 }
 
 pub(super) fn resetprop_delete(key: &str) -> anyhow::Result<()> {
+    anyhow::ensure!(
+        key.starts_with("ro."),
+        "global mutable property deletion is unsupported"
+    );
     let rp = new_resetprop()?;
 
     match rp.delete(key) {

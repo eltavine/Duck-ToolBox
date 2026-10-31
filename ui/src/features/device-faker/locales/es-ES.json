@@ -78,5 +78,6 @@
     "startup_failed": "Fallaron las comprobaciones de compatibilidad al iniciar. Revisa los registros, resuelve los conflictos y reinicia."
   },
   "globalRecoveryReboot": "Hay una sesión de propiedades globales sin finalizar y su proceso de restauración terminó. Detén la simulación y reinicia antes de activarla de nuevo. Si el aviso persiste tras reiniciar, revisa los registros de restauración.",
-  "blocked": "Activado; esperando los requisitos necesarios"
+  "blocked": "Activado; esperando los requisitos necesarios",
+  "globalPropsHelp": "Los perfiles de propiedades globales solo admiten claves {prefix}. Usa el modo COW privado para las propiedades modificables."
 }

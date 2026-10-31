@@ -13,6 +13,7 @@ mod gate;
 mod global_marker;
 mod hooks;
 mod jni_policy;
+mod log_buffer;
 mod process_identity;
 mod prop_backend;
 

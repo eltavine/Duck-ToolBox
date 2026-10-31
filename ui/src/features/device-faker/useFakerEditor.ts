@@ -161,11 +161,18 @@ export function useFakerEditor() {
   async function apply() {
     const candidate = preview.value
     if (!candidate) return
+    const submittingDraft = draft.value
     const saved = await fakerApi.apply(candidate, candidate.summary.global_effects)
+    client.setQueryData<Awaited<ReturnType<typeof fakerApi.status>>>(
+      ["device-faker.status"],
+      (current) => (current ? { ...current, config: saved } : current),
+    )
+    if (disposed) return
     base.value = saved.content
     baseRevision.value = saved.revision
-    draft.value = saved.content
-    stored.value = null
+    if (draft.value === submittingDraft) draft.value = saved.content
+    stored.value = dirty.value ? { content: draft.value, revision: saved.revision } : null
+    previewGeneration++
     preview.value = null
     notice.value = t("restartHelp")
     await refresh()

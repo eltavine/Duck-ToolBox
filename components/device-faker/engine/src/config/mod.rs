@@ -5,6 +5,8 @@ use std::collections::{HashMap, HashSet};
 
 mod profile;
 mod properties;
+#[cfg(test)]
+mod tests;
 use profile::*;
 pub use profile::{DPI_MAX, DPI_MIN, NumberSetting, is_patch_only_key};
 
@@ -166,11 +168,39 @@ impl Config {
     pub fn from_toml(content: &str) -> Result<Self> {
         let value: toml::Value = toml::from_str(content)?;
         if contains_nul(&value) {
-            return Err(
-                ConfigValidationError("Configuration cannot contain NUL characters").into(),
-            );
+            return Err(ConfigValidationError::Invalid(
+                "Configuration cannot contain NUL characters",
+            )
+            .into());
         }
         let config: Self = value.try_into()?;
+        for (global, props) in config
+            .apps
+            .iter()
+            .map(|app| (app.companion_resetprop, &app.custom_props))
+            .chain(
+                config
+                    .templates
+                    .values()
+                    .map(|template| (template.companion_resetprop, &template.custom_props)),
+            )
+        {
+            if global == Some(true)
+                && props
+                    .as_ref()
+                    .is_some_and(|props| props.keys().any(|key| !key.starts_with("ro.")))
+            {
+                return Err(ConfigValidationError::Invalid("Global property profiles support ro.* keys only; mutable properties require private COW mode").into());
+            }
+        }
+        for (sdk, dpi) in config.apps.iter().map(|app| (app.sdk_int, app.dpi)).chain(
+            config
+                .templates
+                .values()
+                .map(|template| (template.sdk_int, template.dpi)),
+        ) {
+            profile::validate_numbers(sdk, dpi)?;
+        }
         for props in config
             .apps
             .iter()
@@ -239,7 +269,7 @@ impl Config {
                 characteristics: app.characteristics.clone(),
                 android_version: app.android_version.clone(),
                 sdk_int: app.sdk_int,
-                dpi: valid_dpi(app.dpi),
+                dpi: app.dpi,
                 custom_props: app.custom_props.clone(),
                 force_denylist_unmount: app
                     .force_denylist_unmount
@@ -276,7 +306,7 @@ impl Config {
                 characteristics: template.characteristics.clone(),
                 android_version: template.android_version.clone(),
                 sdk_int: template.sdk_int,
-                dpi: valid_dpi(template.dpi),
+                dpi: template.dpi,
                 custom_props: template.custom_props.clone(),
                 force_denylist_unmount: template
                     .force_denylist_unmount
@@ -395,10 +425,16 @@ impl MergedAppConfig {
 }
 
 #[derive(Debug)]
-pub struct ConfigValidationError(&'static str);
+pub enum ConfigValidationError {
+    Invalid(&'static str),
+    DensityRange,
+}
 impl std::fmt::Display for ConfigValidationError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(self.0)
+        f.write_str(match self {
+            Self::Invalid(message) => message,
+            Self::DensityRange => "DPI must be between 120 and 640",
+        })
     }
 }
 impl std::error::Error for ConfigValidationError {}

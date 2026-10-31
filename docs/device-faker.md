@@ -51,6 +51,18 @@ buffers are retained rather than reclaiming them through live-area reordering.
 The [AOSP ContextNode definition](https://android.googlesource.com/platform/bionic/+/09a271af557444c9a6b3f3146d6d474156fd6cdb/libc/system_properties/include/system_properties/context_node.h)
 is the layout reference, with unknown layouts still rejected conservatively.
 
+Global property profiles accept only `ro.*` keys, including deletion requests.
+The pinned [mutable update implementation](https://github.com/KernelSU2/ksu_props/blob/ddb6ee7294467f7f25bad2118e9e24eee104144b/crates/prop-rs-android/src/mmap_prop_area.rs)
+sets the dirty bit without maintaining the dirty backup used by current AOSP
+readers, and restores the previous serial counter after publishing. That protocol
+cannot guarantee safe concurrent mutable reads. Both shared configuration parsing
+and the global mutation adapter reject these keys before writing. Mutable keys
+remain available in private COW mode, with the existing 91-byte payload bound;
+private updates occur during application specialization. No replacement global
+property writer or new dependency is introduced. Changing read-only properties
+through root-only direct writes still falls outside init's ordinary immutable
+property contract and is not an atomic transaction across keys or external writers.
+
 ## Boot and mutation order
 
 AOSP init/property reference:
@@ -59,6 +71,8 @@ AOSP init/property reference:
 The toolbox waits for boot completion and finishes legacy property and PI late
 stages under an exclusive boot lock before publishing a boot/build-specific
 readiness token. Duplicate calls skip global writes once that token is valid.
+The compatibility command `stage ready` enters this same ordered boot transaction;
+it cannot publish readiness directly or bypass property stages and their lock.
 Every legacy property read/write failure contributes to the stage result; later
 success cannot hide an earlier failure. Property reads use Android `getprop`, whose
 empty default permits absent OEM keys; `resetprop` returns failure for missing keys
@@ -130,6 +144,11 @@ C string may be published through a configuration save. Custom property names an
 mutable value lengths follow [AOSP init validation](https://android.googlesource.com/platform/system/core/+/68be0c2c0006a0740d0b1809abe4717308f90d15/init/util.cpp).
 Non-`ro.*` values must fit the 91-byte inline payload; allowing long-value records
 would conflict with bionic's mutable read path. Read-only properties retain long-value support.
+SDK integer and DPI limits are checked by the shared parser for every direct app
+and template, including unused or shadowed records. Invalid values are rejected
+before JNI fields are modified; the native path cannot silently discard an invalid
+density while the management path rejects it. The positive Java integer SDK bound
+follows the [JNI primitive type contract](https://docs.oracle.com/en/java/javase/21/docs/specs/jni/types.html).
 
 Commands and frames have deadlines; stop closes new injection immediately, while
 cleanup can take longer and reports pending failures.
@@ -150,6 +169,14 @@ distinguishes ordinary Zygisk application callbacks from its init-oriented API a
 HyperOS native-only callbacks. The embedded engine requires ordinary Android
 ART/JNI Zygisk callbacks; the native-only HyperOS runtime is not a supported target.
 No proprietary ZygiskNext implementation is bundled or modified.
+
+Pre-specialization diagnostics remain in a bounded process-local buffer until
+the companion connection is available. It retains at most 24 KiB and 256 recent
+lines, truncates each line at a UTF-8 boundary within 2 KiB, and reports how many
+older lines were dropped. The bound leaves room for worst-case JSON escaping in
+the 256 KiB companion frame. Draining resets the buffer; excessive debug output
+cannot cause the entire diagnostic frame to exceed that transport limit. This
+does not impose a rotation policy on the companion's on-disk log file.
 
 Build field lookup follows [Android JNI guidance](https://developer.android.com/ndk/guides/jni-tips)
 and the JNI library’s typed lookup errors. Missing fields are skipped individually;
@@ -186,6 +213,14 @@ before readback, so a failed status refresh cannot make the engine appear enable
 Enable acknowledgements also update cached state before readback, following
 [TanStack mutation-response guidance](https://tanstack.com/query/latest/docs/framework/vue/guides/updates-from-mutation-responses).
 A later stop or page disposal invalidates pending enable responses and errors.
+A configuration-save acknowledgement updates the shared saved snapshot, preserves
+edits made while saving, and cannot clear another page's stored draft after the
+submitting page has closed. Retained edits use the new saved revision as their
+base. Invalid saved configuration exposes its technical parse details alongside
+the localized error, following [Apple feedback guidance](https://developer.apple.com/design/human-interface-guidelines/feedback).
+The property-mode restriction is explained in all sixteen locale dictionaries and
+is programmatically associated with the TOML field. Technical diagnostics remain
+left-to-right inside RTL pages; their disclosure is keyboard accessible.
 Runtime template names use bidirectional isolation and localized list separators,
 following [W3C inline bidirectional text guidance](https://www.w3.org/International/articles/inline-bidi-markup/).
 Template-name input determines its direction from the entered text. Confirmation

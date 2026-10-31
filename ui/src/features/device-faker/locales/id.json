@@ -78,5 +78,6 @@
     "startup_failed": "Pemeriksaan kompatibilitas saat mulai gagal. Periksa log modul, atasi konflik, lalu mulai ulang."
   },
   "globalRecoveryReboot": "Sesi properti global belum selesai dan proses pemulihannya telah berhenti. Hentikan penyamaran dan mulai ulang sebelum mengaktifkan lagi. Jika peringatan tetap muncul setelah mulai ulang, periksa catatan pemulihan.",
-  "blocked": "Aktif; menunggu persyaratan terpenuhi"
+  "blocked": "Aktif; menunggu persyaratan terpenuhi",
+  "globalPropsHelp": "Profil properti global hanya mendukung kunci {prefix}. Gunakan mode COW privat untuk properti yang dapat berubah."
 }

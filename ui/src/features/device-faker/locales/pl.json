@@ -78,5 +78,6 @@
     "startup_failed": "Kontrola zgodności przy uruchamianiu nie powiodła się. Sprawdź dzienniki modułu, usuń konflikty i uruchom ponownie."
   },
   "globalRecoveryReboot": "Sesja właściwości globalnych nie została ukończona, a proces przywracania zakończył się. Zatrzymaj podszywanie i uruchom urządzenie ponownie przed włączeniem. Jeśli ostrzeżenie pozostaje po ponownym uruchomieniu, sprawdź dane przywracania.",
-  "blocked": "Włączone; oczekiwanie na spełnienie warunków"
+  "blocked": "Włączone; oczekiwanie na spełnienie warunków",
+  "globalPropsHelp": "Globalne profile właściwości obsługują tylko klucze {prefix}. Dla właściwości zmiennych użyj prywatnego trybu COW."
 }

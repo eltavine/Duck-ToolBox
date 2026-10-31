@@ -11,11 +11,11 @@ pub(super) fn validate_custom_props(props: &HashMap<String, String>) -> anyhow::
                 .bytes()
                 .all(|byte| byte.is_ascii_alphanumeric() || b"._-@:".contains(&byte))
         {
-            return Err(ConfigValidationError("Invalid Android property name").into());
+            return Err(ConfigValidationError::Invalid("Invalid Android property name").into());
         }
         // Bionic's mutable read path uses an inline 92-byte buffer and ignores kLongFlag.
         if !key.starts_with("ro.") && value.len() >= 92 {
-            return Err(ConfigValidationError(
+            return Err(ConfigValidationError::Invalid(
                 "Mutable property values must be shorter than 92 bytes",
             )
             .into());

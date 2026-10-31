@@ -78,5 +78,6 @@
     "startup_failed": "Falha nas verificações de compatibilidade ao iniciar. Consulte os registros do módulo, resolva os conflitos e reinicie."
   },
   "globalRecoveryReboot": "Uma sessão de propriedades globais está incompleta e seu processo de restauração terminou. Pare a simulação e reinicie antes de ativar novamente. Se o aviso continuar após reiniciar, verifique os registros de restauração.",
-  "blocked": "Ativado; aguardando as condições necessárias"
+  "blocked": "Ativado; aguardando as condições necessárias",
+  "globalPropsHelp": "Perfis de propriedades globais aceitam apenas chaves {prefix}. Use o modo COW privado para propriedades mutáveis."
 }

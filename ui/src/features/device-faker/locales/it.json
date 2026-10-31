@@ -78,5 +78,6 @@
     "startup_failed": "Verifiche di compatibilità all’avvio non riuscite. Controlla i registri del modulo, risolvi i conflitti e riavvia."
   },
   "globalRecoveryReboot": "Una sessione delle proprietà globali è incompleta e il processo di ripristino è terminato. Interrompi la simulazione e riavvia prima di riattivarla. Se l’avviso persiste dopo il riavvio, controlla i dati di ripristino.",
-  "blocked": "Attivato; in attesa delle condizioni richieste"
+  "blocked": "Attivato; in attesa delle condizioni richieste",
+  "globalPropsHelp": "I profili delle proprietà globali supportano solo le chiavi {prefix}. Usa la modalità COW privata per le proprietà modificabili."
 }
