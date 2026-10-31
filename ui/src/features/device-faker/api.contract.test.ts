@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { utimesSync, writeFileSync } from "node:fs"
+import { chmodSync, readFileSync, utimesSync, writeFileSync } from "node:fs"
 import { execFileSync } from "node:child_process"
 import path from "node:path"
 import { afterEach, describe, expect, it } from "vitest"
@@ -52,15 +52,22 @@ describe.skipIf(!hasDuckd)("Device Faker real process contract", CONTRACT, () =>
         "/proc/sys/kernel/random/boot_id": "contract-boot",
         "/data/adb/modules/duck-toolbox/module.prop": "id=duck-toolbox",
         "/data/adb/modules/duck-toolbox/zygisk/arm64-v8a.so": "fixture",
+        "/data/adb/modules/duck-toolbox/prop.sh":
+          "#!/bin/sh\nprintf 'legacy\\n' >> \"$DF_BOOT_TEST_TRACE\"\n",
+        "/data/adb/modules/duck-toolbox/play-integrity/pif-engine":
+          "#!/bin/sh\nprintf 'integrity\\n' >> \"$DF_BOOT_TEST_TRACE\"\n",
         "/data/adb/modules/device_faker/module.prop": "id=device_faker",
       },
     })
+    chmodSync(host.path("/data/adb/modules/duck-toolbox/play-integrity/pif-engine"), 0o755)
+    const trace = host.path("/boot-stages")
     execFileSync(
       process.env.DEVICE_FAKER_ENGINE_BIN ??
         path.resolve("../target/device-faker-manager/debug/device-faker-engine"),
       ["stage", "ready"],
-      { env: { ...process.env, DEVICE_FAKER_SYSROOT: host.path("/") } },
+      { env: { ...process.env, DEVICE_FAKER_SYSROOT: host.path("/"), DF_BOOT_TEST_TRACE: trace } },
     )
+    expect(readFileSync(trace, "utf8")).toBe("legacy\nintegrity\n")
     const candidate = await fakerApi.preview(content)
     const saved = await fakerApi.apply(candidate, false)
     const status = await fakerApi.status()

@@ -105,6 +105,30 @@ it("does not publish a preview after its page is closed", async () => {
   await requesting
   expect(editor.preview.value).toBeNull()
 })
+it.each([false, true])(
+  "external changes close an obsolete apply confirmation (dirty=%s)",
+  async (dirty) => {
+    const { editor } = await setup()
+    const draft = dirty ? content + "# unsaved\n" : content
+    editor.draft.value = draft
+    vi.mocked(fakerApi.preview).mockResolvedValue({ ...candidate, content: draft })
+    await editor.prepare()
+    editor.confirm.value = true
+    const updated = {
+      ...candidate,
+      content: content + "# external change\n",
+      revision: "external",
+      error: null,
+    }
+    vi.mocked(fakerApi.status).mockResolvedValue({ ...(await fakerApi.status()), config: updated })
+    await editor.refresh()
+    await flushPromises()
+    expect(editor.draft.value).toBe(dirty ? draft : updated.content)
+    expect(editor.preview.value).toBeNull()
+    expect(editor.confirm.value).toBe(false)
+    expect(fakerApi.apply).not.toHaveBeenCalled()
+  },
+)
 it("a save acknowledgement preserves edits made while it was pending", async () => {
   const { editor } = await setup()
   editor.preview.value = candidate

@@ -55,7 +55,7 @@ function add() {
           }}<Input
             v-model="fields[key]"
             class="mt-2"
-            dir="ltr"
+            :dir="key === 'device' || key === 'product' || key === 'fingerprint' ? 'ltr' : 'auto'"
             spellcheck="false"
             autocapitalize="off"
           />

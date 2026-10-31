@@ -58,6 +58,10 @@ Shared parsing validates SDK/DPI numbers even in unused templates before any JNI
 change. Global property profiles accept only `ro.*` keys: the pinned direct writer
 does not implement current AOSP mutable-reader backup semantics. Non-`ro.*`
 properties require private COW mode; global deletion has the same key restriction.
+JNI fields consume the final property plan, including canonical custom overrides
+and explicit empty values. Custom SDK values require canonical positive decimal
+Java integers and are checked before JNI writes. Derived product/marketing/patch
+aliases follow canonical overrides, with precise custom keys taking precedence.
 
 Global resetprop and display-density options require acknowledgement. Sessions
 bind package, Android user and PID start time; foreground identity is confirmed

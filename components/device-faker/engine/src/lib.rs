@@ -194,8 +194,9 @@ impl MyModule {
         }
 
         // ── 统一执行流（按需调度）──────────────────────────────────────────
-        // ① JNI 字段覆写（始终执行）
-        hook_build_fields(env, &merged)?;
+        // JNI and property adapters consume the same final plan, including explicit overrides.
+        let (prop_map, explicit_props) = Config::build_merged_property_map_with_explicit(&merged);
+        hook_build_fields(env, &prop_map)?;
         if config.debug {
             info!("Build fields faked successfully");
         }
@@ -206,9 +207,7 @@ impl MyModule {
             merged.hide_maps.clear();
         }
 
-        // ② COW 属性伪造（per-process，覆盖 native 读取，零模块驻留）
-        //    companion_resetprop = true 时跳过 COW，全部交给 companion resetprop（全局生效）
-        let (prop_map, explicit_props) = Config::build_merged_property_map_with_explicit(&merged);
+        // Prepare process-local properties before any foreground-only global session.
         if config.debug {
             info!(
                 "Property map: {} entries ({} explicit custom_props)",

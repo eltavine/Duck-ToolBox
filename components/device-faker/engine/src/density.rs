@@ -97,6 +97,15 @@ fn load(path: &Path) -> Result<Option<Lease>> {
         bail!("invalid density recovery journal");
     }
     let mut lease: Lease = serde_json::from_slice(&bytes)?;
+    if lease.before.user > i32::MAX as u32
+        || lease
+            .before
+            .density
+            .is_some_and(|value| value > i32::MAX as u32)
+        || !(crate::config::DPI_MIN..=crate::config::DPI_MAX).contains(&lease.after)
+    {
+        bail!("invalid density recovery journal values");
+    }
     // Earlier records could capture Android's zero/unset sentinel verbatim.
     if lease.before.density == Some(0) {
         lease.before.density = None;
@@ -134,6 +143,11 @@ pub fn apply(
     generation: &str,
     bridge: &mut impl Bridge,
 ) -> Result<()> {
+    if user > i32::MAX as u32
+        || !(crate::config::DPI_MIN..=crate::config::DPI_MAX).contains(&density)
+    {
+        bail!("invalid density activation values");
+    }
     let (path, lock_path) = paths(root);
     let _lock = lock(&lock_path)?;
     restore_locked(&path, bridge)?;
@@ -302,6 +316,49 @@ mod tests {
             assert!(recover(root.path(), &mut bridge).is_err());
             assert_eq!(fs::read_to_string(&path).unwrap(), content);
             assert_eq!(bridge.values[&0], Some(280));
+        }
+    }
+    struct UnusedBridge;
+    impl Bridge for UnusedBridge {
+        fn read(&mut self, _: Option<u32>) -> Result<Value> {
+            panic!("invalid values must not reach the platform")
+        }
+        fn set(&mut self, _: u32, _: Option<u32>) -> Result<()> {
+            panic!("invalid values must not mutate the platform")
+        }
+    }
+    #[test]
+    fn invalid_journal_values_are_preserved_without_platform_access() {
+        let (root, _) = fixture();
+        let (path, _) = paths(root.path());
+        for (user, before, after) in [
+            (u32::MAX, Some(280), 420),
+            (0, Some(u32::MAX), 420),
+            (0, Some(280), 0),
+            (0, Some(280), 641),
+        ] {
+            let content = serde_json::to_vec(&Lease {
+                before: Value {
+                    user,
+                    density: before,
+                },
+                after,
+            })
+            .unwrap();
+            fs::write(&path, &content).unwrap();
+            assert!(recover(root.path(), &mut UnusedBridge).is_err());
+            assert_eq!(fs::read(&path).unwrap(), content);
+        }
+    }
+    #[test]
+    fn invalid_activation_values_cannot_replace_a_recovery_record() {
+        let (root, _) = fixture();
+        let (path, _) = paths(root.path());
+        let content = br#"{"before":{"user":0,"override":280},"after":420}"#;
+        fs::write(&path, content).unwrap();
+        for (user, density) in [(u32::MAX, 420), (0, 0), (0, 641)] {
+            assert!(apply(root.path(), user, density, "initial", &mut UnusedBridge).is_err());
+            assert_eq!(fs::read(&path).unwrap(), content);
         }
     }
     #[test]

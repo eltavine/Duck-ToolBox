@@ -4,6 +4,56 @@ import { readFileSync } from "node:fs"
 test.use({ deviceScaleFactor: 1 })
 
 for (const locale of ["en", "zh-CN", "ar"]) {
+  test(`profile fields preserve text direction and alignment in ${locale}`, async ({
+    page,
+    open,
+  }) => {
+    const messages = JSON.parse(
+      readFileSync(
+        new URL(`../src/features/device-faker/locales/${locale}.json`, import.meta.url),
+        "utf8",
+      ),
+    ) as {
+      addProfile: string
+      fields: Record<string, string>
+      packages: string
+      append: string
+    }
+    await page.setViewportSize({ width: 320, height: 900 })
+    await open("/device-faker", { locale })
+    await page.evaluate(() => {
+      document.documentElement.style.fontSize = "200%"
+    })
+    const builder = page
+      .locator("details")
+      .filter({ has: page.locator("summary", { hasText: messages.addProfile }) })
+    await builder.locator("summary").click()
+    await builder.getByLabel(messages.packages, { exact: true }).fill("com.example.phone")
+    for (const field of ["manufacturer", "brand", "model"]) {
+      const input = builder.getByLabel(messages.fields[field]!, { exact: true })
+      await input.fill("هاتف 12")
+      await expect(input).toHaveAttribute("dir", "auto")
+      expect(await input.evaluate((node) => getComputedStyle(node).direction)).toBe("rtl")
+      expect((await input.boundingBox())!.height).toBeGreaterThanOrEqual(48)
+    }
+    for (const field of ["device", "product", "fingerprint"]) {
+      await expect(builder.getByLabel(messages.fields[field]!, { exact: true })).toHaveAttribute(
+        "dir",
+        "ltr",
+      )
+    }
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+    if (locale === "ar") {
+      await expect(builder.locator("p").first()).toContainText("\u2066@0\u2069")
+      await expect(builder.locator("p").first()).toContainText("\u2066@999\u2069")
+      await builder.screenshot({ path: "/tmp/duck-faker-builder-ar.png", animations: "disabled" })
+    }
+    await builder.getByRole("button", { name: messages.append, exact: true }).click()
+    await expect(page.locator("#faker-config")).toHaveValue(/model = "هاتف 12"/)
+  })
+}
+
+for (const locale of ["en", "zh-CN", "ar"]) {
   for (const theme of ["light", "dark"] as const) {
     test(`saved configuration errors remain actionable in ${locale} / ${theme}`, async ({
       page,

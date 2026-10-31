@@ -2,6 +2,9 @@ use super::*;
 
 pub(super) fn validate_custom_props(props: &HashMap<String, String>) -> anyhow::Result<()> {
     for (key, value) in props {
+        if key == "ro.build.version.sdk" && value != "__DELETE__" {
+            parse_sdk_override(value)?;
+        }
         // AOSP init permits these characters but forbids empty dot-separated segments.
         if key.is_empty()
             || key.starts_with('.')

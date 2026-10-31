@@ -105,6 +105,11 @@ user leaves the journal intact and performs no restore write. The pre-mutation
 baseline must fit the helper’s positive Java integer range; it is checked before
 publishing the journal or changing density. Density has a durable private recovery journal,
 independent of companion memory, and retains the journal if recovery fails.
+Recovery also validates the recorded user, original override and applied density
+before invoking the platform. A syntactically valid but out-of-range record remains
+intact and cannot be mistaken for a later settings edit. Invalid activation values
+are rejected before recovery or publication can replace an existing record. Legacy
+zero/unset baseline records still normalize to reset.
 The current user must also match the profile-bound user before publishing a new
 density journal. A user switch between the focus observation and baseline read
 therefore cannot apply that profile to the newly active user. Writes and recovery
@@ -149,6 +154,11 @@ and template, including unused or shadowed records. Invalid values are rejected
 before JNI fields are modified; the native path cannot silently discard an invalid
 density while the management path rejects it. The positive Java integer SDK bound
 follows the [JNI primitive type contract](https://docs.oracle.com/en/java/javase/21/docs/specs/jni/types.html).
+The canonical `custom_props."ro.build.version.sdk"` override has the same positive
+Java integer bound and must use canonical decimal notation. Empty, signed,
+zero-padded, fractional and overflowing strings are rejected; `__DELETE__` retains
+its existing skip-JNI deletion semantics. The JNI adapter checks SDK conversion
+before modifying any Build field, including when called directly with a plan.
 
 Commands and frames have deadlines; stop closes new injection immediately, while
 cleanup can take longer and reports pending failures.
@@ -188,6 +198,13 @@ exercises the actual Rust JNI hook against a class without `SOC_MODEL`; it is no
 an ART or OEM compatibility test. An explicit SDK override updates both `SDK_INT`
 and the deprecated string `SDK`, whose shared source is shown in
 [AOSP Build](https://android.googlesource.com/platform/frameworks/base/+/99b01a65cc4c104933788b3143285ab6bae65827/core/java/android/os/Build.java).
+JNI consumes the same final property map as COW/global adapters. Canonical custom
+keys therefore override top-level fields consistently, including custom-only
+profiles. An absent/deleted key leaves its existing Java field untouched, while
+an explicit empty value writes an empty string. Product name, marketing name and
+security-patch custom overrides update the same derived aliases as their top-level
+fields before precise custom keys are applied. An explicitly specified alias still
+wins, and inferred OEM aliases retain the existing absent-key filter.
 
 ## Interface and accessibility
 
@@ -210,6 +227,9 @@ notice; an armed but blocked engine reports unmet conditions rather than claimin
 Preview requests retain a generation invalidated by edits or page disposal, including
 edits that return to the original text. A successful stop updates cached power state
 before readback, so a failed status refresh cannot make the engine appear enabled again.
+Changing the saved revision also invalidates pending/visible previews. An apply
+confirmation closes whenever its preview changes, including an external refresh
+while a dirty draft is retained, so it cannot confirm a stale candidate.
 Enable acknowledgements also update cached state before readback, following
 [TanStack mutation-response guidance](https://tanstack.com/query/latest/docs/framework/vue/guides/updates-from-mutation-responses).
 A later stop or page disposal invalidates pending enable responses and errors.
@@ -226,6 +246,10 @@ following [W3C inline bidirectional text guidance](https://www.w3.org/Internatio
 Template-name input determines its direction from the entered text. Confirmation
 dialogs preserve intrinsic row heights and scroll rather than compressing the
 description into their actions at large text sizes.
+Manufacturer, brand and model inputs likewise determine direction from their
+content; machine identifiers retain LTR. Arabic package-help examples isolate
+`@0` and `@999` so punctuation and digits stay in their logical order, following
+[W3C direction guidance for forms and runtime text](https://www.w3.org/International/questions/qa-html-dir).
 
 Sixteen locale dictionaries share the same keys. Browser checks cover all locales
 at 320 px, light/dark themes, 200% root font size, draft preservation and independent
@@ -238,6 +262,7 @@ quality, TalkBack behavior or every dynamic device theme; those need device revi
 cargo test --locked --workspace
 cargo clippy --locked --workspace --all-targets -- -D warnings
 cargo test --locked --manifest-path components/device-faker/manager/Cargo.toml --target-dir target/device-faker-manager
+cargo build --locked --manifest-path components/device-faker/manager/Cargo.toml --target-dir target/device-faker-manager
 python3 scripts/test-device-faker.py
 python3 scripts/test-zygisk-runtime.py
 pnpm --dir ui test

@@ -5,24 +5,19 @@ use jni::{
     strings::JNIStr,
 };
 
-use crate::config::{MergedAppConfig, NumberSetting};
+use std::collections::HashMap;
 
-/// Build 字段的有效伪装值：与 config::field_value 相同的归一化——
-/// 未设置/空串/`__DELETE__` 返回 None（跳过 hook），`__EMPTY__` 归一化为空串。
-fn field_str(field: &Option<String>) -> Option<&str> {
-    match field.as_deref() {
-        Some(value) if !value.is_empty() && value != "__DELETE__" => {
-            Some(if value == "__EMPTY__" { "" } else { value })
-        }
-        _ => None,
-    }
-}
+use crate::config::parse_sdk_override;
 
-/// 根据合并配置 Hook android.os.Build 的静态字段。
+/// 根据最终属性计划更新 android.os.Build 的静态字段。
 pub fn hook_build_fields(
     env: &mut EnvUnowned,
-    merged_config: &MergedAppConfig,
+    props: &HashMap<String, String>,
 ) -> anyhow::Result<()> {
+    let sdk = props
+        .get("ro.build.version.sdk")
+        .map(|value| parse_sdk_override(value).map(|sdk| (value.as_str(), sdk)))
+        .transpose()?;
     let completed = env
         .with_env(|jenv| -> anyhow::Result<bool> {
             if jenv.exception_check() {
@@ -31,24 +26,24 @@ pub fn hook_build_fields(
             let build_class = jenv.find_class(jni_str!("android/os/Build"))?;
 
             for (field, value) in [
-                (jni_str!("MANUFACTURER"), &merged_config.manufacturer),
-                (jni_str!("BRAND"), &merged_config.brand),
-                (jni_str!("MODEL"), &merged_config.model),
-                (jni_str!("DEVICE"), &merged_config.device),
-                (jni_str!("PRODUCT"), &merged_config.product),
-                (jni_str!("HARDWARE"), &merged_config.hardware),
-                (jni_str!("BOARD"), &merged_config.board),
+                (jni_str!("MANUFACTURER"), "ro.product.manufacturer"),
+                (jni_str!("BRAND"), "ro.product.brand"),
+                (jni_str!("MODEL"), "ro.product.model"),
+                (jni_str!("DEVICE"), "ro.product.device"),
+                (jni_str!("PRODUCT"), "ro.product.name"),
+                (jni_str!("HARDWARE"), "ro.hardware"),
+                (jni_str!("BOARD"), "ro.product.board"),
                 // SOC_MODEL exists starting at API 31; typed missing-field errors skip it.
-                (jni_str!("SOC_MODEL"), &merged_config.soc_model),
-                (jni_str!("FINGERPRINT"), &merged_config.fingerprint),
-                (jni_str!("ID"), &merged_config.build_id),
-                (jni_str!("DISPLAY"), &merged_config.display_id),
+                (jni_str!("SOC_MODEL"), "ro.soc.model"),
+                (jni_str!("FINGERPRINT"), "ro.build.fingerprint"),
+                (jni_str!("ID"), "ro.build.id"),
+                (jni_str!("DISPLAY"), "ro.build.display.id"),
             ] {
-                if let Some(value) = field_str(value) {
+                if let Some(value) = props.get(value) {
                     set_build_field(jenv, &build_class, field, value)?;
                 }
             }
-            hook_version_fields(jenv, &build_class, merged_config)?;
+            hook_version_fields(jenv, props, sdk)?;
 
             Ok(true)
         })
@@ -59,37 +54,30 @@ pub fn hook_build_fields(
 
 fn hook_version_fields(
     env: &mut Env,
-    _build_class: &JClass,
-    merged_config: &MergedAppConfig,
+    props: &HashMap<String, String>,
+    sdk: Option<(&str, i32)>,
 ) -> anyhow::Result<()> {
     let version_class = env
         .find_class(jni_str!("android/os/Build$VERSION"))
         .context("Failed to find Build.VERSION class")?;
 
-    if let Some(android_version) = field_str(&merged_config.android_version) {
+    if let Some(android_version) = props.get("ro.build.version.release") {
         set_build_field(env, &version_class, jni_str!("RELEASE"), android_version)?;
     }
 
-    // `__DELETE__`（NumberSetting::Delete）不 hook 该字段：与字符串字段的
-    // `__DELETE__` 语义一致——只由 delete_props 列表在 companion 侧删除属性，
-    // Java 层字段保持系统原值。
-    if let Some(sdk_int) = merged_config.sdk_int.and_then(NumberSetting::value) {
-        set_build_int_field(
-            env,
-            &version_class,
-            jni_str!("SDK_INT"),
-            i32::try_from(sdk_int).context("SDK_INT exceeds Java integer range")?,
-        )?;
-        set_build_field(env, &version_class, jni_str!("SDK"), &sdk_int.to_string())?;
+    // Deleted keys are absent from the final plan; their Java fields remain unchanged.
+    if let Some((sdk_string, sdk_int)) = sdk {
+        set_build_int_field(env, &version_class, jni_str!("SDK_INT"), sdk_int)?;
+        set_build_field(env, &version_class, jni_str!("SDK"), sdk_string)?;
     }
 
     // Build.VERSION.INCREMENTAL 的属性来源是 ro.build.version.incremental
-    if let Some(incremental) = field_str(&merged_config.incremental) {
+    if let Some(incremental) = props.get("ro.build.version.incremental") {
         set_build_field(env, &version_class, jni_str!("INCREMENTAL"), incremental)?;
     }
 
     // Build.VERSION.SECURITY_PATCH 的属性来源是 ro.build.version.security_patch
-    if let Some(security_patch) = field_str(&merged_config.security_patch) {
+    if let Some(security_patch) = props.get("ro.build.version.security_patch") {
         set_build_field(
             env,
             &version_class,

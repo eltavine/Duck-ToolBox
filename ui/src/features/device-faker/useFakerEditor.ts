@@ -59,6 +59,13 @@ export function useFakerEditor() {
   const importConfirm = ref(false)
   const pendingFile = ref("")
   const previewRegion = ref<HTMLElement>()
+  watch(
+    preview,
+    () => {
+      confirm.value = false
+    },
+    { flush: "sync" },
+  )
   function message(caught: unknown): string {
     const detail =
       isDuckError(caught) && typeof caught.details === "object" && caught.details !== null
@@ -69,8 +76,12 @@ export function useFakerEditor() {
   }
   watch(
     () => data.value?.config,
-    (config) => {
+    (config, previous) => {
       if (!config) return
+      if (previous && config.revision !== previous.revision) {
+        previewGeneration++
+        preview.value = null
+      }
       if (!initialized.value) {
         const value = stored.value
         const cached = value && value.content !== config.content ? value : null

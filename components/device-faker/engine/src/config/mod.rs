@@ -8,7 +8,7 @@ mod properties;
 #[cfg(test)]
 mod tests;
 use profile::*;
-pub use profile::{DPI_MAX, DPI_MIN, NumberSetting, is_patch_only_key};
+pub use profile::{DPI_MAX, DPI_MIN, NumberSetting, is_patch_only_key, parse_sdk_override};
 
 /// 机型模板
 #[derive(Debug, Clone, Deserialize)]
