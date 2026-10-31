@@ -6,8 +6,31 @@ use serde::Deserialize;
 pub const DPI_MIN: u32 = 120;
 pub const DPI_MAX: u32 = 640;
 
-pub(super) fn valid_dpi(value: Option<u32>) -> Option<u32> {
-    value.filter(|dpi| (DPI_MIN..=DPI_MAX).contains(dpi))
+pub fn parse_sdk_override(value: &str) -> Result<i32> {
+    let sdk = value.parse::<i32>().ok().filter(|sdk| *sdk > 0);
+    match sdk {
+        Some(sdk) if sdk.to_string() == value => Ok(sdk),
+        _ => Err(super::ConfigValidationError::Invalid(
+            "SDK property overrides must be canonical positive decimal Java integers",
+        )
+        .into()),
+    }
+}
+
+pub(super) fn validate_numbers(sdk: Option<NumberSetting>, dpi: Option<u32>) -> Result<()> {
+    use super::ConfigValidationError;
+    if dpi.is_some_and(|dpi| !(DPI_MIN..=DPI_MAX).contains(&dpi)) {
+        return Err(ConfigValidationError::DensityRange.into());
+    }
+    if sdk
+        .and_then(NumberSetting::value)
+        .is_some_and(|sdk| sdk == 0 || sdk > i32::MAX as u32)
+    {
+        return Err(
+            ConfigValidationError::Invalid("SDK_INT must be a positive Java integer").into(),
+        );
+    }
+    Ok(())
 }
 
 /// `ro.product.*` 会按属性来源顺序读取不同分区的副本。模板字段必须同步这些副本，
@@ -289,14 +312,26 @@ pub(super) fn expand_known_custom_property(
         "ro.product.manufacturer" => insert_product_family(map, "manufacturer", value),
         "ro.product.brand" => insert_product_family(map, "brand", value),
         "ro.product.model" => insert_product_family(map, "model", value),
-        "ro.product.name" => insert_product_family(map, "name", value),
+        "ro.product.name" => {
+            insert_product_family(map, "name", value);
+            map.insert("ro.build.product".into(), value.into());
+        }
         "ro.product.device" => insert_product_family(map, "device", value),
-        "ro.product.marketname" => insert_product_family(map, "marketname", value),
+        "ro.product.marketname" => {
+            insert_product_family(map, "marketname", value);
+            for alias in OEM_MARKETNAME_ALIASES {
+                map.insert((*alias).into(), value.into());
+            }
+        }
         "ro.build.fingerprint" => insert_build_family(map, "fingerprint", value),
         "ro.build.id" => insert_build_family(map, "id", value),
         "ro.build.version.release" => insert_build_family(map, "version.release", value),
         "ro.build.version.sdk" => insert_build_family(map, "version.sdk", value),
         "ro.build.version.incremental" => insert_build_family(map, "version.incremental", value),
+        "ro.build.version.security_patch" => {
+            insert_build_family(map, "version.security_patch", value);
+            map.insert("ro.vendor.build.security_patch".into(), value.into());
+        }
         "ro.build.type" => insert_build_family(map, "type", value),
         "ro.build.tags" => insert_build_family(map, "tags", value),
         _ => {}

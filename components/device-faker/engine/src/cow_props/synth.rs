@@ -227,6 +227,12 @@ fn synth_and_attach(
         anyhow::bail!("no property could be emplaced into synthesized area");
     }
 
+    // Finish protection before any bionic context can retain the mapping.
+    name_anon_vma(start as *mut libc::c_void, size);
+    if unsafe { libc::mprotect(start as *mut libc::c_void, size, libc::PROT_READ) } != 0 {
+        return Err(std::io::Error::last_os_error().into());
+    }
+
     // 4.3 找路由到这个 context 的 NULL 节点：逐个挂上合成区并用 find 验证。
     //     bionic 的负结果不缓存（每次 find 都会重试惰性映射），所以逐节点试是安全的。
     let probe = std::ffi::CString::new(inserted[0].as_str())?;
@@ -252,11 +258,8 @@ fn synth_and_attach(
     // 改成可读 context 名后复查通过，合成区得以存活；路由仍由 property_info 决定。
     backend.set_node_context(idx, readable_context_label());
 
-    // 4.4 泄漏映射（context 节点长期持有），命名成中性 VMA 后 seal 成只读。
-    //     命名必须在仍可写时做（RO 后 PR_SET 会变成 [anon:<fault>]）。
+    // The published read-only mapping must outlive the module and its Rust owner.
     std::mem::forget(area);
-    name_anon_vma(start as *mut libc::c_void, size);
-    let _ = unsafe { libc::mprotect(start as *mut libc::c_void, size, libc::PROT_READ) };
 
     SYNTH_AREAS.with(|c| {
         c.borrow_mut().push(SynthArea {

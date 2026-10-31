@@ -13,10 +13,11 @@ enum LoggerInner {
     /// 能直接写文件（如 companion 进程），直接追加。
     File(File),
     /// 不能直接写文件（如 Zygisk 进程），先缓冲，再通过 companion flush。
-    Buffer(Vec<String>),
+    Buffer(crate::log_buffer::Buffer),
 }
 
-static LOGGER: Mutex<LoggerInner> = Mutex::new(LoggerInner::Buffer(Vec::new()));
+static LOGGER: Mutex<LoggerInner> =
+    Mutex::new(LoggerInner::Buffer(crate::log_buffer::Buffer::new()));
 
 struct AdaptiveLogger;
 
@@ -90,7 +91,7 @@ pub fn drain_lines() -> Vec<String> {
     if let Ok(mut inner) = LOGGER.lock()
         && let LoggerInner::Buffer(buf) = &mut *inner
     {
-        return std::mem::take(buf);
+        return buf.drain();
     }
     Vec::new()
 }

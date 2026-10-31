@@ -14,6 +14,30 @@ pub fn output_with_timeout(command: Command, timeout: Duration) -> Result<Vec<u8
     capture(command, timeout, terminate)
 }
 
+fn exited(child: &mut Child) -> std::io::Result<bool> {
+    #[cfg(unix)]
+    loop {
+        let mut info: libc::siginfo_t = unsafe { std::mem::zeroed() };
+        let result = unsafe {
+            libc::waitid(
+                libc::P_PID,
+                child.id(),
+                &mut info,
+                libc::WEXITED | libc::WNOHANG | libc::WNOWAIT,
+            )
+        };
+        if result == 0 {
+            return Ok(unsafe { info.si_pid() } != 0);
+        }
+        let error = std::io::Error::last_os_error();
+        if error.kind() != std::io::ErrorKind::Interrupted {
+            return Err(error);
+        }
+    }
+    #[cfg(not(unix))]
+    child.try_wait().map(|status| status.is_some())
+}
+
 fn capture(
     mut command: Command,
     timeout: Duration,
@@ -38,14 +62,9 @@ fn capture(
             if stdout.metadata()?.len() > 64 * 1024 || stderr.metadata()?.len() > 64 * 1024 {
                 bail!("platform output exceeds 64 KiB");
             }
-            match child.try_wait() {
-                Ok(Some(status)) => {
-                    owned_child = false;
-                    return Ok(status);
-                }
-                Ok(None) => (),
-                // Another reaper or SIGCHLD=SIG_IGN can release the PID. Never
-                // signal a numeric PID/process group after ownership is lost.
+            match exited(&mut child) {
+                Ok(true) => return Ok(()),
+                Ok(false) => (),
                 Err(error) => {
                     owned_child = false;
                     return Err(error.into());
@@ -57,12 +76,18 @@ fn capture(
             std::thread::sleep(Duration::from_millis(10));
         }
     })();
-    if owned_child {
+    // An external reaper can release the PID. Never signal it after ECHILD.
+    // A waitable child retains its identity until group cleanup and reaping finish.
+    if owned_child && exited(&mut child).is_ok() {
         terminate_owned(&mut child);
     }
-    let status = waited?;
+    waited?;
+    let status = child.wait()?;
     if !status.success() {
-        bail!("platform command failed");
+        bail!("platform command failed with {status}");
+    }
+    if stdout.metadata()?.len() > 64 * 1024 || stderr.metadata()?.len() > 64 * 1024 {
+        bail!("platform output exceeds 64 KiB");
     }
     stdout.rewind()?;
     let mut bytes = Vec::new();
@@ -90,6 +115,18 @@ fn terminate(child: &mut Child) {
 #[cfg(all(test, unix, not(target_os = "android")))]
 mod tests {
     use super::*;
+    #[test]
+    fn successful_commands_do_not_leave_background_writers() {
+        let directory = tempfile::tempdir().unwrap();
+        let marker = directory.path().join("late-write");
+        let mut command = Command::new("/bin/sh");
+        command
+            .args(["-c", "(sleep 0.3; touch \"$LATE_MARKER\") & printf done"])
+            .env("LATE_MARKER", &marker);
+        assert_eq!(output(command).unwrap(), b"done");
+        std::thread::sleep(Duration::from_millis(500));
+        assert!(!marker.exists());
+    }
     #[test]
     fn a_custom_deadline_still_terminates_an_owned_blocked_command() {
         let mut command = Command::new("/bin/sh");

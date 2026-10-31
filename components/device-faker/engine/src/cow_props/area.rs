@@ -6,12 +6,12 @@
 
 use std::cell::RefCell;
 
-use log::info;
+use log::{info, warn};
 use prop_rs_android::mmap_prop_area::MmapPropArea;
 
 use crate::prop_backend::PropBackend;
 
-use super::anon_name::{CLONE_ANON_NAME, anon_vma_name_is, name_anon_vma, set_anon_name};
+use super::anon_name::name_anon_vma;
 use super::mappings::PropAreaMapping;
 use super::owned::{Owner, View};
 use super::relabel::readable_context_label;
@@ -129,34 +129,24 @@ pub(super) fn writable_area_for_mapping(
     }
 }
 
-/// 已有副本按原区起始地址复用（顺带确保可写——`seal_area_clones` 之后需要）。
+/// 已有副本按原区起始地址复用；写权限由 open_area 统一检查。
 fn clone_range_of(orig_start: usize) -> Option<(usize, usize)> {
-    AREA_CLONES
-        .with(|c| {
-            c.borrow()
-                .iter()
-                .find(|cl| cl.orig_start == orig_start)
-                .map(|cl| (cl.clone_start, cl.clone_end - cl.clone_start))
-        })
-        .map(|(start, size)| {
-            let _ = make_writable(start, size);
-            (start, size)
-        })
+    AREA_CLONES.with(|c| {
+        c.borrow()
+            .iter()
+            .find(|cl| cl.orig_start == orig_start)
+            .map(|cl| (cl.clone_start, cl.clone_end - cl.clone_start))
+    })
 }
 
 /// 已有副本按地址区间复用。
 fn clone_range_containing(addr: usize) -> Option<(usize, usize)> {
-    AREA_CLONES
-        .with(|c| {
-            c.borrow()
-                .iter()
-                .find(|cl| addr >= cl.clone_start && addr < cl.clone_end)
-                .map(|cl| (cl.clone_start, cl.clone_end - cl.clone_start))
-        })
-        .map(|(start, size)| {
-            let _ = make_writable(start, size);
-            (start, size)
-        })
+    AREA_CLONES.with(|c| {
+        c.borrow()
+            .iter()
+            .find(|cl| addr >= cl.clone_start && addr < cl.clone_end)
+            .map(|cl| (cl.clone_start, cl.clone_end - cl.clone_start))
+    })
 }
 
 fn make_writable(addr: usize, size: usize) -> anyhow::Result<()> {
@@ -173,24 +163,20 @@ fn make_writable(addr: usize, size: usize) -> anyhow::Result<()> {
     Ok(())
 }
 
-/// patch 全部完成：尽量 seal 成只读；命名与 mprotect 在部分内核上互相打架，
-/// 最终形态是 `r--p [anon:linker_alloc]` 或退回 `rw-p [anon:linker_alloc]`（stock 同有）。
+/// patch 全部完成后设为只读；匿名映射命名失败不会重新开放写权限。
 pub(super) fn seal_area_clones() {
     AREA_CLONES.with(|c| {
         for cl in c.borrow().iter() {
             let size = cl.clone_end - cl.clone_start;
             let addr = cl.clone_start as *mut libc::c_void;
-            // 必须在仍可写时命名（RO 后 PR_SET 会变成 [anon:<fault>]）
             name_anon_vma(addr, size);
-            let named_rw = anon_vma_name_is(addr, CLONE_ANON_NAME.to_str().unwrap_or(""));
-            let _ = unsafe { libc::mprotect(addr, size, libc::PROT_READ) };
-            let named_ro = anon_vma_name_is(addr, CLONE_ANON_NAME.to_str().unwrap_or(""));
-            info!("seal clone @{addr:p} size={size:#x} named_rw={named_rw} named_ro={named_ro}");
-            if !named_ro {
-                let _ = unsafe { libc::mprotect(addr, size, libc::PROT_READ | libc::PROT_WRITE) };
-                set_anon_name(addr, size);
-                let named_rw2 = anon_vma_name_is(addr, CLONE_ANON_NAME.to_str().unwrap_or(""));
-                info!("seal clone @{addr:p} fallback rw named={named_rw2}");
+            if unsafe { libc::mprotect(addr, size, libc::PROT_READ) } != 0 {
+                warn!(
+                    "property clone could not be made read-only: {}",
+                    std::io::Error::last_os_error()
+                );
+            } else {
+                info!("sealed property clone @{addr:p} size={size:#x}");
             }
         }
     });
@@ -209,8 +195,26 @@ pub(super) fn create_area_clone(
 ) -> anyhow::Result<usize> {
     let size = mapping.end - mapping.start;
     let mut map = memmap2::MmapMut::map_anon(size)?;
-    // SAFETY: proc maps supplies a live readable region and the owned destination has this exact size.
-    unsafe { std::ptr::copy_nonoverlapping(mapping.start as *const u8, map.as_mut_ptr(), size) };
+    super::snapshot::capture(
+        &mut map,
+        |destination| {
+            // SAFETY: the validated source mapping has this exact readable extent.
+            unsafe {
+                std::ptr::copy_nonoverlapping(
+                    mapping.start as *const u8,
+                    destination.as_mut_ptr(),
+                    size,
+                )
+            };
+        },
+        |offset| {
+            // SAFETY: snapshot validation bounds every aligned serial/allocation field.
+            unsafe {
+                (&*((mapping.start + offset) as *const std::sync::atomic::AtomicU32))
+                    .load(std::sync::atomic::Ordering::Acquire)
+            }
+        },
+    )?;
     let area = MmapPropArea::new(map)?;
     build_area_clone(area, mapping, size, backend)
 }

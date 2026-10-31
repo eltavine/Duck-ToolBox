@@ -25,9 +25,24 @@ mod hooks;
 #[cfg(all(test, unix, not(target_os = "android")))]
 #[path = "../../engine/src/jni_policy.rs"]
 mod jni_policy;
+#[cfg(test)]
+#[path = "../../engine/src/log_buffer.rs"]
+mod log_buffer;
 #[allow(dead_code)]
 #[path = "../../engine/src/process_identity.rs"]
 mod process_identity;
+#[cfg(test)]
+#[allow(dead_code)]
+#[path = "../../engine/src/cow_props/mappings.rs"]
+mod property_mappings;
+#[cfg(test)]
+#[allow(dead_code)]
+#[path = "../../engine/src/cow_props/snapshot.rs"]
+mod property_snapshot;
+#[cfg(test)]
+#[allow(dead_code)]
+#[path = "../../engine/src/companion/registry.rs"]
+mod session_registry;
 mod state;
 
 use anyhow::{Result, bail};
@@ -58,8 +73,7 @@ fn execute() -> Result<Value> {
             state::request(operation, &input)
         }
         ["stage", "setup"] => state::setup(),
-        ["stage", "boot"] => state::boot(),
-        ["stage", "ready"] => state::ready(),
+        ["stage", "boot" | "ready"] => state::boot(),
         ["stage", "blocked"] => state::blocked(),
         ["stage", "uninstall"] => state::uninstall(),
         _ => bail!(

@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { utimesSync, writeFileSync } from "node:fs"
+import { chmodSync, readFileSync, utimesSync, writeFileSync } from "node:fs"
 import { execFileSync } from "node:child_process"
 import path from "node:path"
 import { afterEach, describe, expect, it } from "vitest"
@@ -52,15 +52,22 @@ describe.skipIf(!hasDuckd)("Device Faker real process contract", CONTRACT, () =>
         "/proc/sys/kernel/random/boot_id": "contract-boot",
         "/data/adb/modules/duck-toolbox/module.prop": "id=duck-toolbox",
         "/data/adb/modules/duck-toolbox/zygisk/arm64-v8a.so": "fixture",
+        "/data/adb/modules/duck-toolbox/prop.sh":
+          "#!/bin/sh\nprintf 'legacy\\n' >> \"$DF_BOOT_TEST_TRACE\"\n",
+        "/data/adb/modules/duck-toolbox/play-integrity/pif-engine":
+          "#!/bin/sh\nprintf 'integrity\\n' >> \"$DF_BOOT_TEST_TRACE\"\n",
         "/data/adb/modules/device_faker/module.prop": "id=device_faker",
       },
     })
+    chmodSync(host.path("/data/adb/modules/duck-toolbox/play-integrity/pif-engine"), 0o755)
+    const trace = host.path("/boot-stages")
     execFileSync(
       process.env.DEVICE_FAKER_ENGINE_BIN ??
         path.resolve("../target/device-faker-manager/debug/device-faker-engine"),
       ["stage", "ready"],
-      { env: { ...process.env, DEVICE_FAKER_SYSROOT: host.path("/") } },
+      { env: { ...process.env, DEVICE_FAKER_SYSROOT: host.path("/"), DF_BOOT_TEST_TRACE: trace } },
     )
+    expect(readFileSync(trace, "utf8")).toBe("legacy\nintegrity\n")
     const candidate = await fakerApi.preview(content)
     const saved = await fakerApi.apply(candidate, false)
     const status = await fakerApi.status()
@@ -74,11 +81,34 @@ describe.skipIf(!hasDuckd)("Device Faker real process contract", CONTRACT, () =>
     utimesSync(host.path("/data/adb/modules/device_faker/disable"), new Date(1000), new Date(1000))
     await fakerApi.enable(saved.revision, status.stop_revision)
     expect((await fakerApi.status()).enabled).toBe(true)
+    const pending = host.path("/data/adb/modules_update/duck-toolbox/module.prop")
+    const { mkdirSync, rmSync } = await import("node:fs")
+    mkdirSync(path.dirname(pending), { recursive: true })
+    writeFileSync(pending, "id=duck-toolbox")
+    await expect(fakerApi.enable(saved.revision, status.stop_revision)).rejects.toMatchObject({
+      details: { code: "startup_not_ready" },
+    })
+    rmSync(pending)
     await fakerApi.disable()
     await expect(fakerApi.enable(saved.revision, status.stop_revision)).rejects.toMatchObject({
       code: "engine_error",
     })
     expect((await fakerApi.status()).enabled).toBe(false)
+  })
+  it("rejects an empty power acknowledgement and allows stop to repair it", async () => {
+    host = installHost({
+      files: {
+        "/data/adb/duck-device-faker/enabled": "",
+        "/data/adb/duck-device-faker/stop": "",
+        "/data/adb/duck-device-faker/config/config.toml": content,
+      },
+    })
+    const status = await fakerApi.status()
+    expect(status.enabled).toBe(false)
+    await expect(fakerApi.enable(status.config.revision, "")).rejects.toMatchObject({
+      details: { code: "power_changed" },
+    })
+    expect((await fakerApi.disable()).stop_revision).not.toBe("")
   })
   it("blocks a lost global owner and keeps its recovery marker after stop", async () => {
     host = installHost({

@@ -59,12 +59,14 @@ const canEnable = computed(
 const state = computed(() => {
   if (editor.status.isPending.value) return t("loading")
   if (!data.value) return t("unavailable")
-  if (data.value.enabled && !prerequisitesReady.value) return t("waiting")
+  if (data.value.enabled && !prerequisitesReady.value) return t("blocked")
   return data.value.enabled ? t("enabled") : t("disabled")
 })
 </script>
 <template>
-  <div class="mx-auto flex w-full max-w-3xl flex-col gap-6 p-[16px] pb-8 [&_section>header]:px-0">
+  <div
+    class="mx-auto flex w-full max-w-3xl flex-col gap-6 p-[16px] pb-8 [&_section>header]:px-[16px]"
+  >
     <section class="bg-primary/8 flex flex-col gap-5 rounded-3xl p-[16px]" :aria-label="t('power')">
       <div class="flex items-start gap-4">
         <div
@@ -115,9 +117,22 @@ const state = computed(() => {
     >
       {{ notice }}
     </p>
-    <p v-if="data?.startup_failed" role="alert" class="bg-muted rounded-2xl p-4 text-sm leading-6">
-      {{ t("errors.startup_failed") }}
-    </p>
+    <div
+      v-if="data?.startup_failed"
+      role="alert"
+      class="bg-muted rounded-2xl p-4 text-sm leading-6"
+    >
+      <p>{{ t("errors.startup_failed") }}</p>
+      <details v-if="data.startup_error" class="mt-2">
+        <summary class="flex min-h-12 cursor-pointer items-center text-sm underline">
+          {{ global.t("core.actions.details") }}
+        </summary>
+        <pre
+          dir="ltr"
+          class="text-muted-foreground overflow-auto text-xs whitespace-pre-wrap [overflow-wrap:anywhere]"
+          >{{ data.startup_error }}</pre>
+      </details>
+    </div>
     <QueryState
       :loading="editor.status.isPending.value"
       :error="editor.status.error.value ? editor.message(editor.status.error.value) : null"
@@ -142,7 +157,12 @@ const state = computed(() => {
           {{ t("cleanupHelp") }}
         </p>
         <p
-          v-if="data.payload_pending || !data.payload_installed || !data.startup_ready"
+          v-if="
+            !data.startup_failed &&
+            !data.conflict &&
+            !data.cleanup_pending &&
+            (data.payload_pending || !data.payload_installed || !data.startup_ready)
+          "
           role="status"
           class="bg-muted rounded-2xl p-4 text-sm leading-6"
         >
@@ -150,16 +170,25 @@ const state = computed(() => {
         </p>
         <SectionCard
           plain
-          content-class="bg-card text-card-foreground rounded-lg p-[12px]"
+          content-class="bg-card text-card-foreground rounded-2xl p-[16px]"
           :title="t('profiles')"
           ><ConfigSummary :summary="data.config.summary"
         /></SectionCard>
-        <p v-if="data.config.error" role="alert" class="text-destructive px-4 text-sm">
-          {{ t("errors.invalid_config") }}
-        </p>
+        <div v-if="data.config.error" role="alert" class="text-destructive min-w-0 px-4 text-sm">
+          <p>{{ t("errors.invalid_config") }}</p>
+          <details class="mt-2">
+            <summary class="flex min-h-12 cursor-pointer items-center underline">
+              {{ global.t("core.actions.details") }}
+            </summary>
+            <pre
+              dir="ltr"
+              class="text-muted-foreground overflow-auto whitespace-pre-wrap [overflow-wrap:anywhere]"
+              >{{ data.config.error }}</pre>
+          </details>
+        </div>
         <SectionCard
           plain
-          content-class="bg-card text-card-foreground rounded-lg p-[12px]"
+          content-class="bg-card text-card-foreground rounded-2xl p-[16px]"
           :title="t('config')"
           :description="t('configHelp')"
         >
@@ -179,13 +208,18 @@ const state = computed(() => {
           </p>
           <fieldset :disabled="busy" class="flex min-w-0 flex-col gap-5">
             <ProfileBuilder @append="editor.appendProfile" />
+            <p id="faker-property-help" class="text-muted-foreground text-sm leading-6">
+              {{ t("globalPropsHelp", { prefix: "\u2066ro.*\u2069" }) }}
+            </p>
             <label for="faker-config" class="text-sm font-medium">{{ t("tomlLabel") }}</label>
             <Textarea
               id="faker-config"
               v-model="draft"
               :maxlength="MAX_DRAFT_CHARACTERS"
               :aria-invalid="draftTooLarge"
-              :aria-describedby="draftTooLarge ? 'faker-config-size' : undefined"
+              :aria-describedby="
+                draftTooLarge ? 'faker-property-help faker-config-size' : 'faker-property-help'
+              "
               dir="ltr"
               class="min-h-64 font-mono text-sm leading-6"
               spellcheck="false"

@@ -10,6 +10,7 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 ENGINE = Path(os.environ.get("PIF_ENGINE_TEST_BINARY", ROOT / "target/pif-engine/debug/pif-engine"))
+FAKER_ENGINE = Path(os.environ.get("DEVICE_FAKER_ENGINE_BIN", ROOT / "target/device-faker-manager/debug/device-faker-engine"))
 BOOT_HASH = "ab" * 32
 INITIAL = {
     "ro.boot.verifiedbootstate": "orange",
@@ -55,7 +56,11 @@ class PropHandler(unittest.TestCase):
         self.reset()
         # Match the shell features of the root manager's BusyBox on Linux hosts too.
         self.executable(self.bin / "busybox", '#!/bin/sh\nshift\nexec bash "$@"\n')
-        self.executable(self.bin / "getprop", "#!/bin/sh\nprintf 1\n")
+        self.executable(self.bin / "getprop", """#!/usr/bin/env python3
+import json, os, pathlib, sys
+values = json.loads(pathlib.Path(os.environ['PROP_TEST_STATE']).read_text())
+print('1' if sys.argv[1] == 'sys.boot_completed' else values.get(sys.argv[1], ''))
+""")
         self.executable(self.bin / "resetprop", """#!/usr/bin/env python3
 import json, os, pathlib, sys
 path = pathlib.Path(os.environ['PROP_TEST_STATE'])
@@ -64,7 +69,9 @@ args = sys.argv[1:]
 if not args:
     print('\\n'.join('[' + key + ']: [' + value + ']' for key, value in values.items()))
 elif len(args) == 1 and not args[0].startswith('-'):
-    print(values.get(args[0], ''))
+    if args[0] not in values:
+        sys.exit(1)
+    print(values[args[0]])
 elif len(args) == 3 and args[0] == '-n':
     values[args[1]] = args[2]
     path.write_text(json.dumps(values))
@@ -268,6 +275,34 @@ elif len(args) == 2 and args[0] == '--delete':
         self.assertEqual(self.properties()["ro.debuggable"], "1")
         self.assertEqual(self.properties()["ro.boot.vbmeta.size"], "4096")
 
+    def test_property_read_failure_is_not_hidden_by_later_success(self):
+        script = self.bin / "getprop"
+        script.write_text(script.read_text().replace(
+            "values = json.loads", "if sys.argv[1] == 'ro.debuggable': sys.exit(7)\nvalues = json.loads"))
+        result = self.run_hook("prop.sh", "--fallback", success=False)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(self.properties()["ro.debuggable"], "1")
+        self.assertEqual(self.properties()["ro.boot.vbmeta.size"], "4096")
+
+    def test_real_embedded_boot_accepts_absent_vendor_properties(self):
+        modules = self.adb / "modules"
+        modules.mkdir()
+        (modules / "duck-toolbox").symlink_to(self.module, target_is_directory=True)
+        (self.module / "module.prop").write_text("id=duck-toolbox\n")
+        boot_id = self.root / "sys/proc/sys/kernel/random/boot_id"
+        boot_id.parent.mkdir(parents=True)
+        boot_id.write_text("boot-prop-test\n")
+        for stage in ["boot", "ready"]:
+            with self.subTest(stage=stage):
+                self.reset()
+                (self.adb / "duck-device-faker/ready").unlink(missing_ok=True)
+                result = subprocess.run([str(FAKER_ENGINE), "stage", stage], env={
+                    **self.env, "DEVICE_FAKER_SYSROOT": str(self.root / "sys"),
+                }, text=True, capture_output=True, timeout=20)
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertTrue(json.loads(result.stdout)["data"]["startup_ready"])
+                self.assert_applied()
+
     def test_unstartable_embedded_manager_does_not_skip_other_property_stages(self):
         manager = self.module / "device-faker/device-faker-engine"
         manager.parent.mkdir()
@@ -292,4 +327,6 @@ elif len(args) == 2 and args[0] == '--delete':
 if __name__ == "__main__":
     if not ENGINE.is_file():
         raise SystemExit("Build pif-engine in target/pif-engine before running these tests")
+    if not FAKER_ENGINE.is_file():
+        raise SystemExit("Build device-faker-engine in target/device-faker-manager before running these tests")
     unittest.main()

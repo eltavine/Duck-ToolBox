@@ -5,6 +5,7 @@ const parameters = new URLSearchParams(location.search)
 let content = parameters.has("faker-enabled")
   ? '[[apps]]\npackage = "com.example.app"\nmodel = "Phone"\n'
   : "debug = false\n\n[templates]\n"
+if (parameters.has("faker-invalid-config")) content = "invalid["
 let revision = "initial"
 let backup = content
 let backupAfter = ""
@@ -16,7 +17,14 @@ const summary = (value: string) => ({
   warnings: [],
   global_effects: /companion_resetprop\s*=\s*true|dpi\s*=/.test(value),
 })
-const config = () => ({ content, revision, summary: summary(content), error: null })
+const config = () => ({
+  content,
+  revision,
+  summary: content.includes("invalid[") ? null : summary(content),
+  error: content.includes("invalid[")
+    ? "TOML parse error at line 1, column 8: invalid table header"
+    : null,
+})
 function input(value: unknown) {
   return value as Record<string, string | boolean>
 }
@@ -33,6 +41,9 @@ const mock: MockModule = {
       parent_active: !parameters.has("faker-parent-disabled"),
       startup_ready: !new URLSearchParams(location.search).has("faker-startup-pending"),
       startup_failed: new URLSearchParams(location.search).has("faker-startup-failed"),
+      startup_error: new URLSearchParams(location.search).has("faker-startup-failed")
+        ? "legacy property pass failed: platform command failed with exit status: 1"
+        : null,
       cleanup_pending:
         parameters.has("faker-cleanup-pending") || parameters.has("faker-orphaned-global"),
       global_recovery_requires_reboot: parameters.has("faker-orphaned-global"),

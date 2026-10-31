@@ -24,6 +24,7 @@ mod owned;
 mod patch;
 mod relabel;
 mod serial;
+mod snapshot;
 mod symbols;
 mod synth;
 

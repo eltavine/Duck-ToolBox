@@ -1,5 +1,5 @@
 //! Platform adapter for the toolbox's ordered global-property boot pass.
-use anyhow::Result;
+use anyhow::{Context as _, Result};
 use std::{path::Path, process::Command, time::Duration};
 
 // PI owns a 30-second script deadline followed by bounded SELinux handling.
@@ -15,7 +15,13 @@ fn legacy(module: &Path, fallback: bool) -> Result<()> {
     if fallback {
         command.arg("--fallback");
     }
-    crate::bounded::output(command).map(|_| ())
+    crate::bounded::output(command)
+        .map(|_| ())
+        .context(if fallback {
+            "legacy property fallback failed"
+        } else {
+            "legacy property pass failed"
+        })
 }
 pub fn stages(module: &Path) -> Result<()> {
     let properties = legacy(module, false);

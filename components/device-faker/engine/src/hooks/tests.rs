@@ -49,6 +49,7 @@ public class Build {
     public static String FINGERPRINT = "stock";
     public static class VERSION {
         public static int SDK_INT = 30;
+        public static String SDK = "30";
         public static String INCREMENTAL = "stock";
     }
 }"#,
@@ -102,9 +103,10 @@ public class Build {
         0
     );
     let mut env = unsafe { EnvUnowned::from_raw(raw_env.cast()) };
-    let config = crate::config::Config::from_toml("[[apps]]\npackage='com.example.app'\nmodel='Phone'\nsoc_model='New SoC'\nfingerprint='New fingerprint'\nincremental='123'\nsdk_int=35\n").unwrap();
+    let config = crate::config::Config::from_toml("[[apps]]\npackage='com.example.app'\nmodel='Phone'\nsoc_model='New SoC'\nfingerprint='New fingerprint'\nincremental='123'\nsdk_int=35\ncustom_props={'ro.product.model'='Custom phone', 'ro.build.fingerprint'='Custom fingerprint', 'ro.build.version.sdk'='36'}\n").unwrap();
     let merged = config.get_merged_config("com.example.app").unwrap();
-    hook_build_fields(&mut env, &merged).unwrap();
+    let props = crate::config::Config::build_merged_property_map_with_explicit(&merged).0;
+    hook_build_fields(&mut env, &props).unwrap();
     let passed = env
         .with_env(|env| -> jni::errors::Result<bool> {
             assert!(!env.exception_check());
@@ -124,7 +126,18 @@ public class Build {
                 )?
                 .l()?;
             let string = env.cast_local::<jni::objects::JString>(text)?;
-            assert_eq!(string.to_string(), "New fingerprint");
+            assert_eq!(string.to_string(), "Custom fingerprint");
+            let sdk = env
+                .get_static_field(
+                    jni_str!("android/os/Build$VERSION"),
+                    jni_str!("SDK"),
+                    jni_sig!("Ljava/lang/String;"),
+                )?
+                .l()?;
+            assert_eq!(
+                env.cast_local::<jni::objects::JString>(sdk)?.to_string(),
+                "36"
+            );
             assert_eq!(
                 env.get_static_field(
                     jni_str!("android/os/Build$VERSION"),
@@ -132,7 +145,7 @@ public class Build {
                     jni_sig!("I")
                 )?
                 .i()?,
-                35
+                36
             );
             let _ = env.throw_new(
                 jni_str!("java/lang/IllegalStateException"),
@@ -142,7 +155,7 @@ public class Build {
         })
         .resolve::<crate::jni_policy::ClearAndDefault>();
     assert!(passed);
-    assert!(hook_build_fields(&mut env, &merged).is_err());
+    assert!(hook_build_fields(&mut env, &props).is_err());
     let retained = env
         .with_env(|env| -> jni::errors::Result<bool> {
             let exception = env
@@ -153,4 +166,45 @@ public class Build {
         })
         .resolve::<crate::jni_policy::ClearAndDefault>();
     assert!(retained);
+    let mut invalid = props.clone();
+    invalid.insert("ro.product.model".into(), "Must not be applied".into());
+    invalid.insert("ro.build.version.sdk".into(), "invalid".into());
+    assert!(hook_build_fields(&mut env, &invalid).is_err());
+    let mut empty = props.clone();
+    empty.remove("ro.product.model");
+    empty.remove("ro.build.version.sdk");
+    empty.insert("ro.build.fingerprint".into(), String::new());
+    hook_build_fields(&mut env, &empty).unwrap();
+    let final_fields = env
+        .with_env(|env| -> jni::errors::Result<bool> {
+            assert!(!env.exception_check());
+            for (field, expected) in [
+                (jni_str!("MODEL"), "Custom phone"),
+                (jni_str!("FINGERPRINT"), ""),
+            ] {
+                let value = env
+                    .get_static_field(
+                        jni_str!("android/os/Build"),
+                        field,
+                        jni_sig!("Ljava/lang/String;"),
+                    )?
+                    .l()?;
+                assert_eq!(
+                    env.cast_local::<jni::objects::JString>(value)?.to_string(),
+                    expected
+                );
+            }
+            assert_eq!(
+                env.get_static_field(
+                    jni_str!("android/os/Build$VERSION"),
+                    jni_str!("SDK_INT"),
+                    jni_sig!("I")
+                )?
+                .i()?,
+                36
+            );
+            Ok(true)
+        })
+        .resolve::<crate::jni_policy::ClearAndDefault>();
+    assert!(final_fields);
 }

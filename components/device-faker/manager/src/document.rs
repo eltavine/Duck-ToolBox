@@ -46,7 +46,16 @@ pub fn inspect(content: &str) -> Result<Value> {
             "Configuration exceeds 48 KiB"
         ));
     }
-    let config = Config::from_toml(content)?;
+    let config = Config::from_toml(content).map_err(|error| {
+        if matches!(
+            error.downcast_ref(),
+            Some(crate::config::ConfigValidationError::DensityRange)
+        ) {
+            Error::new("density_range", "DPI must be between 120 and 640").into()
+        } else {
+            error
+        }
+    })?;
     let mut assignments: BTreeMap<String, Vec<String>> = BTreeMap::new();
     let mut targets = Vec::new();
     for (name, template) in &config.templates {
@@ -58,12 +67,6 @@ pub fn inspect(content: &str) -> Result<Value> {
                 .push(format!("template:{name}"));
             targets.push(key.clone());
         }
-        if template.dpi.is_some_and(|dpi| !(120..=640).contains(&dpi)) {
-            bail!(Error::new(
-                "density_range",
-                "DPI must be between 120 and 640"
-            ));
-        }
     }
     for app in &config.apps {
         package(&app.package)?;
@@ -72,12 +75,6 @@ pub fn inspect(content: &str) -> Result<Value> {
             .entry(app.package.clone())
             .or_default()
             .push("app".into());
-        if app.dpi.is_some_and(|dpi| !(120..=640).contains(&dpi)) {
-            bail!(Error::new(
-                "density_range",
-                "DPI must be between 120 and 640"
-            ));
-        }
     }
     targets.sort();
     targets.dedup();
@@ -91,16 +88,6 @@ pub fn inspect(content: &str) -> Result<Value> {
     let mut deletions = false;
     for key in &targets {
         if let Some(merged) = config.get_merged_config(key) {
-            if merged
-                .sdk_int
-                .and_then(crate::config::NumberSetting::value)
-                .is_some_and(|value| value == 0 || value > i32::MAX as u32)
-            {
-                bail!(Error::new(
-                    "invalid_config",
-                    "SDK_INT must be a positive Java integer"
-                ));
-            }
             global_effects |= merged.companion_resetprop || merged.dpi.is_some();
             deletions |=
                 !Config::build_delete_props_list(&merged).is_empty() && !merged.companion_resetprop;

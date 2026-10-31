@@ -97,6 +97,15 @@ fn load(path: &Path) -> Result<Option<Lease>> {
         bail!("invalid density recovery journal");
     }
     let mut lease: Lease = serde_json::from_slice(&bytes)?;
+    if lease.before.user > i32::MAX as u32
+        || lease
+            .before
+            .density
+            .is_some_and(|value| value > i32::MAX as u32)
+        || !(crate::config::DPI_MIN..=crate::config::DPI_MAX).contains(&lease.after)
+    {
+        bail!("invalid density recovery journal values");
+    }
     // Earlier records could capture Android's zero/unset sentinel verbatim.
     if lease.before.density == Some(0) {
         lease.before.density = None;
@@ -127,7 +136,18 @@ pub fn recover(root: &Path, bridge: &mut impl Bridge) -> Result<()> {
     let _lock = lock(&lock_path)?;
     restore_locked(&path, bridge)
 }
-pub fn apply(root: &Path, density: u32, generation: &str, bridge: &mut impl Bridge) -> Result<()> {
+pub fn apply(
+    root: &Path,
+    user: u32,
+    density: u32,
+    generation: &str,
+    bridge: &mut impl Bridge,
+) -> Result<()> {
+    if user > i32::MAX as u32
+        || !(crate::config::DPI_MIN..=crate::config::DPI_MAX).contains(&density)
+    {
+        bail!("invalid density activation values");
+    }
     let (path, lock_path) = paths(root);
     let _lock = lock(&lock_path)?;
     restore_locked(&path, bridge)?;
@@ -135,6 +155,9 @@ pub fn apply(root: &Path, density: u32, generation: &str, bridge: &mut impl Brid
         bail!("density activation is disabled");
     }
     let before = bridge.read(None)?;
+    if before.user != user {
+        bail!("foreground user changed before density activation");
+    }
     // The helper can restore only positive Java integer density overrides.
     if before.user > i32::MAX as u32
         || before
@@ -230,7 +253,7 @@ mod tests {
     #[test]
     fn recovery_uses_the_original_user_after_a_user_switch() {
         let (root, mut bridge) = fixture();
-        apply(root.path(), 420, "initial", &mut bridge).unwrap();
+        apply(root.path(), 0, 420, "initial", &mut bridge).unwrap();
         bridge.current = 10;
         recover(root.path(), &mut bridge).unwrap();
         assert_eq!(bridge.values[&0], Some(280));
@@ -241,7 +264,7 @@ mod tests {
     fn a_post_write_failure_retains_a_durable_recovery_record() {
         let (root, mut bridge) = fixture();
         bridge.fail_after_write = true;
-        assert!(apply(root.path(), 420, "initial", &mut bridge).is_err());
+        assert!(apply(root.path(), 0, 420, "initial", &mut bridge).is_err());
         assert!(paths(root.path()).0.exists());
         recover(root.path(), &mut bridge).unwrap();
         assert_eq!(bridge.values[&0], Some(280));
@@ -249,16 +272,31 @@ mod tests {
     #[test]
     fn recovery_preserves_an_external_density_edit() {
         let (root, mut bridge) = fixture();
-        apply(root.path(), 420, "initial", &mut bridge).unwrap();
+        apply(root.path(), 0, 420, "initial", &mut bridge).unwrap();
         bridge.values.insert(0, Some(480));
         recover(root.path(), &mut bridge).unwrap();
         assert_eq!(bridge.values[&0], Some(480));
     }
     #[test]
+    fn activation_binds_the_profile_user_before_publishing_recovery_data() {
+        let (root, mut bridge) = fixture();
+        bridge.current = 10;
+        let before = bridge.values.clone();
+        assert!(apply(root.path(), 0, 420, "initial", &mut bridge).is_err());
+        assert_eq!(bridge.values, before);
+        assert!(!paths(root.path()).0.exists());
+        apply(root.path(), 10, 420, "initial", &mut bridge).unwrap();
+        assert_eq!(bridge.values[&0], before[&0]);
+        assert_eq!(bridge.values[&10], Some(420));
+        bridge.current = 0;
+        recover(root.path(), &mut bridge).unwrap();
+        assert_eq!(bridge.values, before);
+    }
+    #[test]
     fn reset_and_recovery_survive_a_new_process_instance() {
         let (root, mut bridge) = fixture();
         bridge.values.insert(0, None);
-        apply(root.path(), 420, "initial", &mut bridge).unwrap();
+        apply(root.path(), 0, 420, "initial", &mut bridge).unwrap();
         let mut next = Fake {
             current: 10,
             values: bridge.values,
@@ -280,21 +318,64 @@ mod tests {
             assert_eq!(bridge.values[&0], Some(280));
         }
     }
+    struct UnusedBridge;
+    impl Bridge for UnusedBridge {
+        fn read(&mut self, _: Option<u32>) -> Result<Value> {
+            panic!("invalid values must not reach the platform")
+        }
+        fn set(&mut self, _: u32, _: Option<u32>) -> Result<()> {
+            panic!("invalid values must not mutate the platform")
+        }
+    }
+    #[test]
+    fn invalid_journal_values_are_preserved_without_platform_access() {
+        let (root, _) = fixture();
+        let (path, _) = paths(root.path());
+        for (user, before, after) in [
+            (u32::MAX, Some(280), 420),
+            (0, Some(u32::MAX), 420),
+            (0, Some(280), 0),
+            (0, Some(280), 641),
+        ] {
+            let content = serde_json::to_vec(&Lease {
+                before: Value {
+                    user,
+                    density: before,
+                },
+                after,
+            })
+            .unwrap();
+            fs::write(&path, &content).unwrap();
+            assert!(recover(root.path(), &mut UnusedBridge).is_err());
+            assert_eq!(fs::read(&path).unwrap(), content);
+        }
+    }
+    #[test]
+    fn invalid_activation_values_cannot_replace_a_recovery_record() {
+        let (root, _) = fixture();
+        let (path, _) = paths(root.path());
+        let content = br#"{"before":{"user":0,"override":280},"after":420}"#;
+        fs::write(&path, content).unwrap();
+        for (user, density) in [(u32::MAX, 420), (0, 0), (0, 641)] {
+            assert!(apply(root.path(), user, density, "initial", &mut UnusedBridge).is_err());
+            assert_eq!(fs::read(&path).unwrap(), content);
+        }
+    }
     #[test]
     fn stop_then_reenable_cannot_resume_an_old_density_activation() {
         let (root, mut bridge) = fixture();
         bridge.change_generation_on_read = Some(root.path().into());
-        assert!(apply(root.path(), 420, "initial", &mut bridge).is_err());
+        assert!(apply(root.path(), 0, 420, "initial", &mut bridge).is_err());
         assert_eq!(bridge.values[&0], Some(280));
         assert!(!paths(root.path()).0.exists());
-        apply(root.path(), 420, "next", &mut bridge).unwrap();
+        apply(root.path(), 0, 420, "next", &mut bridge).unwrap();
         recover(root.path(), &mut bridge).unwrap();
         assert_eq!(bridge.values[&0], Some(280));
     }
     #[test]
     fn mismatched_user_readback_retains_recovery_and_never_writes_another_user() {
         let (root, mut bridge) = fixture();
-        apply(root.path(), 420, "initial", &mut bridge).unwrap();
+        apply(root.path(), 0, 420, "initial", &mut bridge).unwrap();
         bridge.wrong_read_user = true;
         assert!(recover(root.path(), &mut bridge).is_err());
         assert!(paths(root.path()).0.exists());
@@ -321,7 +402,7 @@ mod tests {
     fn an_unrestorable_baseline_is_rejected_before_any_density_change() {
         let (root, mut bridge) = fixture();
         bridge.values.insert(0, Some(u32::MAX));
-        assert!(apply(root.path(), 420, "initial", &mut bridge).is_err());
+        assert!(apply(root.path(), 0, 420, "initial", &mut bridge).is_err());
         assert_eq!(bridge.values[&0], Some(u32::MAX));
         assert!(!paths(root.path()).0.exists());
     }
@@ -371,7 +452,7 @@ mod tests {
     #[test]
     fn the_recovery_record_is_private() {
         let (root, mut bridge) = fixture();
-        apply(root.path(), 420, "initial", &mut bridge).unwrap();
+        apply(root.path(), 0, 420, "initial", &mut bridge).unwrap();
         #[cfg(unix)]
         {
             use std::os::unix::fs::PermissionsExt;

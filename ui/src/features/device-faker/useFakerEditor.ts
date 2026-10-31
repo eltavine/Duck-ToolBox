@@ -1,6 +1,6 @@
-import { computed, nextTick, ref, watch } from "vue"
+import { computed, nextTick, onScopeDispose, ref, watch } from "vue"
 import { useSessionStorage } from "@vueuse/core"
-import { useQuery } from "@tanstack/vue-query"
+import { useQuery, useQueryClient } from "@tanstack/vue-query"
 import { isDuckError } from "@/core/duckd"
 import { fakerApi } from "./api"
 import type { Preview } from "./api"
@@ -25,6 +25,7 @@ const errorCodes = [
 ] as const
 export function useFakerEditor() {
   const { t } = useFakerI18n()
+  const client = useQueryClient()
   const status = useQuery({ queryKey: ["device-faker.status"], queryFn: fakerApi.status })
   const data = computed(() => status.data.value)
   const stored = useSessionStorage<Draft | null>("duck-toolbox/device-faker/draft", null, {
@@ -40,6 +41,14 @@ export function useFakerEditor() {
   const dirty = computed(() => draft.value !== base.value)
   const changed = computed(() => !!data.value && baseRevision.value !== data.value.config.revision)
   const preview = ref<Preview | null>(null)
+  let previewGeneration = 0
+  let powerGeneration = 0
+  let disposed = false
+  onScopeDispose(() => {
+    disposed = true
+    previewGeneration++
+    powerGeneration++
+  })
   const busy = ref(false)
   const stopping = ref(false)
   const error = ref("")
@@ -50,6 +59,13 @@ export function useFakerEditor() {
   const importConfirm = ref(false)
   const pendingFile = ref("")
   const previewRegion = ref<HTMLElement>()
+  watch(
+    preview,
+    () => {
+      confirm.value = false
+    },
+    { flush: "sync" },
+  )
   function message(caught: unknown): string {
     const detail =
       isDuckError(caught) && typeof caught.details === "object" && caught.details !== null
@@ -60,8 +76,12 @@ export function useFakerEditor() {
   }
   watch(
     () => data.value?.config,
-    (config) => {
+    (config, previous) => {
       if (!config) return
+      if (previous && config.revision !== previous.revision) {
+        previewGeneration++
+        preview.value = null
+      }
       if (!initialized.value) {
         const value = stored.value
         const cached = value && value.content !== config.content ? value : null
@@ -80,15 +100,20 @@ export function useFakerEditor() {
     },
     { immediate: true },
   )
-  watch(draft, () => {
-    preview.value = null
-    if (initialized.value) {
-      stored.value =
-        dirty.value && new TextEncoder().encode(draft.value).length <= MAX_DRAFT_BYTES
-          ? { content: draft.value, revision: baseRevision.value }
-          : null
-    }
-  })
+  watch(
+    draft,
+    () => {
+      previewGeneration++
+      preview.value = null
+      if (initialized.value) {
+        stored.value =
+          dirty.value && new TextEncoder().encode(draft.value).length <= MAX_DRAFT_BYTES
+            ? { content: draft.value, revision: baseRevision.value }
+            : null
+      }
+    },
+    { flush: "sync" },
+  )
   function appendProfile(content: string) {
     if (new TextEncoder().encode(draft.value + content).length > MAX_CONFIG_BYTES) {
       error.value = t("tooLarge")
@@ -117,8 +142,18 @@ export function useFakerEditor() {
   async function show(candidate: Preview) {
     preview.value = candidate
     await nextTick()
+    if (disposed) return
     previewRegion.value?.focus({ preventScroll: true })
     previewRegion.value?.scrollIntoView({ block: "nearest", behavior: "instant" })
+  }
+  async function requestPreview(request: () => Promise<Preview>) {
+    const generation = ++previewGeneration
+    try {
+      const candidate = await request()
+      if (!disposed && generation === previewGeneration) await show(candidate)
+    } catch (caught) {
+      if (!disposed && generation === previewGeneration) throw caught
+    }
   }
   async function prepare() {
     const content = draft.value
@@ -126,41 +161,61 @@ export function useFakerEditor() {
       error.value = t("tooLarge")
       return
     }
-    const candidate = await fakerApi.preview(content)
-    if (draft.value === content) await show(candidate)
+    await requestPreview(() => fakerApi.preview(content))
   }
   async function importLegacy() {
-    const candidate = await fakerApi.importPreview()
-    await show(candidate)
+    await requestPreview(fakerApi.importPreview)
   }
   async function restore() {
-    const candidate = await fakerApi.restorePreview()
-    await show(candidate)
+    await requestPreview(fakerApi.restorePreview)
   }
   async function apply() {
     const candidate = preview.value
     if (!candidate) return
+    const submittingDraft = draft.value
     const saved = await fakerApi.apply(candidate, candidate.summary.global_effects)
+    client.setQueryData<Awaited<ReturnType<typeof fakerApi.status>>>(
+      ["device-faker.status"],
+      (current) => (current ? { ...current, config: saved } : current),
+    )
+    if (disposed) return
     base.value = saved.content
     baseRevision.value = saved.revision
-    draft.value = saved.content
-    stored.value = null
+    if (draft.value === submittingDraft) draft.value = saved.content
+    stored.value = dirty.value ? { content: draft.value, revision: saved.revision } : null
+    previewGeneration++
     preview.value = null
     notice.value = t("restartHelp")
     await refresh()
   }
   async function enable() {
-    if (!data.value) return
-    await fakerApi.enable(data.value.config.revision, data.value.stop_revision)
-    notice.value = t("restartHelp")
-    await refresh()
+    if (!data.value || stopping.value) return
+    const generation = ++powerGeneration
+    try {
+      const enabled = await fakerApi.enable(data.value.config.revision, data.value.stop_revision)
+      if (disposed || generation !== powerGeneration) return
+      client.setQueryData<Awaited<ReturnType<typeof fakerApi.status>>>(
+        ["device-faker.status"],
+        (current) => (current ? { ...current, ...enabled } : current),
+      )
+      notice.value = t("restartHelp")
+      await refresh()
+    } catch (caught) {
+      if (!disposed && generation === powerGeneration) throw caught
+    }
   }
   async function disable() {
     if (stopping.value) return
+    const generation = ++powerGeneration
     stopping.value = true
     error.value = ""
     try {
-      await fakerApi.disable()
+      const stopped = await fakerApi.disable()
+      if (disposed || generation !== powerGeneration) return
+      client.setQueryData<Awaited<ReturnType<typeof fakerApi.status>>>(
+        ["device-faker.status"],
+        (current) => (current ? { ...current, ...stopped } : current),
+      )
       notice.value = t("stopHelp")
       await refresh()
     } catch (caught) {

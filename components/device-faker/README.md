@@ -30,9 +30,11 @@ connections carry a bounded, versioned routing frame; each engine owns its state
 
 Startup serializes legacy property updates and PI late initialization before
 publishing a boot-specific Device Faker readiness token. Duplicate successful boot
-passes skip global mutation. Failure keeps injection
-closed. Enable acknowledges the current stop token; sessions retain this generation, and a stale request cannot cancel
-a later stop. Parent disable/removal, pending cleanup, absent readiness or a loaded
+passes skip global mutation. Failure keeps injection closed. Status includes a
+bounded, boot-scoped `startup_error` when available; successful initialization
+clears it. Enable acknowledges the current stop token; sessions retain this
+generation, and a stale request cannot cancel a later stop. Parent disable/removal,
+pending updates or cleanup, absent readiness or a loaded
 standalone `device_faker` closes the gate. A standalone disable flag must predate
 the current boot. Reboot after installation or disabling a conflicting module.
 
@@ -43,11 +45,23 @@ configuration is invalid or another operation is running. Existing process-local
 Build/property values require restarting the app to disappear.
 
 Property clones own their mappings and remain alive for the process lifetime.
+Whole-area snapshots have bounded trie/payload validation and source serial checks;
+dirty or concurrently changing copies are skipped instead of waiting on private
+futex state. A cloned area freezes other values in that area too. Synthetic areas
+become read-only before bionic can retain them.
 Unknown bionic layouts skip property-memory changes. Real bionic mappings are not
 unmapped, replaced with MAP_FIXED or owned by a foreign Rust mapping object.
 `hide_maps` is ignored with a warning. Build-field failures clear their JNI
 exceptions instead of throwing into application startup. Missing Build fields are skipped individually; other JNI failures stop that
 process’s hook, and preexisting exceptions remain pending.
+Shared parsing validates SDK/DPI numbers even in unused templates before any JNI
+change. Global property profiles accept only `ro.*` keys: the pinned direct writer
+does not implement current AOSP mutable-reader backup semantics. Non-`ro.*`
+properties require private COW mode; global deletion has the same key restriction.
+JNI fields consume the final property plan, including canonical custom overrides
+and explicit empty values. Custom SDK values require canonical positive decimal
+Java integers and are checked before JNI writes. Derived product/marketing/patch
+aliases follow canonical overrides, with precise custom keys taking precedence.
 
 Global resetprop and display-density options require acknowledgement. Sessions
 bind package, Android user and PID start time; foreground identity is confirmed
@@ -60,6 +74,10 @@ backups remain in companion memory. Foreground queries have one monitor; session
 Binder callbacks only notify the monitor. Display 0 focus authorizes changes;
 conflicting unscoped focus cannot activate a global profile. The watchdog interval is 500 ms, with bounded platform
 commands; it is not a cleanup deadline. Reboot if global cleanup remains pending.
+The bounded registry retains live targets across foreground switches, restores
+the previous owner before activation and blocks another target while cleanup is
+pending. Density activation checks the current user against the registered target
+before recording recovery data, while recovery always uses the recorded user.
 
 ## Process contract, version 1
 
@@ -79,8 +97,8 @@ host fixture root. It is not a native injection override.
 | disable | Publishes a stop token without waiting for configuration parsing or its lock |
 
 `stage boot` owns the ordered property/PI pass and readiness publication;
-`stage setup` creates empty defaults; `stage ready` recovers density and publishes
-readiness; `stage blocked` records startup failure; `stage uninstall` attempts
+`stage setup` creates empty defaults; `stage ready` is a compatibility alias for
+the complete ordered boot transaction; `stage blocked` records startup failure; `stage uninstall` attempts
 cleanup and preserves unresolved recovery data.
 
 Status always reports `injection_verified: false`. Host tests and cross-compilation

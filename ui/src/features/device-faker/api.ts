@@ -29,6 +29,7 @@ const statusSchema = powerSchema.extend({
   parent_active: z.boolean(),
   startup_ready: z.boolean(),
   startup_failed: z.boolean(),
+  startup_error: z.string().nullable().default(null),
   cleanup_pending: z.boolean(),
   global_recovery_requires_reboot: z.boolean().default(false),
   payload_installed: z.boolean(),

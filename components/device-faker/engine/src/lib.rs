@@ -13,6 +13,7 @@ mod gate;
 mod global_marker;
 mod hooks;
 mod jni_policy;
+mod log_buffer;
 mod process_identity;
 mod prop_backend;
 
@@ -179,6 +180,12 @@ impl MyModule {
             return Ok(());
         };
 
+        // Configuration and package resolution must not revive an older enable generation.
+        if gate::activation_at(Path::new("/")).as_deref() != Some(generation.as_str()) {
+            api.set_option(ZygiskOption::DlCloseModuleLibrary);
+            return Ok(());
+        }
+
         if merged.force_denylist_unmount {
             api.set_option(ZygiskOption::ForceDenylistUnmount);
             if config.debug {
@@ -187,8 +194,9 @@ impl MyModule {
         }
 
         // ── 统一执行流（按需调度）──────────────────────────────────────────
-        // ① JNI 字段覆写（始终执行）
-        hook_build_fields(env, &merged)?;
+        // JNI and property adapters consume the same final plan, including explicit overrides.
+        let (prop_map, explicit_props) = Config::build_merged_property_map_with_explicit(&merged);
+        hook_build_fields(env, &prop_map)?;
         if config.debug {
             info!("Build fields faked successfully");
         }
@@ -199,9 +207,7 @@ impl MyModule {
             merged.hide_maps.clear();
         }
 
-        // ② COW 属性伪造（per-process，覆盖 native 读取，零模块驻留）
-        //    companion_resetprop = true 时跳过 COW，全部交给 companion resetprop（全局生效）
-        let (prop_map, explicit_props) = Config::build_merged_property_map_with_explicit(&merged);
+        // Prepare process-local properties before any foreground-only global session.
         if config.debug {
             info!(
                 "Property map: {} entries ({} explicit custom_props)",
@@ -329,14 +335,19 @@ impl MyModule {
     ) -> anyhow::Result<String> {
         let result: String = env
             .with_env(|_jenv| -> Result<String, jni::errors::Error> {
-                let app_data_dir = args.app_data_dir.to_string();
-
-                if let Some(package) = app_data_dir.rsplit('/').next()
-                    && !package.is_empty()
-                {
-                    return Ok(package.to_string());
+                // A required jstring argument can still contain a null Java reference.
+                // Formatting it would yield "<NULL>" rather than triggering the fallback.
+                if !args.app_data_dir.is_null() {
+                    let app_data_dir = args.app_data_dir.to_string();
+                    if let Some(package) = app_data_dir.rsplit('/').next()
+                        && !package.is_empty()
+                    {
+                        return Ok(package.to_string());
+                    }
                 }
-
+                if args.nice_name.is_null() {
+                    return Ok(String::new());
+                }
                 let nice_name = args.nice_name.to_string();
 
                 let mut nice_name: String = nice_name;
