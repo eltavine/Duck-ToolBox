@@ -1,0 +1,46 @@
+{
+  "meta": {
+    "title": "Tiện ích khác",
+    "description": "Công cụ dành cho từng ứng dụng."
+  },
+  "language": {
+    "title": "Giả lập ngôn ngữ",
+    "description": "Đổi ngôn ngữ mà tiến trình ứng dụng đã chọn nhìn thấy.",
+    "rule": "Quy tắc ứng dụng",
+    "ruleHelp": "Một ngôn ngữ cho mỗi ứng dụng và người dùng Android. Lưu không tự bật giả lập.",
+    "package": "Tên gói",
+    "pickApp": "Chọn ứng dụng đã cài",
+    "user": "ID người dùng Android",
+    "userHelp": "Dùng 0 cho người dùng chính. Hồ sơ công việc có ID riêng. Danh sách chỉ hiển thị ứng dụng mà trình quản lý thấy được.",
+    "locale": "Ngôn ngữ giả lập",
+    "presets": "Ngôn ngữ phổ biến",
+    "localeHelp": "Thẻ ngôn ngữ, ví dụ en-US, ja-JP hoặc zh-Hant-TW.",
+    "enable": "Bật",
+    "disable": "Tắt",
+    "enabled": "Đã bật cho tiến trình mới",
+    "disabled": "Đã tắt",
+    "restart": "Đóng hoàn toàn rồi mở lại ứng dụng sau khi lưu, bật hoặc tắt. Tiến trình đang chạy vẫn giữ ngôn ngữ hiện tại.",
+    "limits": "Cần Zygisk. Chỉ đổi ngôn ngữ mà ứng dụng đã chọn nhìn thấy, không đổi ngôn ngữ thiết bị. Bộ nhớ đệm và một số kiểm tra riêng hoặc mã gốc có thể bỏ qua. Bố cục và nội dung theo vùng có thể thay đổi; không đảm bảo loại bỏ quảng cáo.",
+    "unavailable": "Cập nhật và bật Duck ToolBox rồi khởi động lại thiết bị.",
+    "changed": "Cấu hình đã đổi ở nơi khác. Làm mới trước khi lưu hoặc bật; việc bỏ thay đổi cục bộ cần xác nhận.",
+    "rules": "Quy tắc ứng dụng",
+    "empty": "Chưa chọn ứng dụng. Hãy thêm quy tắc.",
+    "userLabel": "Người dùng {id}",
+    "unsaved": "Thay đổi chưa lưu",
+    "scope": "Phạm vi và tương thích",
+    "saved": "Đã lưu cấu hình ngôn ngữ",
+    "discard": "Bỏ thay đổi cục bộ?",
+    "removeRule": "Xóa quy tắc ứng dụng này?",
+    "noApps": "Không có ứng dụng phù hợp."
+  },
+  "errors": {
+    "duplicate_rule": "Đã có quy tắc cho ứng dụng và người dùng Android này.",
+    "invalid_config": "Cấu hình không hợp lệ. Hãy tắt giả lập trước khi sửa quy tắc đã lưu.",
+    "stale_revision": "Cấu hình đã thay đổi. Làm mới rồi thử lại.",
+    "operation_busy": "Một thao tác khác đang chạy. Hãy thử lại sau.",
+    "empty_rules": "Hãy thêm và lưu ít nhất một quy tắc ứng dụng trước.",
+    "state_unavailable": "Không thể đọc hoặc ghi cấu hình ngôn ngữ.",
+    "runtime_unavailable": "Cập nhật và bật Duck ToolBox rồi khởi động lại thiết bị.",
+    "config_too_large": "Quy tắc vượt quá 64 KiB. Hãy bớt quy tắc trước khi lưu."
+  }
+}

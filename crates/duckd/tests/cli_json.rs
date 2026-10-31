@@ -241,7 +241,8 @@ fn features_manifest_lists_every_registered_tool() {
             "system",
             "kernel-modules",
             "zram",
-            "linux-env"
+            "linux-env",
+            "misc"
         ]
     );
     assert_eq!(payload["data"]["api"], 1);

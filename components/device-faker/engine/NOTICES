@@ -25,6 +25,9 @@ Modified 2026-10-31: boot-completed PI calls allow their bounded lifecycle stage
 to finish before fallback. Native companion and ordinary platform commands retain
 the existing five-second limit; early boot budgets are unchanged.
 
+Modified 2026-10-31: update compatible Rust dependencies and lockfiles while
+retaining rsbinder 0.11 for Android API 26 builds.
+
 The Device Faker adaptations, management process and Java density helper are
 licensed under GPL-3.0-or-later. The combined Zygisk library links the GPL-3.0-only
 Play Integrity engine and dispatcher and is distributed under GPL-3.0-only.

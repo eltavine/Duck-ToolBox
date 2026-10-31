@@ -39,6 +39,8 @@ const routes = [
   "/settings",
   "/system",
   "/system/activity",
+  "/misc",
+  "/misc/language",
   "/device-ids",
   "/rkp-device",
   "/tee-attestation",

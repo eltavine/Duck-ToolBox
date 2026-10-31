@@ -21,7 +21,7 @@ platform = "darwin" if (include / "darwin").is_dir() else "linux"
 with tempfile.TemporaryDirectory(prefix="duck-runtime-") as directory:
     binary = Path(directory) / "runtime-test"
     subprocess.run([os.environ.get("CXX", "c++"), "-std=c++20", "-Wall", "-Wextra", "-Werror", "-pthread",
-                    "-DDUCK_HAS_DEVICE_FAKER=1", "-I", str(SOURCE), "-I", str(HEADER),
+                    "-DDUCK_HAS_DEVICE_FAKER=1", "-DDUCK_HAS_LANGUAGE_SPOOF=1", "-I", str(SOURCE), "-I", str(HEADER),
                     "-I", str(include), "-I", str(include / platform),
                     str(SOURCE / "tests/runtime.cpp"), str(SOURCE / "entry.cpp"),
                     str(SOURCE / "engine.cpp"), str(SOURCE / "channel.cpp"), "-o", str(binary)], check=True)

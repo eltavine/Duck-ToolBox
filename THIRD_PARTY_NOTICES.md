@@ -25,6 +25,13 @@ GPL-3.0-only; original dependency licenses and copyright notices still apply.
 The `duckd` executable communicates with the separate management processes and does
 not link either GPL engine. The root MIT license does not replace component terms.
 
+The language spoofing component in `components/language-spoof` also joins the GPL
+composite library. It statically links the pinned LSPlant and DexBuilder sources
+under LGPL-3.0 and parallel-hashmap under Apache-2.0. A small MIT-licensed adaptation
+of the existing xDL symbol lookup supplies ART prefix resolution. Original notices,
+licenses and dependency sources accompany the combined library; see the component's
+NOTICE and README. The MIT `duck-misc` management crate does not link this component.
+
 Existing third-party notices, including `module/licenses/rkp-v1-oracle.txt`, remain
 applicable to their respective components.
 

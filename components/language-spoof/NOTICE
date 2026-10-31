@@ -1,0 +1,18 @@
+The process-local language component and its Zygisk integration are distributed
+under GPL-3.0-only. The independently written duck-misc management crate and WebUI
+retain the repository's MIT license. Management exchanges private JSON configuration
+with the component and does not link the native engine.
+
+The native component statically links LSPlant and DexBuilder under LGPL-3.0,
+and parallel-hashmap under Apache-2.0. Their original notices remain applicable.
+Source revisions are pinned in scripts/build-play-integrity.py. The versioned source
+archive includes these dependency sources and the reproducible build instructions.
+
+The ART prefix resolver adapts xDL's symbol lookup under its MIT license:
+Copyright (c) 2020-2025 HexHacking Team. The existing pinned ShadowHook/xDL source
+and license notices accompany the combined library. The build applies the prefix
+lookup addition from native/xdl-prefix.inc; ELF parsing stays in xDL.
+
+The combined library also includes the GPL-3.0-only Play Integrity component and
+GPL-3.0-or-later Device Faker component. Their existing copyrights and license
+notices are retained. Dependencies keep their own license terms.

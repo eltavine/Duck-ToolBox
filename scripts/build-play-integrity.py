@@ -22,6 +22,9 @@ DEPENDENCIES = {
     ),
     "shadowhook": ("bytedance/android-inline-hook", "854c775c2c3676e57a0f383597ebf420b5204161"),
     "hiddenapibypass": ("LSPosed/AndroidHiddenApiBypass", "4efc64fcada7df15e7b5ba068e774343b760270d"),
+    "lsplant": ("LSPosed/LSPlant", "6ac2280d8d88e14f0864c26ac97c1dc96713bde1"),
+    "dex_builder": ("LSPosed/DexBuilder", "ac7fb2230954ee311808bad469b0db501f31bfb8"),
+    "parallel_hashmap": ("greg7mdp/parallel-hashmap", "0cd57d29a959256ed66b2afdd1009928fc625d09"),
 }
 
 
@@ -50,12 +53,26 @@ def dependencies():
                 member.name = "/".join(parts)
                 source.extract(member, destination, filter="data")
         (destination / ".revision").write_text(commit)
+    # Materialize the pinned LSPlant submodules without depending on a Git checkout.
+    for source, destination in [
+        ("dex_builder", "lsplant/lsplant/src/main/jni/external/dex_builder"),
+        ("parallel_hashmap", "lsplant/lsplant/src/main/jni/external/dex_builder/external/parallel_hashmap"),
+    ]:
+        target = VENDOR / destination
+        if not (target / ".revision").exists() or (target / ".revision").read_text() != (VENDOR / source / ".revision").read_text():
+            if target.exists():
+                shutil.rmtree(target)
+            shutil.copytree(VENDOR / source, target)
     # PIF deliberately disables shadowhook's linker initialization. Keep the patch
     # reproducible from this build script and its pinned upstream revision.
     linker = VENDOR / "shadowhook/shadowhook/src/main/cpp/sh_linker.c"
     value = linker.read_text()
     if "sh_linker_init_dummy" not in value:
         linker.write_text(value.replace("sh_linker_init", "sh_linker_init_dummy"))
+    symbols = VENDOR / "shadowhook/shadowhook/src/main/cpp/third_party/xdl/xdl.c"
+    value = symbols.read_text()
+    if '#include "xdl-prefix.inc"' not in value:
+        symbols.write_text(value + '\n// Modified 2026-10-31: expose ART prefix lookup.\n#include "xdl-prefix.inc"\n')
 
 
 def source_revision():
@@ -96,6 +113,7 @@ def main():
     run("cargo", "build", "--locked", "--release", "--manifest-path", ENGINE / "Cargo.toml", "--target-dir", ROOT / "target/pif-engine", "--target", target, env=env)
     run(sys.executable, ROOT / "scripts/build-device-faker.py", "--sdk", args.sdk)
     env.update({"DUCK_RUNTIME_DIR": str(ROOT / "components/zygisk-runtime"),
+                "DUCK_LANGUAGE_DIR": str(ROOT / "components/language-spoof"),
                 "DUCK_FAKER_LIBRARY": str(ROOT / "target/device-faker/libdevicefaker.a"),
                 "DUCK_FAKER_JAVA": str(ROOT / "components/device-faker/java")})
     wrapper = ENGINE / "android/gradlew"
@@ -109,6 +127,7 @@ def main():
     shutil.copy2(ROOT / f"target/pif-engine/{target}/release/pif-engine", payload / "pif-engine")
     dex = ENGINE / "android/app/build/intermediates/dex/release/minifyReleaseWithR8/classes.dex"
     shutil.copy2(dex, payload / "classes.dex")
+    (payload / "language-spoof.version").write_text("1\n")
     libraries = ENGINE / "android/app/build/intermediates/stripped_native_libs/release/stripReleaseDebugSymbols/out/lib"
     zygisk = ROOT / "module/zygisk"
     if zygisk.exists():
@@ -129,6 +148,10 @@ def main():
                 destination=notices / name / path.relative_to(VENDOR / name)
                 destination.parent.mkdir(parents=True,exist_ok=True)
                 shutil.copy2(path,destination)
+    language_notices = ROOT / "module/licenses/language-spoof"
+    language_notices.mkdir(parents=True, exist_ok=True)
+    for name in ["LICENSE", "NOTICE", "README.md"]:
+        shutil.copy2(ROOT / "components/language-spoof" / name, language_notices / name)
     # Maven dependencies' license texts are kept with the source component.
     shutil.copytree(ENGINE / "licenses", notices, dirs_exist_ok=True)
     # Packaging includes the exact committed source and locked dependencies.
@@ -149,7 +172,7 @@ def main():
     (payload / "build.json").write_text(json.dumps({
         "upstream_revision": json.loads((ENGINE / "UPSTREAM.json").read_text())["revision"],
         "source_commit": commit,
-        "embedded": {"api": 4, "device_faker_revision": (ROOT / "components/device-faker/UPSTREAM_REVISION").read_text().strip()},
+        "embedded": {"api": 4, "language_contract": 1, "device_faker_revision": (ROOT / "components/device-faker/UPSTREAM_REVISION").read_text().strip()},
         "files": {p.relative_to(ROOT / "module").as_posix(): hashlib.sha256(p.read_bytes()).hexdigest() for p in artifacts},
     }, indent=2) + "\n")
 

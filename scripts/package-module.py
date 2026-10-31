@@ -44,7 +44,7 @@ def check_source_checkout(commit, root=ROOT):
     if dirty:
         raise ValueError("Corresponding-source checkout contains unpublished changes: " + dirty)
     components = subprocess.check_output(
-        ["git", "ls-tree", "-r", commit, "--", "components/play-integrity", "components/device-faker", "components/zygisk-runtime"],
+        ["git", "ls-tree", "-r", commit, "--", "components/play-integrity", "components/device-faker", "components/zygisk-runtime", "components/language-spoof"],
         cwd=root, text=True,
     )
     if any(line.startswith("160000 ") for line in components.splitlines()):
@@ -113,6 +113,8 @@ def validate_component_notices(root=ROOT, module=MODULE):
     for name, source in [("GPL-3.0.txt", "engine/LICENSE"), ("NOTICE", "engine/NOTICES"),
                          ("UPSTREAM_REVISION", "UPSTREAM_REVISION")]:
         pairs.append((root / "components/device-faker" / source, module / "licenses/device-faker" / name))
+    for name in ["LICENSE", "NOTICE", "README.md"]:
+        pairs.append((root / "components/language-spoof" / name, module / "licenses/language-spoof" / name))
     licenses = root / "components/play-integrity/licenses"
     for source in licenses.rglob("*"):
         if source.is_file():
@@ -148,6 +150,14 @@ def validate_device_faker():
         raise ValueError("Device Faker corresponding-source notice does not match its build commit")
     if not any(source_url.encode() in path.read_bytes() for path in (MODULE / "webroot").rglob("*.js")):
         raise ValueError("WebUI Device Faker corresponding-source commit is missing or mismatched")
+
+
+def validate_language_contract(manifest, module=MODULE):
+    if manifest.get("embedded", {}).get("language_contract") != 1:
+        raise ValueError("Root Zygisk payload has an incompatible language contract")
+    marker = module / "play-integrity/language-spoof.version"
+    if not marker.is_file() or marker.read_bytes() != b"1\n":
+        raise ValueError("Root Zygisk payload has an incompatible language contract")
 
 
 def validate():
@@ -194,8 +204,9 @@ def validate():
     ):
         raise ValueError("WebUI corresponding-source commit is missing or mismatched")
     embedded = manifest.get("embedded")
-    if not embedded or embedded.get("api") != 4 or embedded.get("device_faker_revision") != (ROOT / "components/device-faker/UPSTREAM_REVISION").read_text().strip():
+    if not embedded or embedded.get("api") != 4 or embedded.get("language_contract") != 1 or embedded.get("device_faker_revision") != (ROOT / "components/device-faker/UPSTREAM_REVISION").read_text().strip():
         raise ValueError("Root Zygisk payload does not contain the recorded embedded engine")
+    validate_language_contract(manifest)
     if any(path != MODULE / "module.prop" for path in MODULE.rglob("module.prop")):
         raise ValueError("The installable module must not contain a second root-manager module")
 

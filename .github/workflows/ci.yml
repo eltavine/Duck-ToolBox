@@ -57,7 +57,7 @@ jobs:
         run: cargo test --workspace --locked
       - name: Every feature builds on its own
         run: |
-          for feature in rkp rkp-device tee-attestation device-ids tricky-store play-integrity device-faker kernel-modules zram linux-env system; do
+          for feature in rkp rkp-device tee-attestation device-ids tricky-store play-integrity device-faker kernel-modules zram linux-env system misc; do
             echo "::group::duckd with only ${feature}"
             cargo check --locked --package duckd --no-default-features --features "${feature}"
             echo "::endgroup::"
@@ -74,7 +74,7 @@ jobs:
           java-version: '21'
       - uses: android-actions/setup-android@v4.0.4
         with:
-          packages: 'build-tools;37.0.0 ndk;30.0.16248370 cmake;3.22.1'
+          packages: 'build-tools;37.0.0 ndk;30.0.16248370 cmake;4.1.2'
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: aarch64-linux-android
@@ -95,6 +95,7 @@ jobs:
           python3 scripts/test-play-integrity-scripts.py
           python3 scripts/test-prop-handler.py
           python3 scripts/test-zygisk-runtime.py
+          python3 scripts/test-language-spoof.py
       - name: Engine scripts
         run: shellcheck -s bash --severity=error components/play-integrity/scripts/*.sh
       - name: Build engine and commit-pinned source notice
@@ -108,6 +109,7 @@ jobs:
             module/play-integrity
             module/zygisk
             module/licenses/play-integrity
+            module/licenses/language-spoof
             module/webroot/licenses/corresponding-source.tar.gz
 
   device-faker:

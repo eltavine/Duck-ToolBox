@@ -59,6 +59,7 @@ components/play-integrity/android/build/
 # Device Faker engine payloads
 /module/device-faker/
 /module/licenses/device-faker/
+/module/licenses/language-spoof/
 /components/device-faker/manager/target/
 
 /components/device-faker/engine/target/

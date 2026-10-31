@@ -19,6 +19,7 @@ duck-rkp-device = { path = "crates/duck-rkp-device" }
 duck-tee-attestation = { path = "crates/duck-tee-attestation" }
 duck-device-ids = { path = "crates/duck-device-ids" }
 duck-system = { path = "crates/duck-system" }
+duck-misc = { path = "crates/duck-misc" }
 duck-kernel-modules = { path = "crates/duck-kernel-modules" }
 duck-zram = { path = "crates/duck-zram" }
 duck-linux-env = { path = "crates/duck-linux-env" }
@@ -37,7 +38,7 @@ ed25519-dalek = "3.0.0"
 getrandom = "0.4.3"
 hex = "0.4.3"
 hkdf = "0.13.0"
-libc = "0.2.189"
+libc = "0.2.191"
 object = { version = "0.40.0", default-features = false, features = ["read_core", "elf", "std"] }
 libloading = "0.9.0"
 p256 = { version = "0.14.0", features = ["arithmetic", "ecdh", "ecdsa", "pem", "pkcs8"] }
@@ -46,23 +47,23 @@ pkcs8 = { version = "0.11.0", features = ["pem"] }
 quick-xml = "0.42.0"
 rcgen = { version = "0.14.10", default-features = false, features = ["aws_lc_rs", "crypto", "pem"] }
 reqwest = { version = "0.13.5", default-features = false, features = ["http2", "rustls"] }
-rustls = { version = "0.23.45", default-features = false, features = ["aws_lc_rs", "std", "tls12"] }
+rustls = { version = "0.23.46", default-features = false, features = ["aws_lc_rs", "std", "tls12"] }
 serde = { version = "1.0.229", features = ["derive"] }
-serde_json = "1.0.151"
-sha2 = "0.11.0"
+serde_json = "1.0.154"
+sha2 = "0.11.1"
 tempfile = "3.27.0"
 tar = { version = "0.4.46", default-features = false }
 flate2 = { version = "1.1.10", default-features = false, features = ["zlib-rs"] }
 thiserror = "2.0.21"
 time = "0.3.55"
-tokio = { version = "1.53.1", features = ["macros", "rt-multi-thread"] }
-toml = "1.1.6"
-toml_edit = "0.25.15"
-webpki-roots = "1.0.9"
+tokio = { version = "1.54.1", features = ["macros", "rt-multi-thread"] }
+toml = "1.1.8"
+toml_edit = "0.25.17"
+webpki-roots = "1.0.11"
 x25519-dalek = { version = "3.0.0", features = ["static_secrets"] }
 x509-cert = "0.3.0"
-zeroize = { version = "1.9.0", features = ["derive"] }
-zip = { version = "9.0.3", default-features = false, features = ["deflate"] }
+zeroize = { version = "1.9.1", features = ["derive"] }
+zip = { version = "9.1.3", default-features = false, features = ["deflate"] }
 
 [workspace.lints.rust]
 unsafe_code = "deny"

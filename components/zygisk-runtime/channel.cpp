@@ -25,7 +25,7 @@ bool channel(int fd, unsigned char &id, bool writing) {
         if (count <= 0) return false;
         offset += static_cast<size_t>(count);
     }
-    if (!std::equal(prefix.begin(), prefix.end(), frame.begin()) || frame.back() > 1) return false;
+    if (!std::equal(prefix.begin(), prefix.end(), frame.begin()) || frame.back() > 2) return false;
     id = frame.back();
     return true;
 }

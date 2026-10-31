@@ -38,6 +38,8 @@ static FEATURES: &[&dyn Feature] = &[
     &duck_zram::FEATURE,
     #[cfg(feature = "linux-env")]
     &duck_linux_env::FEATURE,
+    #[cfg(feature = "misc")]
+    &duck_misc::FEATURE,
 ];
 
 fn cli() -> clap::Command {

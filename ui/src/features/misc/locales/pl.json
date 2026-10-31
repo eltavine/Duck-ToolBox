@@ -1,0 +1,46 @@
+{
+  "meta": {
+    "title": "Różne",
+    "description": "Narzędzia dla poszczególnych aplikacji."
+  },
+  "language": {
+    "title": "Symulowanie języka",
+    "description": "Zmienia język widoczny dla procesów wybranych aplikacji.",
+    "rule": "Reguła aplikacji",
+    "ruleHelp": "Jeden język na aplikację i użytkownika Androida. Zapisanie nie włącza symulacji.",
+    "package": "Nazwa pakietu",
+    "pickApp": "Wybierz zainstalowaną aplikację",
+    "user": "ID użytkownika Androida",
+    "userHelp": "Użyj 0 dla głównego użytkownika. Profile służbowe mają osobne ID. Lista zawiera aplikacje widoczne dla menedżera.",
+    "locale": "Symulowany język",
+    "presets": "Popularne języki",
+    "localeHelp": "Znacznik języka, np. en-US, ja-JP lub zh-Hant-TW.",
+    "enable": "Włącz",
+    "disable": "Wyłącz",
+    "enabled": "Włączono dla nowych procesów",
+    "disabled": "Wyłączono",
+    "restart": "Po zapisaniu, włączeniu lub wyłączeniu całkowicie zamknij i otwórz aplikacje. Istniejące procesy zachowują język.",
+    "limits": "Wymaga Zygiska. Zmienia język widoczny dla wybranych aplikacji bez zmiany języka urządzenia. Pamięć podręczna i niektóre własne lub natywne kontrole mogą omijać podmianę. Wygląd i treści regionalne mogą się zmienić; usunięcie reklam nie jest gwarantowane.",
+    "unavailable": "Zaktualizuj i włącz Duck ToolBox, następnie uruchom ponownie urządzenie.",
+    "changed": "Konfiguracja zmieniła się gdzie indziej. Odśwież przed zapisaniem lub włączeniem. Odrzucenie lokalnych zmian wymaga potwierdzenia.",
+    "rules": "Reguły aplikacji",
+    "empty": "Nie wybrano aplikacji. Dodaj regułę.",
+    "userLabel": "Użytkownik {id}",
+    "unsaved": "Niezapisane zmiany",
+    "scope": "Zakres i zgodność",
+    "saved": "Zapisano konfigurację języka",
+    "discard": "Odrzucić lokalne zmiany?",
+    "removeRule": "Usunąć tę regułę aplikacji?",
+    "noApps": "Brak pasujących aplikacji."
+  },
+  "errors": {
+    "duplicate_rule": "Dla tej aplikacji i użytkownika Androida reguła już istnieje.",
+    "invalid_config": "Konfiguracja jest nieprawidłowa. Wyłącz symulowanie przed naprawą zapisanych reguł.",
+    "stale_revision": "Konfiguracja się zmieniła. Odśwież i spróbuj ponownie.",
+    "operation_busy": "Trwa inna operacja. Spróbuj za chwilę.",
+    "empty_rules": "Najpierw dodaj i zapisz co najmniej jedną regułę.",
+    "state_unavailable": "Nie można odczytać lub zapisać konfiguracji języka.",
+    "runtime_unavailable": "Zaktualizuj i włącz Duck ToolBox, następnie uruchom ponownie urządzenie.",
+    "config_too_large": "Reguły przekraczają 64 KiB. Usuń część przed zapisaniem."
+  }
+}

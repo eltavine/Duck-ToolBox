@@ -53,6 +53,20 @@ if(NOT EXISTS "${DUCK_RUNTIME_DIR}/entry.cpp")
 endif()
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     ${DUCK_RUNTIME_DIR}/entry.cpp ${DUCK_RUNTIME_DIR}/engine.cpp ${DUCK_RUNTIME_DIR}/channel.cpp)
+set(DUCK_LANGUAGE_DIR "" CACHE PATH "Process-local language spoofing source")
+if(NOT EXISTS "${DUCK_LANGUAGE_DIR}/native/entry.cpp")
+    message(FATAL_ERROR "Build with the independent language spoofing component")
+endif()
+set(LSPLANT_BUILD_SHARED OFF CACHE BOOL "" FORCE)
+set(LSPLANT_STANDALONE ON CACHE BOOL "" FORCE)
+add_subdirectory(${PIF_VENDOR_DIR}/lsplant/lsplant/src/main/jni ${CMAKE_CURRENT_BINARY_DIR}/lsplant)
+target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE lsplant_static)
+target_sources(${CMAKE_PROJECT_NAME} PRIVATE
+    ${DUCK_LANGUAGE_DIR}/native/entry.cpp ${DUCK_LANGUAGE_DIR}/native/config.cpp
+    ${DUCK_LANGUAGE_DIR}/native/companion.cpp ${DUCK_LANGUAGE_DIR}/native/hooks.cpp
+    ${DUCK_LANGUAGE_DIR}/native/properties.cpp)
+target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE ${DUCK_LANGUAGE_DIR}/native)
+target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE DUCK_HAS_LANGUAGE_SPOOF=1)
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 if(CMAKE_ANDROID_ARCH_ABI STREQUAL "arm64-v8a")
     if(NOT EXISTS "${DUCK_FAKER_LIBRARY}")

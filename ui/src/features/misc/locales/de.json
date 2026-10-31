@@ -1,0 +1,46 @@
+{
+  "meta": {
+    "title": "Sonstiges",
+    "description": "Praktische Werkzeuge für einzelne Apps."
+  },
+  "language": {
+    "title": "Sprachsimulation",
+    "description": "Ändert die Sprache, die ausgewählte App-Prozesse sehen.",
+    "rule": "App-Regel",
+    "ruleHelp": "Eine Sprache pro App und Android-Nutzer. Speichern aktiviert die Simulation nicht.",
+    "package": "Paketname",
+    "pickApp": "Installierte App auswählen",
+    "user": "Android-Nutzer-ID",
+    "userHelp": "Für den Hauptnutzer 0 verwenden. Arbeitsprofile haben eigene IDs. Die Auswahl zeigt Apps, die der Manager sehen kann.",
+    "locale": "Simulierte Sprache",
+    "presets": "Häufige Sprachen",
+    "localeHelp": "Sprachkennung, etwa en-US, ja-JP oder zh-Hant-TW.",
+    "enable": "Aktivieren",
+    "disable": "Deaktivieren",
+    "enabled": "Für neue App-Prozesse aktiviert",
+    "disabled": "Deaktiviert",
+    "restart": "Die Ziel-Apps nach dem Speichern, Aktivieren oder Deaktivieren vollständig schließen und erneut öffnen. Bestehende Prozesse behalten ihre Sprache.",
+    "limits": "Benötigt Zygisk. Ändert die von ausgewählten Apps erkannte Sprache, ohne die Gerätesprache zu ändern. Zwischengespeicherte Werte und eigene oder native Prüfungen können dies umgehen. Darstellung und regionale Inhalte können sich ändern; Werbeentfernung wird nicht garantiert.",
+    "unavailable": "Duck ToolBox aktualisieren und aktivieren, dann das Gerät neu starten.",
+    "changed": "Die Konfiguration wurde anderweitig geändert. Vor dem Speichern oder Aktivieren aktualisieren. Lokale Änderungen werden erst nach Bestätigung verworfen.",
+    "rules": "App-Regeln",
+    "empty": "Keine Apps ausgewählt. Zuerst eine Regel hinzufügen.",
+    "userLabel": "Nutzer {id}",
+    "unsaved": "Ungespeicherte Änderungen",
+    "scope": "Umfang und Kompatibilität",
+    "saved": "Sprachkonfiguration gespeichert",
+    "discard": "Lokale Änderungen verwerfen?",
+    "removeRule": "Diese App-Regel entfernen?",
+    "noApps": "Keine passenden Apps."
+  },
+  "errors": {
+    "duplicate_rule": "Für diese App und diesen Android-Nutzer gibt es bereits eine Regel.",
+    "invalid_config": "Die Sprachkonfiguration ist ungültig. Vor dem Reparieren der gespeicherten Regeln die Simulation deaktivieren.",
+    "stale_revision": "Die Konfiguration hat sich geändert. Aktualisieren und erneut versuchen.",
+    "operation_busy": "Eine andere Operation läuft. Bitte kurz warten.",
+    "empty_rules": "Zuerst mindestens eine App-Regel hinzufügen und speichern.",
+    "state_unavailable": "Die Sprachkonfiguration konnte nicht gelesen oder geschrieben werden.",
+    "runtime_unavailable": "Duck ToolBox aktualisieren und aktivieren, dann das Gerät neu starten.",
+    "config_too_large": "Die Sprachregeln überschreiten 64 KiB. Vor dem Speichern einige Regeln entfernen."
+  }
+}

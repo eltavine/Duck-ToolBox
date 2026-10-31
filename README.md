@@ -27,6 +27,13 @@ changed, removed or added on its own.
   Online template downloads are not embedded. Actual injection needs device validation.
   See [build, lifecycle and protocol](components/device-faker/README.md).
 
+- **Miscellaneous → Language spoofing**: per-app, per-Android-user language rules
+  for Java locale APIs, app/system resources and common native property reads.
+  Requires working Zygisk; configuration and activation are separate. It leaves the
+  device language unchanged. Restart target apps after changes. Native/custom language
+  logic may bypass it and advertisement removal is not guaranteed. See the
+  [component, build requirements and device validation procedure](components/language-spoof/README.md).
+
 - **Tricky Store manager**: a complete port of KOWX712's
   [Tricky Addon: Update Target List](https://github.com/KOWX712/Tricky-Addon-Update-Target-List),
   for whichever keystore module is active:

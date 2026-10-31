@@ -21,7 +21,7 @@ const props = defineProps<{ provider: Provider | null; saving: boolean }>()
 const open = defineModel<boolean>("open", { required: true })
 const emit = defineEmits<{ save: [provider: Provider]; remove: [] }>()
 const { t } = useTrickyI18n()
-const global = useI18n()
+const { t: coreT } = useI18n()
 
 const form = ref<Provider>({ name: "", url: "", decode: "" })
 watch(
@@ -86,7 +86,7 @@ function submit() {
             {{ t("ta.functional_button_remove") }}
           </Button>
           <Button type="button" variant="outline" @click="open = false">{{
-            global.t("core.actions.cancel")
+            coreT("core.actions.cancel")
           }}</Button>
           <Button type="submit" :disabled="saving">{{ t("ta.functional_button_save") }}</Button>
         </DialogFooter>

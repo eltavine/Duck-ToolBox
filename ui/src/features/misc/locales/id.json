@@ -1,0 +1,46 @@
+{
+  "meta": {
+    "title": "Lain-lain",
+    "description": "Alat untuk setiap aplikasi."
+  },
+  "language": {
+    "title": "Penyamaran bahasa",
+    "description": "Mengganti bahasa yang dilihat proses aplikasi pilihan.",
+    "rule": "Aturan aplikasi",
+    "ruleHelp": "Satu bahasa per aplikasi dan pengguna Android. Menyimpan tidak mengaktifkan penyamaran.",
+    "package": "Nama paket",
+    "pickApp": "Pilih aplikasi terpasang",
+    "user": "ID pengguna Android",
+    "userHelp": "Gunakan 0 untuk pengguna utama. Profil kerja memiliki ID tersendiri. Daftar menampilkan aplikasi yang terlihat oleh pengelola.",
+    "locale": "Bahasa samaran",
+    "presets": "Bahasa umum",
+    "localeHelp": "Tag bahasa, misalnya en-US, ja-JP atau zh-Hant-TW.",
+    "enable": "Aktifkan",
+    "disable": "Nonaktifkan",
+    "enabled": "Aktif untuk proses baru",
+    "disabled": "Nonaktif",
+    "restart": "Tutup sepenuhnya lalu buka kembali aplikasi setelah menyimpan, mengaktifkan atau menonaktifkan. Proses yang sudah berjalan tetap menggunakan bahasa saat ini.",
+    "limits": "Memerlukan Zygisk. Mengubah bahasa yang dilihat aplikasi pilihan tanpa mengganti bahasa perangkat. Cache dan beberapa pemeriksaan khusus atau native dapat melewatinya. Tampilan dan konten regional dapat berubah; penghapusan iklan tidak dijamin.",
+    "unavailable": "Perbarui dan aktifkan Duck ToolBox, lalu mulai ulang perangkat.",
+    "changed": "Konfigurasi berubah di tempat lain. Segarkan sebelum menyimpan atau mengaktifkan; konfirmasi diminta sebelum membuang perubahan lokal.",
+    "rules": "Aturan aplikasi",
+    "empty": "Belum ada aplikasi dipilih. Tambahkan aturan.",
+    "userLabel": "Pengguna {id}",
+    "unsaved": "Perubahan belum disimpan",
+    "scope": "Cakupan dan kompatibilitas",
+    "saved": "Konfigurasi bahasa disimpan",
+    "discard": "Buang perubahan lokal?",
+    "removeRule": "Hapus aturan aplikasi ini?",
+    "noApps": "Tidak ada aplikasi yang cocok."
+  },
+  "errors": {
+    "duplicate_rule": "Aturan untuk aplikasi dan pengguna Android ini sudah ada.",
+    "invalid_config": "Konfigurasi tidak valid. Nonaktifkan penyamaran sebelum memperbaiki aturan tersimpan.",
+    "stale_revision": "Konfigurasi berubah. Segarkan dan coba lagi.",
+    "operation_busy": "Operasi lain sedang berjalan. Coba lagi sebentar lagi.",
+    "empty_rules": "Tambahkan dan simpan setidaknya satu aturan aplikasi dahulu.",
+    "state_unavailable": "Konfigurasi bahasa tidak dapat dibaca atau ditulis.",
+    "runtime_unavailable": "Perbarui dan aktifkan Duck ToolBox, lalu mulai ulang perangkat.",
+    "config_too_large": "Aturan melebihi 64 KiB. Hapus beberapa aturan sebelum menyimpan."
+  }
+}

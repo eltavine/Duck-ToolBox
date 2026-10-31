@@ -1,0 +1,46 @@
+{
+  "meta": {
+    "title": "Varios",
+    "description": "Herramientas para aplicaciones individuales."
+  },
+  "language": {
+    "title": "Suplantación de idioma",
+    "description": "Cambia el idioma que ven los procesos de las aplicaciones elegidas.",
+    "rule": "Regla de aplicación",
+    "ruleHelp": "Un idioma por aplicación y usuario de Android. Guardar no activa la suplantación.",
+    "package": "Nombre del paquete",
+    "pickApp": "Elegir aplicación instalada",
+    "user": "ID de usuario de Android",
+    "userHelp": "Usa 0 para el usuario principal. Los perfiles de trabajo tienen IDs separados. El selector muestra las aplicaciones visibles para el gestor.",
+    "locale": "Idioma",
+    "presets": "Idiomas habituales",
+    "localeHelp": "Etiqueta de idioma, como en-US, ja-JP o zh-Hant-TW.",
+    "enable": "Activar",
+    "disable": "Desactivar",
+    "enabled": "Activada para procesos nuevos",
+    "disabled": "Desactivada",
+    "restart": "Cierra completamente y vuelve a abrir las aplicaciones tras guardar, activar o desactivar. Los procesos existentes mantienen su idioma.",
+    "limits": "Requiere Zygisk. Cambia el idioma visto por las apps elegidas sin alterar el idioma del dispositivo. La caché y ciertas comprobaciones propias o nativas pueden eludirlo. Puede afectar al diseño o contenido regional; no garantiza eliminar anuncios.",
+    "unavailable": "Actualiza y activa Duck ToolBox y reinicia el dispositivo.",
+    "changed": "La configuración cambió en otro lugar. Actualiza antes de guardar o activar; se pedirá confirmación antes de descartar los cambios locales.",
+    "rules": "Reglas de aplicaciones",
+    "empty": "No hay aplicaciones seleccionadas. Añade una regla.",
+    "userLabel": "Usuario {id}",
+    "unsaved": "Cambios sin guardar",
+    "scope": "Alcance y compatibilidad",
+    "saved": "Configuración de idioma guardada",
+    "discard": "¿Descartar los cambios locales?",
+    "removeRule": "¿Eliminar esta regla de aplicación?",
+    "noApps": "No hay aplicaciones coincidentes."
+  },
+  "errors": {
+    "duplicate_rule": "Ya hay una regla para esta aplicación y usuario de Android.",
+    "invalid_config": "La configuración no es válida. Desactiva la suplantación antes de reparar las reglas guardadas.",
+    "stale_revision": "La configuración cambió. Actualiza y vuelve a intentarlo.",
+    "operation_busy": "Hay otra operación en curso. Inténtalo de nuevo en breve.",
+    "empty_rules": "Primero añade y guarda al menos una regla de aplicación.",
+    "state_unavailable": "No se pudo leer o escribir la configuración de idioma.",
+    "runtime_unavailable": "Actualiza y activa Duck ToolBox y reinicia el dispositivo.",
+    "config_too_large": "Las reglas superan 64 KiB. Elimina algunas antes de guardar."
+  }
+}

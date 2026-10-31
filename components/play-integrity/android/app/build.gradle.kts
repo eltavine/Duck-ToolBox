@@ -38,6 +38,7 @@ android {
                 arguments += "-DPIF_VENDOR_DIR=${System.getenv("PIF_VENDOR_DIR") ?: ""}"
                 arguments += "-DCMAKE_BUILD_TYPE=Release"
                 arguments += "-DDUCK_RUNTIME_DIR=${System.getenv("DUCK_RUNTIME_DIR") ?: ""}"
+                arguments += "-DDUCK_LANGUAGE_DIR=${System.getenv("DUCK_LANGUAGE_DIR") ?: ""}"
                 arguments += "-DDUCK_FAKER_LIBRARY=${System.getenv("DUCK_FAKER_LIBRARY") ?: ""}"
 
                 cppFlags += "-std=c++23"
@@ -52,12 +53,18 @@ android {
     System.getenv("DUCK_FAKER_JAVA")?.takeIf { it.isNotBlank() }?.let { source ->
         sourceSets.getByName("main").java.srcDir(source)
     }
+    System.getenv("DUCK_LANGUAGE_DIR")?.takeIf { it.isNotBlank() }?.let { source ->
+        sourceSets.getByName("main").java.srcDir("$source/java")
+    }
 
     buildTypes {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            System.getenv("DUCK_LANGUAGE_DIR")?.takeIf { it.isNotBlank() }?.let { source ->
+                proguardFiles("$source/proguard-rules.pro")
+            }
             System.getenv("DUCK_FAKER_JAVA")?.takeIf { it.isNotBlank() }?.let { source ->
                 proguardFiles(file(source).resolve("../proguard-rules.pro"))
             }
@@ -72,7 +79,7 @@ android {
     externalNativeBuild {
         cmake {
             path = file("src/main/cpp/CMakeLists.txt")
-            version = "3.22.1"
+            version = "4.1.2"
         }
     }
 }

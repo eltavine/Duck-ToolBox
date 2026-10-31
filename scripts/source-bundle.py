@@ -40,7 +40,8 @@ def create(commit, destination, offline=False):
         config_path = source / ".cargo/config.toml"
         config_path.write_text(config_path.read_text() + "\n" + config)
         native = ROOT / "target/play-integrity/vendor"
-        for name in ["json", "local_cxa_atexit_finalize_impl", "shadowhook", "hiddenapibypass"]:
+        for name in ["json", "local_cxa_atexit_finalize_impl", "shadowhook", "hiddenapibypass",
+                     "lsplant", "dex_builder", "parallel_hashmap"]:
             path = native / name
             if not (path / ".revision").is_file():
                 raise ValueError(f"Pinned native source is missing: {name}")
@@ -49,7 +50,7 @@ def create(commit, destination, offline=False):
         (source / "SOURCE_COMMIT").write_text(commit + "\n")
         (source / "SOURCE.json").write_text(json.dumps({"commit": commit, "format": 1,
             "build": "python3 scripts/build-play-integrity.py",
-            "requirements": "Rust toolchain, JDK 21, SDK 37 / Build Tools 37.0.0, NDK 30.0.16248370"}, indent=2) + "\n")
+            "requirements": "Rust toolchain, JDK 21, SDK 37 / Build Tools 37.0.0, NDK 30.0.16248370, CMake 4.1.2"}, indent=2) + "\n")
         with tarfile.open(destination, "w:gz", compresslevel=6) as output:
             output.add(source, arcname=source.name)
     return destination

@@ -11,22 +11,23 @@ license = "GPL-3.0-or-later"
 
 [dependencies]
 tempfile = "3.27.0"
-anyhow = { version = "1.0.102", default-features = false }
-jni = { version = "0.22", default-features = false }
-log = { version = "^0.4", default-features = false }
-serde = { version = "1.0.228", features = ["derive", "std"] }
+anyhow = { version = "1.0.104", default-features = false }
+jni = { version = "0.22.4", default-features = false }
+log = { version = "0.4.35", default-features = false }
+serde = { version = "1.0.229", features = ["derive", "std"] }
 # preserve_order：templates 表按 config.toml 的书写顺序解析（底层 IndexMap），
 # 使「同一包名被多个模板声明」时命中结果确定（书写顺序靠前者胜），
 # 而不是 Rust HashMap 的进程级随机迭代顺序。
-toml = { version = "1.0", features = ["parse", "preserve_order"] }
-indexmap = { version = "2.13", features = ["serde"] }
+toml = { version = "1.1.8", features = ["parse", "preserve_order"] }
+indexmap = { version = "2.14.2", features = ["serde"] }
 zygisk-api = { git = "https://github.com/Seyud/zygisk-api-rs.git" }
-serde_json = "1.0.149"
-libc = "0.2"
+serde_json = "1.0.154"
+libc = "0.2.191"
 prop-rs-android = { git = "https://github.com/KernelSU2/ksu_props", rev = "ddb6ee7294467f7f25bad2118e9e24eee104144b" }
-memmap2 = "0.9.11"
+memmap2 = "0.9.12"
 # 前台 UidObserver：root binder 注册 ActivityManager.registerUidObserver，
 # 事件驱动接收 PROCESS_STATE_TOP 变化。
+# rsbinder 0.12 requires Android API 29; the embedded engine still targets API 26.
 rsbinder = { version = "0.11", features = ["android_10_plus"] }
 
 [build-dependencies]

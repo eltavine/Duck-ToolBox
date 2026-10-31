@@ -10,6 +10,7 @@ test("lists every tool on the home page", async ({ page, open }) => {
     "TEE Attestation Extractor",
     "Device ID Provisioner",
     "Module & updates",
+    "Miscellaneous",
   ]) {
     await expect(page.getByRole("button", { name: new RegExp(name) })).toBeVisible()
   }
@@ -201,7 +202,7 @@ test("lays out right-to-left languages mirrored", async ({ page, open }) => {
 
 test("follows the saved language", async ({ page, open }) => {
   await open("/", { locale: "zh-CN" })
-  await expect(page.getByText("工具")).toBeVisible()
+  await expect(page.getByRole("heading", { name: "工具", exact: true })).toBeVisible()
   await expect(page.locator("html")).toHaveAttribute("dir", "ltr")
 })
 

@@ -1,0 +1,46 @@
+{
+  "meta": {
+    "title": "Divers",
+    "description": "Des outils pour chaque application."
+  },
+  "language": {
+    "title": "Simulation de langue",
+    "description": "Remplace la langue vue par les processus des applications choisies.",
+    "rule": "Règle d’application",
+    "ruleHelp": "Une langue par application et utilisateur Android. Enregistrer n’active pas la simulation.",
+    "package": "Nom du paquet",
+    "pickApp": "Choisir une application installée",
+    "user": "ID utilisateur Android",
+    "userHelp": "Utilisez 0 pour l’utilisateur principal. Les profils professionnels ont leurs propres ID. Le sélecteur affiche les applications visibles par le gestionnaire.",
+    "locale": "Langue simulée",
+    "presets": "Langues courantes",
+    "localeHelp": "Balise de langue, par exemple en-US, ja-JP ou zh-Hant-TW.",
+    "enable": "Activer",
+    "disable": "Désactiver",
+    "enabled": "Activée pour les nouveaux processus",
+    "disabled": "Désactivée",
+    "restart": "Fermez complètement puis rouvrez les applications après l’enregistrement, l’activation ou la désactivation. Les processus existants conservent leur langue.",
+    "limits": "Nécessite Zygisk. Modifie la langue vue par les applications choisies sans changer celle de l’appareil. Le cache et certains traitements propres ou natifs peuvent le contourner. La présentation et le contenu régional peuvent changer ; la suppression des publicités n’est pas garantie.",
+    "unavailable": "Mettez à jour et activez Duck ToolBox, puis redémarrez l’appareil.",
+    "changed": "La configuration a changé ailleurs. Actualisez avant d’enregistrer ou d’activer. L’abandon des modifications locales demande une confirmation.",
+    "rules": "Règles des applications",
+    "empty": "Aucune application sélectionnée. Ajoutez une règle.",
+    "userLabel": "Utilisateur {id}",
+    "unsaved": "Modifications non enregistrées",
+    "scope": "Portée et compatibilité",
+    "saved": "Configuration de langue enregistrée",
+    "discard": "Abandonner les modifications locales ?",
+    "removeRule": "Supprimer cette règle d’application ?",
+    "noApps": "Aucune application correspondante."
+  },
+  "errors": {
+    "duplicate_rule": "Une règle existe déjà pour cette application et cet utilisateur Android.",
+    "invalid_config": "La configuration est incorrecte. Désactivez la simulation avant de réparer les règles enregistrées.",
+    "stale_revision": "La configuration a changé. Actualisez puis réessayez.",
+    "operation_busy": "Une autre opération est en cours. Réessayez dans un instant.",
+    "empty_rules": "Ajoutez et enregistrez d’abord une règle d’application.",
+    "state_unavailable": "Impossible de lire ou d’écrire la configuration de langue.",
+    "runtime_unavailable": "Mettez à jour et activez Duck ToolBox, puis redémarrez l’appareil.",
+    "config_too_large": "Les règles dépassent 64 Kio. Supprimez-en avant d’enregistrer."
+  }
+}

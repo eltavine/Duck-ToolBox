@@ -1,0 +1,46 @@
+{
+  "meta": {
+    "title": "Miscellaneous",
+    "description": "Small tools for individual applications."
+  },
+  "language": {
+    "title": "Language spoofing",
+    "description": "Override the language seen by selected app processes.",
+    "rule": "Application rule",
+    "ruleHelp": "One language per application and Android user. Saving a rule does not enable spoofing.",
+    "package": "Package name",
+    "pickApp": "Choose installed app",
+    "user": "Android user ID",
+    "userHelp": "Use 0 for the main user. Work profiles and secondary users have separate IDs. The app picker lists apps visible to the manager.",
+    "locale": "Language",
+    "presets": "Common languages",
+    "localeHelp": "Language tag, for example en-US, ja-JP or zh-Hant-TW.",
+    "enable": "Enable",
+    "disable": "Disable",
+    "enabled": "Enabled for new app processes",
+    "disabled": "Disabled",
+    "restart": "Fully close and reopen the target apps after saving, enabling or disabling. Existing processes keep their current language.",
+    "limits": "Requires Zygisk. Changes the language seen by selected apps without changing your device language. Cached values and some app-specific or native checks may bypass it. Layout and regional content may change; ad removal is not guaranteed.",
+    "unavailable": "Update and enable Duck ToolBox, then reboot to load the language runtime.",
+    "changed": "The configuration changed elsewhere. Refresh before saving or enabling; local edits will be discarded only after confirmation.",
+    "rules": "Application rules",
+    "empty": "No applications selected. Add a rule to get started.",
+    "userLabel": "User {id}",
+    "unsaved": "Unsaved changes",
+    "scope": "Scope and compatibility",
+    "saved": "Language configuration saved",
+    "discard": "Discard local changes?",
+    "removeRule": "Remove this application rule?",
+    "noApps": "No matching applications."
+  },
+  "errors": {
+    "duplicate_rule": "This application already has a rule for that Android user.",
+    "invalid_config": "The language configuration is invalid. Disable spoofing before repairing the saved rules.",
+    "stale_revision": "The configuration changed. Refresh before trying again.",
+    "operation_busy": "Another language operation is running. Try again shortly.",
+    "empty_rules": "Add and save at least one application rule first.",
+    "state_unavailable": "The language configuration could not be read or written.",
+    "runtime_unavailable": "Update and enable Duck ToolBox, then reboot to load the language runtime.",
+    "config_too_large": "Language rules exceed 64 KiB. Remove some rules before saving."
+  }
+}

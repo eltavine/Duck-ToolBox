@@ -1,0 +1,46 @@
+{
+  "meta": {
+    "title": "杂项",
+    "description": "面向单个应用的实用小工具。"
+  },
+  "language": {
+    "title": "语言伪装",
+    "description": "为选定的应用进程指定语言。",
+    "rule": "应用规则",
+    "ruleHelp": "每个应用、每个 Android 用户分别配置语言。保存规则不会自动启用伪装。",
+    "package": "应用包名",
+    "pickApp": "选择已安装应用",
+    "user": "Android 用户 ID",
+    "userHelp": "主用户填 0，工作资料与其他用户使用各自的 ID。应用选择器显示管理器可见的应用。",
+    "locale": "伪装语言",
+    "presets": "常用语言",
+    "localeHelp": "语言标签，例如 en-US、ja-JP 或 zh-Hant-TW。",
+    "enable": "启用",
+    "disable": "停用",
+    "enabled": "已启用，对新进程生效",
+    "disabled": "已停用",
+    "restart": "保存、启用或停用后，请完全关闭并重新打开目标应用。已运行的进程会保留当前语言。",
+    "limits": "需要 Zygisk，仅修改选定应用看到的语言，不修改设备语言。缓存、应用自有逻辑或部分原生读取可能不受影响。变更可能影响排版和地区内容，不保证去除广告。",
+    "unavailable": "请更新并启用 Duck ToolBox，然后重启设备以加载语言伪装引擎。",
+    "changed": "配置已在其他位置发生变化。保存或启用前请刷新；放弃本地修改前会请求确认。",
+    "rules": "应用规则",
+    "empty": "尚未选择应用，请先添加规则。",
+    "userLabel": "用户 {id}",
+    "unsaved": "有未保存的修改",
+    "scope": "作用范围与兼容性",
+    "saved": "语言配置已保存",
+    "discard": "放弃本地修改？",
+    "removeRule": "移除此应用规则？",
+    "noApps": "没有匹配的应用。"
+  },
+  "errors": {
+    "duplicate_rule": "此应用在该 Android 用户下已有规则。",
+    "invalid_config": "语言配置无效，请先停用伪装，再修复保存的规则。",
+    "stale_revision": "配置已变化，请刷新后重试。",
+    "operation_busy": "其他语言配置操作正在运行，请稍后重试。",
+    "empty_rules": "请先添加并保存至少一条应用规则。",
+    "state_unavailable": "无法读写语言配置。",
+    "runtime_unavailable": "请更新并启用 Duck ToolBox，然后重启设备以加载语言伪装引擎。",
+    "config_too_large": "语言规则超过 64 KiB，请减少规则后再保存。"
+  }
+}

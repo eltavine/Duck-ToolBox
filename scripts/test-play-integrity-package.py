@@ -83,6 +83,24 @@ class SourceCheckoutTest(unittest.TestCase):
 
 
 class DistributionIntegrityTest(unittest.TestCase):
+    def test_language_contract_requires_both_metadata_and_the_version_marker(self):
+        with tempfile.TemporaryDirectory() as directory:
+            module = Path(directory)
+            payload = module / "play-integrity"
+            payload.mkdir()
+            manifest = {"embedded": {"language_contract": 1}}
+            marker = payload / "language-spoof.version"
+            for value in (None, b"", b"2\n", b"1", b"1\nextra"):
+                if value is not None:
+                    marker.write_bytes(value)
+                with self.subTest(value=value), self.assertRaisesRegex(ValueError, "language contract"):
+                    package.validate_language_contract(manifest, module)
+            marker.write_bytes(b"1\n")
+            package.validate_language_contract(manifest, module)
+            for invalid in ({}, {"embedded": {"language_contract": 2}}):
+                with self.assertRaisesRegex(ValueError, "language contract"):
+                    package.validate_language_contract(invalid, module)
+
     def test_rejects_source_changes_even_with_a_matching_commit_marker(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -187,8 +205,10 @@ class NoticePreservationTest(unittest.TestCase):
             shutil.copytree(source / "components/play-integrity/licenses", module / "licenses/play-integrity", dirs_exist_ok=True)
             for original, name in [("engine/LICENSE", "GPL-3.0.txt"), ("engine/NOTICES", "NOTICE"), ("UPSTREAM_REVISION", "UPSTREAM_REVISION")]:
                 copy("components/device-faker/" + original, "licenses/device-faker/" + name)
+            for name in ["LICENSE", "NOTICE", "README.md"]:
+                copy("components/language-spoof/" + name, "licenses/language-spoof/" + name)
             package.validate_component_notices(module=module)
-            for relative in ["LICENSE", "licenses/play-integrity/NOTICE", "licenses/play-integrity/zygisk-ISC.txt", "licenses/device-faker/NOTICE"]:
+            for relative in ["LICENSE", "licenses/play-integrity/NOTICE", "licenses/play-integrity/zygisk-ISC.txt", "licenses/device-faker/NOTICE", "licenses/language-spoof/NOTICE", "licenses/language-spoof/LICENSE"]:
                 path = module / relative
                 original = path.read_bytes()
                 for changed in [b"", b"truncated notice"]:

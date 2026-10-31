@@ -1,0 +1,46 @@
+{
+  "meta": {
+    "title": "雜項",
+    "description": "適用於個別應用程式的實用工具。"
+  },
+  "language": {
+    "title": "語言偽裝",
+    "description": "為選定的應用程式指定語言。",
+    "rule": "應用程式規則",
+    "ruleHelp": "每個應用程式與 Android 使用者分別設定語言。儲存規則不會自動啟用偽裝。",
+    "package": "應用程式套件名稱",
+    "pickApp": "選擇已安裝的應用程式",
+    "user": "Android 使用者 ID",
+    "userHelp": "主要使用者填 0，工作設定檔與其他使用者有各自的 ID。選擇器顯示管理器可見的應用程式。",
+    "locale": "偽裝語言",
+    "presets": "常用語言",
+    "localeHelp": "語言標籤，例如 en-US、ja-JP 或 zh-Hant-TW。",
+    "enable": "啟用",
+    "disable": "停用",
+    "enabled": "已啟用，對新處理程序生效",
+    "disabled": "已停用",
+    "restart": "儲存、啟用或停用後，請完全關閉並重新開啟目標應用程式。現有處理程序會保留目前語言。",
+    "limits": "需要 Zygisk，僅變更選定應用程式看到的語言，不修改裝置語言。快取、自有邏輯或部分原生讀取可能不受影響。變更可能影響版面與地區內容，不保證移除廣告。",
+    "unavailable": "請更新並啟用 Duck ToolBox，再重新啟動裝置以載入語言偽裝引擎。",
+    "changed": "設定已在其他位置變更。儲存或啟用前請重新整理；捨棄本機變更前會要求確認。",
+    "rules": "應用程式規則",
+    "empty": "尚未選擇應用程式，請先新增規則。",
+    "userLabel": "使用者 {id}",
+    "unsaved": "有尚未儲存的變更",
+    "scope": "作用範圍與相容性",
+    "saved": "語言設定已儲存",
+    "discard": "捨棄本機變更？",
+    "removeRule": "移除此應用程式規則？",
+    "noApps": "沒有符合的應用程式。"
+  },
+  "errors": {
+    "duplicate_rule": "此應用程式在該 Android 使用者下已有規則。",
+    "invalid_config": "語言設定無效。請先停用偽裝，再修復儲存的規則。",
+    "stale_revision": "設定已變更，請重新整理後重試。",
+    "operation_busy": "其他語言設定操作正在執行，請稍後重試。",
+    "empty_rules": "請先新增並儲存至少一條應用程式規則。",
+    "state_unavailable": "無法讀取或寫入語言設定。",
+    "runtime_unavailable": "請更新並啟用 Duck ToolBox，再重新啟動裝置以載入語言偽裝引擎。",
+    "config_too_large": "語言規則超過 64 KiB，請減少規則後再儲存。"
+  }
+}

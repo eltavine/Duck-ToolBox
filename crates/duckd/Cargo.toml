@@ -13,7 +13,8 @@ path = "src/main.rs"
 
 # Each tool is an optional crate, so a build can ship any subset of them.
 [features]
-default = ["rkp", "rkp-device", "tee-attestation", "device-ids", "tricky-store", "play-integrity", "device-faker", "kernel-modules", "zram", "linux-env", "system"]
+default = ["rkp", "rkp-device", "tee-attestation", "device-ids", "tricky-store", "play-integrity", "device-faker", "kernel-modules", "zram", "linux-env", "system", "misc"]
+misc = ["dep:duck-misc"]
 linux-env = ["dep:duck-linux-env"]
 zram = ["dep:duck-zram"]
 kernel-modules = ["dep:duck-kernel-modules"]
@@ -36,6 +37,7 @@ duck-rkp = { workspace = true, optional = true }
 duck-rkp-device = { workspace = true, optional = true }
 duck-tee-attestation = { workspace = true, optional = true }
 duck-system = { workspace = true, optional = true }
+duck-misc = { workspace = true, optional = true }
 duck-kernel-modules = { workspace = true, optional = true }
 duck-zram = { workspace = true, optional = true }
 duck-linux-env = { workspace = true, optional = true }

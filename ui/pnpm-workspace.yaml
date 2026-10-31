@@ -4,17 +4,17 @@ allowBuilds:
   vue-demi: true
 
 minimumReleaseAgeExclude:
-  - '@typescript-native-bridge/darwin-arm64@6.0.3-bridge.18.tsgo.7.0.2'
-  - '@typescript-native-bridge/darwin-x64@6.0.3-bridge.18.tsgo.7.0.2'
-  - '@typescript-native-bridge/linux-arm64@6.0.3-bridge.18.tsgo.7.0.2'
-  - '@typescript-native-bridge/linux-arm@6.0.3-bridge.18.tsgo.7.0.2'
-  - '@typescript-native-bridge/linux-x64@6.0.3-bridge.18.tsgo.7.0.2'
-  - '@typescript-native-bridge/win32-arm64@6.0.3-bridge.18.tsgo.7.0.2'
-  - '@typescript-native-bridge/win32-x64@6.0.3-bridge.18.tsgo.7.0.2'
-  - typescript-native-bridge@6.0.3-bridge.18.tsgo.7.0.2
+  - '@typescript-native-bridge/darwin-arm64@6.0.3-bridge.19.tsgo.7.0.2'
+  - '@typescript-native-bridge/darwin-x64@6.0.3-bridge.19.tsgo.7.0.2'
+  - '@typescript-native-bridge/linux-arm64@6.0.3-bridge.19.tsgo.7.0.2'
+  - '@typescript-native-bridge/linux-arm@6.0.3-bridge.19.tsgo.7.0.2'
+  - '@typescript-native-bridge/linux-x64@6.0.3-bridge.19.tsgo.7.0.2'
+  - '@typescript-native-bridge/win32-arm64@6.0.3-bridge.19.tsgo.7.0.2'
+  - '@typescript-native-bridge/win32-x64@6.0.3-bridge.19.tsgo.7.0.2'
+  - typescript-native-bridge@6.0.3-bridge.19.tsgo.7.0.2
 
 # TypeScript 7 (tsgo) no longer ships the classic compiler API that vue-tsc and
 # typescript-eslint call. typescript-native-bridge keeps that API and runs the tsgo 7
 # engine behind it, the path vue-tsc's maintainers validated (vuejs/language-tools#5381).
 overrides:
-  typescript: npm:typescript-native-bridge@6.0.3-bridge.18.tsgo.7.0.2
+  typescript: npm:typescript-native-bridge@6.0.3-bridge.19.tsgo.7.0.2

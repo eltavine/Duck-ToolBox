@@ -1,0 +1,46 @@
+{
+  "meta": {
+    "title": "Varie",
+    "description": "Strumenti per singole applicazioni."
+  },
+  "language": {
+    "title": "Simulazione della lingua",
+    "description": "Cambia la lingua vista dai processi delle app selezionate.",
+    "rule": "Regola dell’app",
+    "ruleHelp": "Una lingua per app e utente Android. Salvare non attiva la simulazione.",
+    "package": "Nome del pacchetto",
+    "pickApp": "Scegli app installata",
+    "user": "ID utente Android",
+    "userHelp": "Usa 0 per l’utente principale. I profili di lavoro hanno ID separati. Il selettore mostra le app visibili al gestore.",
+    "locale": "Lingua simulata",
+    "presets": "Lingue comuni",
+    "localeHelp": "Tag della lingua, ad esempio en-US, ja-JP o zh-Hant-TW.",
+    "enable": "Attiva",
+    "disable": "Disattiva",
+    "enabled": "Attiva per i nuovi processi",
+    "disabled": "Disattivata",
+    "restart": "Chiudi completamente e riapri le app dopo il salvataggio, l’attivazione o la disattivazione. I processi esistenti mantengono la lingua attuale.",
+    "limits": "Richiede Zygisk. Cambia la lingua vista dalle app scelte senza cambiare quella del dispositivo. Cache e alcuni controlli propri o nativi possono aggirarlo. Aspetto e contenuti regionali possono cambiare; la rimozione degli annunci non è garantita.",
+    "unavailable": "Aggiorna e attiva Duck ToolBox, quindi riavvia il dispositivo.",
+    "changed": "La configurazione è cambiata altrove. Aggiorna prima di salvare o attivare; verrà chiesta conferma prima di scartare le modifiche locali.",
+    "rules": "Regole delle app",
+    "empty": "Nessuna app selezionata. Aggiungi una regola.",
+    "userLabel": "Utente {id}",
+    "unsaved": "Modifiche non salvate",
+    "scope": "Ambito e compatibilità",
+    "saved": "Configurazione della lingua salvata",
+    "discard": "Scartare le modifiche locali?",
+    "removeRule": "Rimuovere questa regola dell’app?",
+    "noApps": "Nessuna app corrispondente."
+  },
+  "errors": {
+    "duplicate_rule": "Esiste già una regola per questa app e questo utente Android.",
+    "invalid_config": "La configurazione non è valida. Disattiva la simulazione prima di correggere le regole salvate.",
+    "stale_revision": "La configurazione è cambiata. Aggiorna e riprova.",
+    "operation_busy": "È in corso un’altra operazione. Riprova tra poco.",
+    "empty_rules": "Aggiungi e salva prima almeno una regola dell’app.",
+    "state_unavailable": "Impossibile leggere o scrivere la configurazione della lingua.",
+    "runtime_unavailable": "Aggiorna e attiva Duck ToolBox, quindi riavvia il dispositivo.",
+    "config_too_large": "Le regole superano 64 KiB. Rimuovine alcune prima di salvare."
+  }
+}
