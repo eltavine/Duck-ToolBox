@@ -1,17 +1,19 @@
 <script setup lang="ts">
 import type { Preview } from "../api"
+import { useI18n } from "vue-i18n"
 import { useFakerI18n } from "../i18n"
 defineProps<{ summary: Preview["summary"] | null | undefined }>()
 const { t } = useFakerI18n()
+const { n } = useI18n()
 </script>
 <template>
   <div class="flex min-w-0 flex-col gap-4">
     <div class="flex flex-wrap gap-2 text-sm">
       <span class="bg-secondary text-secondary-foreground rounded-full px-3 py-1.5">{{
-        t("targetCount", { count: summary?.targets.length ?? 0 })
+        t("targetCount", { count: n(summary?.targets.length ?? 0) })
       }}</span>
       <span class="bg-muted rounded-full px-3 py-1.5"
-        >{{ t("templates") }}: {{ summary?.templates.length ?? 0 }}</span
+        >{{ t("templates") }}: {{ n(summary?.templates.length ?? 0) }}</span
       >
     </div>
     <p
@@ -43,7 +45,7 @@ const { t } = useFakerI18n()
         {{
           t(`warnings.${warning.code}`, {
             target: warning.target ? `\u2066${warning.target}\u2069` : undefined,
-            count: warning.count,
+            count: warning.count === undefined ? undefined : n(warning.count),
           })
         }}
       </li>

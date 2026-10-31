@@ -166,9 +166,25 @@ impl Config {
     pub fn from_toml(content: &str) -> Result<Self> {
         let value: toml::Value = toml::from_str(content)?;
         if contains_nul(&value) {
-            return Err(ConfigValidationError.into());
+            return Err(
+                ConfigValidationError("Configuration cannot contain NUL characters").into(),
+            );
         }
-        Ok(value.try_into()?)
+        let config: Self = value.try_into()?;
+        for props in config
+            .apps
+            .iter()
+            .filter_map(|app| app.custom_props.as_ref())
+            .chain(
+                config
+                    .templates
+                    .values()
+                    .filter_map(|template| template.custom_props.as_ref()),
+            )
+        {
+            properties::validate_custom_props(props)?;
+        }
+        Ok(config)
     }
 
     /// 查找包名对应的应用配置（优先）或模板配置
@@ -379,10 +395,10 @@ impl MergedAppConfig {
 }
 
 #[derive(Debug)]
-pub struct ConfigValidationError;
+pub struct ConfigValidationError(&'static str);
 impl std::fmt::Display for ConfigValidationError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str("Configuration cannot contain NUL characters")
+        f.write_str(self.0)
     }
 }
 impl std::error::Error for ConfigValidationError {}

@@ -77,5 +77,6 @@
     "density_range": "DPI: 120–640",
     "startup_failed": "Kiểm tra tương thích khi khởi động thất bại. Hãy xem nhật ký mô-đun, giải quyết xung đột rồi khởi động lại."
   },
-  "globalRecoveryReboot": "Phiên thuộc tính toàn cục chưa hoàn tất và tiến trình khôi phục đã kết thúc. Dừng giả lập rồi khởi động lại trước khi bật lại. Nếu cảnh báo vẫn còn sau khi khởi động lại, hãy kiểm tra các bản ghi khôi phục."
+  "globalRecoveryReboot": "Phiên thuộc tính toàn cục chưa hoàn tất và tiến trình khôi phục đã kết thúc. Dừng giả lập rồi khởi động lại trước khi bật lại. Nếu cảnh báo vẫn còn sau khi khởi động lại, hãy kiểm tra các bản ghi khôi phục.",
+  "blocked": "Đã bật; đang chờ đáp ứng điều kiện hoạt động"
 }

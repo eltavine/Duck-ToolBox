@@ -33,6 +33,9 @@ const mock: MockModule = {
       parent_active: !parameters.has("faker-parent-disabled"),
       startup_ready: !new URLSearchParams(location.search).has("faker-startup-pending"),
       startup_failed: new URLSearchParams(location.search).has("faker-startup-failed"),
+      startup_error: new URLSearchParams(location.search).has("faker-startup-failed")
+        ? "legacy property pass failed: platform command failed with exit status: 1"
+        : null,
       cleanup_pending:
         parameters.has("faker-cleanup-pending") || parameters.has("faker-orphaned-global"),
       global_recovery_requires_reboot: parameters.has("faker-orphaned-global"),

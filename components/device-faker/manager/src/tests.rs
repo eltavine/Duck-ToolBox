@@ -69,6 +69,47 @@ fn disabling_invalidates_a_stale_enable_without_taking_the_write_lock() {
     assert!(snapshot(&paths.content().unwrap())["error"].is_string());
     assert!(stop(&paths).is_ok());
 }
+
+#[test]
+fn custom_properties_follow_android_name_and_mutable_value_constraints() {
+    for key in [
+        "",
+        ".ro.model",
+        "ro..model",
+        "ro.model.",
+        "ro.bad/key",
+        "ro.设备",
+    ] {
+        let content = format!("[templates.unused.custom_props]\n{key:?}='x'\n");
+        assert!(crate::config::Config::from_toml(&content).is_err(), "{key}");
+    }
+    for key in ["persist.demo", "vendor.demo", "sys.demo"] {
+        for value in ["x".repeat(92), "中文".repeat(16)] {
+            let content = format!("[templates.unused.custom_props]\n{key:?}={value:?}\n");
+            assert!(crate::config::Config::from_toml(&content).is_err());
+        }
+        let content = format!(
+            "[templates.unused.custom_props]\n{key:?}={:?}\n",
+            "x".repeat(91)
+        );
+        assert!(crate::config::Config::from_toml(&content).is_ok());
+    }
+    let content = format!(
+        "[templates.unused.custom_props]\n'ro.demo'={:?}\n",
+        "中文".repeat(50)
+    );
+    assert!(crate::config::Config::from_toml(&content).is_ok());
+}
+
+#[test]
+fn empty_power_tokens_never_report_an_enabled_engine() {
+    let (_root, paths) = fixture();
+    write(&paths.file("enabled"), "").unwrap();
+    write(&paths.file("stop"), "").unwrap();
+    assert!(!paths.enabled().unwrap());
+    assert_eq!(stop(&paths).unwrap()["enabled"], false);
+    assert!(!paths.stop_revision().unwrap().is_empty());
+}
 #[test]
 fn atomic_config_writes_are_private_and_stale_revisions_fail() {
     let (_root, paths) = fixture();
@@ -127,9 +168,41 @@ fn failed_boot_replaces_stale_readiness_and_can_be_retried() {
         read(&paths.file("startup-failed"), 64).unwrap().as_deref(),
         Some("boot-test")
     );
+    let failed = status(&paths).unwrap();
+    assert_eq!(failed["startup_failed"], true);
+    assert_eq!(failed["startup_error"], "property write failed");
     run_boot(&paths, || Ok(())).unwrap();
     assert!(crate::gate::startup_ready_at(&paths.root));
     assert!(!paths.file("startup-failed").exists());
+    assert!(!paths.file("startup-error.json").exists());
+    assert!(status(&paths).unwrap()["startup_error"].is_null());
+}
+
+#[test]
+fn startup_diagnostics_are_bounded_and_cannot_change_boot_state() {
+    let (_root, paths) = boot_fixture();
+    let error = "故障".repeat(4096);
+    assert!(run_boot(&paths, || anyhow::bail!(error)).is_err());
+    let failed = status(&paths).unwrap();
+    assert_eq!(
+        failed["startup_error"].as_str().unwrap().chars().count(),
+        2048
+    );
+    for content in [
+        "invalid[".to_string(),
+        "x".repeat(16 * 1024 + 1),
+        json!({"boot":"previous-boot", "message":"stale"}).to_string(),
+    ] {
+        write(&paths.file("startup-error.json"), &content).unwrap();
+        let failed = status(&paths).unwrap();
+        assert_eq!(failed["startup_failed"], true);
+        assert_eq!(failed["startup_ready"], false);
+        assert!(failed["startup_error"].is_null());
+    }
+    fs::remove_file(paths.file("startup-error.json")).unwrap();
+    fs::create_dir(paths.file("startup-error.json")).unwrap();
+    run_boot(&paths, || Ok(())).unwrap();
+    assert_eq!(status(&paths).unwrap()["startup_ready"], true);
 }
 #[test]
 fn concurrent_boot_does_not_publish_failure_or_run_a_second_pass() {
@@ -208,7 +281,11 @@ fn boot_adapter_runs_legacy_then_integrity_then_fallback_before_readiness() {
     );
     fs::remove_file(paths.file("ready")).unwrap();
     write(&module.join("prop.sh"), "exit 1\n").unwrap();
-    assert!(run_boot(&paths, || crate::boot::stages(&module)).is_err());
+    let error = run_boot(&paths, || crate::boot::stages(&module)).unwrap_err();
+    let message = format!("{error:#}");
+    assert!(message.contains("legacy property pass failed"), "{message}");
+    assert!(message.contains("exit status: 1"), "{message}");
+    assert_eq!(status(&paths).unwrap()["startup_error"], message);
     assert!(!crate::gate::startup_ready_at(&paths.root));
 }
 

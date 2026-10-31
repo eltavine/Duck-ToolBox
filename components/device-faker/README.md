@@ -30,9 +30,11 @@ connections carry a bounded, versioned routing frame; each engine owns its state
 
 Startup serializes legacy property updates and PI late initialization before
 publishing a boot-specific Device Faker readiness token. Duplicate successful boot
-passes skip global mutation. Failure keeps injection
-closed. Enable acknowledges the current stop token; sessions retain this generation, and a stale request cannot cancel
-a later stop. Parent disable/removal, pending cleanup, absent readiness or a loaded
+passes skip global mutation. Failure keeps injection closed. Status includes a
+bounded, boot-scoped `startup_error` when available; successful initialization
+clears it. Enable acknowledges the current stop token; sessions retain this
+generation, and a stale request cannot cancel a later stop. Parent disable/removal,
+pending updates or cleanup, absent readiness or a loaded
 standalone `device_faker` closes the gate. A standalone disable flag must predate
 the current boot. Reboot after installation or disabling a conflicting module.
 

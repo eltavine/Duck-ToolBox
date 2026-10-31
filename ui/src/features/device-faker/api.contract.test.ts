@@ -74,11 +74,34 @@ describe.skipIf(!hasDuckd)("Device Faker real process contract", CONTRACT, () =>
     utimesSync(host.path("/data/adb/modules/device_faker/disable"), new Date(1000), new Date(1000))
     await fakerApi.enable(saved.revision, status.stop_revision)
     expect((await fakerApi.status()).enabled).toBe(true)
+    const pending = host.path("/data/adb/modules_update/duck-toolbox/module.prop")
+    const { mkdirSync, rmSync } = await import("node:fs")
+    mkdirSync(path.dirname(pending), { recursive: true })
+    writeFileSync(pending, "id=duck-toolbox")
+    await expect(fakerApi.enable(saved.revision, status.stop_revision)).rejects.toMatchObject({
+      details: { code: "startup_not_ready" },
+    })
+    rmSync(pending)
     await fakerApi.disable()
     await expect(fakerApi.enable(saved.revision, status.stop_revision)).rejects.toMatchObject({
       code: "engine_error",
     })
     expect((await fakerApi.status()).enabled).toBe(false)
+  })
+  it("rejects an empty power acknowledgement and allows stop to repair it", async () => {
+    host = installHost({
+      files: {
+        "/data/adb/duck-device-faker/enabled": "",
+        "/data/adb/duck-device-faker/stop": "",
+        "/data/adb/duck-device-faker/config/config.toml": content,
+      },
+    })
+    const status = await fakerApi.status()
+    expect(status.enabled).toBe(false)
+    await expect(fakerApi.enable(status.config.revision, "")).rejects.toMatchObject({
+      details: { code: "power_changed" },
+    })
+    expect((await fakerApi.disable()).stop_revision).not.toBe("")
   })
   it("blocks a lost global owner and keeps its recovery marker after stop", async () => {
     host = installHost({

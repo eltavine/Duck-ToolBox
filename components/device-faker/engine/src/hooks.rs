@@ -80,6 +80,7 @@ fn hook_version_fields(
             jni_str!("SDK_INT"),
             i32::try_from(sdk_int).context("SDK_INT exceeds Java integer range")?,
         )?;
+        set_build_field(env, &version_class, jni_str!("SDK"), &sdk_int.to_string())?;
     }
 
     // Build.VERSION.INCREMENTAL 的属性来源是 ro.build.version.incremental

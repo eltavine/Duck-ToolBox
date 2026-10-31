@@ -1,5 +1,29 @@
 use super::*;
 
+pub(super) fn validate_custom_props(props: &HashMap<String, String>) -> anyhow::Result<()> {
+    for (key, value) in props {
+        // AOSP init permits these characters but forbids empty dot-separated segments.
+        if key.is_empty()
+            || key.starts_with('.')
+            || key.ends_with('.')
+            || key.contains("..")
+            || !key
+                .bytes()
+                .all(|byte| byte.is_ascii_alphanumeric() || b"._-@:".contains(&byte))
+        {
+            return Err(ConfigValidationError("Invalid Android property name").into());
+        }
+        // Bionic's mutable read path uses an inline 92-byte buffer and ignores kLongFlag.
+        if !key.starts_with("ro.") && value.len() >= 92 {
+            return Err(ConfigValidationError(
+                "Mutable property values must be shorter than 92 bytes",
+            )
+            .into());
+        }
+    }
+    Ok(())
+}
+
 impl Config {
     /// 构建合并配置的系统属性映射
     /// 空字符串会被忽略，不会添加到映射中

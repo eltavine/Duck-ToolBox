@@ -28,6 +28,10 @@ mod jni_policy;
 #[allow(dead_code)]
 #[path = "../../engine/src/process_identity.rs"]
 mod process_identity;
+#[cfg(test)]
+#[allow(dead_code)]
+#[path = "../../engine/src/cow_props/mappings.rs"]
+mod property_mappings;
 mod state;
 
 use anyhow::{Result, bail};

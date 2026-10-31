@@ -116,11 +116,43 @@ test("preserves the draft across navigation and keeps stop available while start
   await expect(
     page.getByText("Startup compatibility checks failed.", { exact: false }),
   ).toBeVisible()
+  await expect(page.getByText("Wait for toolbox startup to finish.", { exact: false })).toHaveCount(
+    0,
+  )
   await expect(page.getByRole("button", { name: "Enable", exact: true })).toBeDisabled()
   await expect(page.getByRole("button", { name: "Stop spoofing", exact: true })).toBeEnabled()
+  await page.getByText("Details", { exact: true }).click()
+  await expect(
+    page.getByText("legacy property pass failed: platform command failed with exit status: 1", {
+      exact: true,
+    }),
+  ).toBeVisible()
   await page.getByRole("button", { name: "Stop spoofing", exact: true }).click()
   await expect(page.locator("#faker-config")).toHaveValue(draft)
 })
+
+for (const theme of ["light", "dark"] as const) {
+  test(`startup failure keeps headings, fields and touch controls aligned in ${theme}`, async ({
+    page,
+    open,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 1000 })
+    await open("/device-faker", { locale: "en", theme, query: { "faker-startup-failed": "1" } })
+    const headings = await page.locator("section > header h2").all()
+    const field = await page.locator("#faker-config").boundingBox()
+    for (const heading of headings) {
+      const box = await heading.boundingBox()
+      expect(Math.abs(box!.x - field!.x)).toBeLessThanOrEqual(1)
+    }
+    await page.getByText("Details", { exact: true }).click()
+    const controls = page.locator("section").first().getByRole("button")
+    for (const button of await controls.all()) {
+      expect((await button.boundingBox())!.height).toBeGreaterThanOrEqual(48)
+    }
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+    await page.screenshot({ path: `/tmp/duck-faker-startup-${theme}.png` })
+  })
+}
 
 for (const prerequisite of [
   "faker-startup-pending",

@@ -93,6 +93,7 @@ jobs:
           python3 scripts/test-play-integrity-native.py
           python3 scripts/test-play-integrity-java.py
           python3 scripts/test-play-integrity-scripts.py
+          cargo build --locked --manifest-path components/device-faker/manager/Cargo.toml --target-dir target/device-faker-manager
           python3 scripts/test-prop-handler.py
           python3 scripts/test-zygisk-runtime.py
           python3 scripts/test-language-spoof.py

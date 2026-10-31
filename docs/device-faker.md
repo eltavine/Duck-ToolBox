@@ -6,7 +6,8 @@ Reference baseline: AOSP Android 16 release, bionic commit
 [`09a271af557444c9a6b3f3146d6d474156fd6cdb`](https://android.googlesource.com/platform/bionic/+/09a271af557444c9a6b3f3146d6d474156fd6cdb/libc/system_properties/system_properties.cpp).
 Bionic retains pointers into property areas; cloned areas therefore remain mapped
 for process lifetime. The scanner checks readable code, complete writable context
-arrays, bounded SELinux names and actual property mapping starts. Unknown layouts
+arrays, bounded SELinux names and readable, complete property mapping starts.
+Unreadable, reversed, oversized and nonzero-offset mappings are rejected before copying. Unknown layouts
 skip property-memory mutation. A maps snapshot cannot protect against unrelated
 concurrent unmapping; runtime discovery is still vendor/version sensitive.
 
@@ -18,6 +19,9 @@ No kernel ABI or private bionic structure layout is assumed universally stable.
 Platform command cleanup also follows [Android common kernel child reaping semantics](https://android.googlesource.com/kernel/common/+/bc537c78955c9e22326fa13e2982b9e06a3d9f23/kernel/exit.c):
 a failed wait can mean PID ownership was lost (for example, automatic SIGCHLD
 reaping). That path returns an error without signalling the numeric PID/group.
+Both the native platform adapter and management process boundary use `waitid`
+with `WNOWAIT` to retain a completed child's identity until its process group has
+been terminated and its status reaped. Normal completion also stops leftover descendants.
 Density transaction guards explicitly unlock before closing their descriptor,
 consistent with [kernel file-lock lifetime](https://android.googlesource.com/kernel/common/+/bc537c78955c9e22326fa13e2982b9e06a3d9f23/fs/locks.c).
 A forked child retaining a descriptor must not extend a completed transaction.
@@ -40,11 +44,17 @@ The toolbox waits for boot completion and finishes legacy property and PI late
 stages under an exclusive boot lock before publishing a boot/build-specific
 readiness token. Duplicate calls skip global writes once that token is valid.
 Every legacy property read/write failure contributes to the stage result; later
-success cannot hide an earlier failure. Failure records
-startup failure and leaves the gate closed. Stop-token acknowledgement prevents a
+success cannot hide an earlier failure. Property reads use Android `getprop`, whose
+empty default permits absent OEM keys; `resetprop` returns failure for missing keys
+and is reserved for writes in this pass. The host command fixture reproduces that
+missing-key exit status and runs the actual management boot transaction.
+Failure records startup failure and a bounded, boot-scoped cause for the status
+response and WebUI details, leaving the gate closed. Stop-token acknowledgement prevents a
 stale enable from reopening the gate. Sessions and individual property/DPI writes
 retain their enable generation: a rapid stop/re-enable cancels the old generation.
-Standalone module conflicts require reboot.
+Standalone module conflicts require reboot. A pending toolbox update closes both
+the native activation gate and management enable operation until reboot. Empty
+enable/stop acknowledgements never count as enabled; stop can replace corrupt tokens.
 
 Global-property cleanup tracks attempted writes and compares the current value
 with the applied value before
@@ -90,7 +100,10 @@ recovery data is retained.
 
 TOML is parsed and checked for embedded NUL characters in keys and values before
 creating a native property plan. This also checks unused templates; no truncated
-C string may be published through a configuration save.
+C string may be published through a configuration save. Custom property names and
+mutable value lengths follow [AOSP init validation](https://android.googlesource.com/platform/system/core/+/68be0c2c0006a0740d0b1809abe4717308f90d15/init/util.cpp).
+Non-`ro.*` values must fit the 91-byte inline payload; allowing long-value records
+would conflict with bionic's mutable read path. Read-only properties retain long-value support.
 
 Commands and frames have deadlines; stop closes new injection immediately, while
 cleanup can take longer and reports pending failures.
@@ -102,6 +115,9 @@ is the ABI contract. The composite callback table registers once and dispatches 
 before Device Faker, deferring library unload until callbacks finish. PI-selected
 processes receive no Device Faker callback. Companion routing validates a versioned
 frame and owns descriptors explicitly. Original header copyright is retained.
+Package extraction falls back to the process name when the data-directory Java
+reference is null, and removes the process suffix before matching a profile.
+The enable generation is rechecked after configuration resolution and before hooks.
 
 [ZygiskNext documentation](https://github.com/LSPosed/ZygiskNext/tree/db994f8caebd440eedd02beab38ca62f3d1f8a2a)
 distinguishes ordinary Zygisk application callbacks from its init-oriented API and
@@ -116,7 +132,9 @@ other lookup or initialization failures abort the hook. For example,
 A missing field on older Android must not prevent subsequent fingerprint/version
 updates. An exception already pending on entry is preserved. A host JVM fixture
 exercises the actual Rust JNI hook against a class without `SOC_MODEL`; it is not
-an ART or OEM compatibility test.
+an ART or OEM compatibility test. An explicit SDK override updates both `SDK_INT`
+and the deprecated string `SDK`, whose shared source is shown in
+[AOSP Build](https://android.googlesource.com/platform/frameworks/base/+/99b01a65cc4c104933788b3143285ab6bae65827/core/java/android/os/Build.java).
 
 ## Interface and accessibility
 
@@ -124,13 +142,21 @@ The interface applies Material 3 Expressive hierarchy and tonal surfaces while
 following [Android accessibility](https://developer.android.com/design/ui/mobile/guides/foundations/accessibility)
 and [Apple accessibility principles](https://developer.apple.com/design/human-interface-guidelines/accessibility).
 [Google's Material 3 Expressive overview](https://blog.google/products-and-platforms/platforms/android/material-3-expressive-android-wearos-launch/)
-is the visual reference. Controls use the shared design tokens, explicit labels,
+and [Material design research](https://design.google/library/expressive-material-design-google-research)
+are the visual references. Section headings and field surfaces share a leading
+alignment, following [Apple layout guidance](https://developer.apple.com/design/human-interface-guidelines/layout).
+Controls use the shared design tokens, explicit labels,
 visible state text and 48 px minimum touch targets. Editing, preview, apply and
 power state are separate. Unsaved drafts persist across navigation. The editor caps manual input length
 and retains a bounded draft even when multibyte text exceeds the 48 KiB publication
 limit. It shows a localized error linked to the text area; oversized text cannot
 be previewed/applied. Identical cached/saved content uses the current revision. Source code
-and TOML remain left-to-right within translated or right-to-left layouts.
+and TOML remain left-to-right within translated or right-to-left layouts. Counts
+use locale-aware number formatting. Startup failure suppresses the generic waiting
+notice; an armed but blocked engine reports unmet conditions rather than claiming injection.
+Preview requests retain a generation invalidated by edits or page disposal, including
+edits that return to the original text. A successful stop updates cached power state
+before readback, so a failed status refresh cannot make the engine appear enabled again.
 
 Sixteen locale dictionaries share the same keys. Browser checks cover all locales
 at 320 px, light/dark themes, 200% root font size, draft preservation and independent
@@ -153,11 +179,11 @@ python3 scripts/build-play-integrity.py
 ```
 
 The installation ZIP contains one root-manager module, one Zygisk library per ABI,
-both management CLIs, licenses, hashes and the exact corresponding-source archive.
-The archive carries locked Rust dependencies and pinned native build dependencies.
-Packaging compares every archived regular source file with the build commit
-(except the required Cargo vendor configuration extension), preserves executable
-bits, and publishes the final ZIP atomically only after CRC validation.
+both management CLIs, licenses, hashes and corresponding-source links pinned to
+the build commit. Device Faker remains an ordinary source component statically
+linked into that module, with no Git submodule or second installable root module.
+Packaging rejects modified source checkouts and gitlinks, verifies artifact hashes
+and notices, preserves executable bits, and publishes the ZIP atomically after CRC validation.
 Host tests, ABI harnesses, source inspection and Android cross-compilation do not
 prove real injection, every OEM bionic layout, JNI field availability or actual
 property/density restoration on a device. `injection_verified` remains false.

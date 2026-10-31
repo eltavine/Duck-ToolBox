@@ -49,6 +49,7 @@ public class Build {
     public static String FINGERPRINT = "stock";
     public static class VERSION {
         public static int SDK_INT = 30;
+        public static String SDK = "30";
         public static String INCREMENTAL = "stock";
     }
 }"#,
@@ -125,6 +126,17 @@ public class Build {
                 .l()?;
             let string = env.cast_local::<jni::objects::JString>(text)?;
             assert_eq!(string.to_string(), "New fingerprint");
+            let sdk = env
+                .get_static_field(
+                    jni_str!("android/os/Build$VERSION"),
+                    jni_str!("SDK"),
+                    jni_sig!("Ljava/lang/String;"),
+                )?
+                .l()?;
+            assert_eq!(
+                env.cast_local::<jni::objects::JString>(sdk)?.to_string(),
+                "35"
+            );
             assert_eq!(
                 env.get_static_field(
                     jni_str!("android/os/Build$VERSION"),

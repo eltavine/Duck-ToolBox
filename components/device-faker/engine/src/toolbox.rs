@@ -77,6 +77,9 @@ pub fn activation_at(root: &Path) -> Option<String> {
             .join("data/adb/duck-device-faker/cleanup-failed")
             .exists()
         && active(root, "duck-toolbox")
+        && !root
+            .join("data/adb/modules_update/duck-toolbox/module.prop")
+            .is_file()
         && startup_ready_at(root)
         && !standalone_conflict_at(root))
     .then_some(token)
@@ -107,6 +110,17 @@ mod tests {
             std::fs::create_dir_all(&module).unwrap();
             std::fs::write(module.join("module.prop"), "").unwrap();
             assert_eq!(enabled_at(&root), id == "duck-toolbox");
+            if id == "duck-toolbox" {
+                let pending = root.join("data/adb/modules_update/duck-toolbox");
+                std::fs::create_dir_all(&pending).unwrap();
+                std::fs::write(pending.join("module.prop"), "id=duck-toolbox").unwrap();
+                assert!(
+                    !enabled_at(&root),
+                    "a pending update must close new injection"
+                );
+                std::fs::remove_dir_all(pending).unwrap();
+                assert!(enabled_at(&root));
+            }
             for flag in ["disable", "remove"] {
                 std::fs::write(module.join(flag), "").unwrap();
                 assert_eq!(enabled_at(&root), id == "device_faker" && flag == "disable");

@@ -179,6 +179,12 @@ impl MyModule {
             return Ok(());
         };
 
+        // Configuration and package resolution must not revive an older enable generation.
+        if gate::activation_at(Path::new("/")).as_deref() != Some(generation.as_str()) {
+            api.set_option(ZygiskOption::DlCloseModuleLibrary);
+            return Ok(());
+        }
+
         if merged.force_denylist_unmount {
             api.set_option(ZygiskOption::ForceDenylistUnmount);
             if config.debug {
@@ -329,14 +335,19 @@ impl MyModule {
     ) -> anyhow::Result<String> {
         let result: String = env
             .with_env(|_jenv| -> Result<String, jni::errors::Error> {
-                let app_data_dir = args.app_data_dir.to_string();
-
-                if let Some(package) = app_data_dir.rsplit('/').next()
-                    && !package.is_empty()
-                {
-                    return Ok(package.to_string());
+                // A required jstring argument can still contain a null Java reference.
+                // Formatting it would yield "<NULL>" rather than triggering the fallback.
+                if !args.app_data_dir.is_null() {
+                    let app_data_dir = args.app_data_dir.to_string();
+                    if let Some(package) = app_data_dir.rsplit('/').next()
+                        && !package.is_empty()
+                    {
+                        return Ok(package.to_string());
+                    }
                 }
-
+                if args.nice_name.is_null() {
+                    return Ok(String::new());
+                }
                 let nice_name = args.nice_name.to_string();
 
                 let mut nice_name: String = nice_name;

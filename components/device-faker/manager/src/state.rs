@@ -49,8 +49,9 @@ impl Paths {
         Ok(read(&self.file("stop"), 256)?.unwrap_or_else(|| "initial".into()))
     }
     fn enabled(&self) -> Result<bool> {
-        Ok(read(&self.file("enabled"), 256)?
-            .is_some_and(|token| self.stop_revision().is_ok_and(|stop| stop == token)))
+        Ok(read(&self.file("enabled"), 256)?.is_some_and(|token| {
+            !token.is_empty() && self.stop_revision().is_ok_and(|stop| stop == token)
+        }))
     }
     fn lock(&self) -> Result<TransactionLock> {
         private_dir(&self.data)?;
@@ -113,13 +114,28 @@ fn matches_revision(input: &Value, content: &str) -> Result<()> {
 fn status(paths: &Paths) -> Result<Value> {
     let config = snapshot(&paths.content()?);
     let installed = paths.module("duck-toolbox");
+    let boot = read(&paths.root.join("proc/sys/kernel/random/boot_id"), 64)
+        .ok()
+        .flatten();
+    let startup_failed = read(&paths.file("startup-failed"), 64)?
+        .is_some_and(|failed| boot.as_ref().is_some_and(|boot| failed == boot.trim()));
+    // Diagnostic damage must not prevent status reads or affect the activation gate.
+    let startup_error = startup_failed
+        .then(|| {
+            let diagnostic: Value =
+                serde_json::from_str(&read(&paths.file("startup-error.json"), 16 * 1024).ok()??)
+                    .ok()?;
+            (diagnostic["boot"].as_str()? == boot.as_ref()?.trim())
+                .then(|| diagnostic["message"].as_str().map(str::to_owned))?
+        })
+        .flatten();
     Ok(json!({
         "enabled": paths.enabled()?, "stop_revision": paths.stop_revision()?,
         "cleanup_pending": paths.file("cleanup-failed").exists() || (!paths.enabled()? && paths.file("density.json").exists()) || (crate::global_marker::path(&paths.root).exists() && !crate::gate::enabled_at(&paths.root)),
         "global_recovery_requires_reboot": crate::global_marker::requires_reboot(&paths.root),
         "parent_active": paths.active("duck-toolbox"),
         "startup_ready": crate::gate::startup_ready_at(&paths.root),
-        "startup_failed": read(&paths.file("startup-failed"),64)?.is_some_and(|failed|read(&paths.root.join("proc/sys/kernel/random/boot_id"),64).ok().flatten().is_some_and(|boot| failed==boot.trim())),
+        "startup_failed": startup_failed, "startup_error": startup_error,
         "payload_installed": installed.join("zygisk/arm64-v8a.so").is_file(),
         "payload_active": paths.active("duck-toolbox"),
         "payload_pending": paths.root.join("data/adb/modules_update/duck-toolbox/module.prop").is_file(),
@@ -167,6 +183,7 @@ fn ready_at(paths: &Paths) -> Result<Value> {
     if paths.file("startup-failed").exists() {
         fs::remove_file(paths.file("startup-failed"))?;
     }
+    let _ = fs::remove_file(paths.file("startup-error.json"));
     Ok(json!({"startup_ready":true}))
 }
 
@@ -197,8 +214,10 @@ fn run_boot(paths: &Paths, stages: impl FnOnce() -> Result<()>) -> Result<Value>
         if paths.file("ready").exists() {
             fs::remove_file(paths.file("ready"))?;
         }
-        crate::density::recover(&paths.root, &mut crate::density::AndroidBridge)?;
-        crate::global_marker::prepare_boot(&paths.root)?;
+        crate::density::recover(&paths.root, &mut crate::density::AndroidBridge)
+            .context("display-density recovery failed")?;
+        crate::global_marker::prepare_boot(&paths.root)
+            .context("global-property ownership check failed")?;
         stages()?;
         // Direct nonpersistent properties are recreated by init on each boot.
         // A same-boot failure remains owned by its companion and must not be cleared here.
@@ -213,8 +232,17 @@ fn run_boot(paths: &Paths, stages: impl FnOnce() -> Result<()>) -> Result<Value>
         }
         ready_at(paths)
     })();
-    if result.is_err() {
+    if let Err(error) = &result {
         blocked_at(paths)?;
+        // Keep a bounded, boot-scoped cause even when the boot hook discards stdout.
+        // Recording diagnostics is best effort; the original failure remains authoritative.
+        let message: String = format!("{error:#}").chars().take(2048).collect();
+        if let Ok(Some(boot)) = read(&paths.file("startup-failed"), 64) {
+            let _ = write(
+                &paths.file("startup-error.json"),
+                &json!({"boot":boot,"message":message}).to_string(),
+            );
+        }
     }
     result
 }
@@ -325,7 +353,7 @@ pub fn request(operation: &str, input: &Value) -> Result<Value> {
                 ));
             }
             let stop = paths.stop_revision()?;
-            if required(input, "stop_revision")? != stop {
+            if stop.is_empty() || required(input, "stop_revision")? != stop {
                 bail!(Error::new(
                     "power_changed",
                     "The stop state changed; refresh before enabling"
@@ -350,6 +378,10 @@ pub fn request(operation: &str, input: &Value) -> Result<Value> {
             }
             if !paths.active("duck-toolbox")
                 || !crate::gate::startup_ready_at(&paths.root)
+                || paths
+                    .root
+                    .join("data/adb/modules_update/duck-toolbox/module.prop")
+                    .is_file()
                 || !paths
                     .module("duck-toolbox")
                     .join("zygisk/arm64-v8a.so")
