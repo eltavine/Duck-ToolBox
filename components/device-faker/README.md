@@ -45,6 +45,10 @@ configuration is invalid or another operation is running. Existing process-local
 Build/property values require restarting the app to disappear.
 
 Property clones own their mappings and remain alive for the process lifetime.
+Whole-area snapshots have bounded trie/payload validation and source serial checks;
+dirty or concurrently changing copies are skipped instead of waiting on private
+futex state. A cloned area freezes other values in that area too. Synthetic areas
+become read-only before bionic can retain them.
 Unknown bionic layouts skip property-memory changes. Real bionic mappings are not
 unmapped, replaced with MAP_FIXED or owned by a foreign Rust mapping object.
 `hide_maps` is ignored with a warning. Build-field failures clear their JNI
@@ -62,6 +66,10 @@ backups remain in companion memory. Foreground queries have one monitor; session
 Binder callbacks only notify the monitor. Display 0 focus authorizes changes;
 conflicting unscoped focus cannot activate a global profile. The watchdog interval is 500 ms, with bounded platform
 commands; it is not a cleanup deadline. Reboot if global cleanup remains pending.
+The bounded registry retains live targets across foreground switches, restores
+the previous owner before activation and blocks another target while cleanup is
+pending. Density activation checks the current user against the registered target
+before recording recovery data, while recovery always uses the recorded user.
 
 ## Process contract, version 1
 

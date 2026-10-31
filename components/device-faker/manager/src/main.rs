@@ -32,6 +32,14 @@ mod process_identity;
 #[allow(dead_code)]
 #[path = "../../engine/src/cow_props/mappings.rs"]
 mod property_mappings;
+#[cfg(test)]
+#[allow(dead_code)]
+#[path = "../../engine/src/cow_props/snapshot.rs"]
+mod property_snapshot;
+#[cfg(test)]
+#[allow(dead_code)]
+#[path = "../../engine/src/companion/registry.rs"]
+mod session_registry;
 mod state;
 
 use anyhow::{Result, bail};

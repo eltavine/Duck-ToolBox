@@ -42,10 +42,12 @@ export function useFakerEditor() {
   const changed = computed(() => !!data.value && baseRevision.value !== data.value.config.revision)
   const preview = ref<Preview | null>(null)
   let previewGeneration = 0
+  let powerGeneration = 0
   let disposed = false
   onScopeDispose(() => {
     disposed = true
     previewGeneration++
+    powerGeneration++
   })
   const busy = ref(false)
   const stopping = ref(false)
@@ -169,17 +171,29 @@ export function useFakerEditor() {
     await refresh()
   }
   async function enable() {
-    if (!data.value) return
-    await fakerApi.enable(data.value.config.revision, data.value.stop_revision)
-    notice.value = t("restartHelp")
-    await refresh()
+    if (!data.value || stopping.value) return
+    const generation = ++powerGeneration
+    try {
+      const enabled = await fakerApi.enable(data.value.config.revision, data.value.stop_revision)
+      if (disposed || generation !== powerGeneration) return
+      client.setQueryData<Awaited<ReturnType<typeof fakerApi.status>>>(
+        ["device-faker.status"],
+        (current) => (current ? { ...current, ...enabled } : current),
+      )
+      notice.value = t("restartHelp")
+      await refresh()
+    } catch (caught) {
+      if (!disposed && generation === powerGeneration) throw caught
+    }
   }
   async function disable() {
     if (stopping.value) return
+    const generation = ++powerGeneration
     stopping.value = true
     error.value = ""
     try {
       const stopped = await fakerApi.disable()
+      if (disposed || generation !== powerGeneration) return
       client.setQueryData<Awaited<ReturnType<typeof fakerApi.status>>>(
         ["device-faker.status"],
         (current) => (current ? { ...current, ...stopped } : current),

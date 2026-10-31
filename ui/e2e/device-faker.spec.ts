@@ -1,6 +1,53 @@
 import { expect, test } from "./fixtures"
+import { readFileSync } from "node:fs"
 
 test.use({ deviceScaleFactor: 1 })
+
+for (const locale of ["en", "zh-CN", "ar"]) {
+  test(`mixed template names and global confirmation remain readable in ${locale}`, async ({
+    page,
+    open,
+  }) => {
+    const messages = JSON.parse(
+      readFileSync(
+        new URL(`../src/features/device-faker/locales/${locale}.json`, import.meta.url),
+        "utf8",
+      ),
+    ) as Record<string, string>
+    await page.setViewportSize({ width: 320, height: 900 })
+    await open("/device-faker", { locale })
+    await page.evaluate(() => {
+      document.documentElement.style.fontSize = "200%"
+    })
+    await page
+      .locator("#faker-config")
+      .fill(
+        '[templates."هاتف 12"]\npackages=["com.example.a"]\nmodel="Phone"\ndpi=420\n[templates."Pixel 9"]\npackages=["com.example.b"]\nmodel="Phone"\n',
+      )
+    await page.getByRole("button", { name: messages.preview!, exact: true }).click()
+    const preview = page.getByRole("region", { name: messages.preview!, exact: true })
+    await expect(preview.locator("bdi")).toHaveCount(2)
+    await expect(preview.locator("bdi").first()).toHaveAttribute("dir", "auto")
+    await preview.getByRole("button", { name: messages.apply!, exact: true }).click()
+    const dialog = page.getByRole("alertdialog")
+    await expect(dialog).toBeVisible()
+    const confirm = dialog.getByRole("button", { name: messages.apply!, exact: true })
+    await confirm.scrollIntoViewIfNeeded()
+    const box = await confirm.boundingBox()
+    expect(box!.height).toBeGreaterThanOrEqual(48)
+    expect(box!.x).toBeGreaterThanOrEqual(0)
+    expect(box!.x + box!.width).toBeLessThanOrEqual(320)
+    expect(await dialog.evaluate((node) => node.scrollWidth <= node.clientWidth)).toBe(true)
+    const header = await dialog.locator('[data-slot="alert-dialog-header"]').boundingBox()
+    const footer = await dialog.locator('[data-slot="alert-dialog-footer"]').boundingBox()
+    expect(header!.y + header!.height).toBeLessThanOrEqual(footer!.y)
+    if (locale === "ar") {
+      await page.screenshot({ path: "/tmp/duck-faker-confirm-ar.png", animations: "disabled" })
+    }
+    await confirm.click()
+    await expect(dialog).toHaveCount(0)
+  })
+}
 
 test("imports and previews without enabling, then applies and independently controls power", async ({
   page,

@@ -36,7 +36,9 @@ function add() {
       {{ t("addProfile") }}
     </summary>
     <div class="mt-4 flex flex-col gap-4">
-      <label class="text-sm">{{ t("templateName") }}<Input v-model="name" class="mt-2" /></label>
+      <label class="text-sm"
+        >{{ t("templateName") }}<Input v-model="name" class="mt-2" dir="auto"
+      /></label>
       <label class="text-sm"
         >{{ t("packages")
         }}<Textarea

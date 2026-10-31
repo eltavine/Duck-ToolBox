@@ -1,10 +1,16 @@
 <script setup lang="ts">
 import type { Preview } from "../api"
 import { useI18n } from "vue-i18n"
+import { computed } from "vue"
 import { useFakerI18n } from "../i18n"
-defineProps<{ summary: Preview["summary"] | null | undefined }>()
-const { t } = useFakerI18n()
+const props = defineProps<{ summary: Preview["summary"] | null | undefined }>()
+const { t, locale } = useFakerI18n()
 const { n } = useI18n()
+const templateNames = computed(() =>
+  new Intl.ListFormat(locale.value, { style: "short", type: "conjunction" }).formatToParts(
+    props.summary?.templates ?? [],
+  ),
+)
 </script>
 <template>
   <div class="flex min-w-0 flex-col gap-4">
@@ -20,7 +26,10 @@ const { n } = useI18n()
       v-if="summary?.templates.length"
       class="text-muted-foreground text-sm [overflow-wrap:anywhere]"
     >
-      {{ summary.templates.join(", ") }}
+      <template v-for="(part, index) in templateNames" :key="index">
+        <bdi v-if="part.type === 'element'" dir="auto">{{ part.value }}</bdi
+        ><span v-else>{{ part.value }}</span>
+      </template>
     </p>
     <ul
       v-if="summary?.targets.length"

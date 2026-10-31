@@ -1,8 +1,10 @@
 mod platform;
 mod protocol;
+mod registry;
 mod session;
 use platform::*;
 pub use protocol::*;
+use registry::*;
 use session::*;
 use std::{
     collections::{HashMap, HashSet},
@@ -138,6 +140,12 @@ fn apply_resetprop_session(
     mut request: ResetpropSessionRequest,
 ) -> anyhow::Result<HashMap<String, String>> {
     sync_log_level(request.debug);
+    let user: u32 = request
+        .package_name
+        .rsplit_once('@')
+        .ok_or_else(|| anyhow::anyhow!("session target lacks an Android user"))?
+        .1
+        .parse()?;
     if crate::process_identity::start_at(std::path::Path::new("/"), request.pid)
         != Some(request.start)
     {
@@ -200,12 +208,8 @@ fn apply_resetprop_session(
     // 首次 Apply 时惰性启动前台源（UidObserver 事件驱动；失败退 0.5s 轮询）。
     spawn_fg_observer_once();
 
-    // D2 语义：前台源未就绪时不急切应用任何全局态；但**照常采样登记 session**。
-    // 之前这里直接 return（连 session 都不登记），observer 注册完成后到达的首次
-    // TOP 事件会因 `SESSION == None` 无法激活 → 本次启动属性永不应用（首启竞态，
-    // 冷启动后首个 companion app 必命中，极易误报"某版本属性失效"）。
-    // 修复：不 return 不等待——session 登记后，registerUidObserver 完成时 AMS 会
-    // 回放当前 uid 状态（或 0.5s dumpsys 轮询兜底）产生 FG 事件驱动激活。
+    // Registration retains live targets without applying globals. The single foreground
+    // monitor activates them after a confirmed focus event or its periodic fallback.
     if !fg_ready() {
         warn_fg_unavailable();
         info!(
@@ -214,50 +218,37 @@ fn apply_resetprop_session(
         );
     }
 
-    let mut guard = SESSION.lock().unwrap();
-
-    // 同包去重：同包 + 旧进程存活 + dpi 未变 → 幂等返回现有备份。
-    if let Some(sess) = guard.as_ref()
-        && sess.package == request.package_name
-        && sess.app_pid == request.pid
-        && sess.start == request.start
-        && sess.generation == request.generation
-        && sess.spec.density == request.density
-    {
-        info!(
-            "Skipping duplicate Apply for '{}' (pid {}), session already registered",
-            request.package_name, request.pid
-        );
-        return Ok(sess.originals.prop_backups.clone());
-    }
-
-    if let Some(old) = guard.as_mut()
-        && old.activated
-        && !deactivate_session(old, &request.package_name)
-    {
-        anyhow::bail!("previous global cleanup is still pending");
-    }
-    let backups_for_response = HashMap::new();
-    *guard = Some(Session {
-        package: request.package_name.clone(),
-        generation: request.generation,
-        attempted: HashSet::new(),
-        claimed_global: false,
-        app_pid: request.pid,
-        start: request.start,
-        unknown_since: None,
-        closing: false,
-        spec: SessionSpec {
-            props: request.props,
-            delete_props: request.delete_props,
-            density: request.density,
+    let mut guard = SESSIONS.lock().unwrap();
+    let generation = request.generation.clone();
+    let backups_for_response = register(
+        &mut guard,
+        Session {
+            package: request.package_name.clone(),
+            user,
+            generation: request.generation,
+            attempted: HashSet::new(),
+            claimed_global: false,
+            app_pid: request.pid,
+            start: request.start,
+            unknown_since: None,
+            closing: false,
+            spec: SessionSpec {
+                props: request.props,
+                delete_props: request.delete_props,
+                density: request.density,
+            },
+            originals: Originals {
+                prop_backups: HashMap::new(),
+                absent_props: HashSet::new(),
+            },
+            activated: false,
         },
-        originals: Originals {
-            prop_backups: HashMap::new(),
-            absent_props: HashSet::new(),
+        |session| {
+            session.generation == generation
+                && crate::process_identity::start_at(std::path::Path::new("/"), session.app_pid)
+                    == Some(session.start)
         },
-        activated: false,
-    });
+    )?;
     drop(guard);
 
     Ok(backups_for_response)

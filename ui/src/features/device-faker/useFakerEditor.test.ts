@@ -12,6 +12,7 @@ vi.mock("./api", () => ({
     preview: vi.fn(),
     importPreview: vi.fn(),
     restorePreview: vi.fn(),
+    enable: vi.fn(),
     disable: vi.fn(),
   },
 }))
@@ -113,3 +114,41 @@ it("retains an acknowledged stop when status readback fails", async () => {
   expect(editor.notice.value).toBe("stopHelp")
   expect(editor.status.isError.value).toBe(true)
 })
+
+it("retains an acknowledged enable when status readback fails", async () => {
+  const initial = { ...(await fakerApi.status()), enabled: false }
+  vi.mocked(fakerApi.status).mockResolvedValue(initial)
+  const { editor } = await setup()
+  vi.mocked(fakerApi.enable).mockResolvedValue({ enabled: true, stop_revision: "initial" })
+  vi.mocked(fakerApi.status).mockRejectedValue(new Error("readback unavailable"))
+  await editor.enable()
+  expect(editor.data.value?.enabled).toBe(true)
+  expect(editor.notice.value).toBe("restartHelp")
+  expect(editor.status.isError.value).toBe(true)
+})
+
+it.each([true, false])(
+  "a delayed enable result cannot replace a later stop (success=%s)",
+  async (success) => {
+    const initial = { ...(await fakerApi.status()), enabled: false }
+    vi.mocked(fakerApi.status).mockResolvedValue(initial)
+    const { editor } = await setup()
+    const pending = deferred<{ enabled: boolean; stop_revision: string }>()
+    vi.mocked(fakerApi.enable).mockReturnValue(
+      pending.promise.then((value) => {
+        if (!success) throw new Error("obsolete enable failed")
+        return value
+      }),
+    )
+    const enabling = editor.action(editor.enable)
+    vi.mocked(fakerApi.disable).mockResolvedValue({ enabled: false, stop_revision: "stopped" })
+    vi.mocked(fakerApi.status).mockResolvedValue({ ...initial, stop_revision: "stopped" })
+    await editor.disable()
+    pending.resolve({ enabled: true, stop_revision: "initial" })
+    await enabling
+    expect(editor.data.value?.enabled).toBe(false)
+    expect(editor.data.value?.stop_revision).toBe("stopped")
+    expect(editor.notice.value).toBe("stopHelp")
+    expect(editor.error.value).toBe("")
+  },
+)

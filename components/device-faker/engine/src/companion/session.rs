@@ -1,44 +1,13 @@
 use super::platform::*;
+use super::registry::{Originals, Session, reconcile};
 use log::{error, warn};
 use std::{
     collections::{HashMap, HashSet},
     sync::{Mutex, OnceLock},
     time::{Duration, Instant},
 };
-pub(super) static SESSION: Mutex<Option<Session>> = Mutex::new(None);
 
-/// 单个前台门控会话：Apply 登记，FG 事件驱动激活/恢复。
-pub(super) struct Session {
-    pub(super) package: String,
-    pub(super) app_pid: u32,
-    pub(super) start: u64,
-    pub(super) generation: String,
-    pub(super) attempted: HashSet<String>,
-    pub(super) claimed_global: bool,
-    pub(super) unknown_since: Option<Instant>,
-    pub(super) closing: bool,
-    /// 本次伪装规格（来自 Apply 请求）
-    pub(super) spec: SessionSpec,
-    /// Apply 时采样的原始值备份（此刻全局处于干净状态）
-    pub(super) originals: Originals,
-    /// 是否已随 FG 事件中央激活
-    pub(super) activated: bool,
-}
-
-pub(super) struct SessionSpec {
-    pub(super) props: HashMap<String, String>,
-    pub(super) delete_props: Vec<String>,
-    pub(super) density: Option<u32>,
-}
-
-pub(super) struct Originals {
-    pub(super) prop_backups: HashMap<String, String>,
-    /// 备份时**真机上不存在**的 key（`prop_backups` 里只是空串占位）。restore 时
-    /// 必须 `delete` 而不是 `set ""`——否则会把"本来没有的属性"写成**空值属性**：
-    /// key 存在但值为空，`getprop` 读出来同样是空串，与"不存在"难以区分，在
-    /// `__system_property_foreach` / 全量 dump 里就是真机没有的可枚举幽灵属性。
-    pub(super) absent_props: HashSet<String>,
-}
+pub(super) static SESSIONS: Mutex<Vec<Session>> = Mutex::new(Vec::new());
 
 // ── 前台源（UidObserver 事件驱动，0.5s dumpsys 轮询兜底）───────────────────
 //
@@ -70,17 +39,16 @@ pub(super) fn spawn_fg_observer_once() {
                 std::thread::sleep(wait);
                 last = Instant::now();
                 let needs_focus = {
-                    let guard = SESSION.lock().unwrap();
-                    let Some(session) = guard.as_ref() else {
-                        continue;
-                    };
-                    crate::gate::activation_at(std::path::Path::new("/")).as_deref()
-                        == Some(session.generation.as_str())
-                        && !session.closing
-                        && crate::process_identity::start_at(
-                            std::path::Path::new("/"),
-                            session.app_pid,
-                        ) == Some(session.start)
+                    let guard = SESSIONS.lock().unwrap();
+                    let generation = crate::gate::activation_at(std::path::Path::new("/"));
+                    guard.iter().any(|session| {
+                        generation.as_deref() == Some(session.generation.as_str())
+                            && !session.closing
+                            && crate::process_identity::start_at(
+                                std::path::Path::new("/"),
+                                session.app_pid,
+                            ) == Some(session.start)
+                    })
                 };
                 let observed = if needs_focus {
                     crate::fg_observer::confirmed_fg()
@@ -122,51 +90,21 @@ pub(super) fn warn_fg_unavailable() {
     }
 }
 
-// ── 中央状态机：FG 事件驱动激活/恢复 ────────────────────────────────────────
-//
-// | 条件                                    | 动作                             |
-// |-----------------------------------------|----------------------------------|
-// | 死会话（kill 0 失败）且未激活             | 清空（搭车式惰性回收，D5）        |
-// | FG == 包名 && !activated                 | 应用 props 批量 + density，激活   |
-// | FG == 包名 && activated                  | 幂等跳过                          |
-// | FG != 包名 && activated                  | 恢复 props + density，失活        |
-// | FG == "-"（过渡态）                      | 保持现状（宁可晚不错）            |
-// | 其它                                     | 无操作                            |
-
+/// One monitor selects the latest live foreground target and restores the previous owner first.
 pub(super) fn handle_fg_event(observed: &str) {
-    let mut guard = SESSION.lock().unwrap();
-    let Some(sess) = guard.as_mut() else {
-        return;
-    };
-    let live = crate::process_identity::start_at(std::path::Path::new("/"), sess.app_pid)
-        == Some(sess.start);
-    if crate::gate::activation_at(std::path::Path::new("/")).as_deref()
-        != Some(sess.generation.as_str())
-        || !live
-        || sess.closing
-    {
-        let mut taken = guard.take().unwrap();
-        if taken.activated && !deactivate_session(&mut taken, "closed") {
-            *guard = Some(taken);
-        }
-        return;
-    }
-    let focus = observed.to_string();
-    if focus == "-" {
-        let since = sess.unknown_since.get_or_insert_with(Instant::now);
-        if !sess.activated || since.elapsed() < Duration::from_secs(2) {
-            return;
-        }
-    } else {
-        sess.unknown_since = None;
-    }
-    if focus == sess.package {
-        if !sess.activated {
-            activate_session(sess);
-        }
-    } else if sess.activated {
-        deactivate_session(sess, &focus);
-    }
+    let mut guard = SESSIONS.lock().unwrap();
+    let generation = crate::gate::activation_at(std::path::Path::new("/"));
+    reconcile(
+        &mut guard,
+        observed,
+        |session| {
+            generation.as_deref() == Some(session.generation.as_str())
+                && crate::process_identity::start_at(std::path::Path::new("/"), session.app_pid)
+                    == Some(session.start)
+        },
+        activate_session,
+        |session| deactivate_session(session, observed),
+    );
 }
 
 fn activate_session(sess: &mut Session) {
@@ -226,7 +164,7 @@ fn activate_session(sess: &mut Session) {
         return;
     }
     if let Some(density) = sess.spec.density
-        && let Err(error) = set_density(density, &sess.generation)
+        && let Err(error) = set_density(sess.user, density, &sess.generation)
     {
         error!("density activation failed: {error}");
         deactivate_session(sess, "activation failed");

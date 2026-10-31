@@ -153,9 +153,10 @@ pub(super) fn restore_owned_props(
     Ok(())
 }
 
-pub(super) fn set_density(density: u32, generation: &str) -> anyhow::Result<()> {
+pub(super) fn set_density(user: u32, density: u32, generation: &str) -> anyhow::Result<()> {
     crate::density::apply(
         std::path::Path::new("/"),
+        user,
         density,
         generation,
         &mut crate::density::AndroidBridge,

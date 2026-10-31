@@ -11,6 +11,22 @@ Unreadable, reversed, oversized and nonzero-offset mappings are rejected before 
 skip property-memory mutation. A maps snapshot cannot protect against unrelated
 concurrent unmapping; runtime discovery is still vendor/version sensitive.
 
+Private copies also validate the complete bounded trie, record offsets, names,
+inline/long payload bounds and clean property serials. At most three attempts
+bracket a second copy with source allocation/serial checks; a changing or dirty
+area is skipped before bionic receives its address. Waiting on a copied dirty bit
+would have no writer to wake it. This follows the dirty backup and acquire/release
+protocol in [bionic property reads and updates](https://android.googlesource.com/platform/bionic/+/09a271af557444c9a6b3f3146d6d474156fd6cdb/libc/system_properties/system_properties.cpp).
+Bit 16 is interpreted as the long-value flag only for `ro.*`, matching that read
+path; it remains part of the counter for mutable properties. The pinned property
+library still performs property access and mutation. A local nonblocking snapshot
+guard is necessary because its public API does not enumerate whole-area serial
+offsets without reading/waiting on values. A private area freezes its complete
+snapshot, including unrelated values in the same area; it does not track later
+global updates. Synthetic areas are protected read-only before attachment. Clone
+sealing checks protection failure and never reopens writable memory just to retain
+a cosmetic anonymous mapping name.
+
 Linux Android common kernel baseline
 [`bc537c78955c9e22326fa13e2982b9e06a3d9f23`](https://android.googlesource.com/kernel/common/+/bc537c78955c9e22326fa13e2982b9e06a3d9f23/mm/mmap.c)
 provides the VMA lifecycle reference. Owned private clones replace neither bionic's
@@ -75,6 +91,10 @@ user leaves the journal intact and performs no restore write. The pre-mutation
 baseline must fit the helper’s positive Java integer range; it is checked before
 publishing the journal or changing density. Density has a durable private recovery journal,
 independent of companion memory, and retains the journal if recovery fails.
+The current user must also match the profile-bound user before publishing a new
+density journal. A user switch between the focus observation and baseline read
+therefore cannot apply that profile to the newly active user. Writes and recovery
+continue to address the recorded user explicitly.
 
 The density helper uses explicit user IDs, following the window manager interface
 at AOSP frameworks/base
@@ -85,6 +105,12 @@ serialized by their ownership mutex; Binder callbacks only send bounded,
 coalesced notifications. Periodic checks remain active if observer registration
 fails. Queries are rate limited to at most one every 200 ms, with a normal 500 ms
 period. This is a scheduling bound, not a device performance measurement.
+The registry retains up to 256 live process-bound targets, deduplicates identical
+registrations and removes dead or stopped generations after recovery. Registering
+a background target preserves the active owner. Switching from A to B restores A
+before applying B; returning to the still-live A can activate it without another
+Zygisk callback. Unknown focus has a two-second grace period before restoration.
+Failed restoration retains the owner and blocks another activation.
 Window dumps are filtered before the 64 KiB output limit is applied. On the
 [AOSP display dump layout](https://android.googlesource.com/platform/frameworks/base/+/99b01a65cc4c104933788b3143285ab6bae65827/services/core/java/com/android/server/wm/DisplayContent.java),
 only display 0 can authorize the global profile because the density helper targets
@@ -157,6 +183,14 @@ notice; an armed but blocked engine reports unmet conditions rather than claimin
 Preview requests retain a generation invalidated by edits or page disposal, including
 edits that return to the original text. A successful stop updates cached power state
 before readback, so a failed status refresh cannot make the engine appear enabled again.
+Enable acknowledgements also update cached state before readback, following
+[TanStack mutation-response guidance](https://tanstack.com/query/latest/docs/framework/vue/guides/updates-from-mutation-responses).
+A later stop or page disposal invalidates pending enable responses and errors.
+Runtime template names use bidirectional isolation and localized list separators,
+following [W3C inline bidirectional text guidance](https://www.w3.org/International/articles/inline-bidi-markup/).
+Template-name input determines its direction from the entered text. Confirmation
+dialogs preserve intrinsic row heights and scroll rather than compressing the
+description into their actions at large text sizes.
 
 Sixteen locale dictionaries share the same keys. Browser checks cover all locales
 at 320 px, light/dark themes, 200% root font size, draft preservation and independent
