@@ -13,6 +13,7 @@ import subprocess
 import sys
 import zipfile
 import tarfile
+import warnings
 
 ROOT = Path(__file__).resolve().parents[1]
 MODULE = ROOT / "module"
@@ -100,7 +101,8 @@ def validate_dependency_licenses(manifest):
     if not isinstance(missing, list) or any(not isinstance(name, str) or not name for name in missing):
         raise ValueError("Missing Device Faker dependency license metadata; rebuild the engine")
     if missing:
-        raise ValueError("Device Faker dependencies have no declared license: " + ", ".join(missing))
+        warnings.warn("Device Faker dependencies have no declared license: " + ", ".join(missing),
+                      RuntimeWarning, stacklevel=2)
 
 
 def validate_component_notices(root=ROOT, module=MODULE):

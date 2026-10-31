@@ -17,10 +17,11 @@ permission for these separately authored dependencies. Obtain an applicable
 license from their rights holders or replace them with an implementation whose
 redistribution terms are established before distributing the linked binaries.
 The engine build records dependencies without a declared license or nonempty
-license file. Module packaging rejects such a build, including older build
-metadata without this check. Passing this check only establishes the presence
-of a declaration; it does not establish license compatibility or permission
-for code beyond that declaration's scope.
+license file. Module packaging warns about those recorded dependencies and
+continues, retaining the original notices and corresponding source. Missing or
+invalid license metadata still requires rebuilding the engine. This warning does
+not resolve the missing redistribution permission. The presence of a declaration
+alone does not establish license compatibility or permission beyond its scope.
 
 ## Build and verification
 

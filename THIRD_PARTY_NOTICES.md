@@ -66,5 +66,6 @@ dependencies is unresolved. Their pinned KernelSU2/ksu_props revision
 declaration. The component GPL notices do not supply that missing permission.
 Resolve the dependency terms or replace those dependencies before distributing
 the combined library. See the component documentation for the recorded scope.
-Module packaging rejects engine builds with missing dependency license
-declarations, and rejects older build metadata that lacks this check.
+Module packaging warns about recorded missing dependency license declarations
+without stopping assembly. It still rejects missing or invalid dependency license
+metadata. The warning does not establish redistribution permission.

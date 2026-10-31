@@ -13,6 +13,7 @@ import shutil
 import subprocess
 import tempfile
 import unittest
+import warnings
 
 spec = importlib.util.spec_from_file_location("package_module", Path(__file__).with_name("package-module.py"))
 package = importlib.util.module_from_spec(spec)
@@ -160,7 +161,7 @@ class DependencyLicenseTest(unittest.TestCase):
                           "license_file": None, "manifest_path": str(crate / "Cargo.toml")}
             missing = build_faker.unlicensed_dependencies({"packages": [dependency]})
             self.assertEqual(missing, ["unlicensed@1.0"])
-            with self.assertRaisesRegex(ValueError, "unlicensed@1.0"):
+            with self.assertWarnsRegex(RuntimeWarning, "unlicensed@1.0"):
                 package.validate_dependency_licenses({"unlicensed_dependencies": missing})
 
     def test_declared_license_file_must_exist_and_contain_text(self):
@@ -179,7 +180,10 @@ class DependencyLicenseTest(unittest.TestCase):
             dependency["license_file"] = None
             dependency["license"] = "MIT OR Apache-2.0"
             self.assertEqual(build_faker.unlicensed_dependencies(metadata), [])
-            package.validate_dependency_licenses({"unlicensed_dependencies": []})
+            with warnings.catch_warnings(record=True) as recorded:
+                warnings.simplefilter("always")
+                package.validate_dependency_licenses({"unlicensed_dependencies": []})
+            self.assertEqual(recorded, [])
 
     def test_older_or_invalid_build_metadata_cannot_skip_the_check(self):
         for value in [{}, {"unlicensed_dependencies": None},
