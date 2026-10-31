@@ -12,6 +12,14 @@ pub struct Paths {
     root: PathBuf,
     data: PathBuf,
 }
+struct TransactionLock(File);
+impl Drop for TransactionLock {
+    fn drop(&mut self) {
+        // A fork may retain this descriptor after the transaction has finished.
+        // Release ownership explicitly instead of waiting for every copy to close.
+        let _ = self.0.unlock();
+    }
+}
 impl Paths {
     fn discover() -> Result<Self> {
         let root =
@@ -44,7 +52,7 @@ impl Paths {
         Ok(read(&self.file("enabled"), 256)?
             .is_some_and(|token| self.stop_revision().is_ok_and(|stop| stop == token)))
     }
-    fn lock(&self) -> Result<File> {
+    fn lock(&self) -> Result<TransactionLock> {
         private_dir(&self.data)?;
         let lock = File::options()
             .create(true)
@@ -53,7 +61,7 @@ impl Paths {
             .open(self.file("lock"))?;
         lock.try_lock()
             .context("another Device Faker write is running")?;
-        Ok(lock)
+        Ok(TransactionLock(lock))
     }
 }
 fn read(path: &Path, limit: usize) -> Result<Option<String>> {
@@ -180,6 +188,7 @@ fn run_boot(paths: &Paths, stages: impl FnOnce() -> Result<()>) -> Result<Value>
         Err(std::fs::TryLockError::WouldBlock) => return Ok(json!({"boot_in_progress":true})),
         Err(error) => return Err(error.into()),
     }
+    let _lock = TransactionLock(lock);
     if crate::gate::startup_ready_at(&paths.root) {
         return Ok(json!({"startup_ready":true,"already_completed":true}));
     }

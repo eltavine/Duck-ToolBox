@@ -305,3 +305,83 @@ fn startup_cannot_overwrite_a_same_boot_orphan_but_clears_a_previous_boot() {
     assert!(!marker.exists());
     assert!(crate::gate::startup_ready_at(&paths.root));
 }
+
+#[cfg(unix)]
+#[test]
+fn completed_transactions_release_locks_inherited_by_a_forked_child() {
+    const CHILD: &str = "DEVICE_FAKER_TEST_INHERITED_STATE_LOCKS";
+    if std::env::var_os(CHILD).is_none() {
+        assert!(
+            std::process::Command::new(std::env::current_exe().unwrap())
+                .args([
+                    "--exact",
+                    "state::tests::completed_transactions_release_locks_inherited_by_a_forked_child"
+                ])
+                .env(CHILD, "1")
+                .status()
+                .unwrap()
+                .success()
+        );
+        return;
+    }
+    struct PausedChild(libc::pid_t);
+    impl Drop for PausedChild {
+        fn drop(&mut self) {
+            // SAFETY: this test owns the unreaped child until this guard is dropped.
+            unsafe {
+                libc::kill(self.0, libc::SIGKILL);
+                while libc::waitpid(self.0, std::ptr::null_mut(), 0) < 0 {
+                    if std::io::Error::last_os_error().raw_os_error() != Some(libc::EINTR) {
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    fn fork_paused() -> PausedChild {
+        // SAFETY: the isolated child only calls async-signal-safe pause before being reaped.
+        let pid = unsafe { libc::fork() };
+        assert!(pid >= 0);
+        if pid == 0 {
+            loop {
+                unsafe {
+                    libc::pause();
+                }
+            }
+        }
+        PausedChild(pid)
+    }
+    let (_root, paths) = boot_fixture();
+    {
+        let lock = paths.lock().unwrap();
+        let _child = fork_paused();
+        assert!(paths.lock().is_err(), "an active writer remains exclusive");
+        drop(lock);
+        assert!(
+            paths.lock().is_ok(),
+            "an inherited descriptor must not retain a completed write lock"
+        );
+    }
+    let mut child = None;
+    run_boot(&paths, || {
+        child = Some(fork_paused());
+        Ok(())
+    })
+    .unwrap();
+    let _child = child.unwrap();
+    fs::remove_file(paths.file("ready")).unwrap();
+    let marker = crate::global_marker::path(&paths.root);
+    write(&marker, "previous-boot\n2000000000\n42\ninitial\n").unwrap();
+    let mut ran = false;
+    let result = run_boot(&paths, || {
+        ran = true;
+        Ok(())
+    })
+    .unwrap();
+    assert_eq!(result["startup_ready"], true);
+    assert!(
+        ran,
+        "an inherited descriptor must not retain a completed boot lock"
+    );
+    assert!(!marker.exists());
+}
