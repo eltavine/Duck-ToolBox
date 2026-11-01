@@ -1,0 +1,2194 @@
+{
+  "source": {
+    "issue": "https://github.com/eltavine/Duck-ToolBox/issues/48",
+    "attachment": "https://github.com/user-attachments/files/34215450/default.txt",
+    "contributor": "SkyQiQiQwQ",
+    "sha256": "3217f4e6096e9fd0ca2891d31b3a58a1ddcc1aeca38902c7cf596422af370586"
+  },
+  "devices": [
+    {
+      "id": "lenovo-tb323fu",
+      "label": "Lenovo Y700 五代",
+      "fields": {
+        "manufacturer": "LENOVO",
+        "brand": "Lenovo",
+        "model": "TB323FU",
+        "marketname": "拯救者平板 Y700",
+        "device": "TB323FU",
+        "product": "TB323FU",
+        "name": "TB323FU",
+        "build_id": "BQ2A.250831.001-BP2A.250605.031.A3",
+        "fingerprint": "Lenovo/TB323FU/TB323FU:16/BQ2A.250831.001-BP2A.250605.031.A3/02.083.251119C:user/release-keys"
+      }
+    },
+    {
+      "id": "lenovo-tb322fc",
+      "label": "Lenovo Y700 四代",
+      "fields": {
+        "manufacturer": "LENOVO",
+        "brand": "Lenovo",
+        "model": "TB322FC",
+        "marketname": "拯救者平板 Y700",
+        "device": "TB322FC",
+        "product": "TB322FC",
+        "name": "TB322FC",
+        "build_id": "AQ3A.250129.001",
+        "fingerprint": "Lenovo/TB322FC_PRC/TB322FC:15/AQ3A.250129.001/ZUXOS_1.1.11.263_251105_PRC:user/release-keys"
+      }
+    },
+    {
+      "id": "lenovo-tb522fu",
+      "label": "Lenovo Y900-13",
+      "fields": {
+        "manufacturer": "LENOVO",
+        "brand": "Lenovo",
+        "model": "TB522FU",
+        "marketname": "拯救者平板 Y900-13",
+        "device": "TB522FU",
+        "product": "TB522FU",
+        "name": "TB522FU",
+        "build_id": "BQ2A.250831.001",
+        "fingerprint": "Lenovo/TB522FU/TB522FU:16/BQ2A.250831.001/11.048.260509C:user/release-keys"
+      }
+    },
+    {
+      "id": "lenovo-xt2611-1",
+      "label": "Lenovo 拯救者手机 Y70 新一代",
+      "fields": {
+        "manufacturer": "Lenovo",
+        "brand": "Lenovo",
+        "model": "XT2611-1",
+        "marketname": "Lenovo 拯救者手机 Y70 新一代"
+      }
+    },
+    {
+      "id": "oppo-plp110",
+      "label": "OPPO Find N6",
+      "fields": {
+        "manufacturer": "oppo",
+        "brand": "oppo",
+        "model": "PLP110",
+        "marketname": "OPPO Find N6"
+      }
+    },
+    {
+      "id": "oppo-pkj110",
+      "label": "OPPO Find X8 Ultra",
+      "fields": {
+        "manufacturer": "oppo",
+        "brand": "oppo",
+        "model": "PKJ110",
+        "marketname": "Find X8 Ultra",
+        "device": "PKJ110",
+        "product": "PKJ110",
+        "name": "PKJ110",
+        "build_id": "AP3A.240617.008",
+        "fingerprint": "oppo/PKJ110/PKJ110:15/AP3A.240617.008/1758264862075:user/release-keys"
+      }
+    },
+    {
+      "id": "oppo-pma110",
+      "label": "OPPO Find X9 Ultra",
+      "fields": {
+        "manufacturer": "oppo",
+        "brand": "oppo",
+        "model": "PMA110",
+        "marketname": "OPPO Find X9 Ultra"
+      }
+    },
+    {
+      "id": "oppo-pma120",
+      "label": "OPPO Find X9 Ultra卫星通信版",
+      "fields": {
+        "manufacturer": "oppo",
+        "brand": "oppo",
+        "model": "PMA120",
+        "marketname": "OPPO Find X9 Ultra卫星通信版"
+      }
+    },
+    {
+      "id": "oppo-pme110",
+      "label": "OPPO Find X9s Pro",
+      "fields": {
+        "manufacturer": "OPPO",
+        "brand": "OPPO",
+        "model": "PME110",
+        "marketname": "Find X9s Pro",
+        "device": "OP61C1L1",
+        "product": "PME110",
+        "name": "PME110",
+        "build_id": "BP2A.250605.015",
+        "fingerprint": "OPPO/PME110/OP61C1L1:16/BP2A.250605.015/B.331e10a-f8b732-f9320b:user/release-keys"
+      }
+    },
+    {
+      "id": "oppo-opd2405",
+      "label": "OPPO Pad 3",
+      "fields": {
+        "manufacturer": "oppo",
+        "brand": "oppo",
+        "model": "OPD2405",
+        "marketname": "OPPO Pad 3"
+      }
+    },
+    {
+      "id": "oppo-opd2401",
+      "label": "OPPO Pad 3 Pro",
+      "fields": {
+        "manufacturer": "oppo",
+        "brand": "oppo",
+        "model": "OPD2401",
+        "marketname": "OPPO Pad 3 Pro"
+      }
+    },
+    {
+      "id": "oppo-opd2409",
+      "label": "OPPO Pad 4 Pro",
+      "fields": {
+        "manufacturer": "oppo",
+        "brand": "oppo",
+        "model": "OPD2409",
+        "marketname": "OPPO Pad 4 Pro"
+      }
+    },
+    {
+      "id": "oppo-opd2511",
+      "label": "OPPO Pad 5 Pro",
+      "fields": {
+        "manufacturer": "oppo",
+        "brand": "oppo",
+        "model": "OPD2511",
+        "marketname": "OPPO Pad 5 Pro"
+      }
+    },
+    {
+      "id": "oppo-opd2515",
+      "label": "OPPO Pad Mini",
+      "fields": {
+        "manufacturer": "oppo",
+        "brand": "oppo",
+        "model": "OPD2515",
+        "marketname": "OPPO Pad Mini"
+      }
+    },
+    {
+      "id": "vivo-v2546a",
+      "label": "iQOO 15 Ultra",
+      "fields": {
+        "manufacturer": "vivo",
+        "brand": "vivo",
+        "model": "V2546A",
+        "marketname": "iQOO 15 Ultra"
+      }
+    },
+    {
+      "id": "motorola-xt2601-1",
+      "label": "moto X70 Air",
+      "fields": {
+        "manufacturer": "Motorola",
+        "brand": "Motorola",
+        "model": "XT2601-1",
+        "marketname": "moto X70 Air"
+      }
+    },
+    {
+      "id": "motorola-xt2603-1",
+      "label": "moto X70 Air Pro",
+      "fields": {
+        "manufacturer": "Motorola",
+        "brand": "Motorola",
+        "model": "XT2603-1",
+        "marketname": "moto X70 Air Pro"
+      }
+    },
+    {
+      "id": "motorola-xt2651-4",
+      "label": "moto razr Fold",
+      "fields": {
+        "manufacturer": "Motorola",
+        "brand": "Motorola",
+        "model": "XT2651-4",
+        "marketname": "moto razr Fold"
+      }
+    },
+    {
+      "id": "vivo-v2547a",
+      "label": "vivo X300 Ultra",
+      "fields": {
+        "manufacturer": "vivo",
+        "brand": "vivo",
+        "model": "V2547A",
+        "marketname": "vivo X300 Ultra",
+        "device": "PD2547",
+        "product": "PD2547",
+        "name": "PD2547",
+        "build_id": "BP2A.250605.031.A3_V000L1",
+        "fingerprint": "vivo/PD2547/PD2547:16/BP2A.250605.031.A3_V000L1/compiler260424204746:user/release-keys"
+      }
+    },
+    {
+      "id": "vivo-v2547da",
+      "label": "vivo X300 Ultra摄影师版",
+      "fields": {
+        "manufacturer": "vivo",
+        "brand": "vivo",
+        "model": "V2547DA",
+        "marketname": "vivo X300 Ultra摄影师版"
+      }
+    },
+    {
+      "id": "vivo-v2548a",
+      "label": "vivo X300 s",
+      "fields": {
+        "manufacturer": "vivo",
+        "brand": "vivo",
+        "model": "V2548A",
+        "marketname": "vivo X300 s"
+      }
+    },
+    {
+      "id": "oneplus-plz110",
+      "label": "一加 15 T",
+      "fields": {
+        "manufacturer": "OnePlus",
+        "brand": "OnePlus",
+        "model": "PLZ110",
+        "marketname": "OnePlus 15 T"
+      }
+    },
+    {
+      "id": "oneplus-pmb110",
+      "label": "一加 ACE6 至尊版",
+      "fields": {
+        "manufacturer": "oneplus",
+        "brand": "oneplus",
+        "model": "PMB110",
+        "marketname": "一加 ACE6 至尊版"
+      }
+    },
+    {
+      "id": "oneplus-opd2513",
+      "label": "一加平板 3 Pro",
+      "fields": {
+        "manufacturer": "oneplus",
+        "brand": "oneplus",
+        "model": "OPD2513",
+        "marketname": "一加平板 3 Pro"
+      }
+    },
+    {
+      "id": "samsung-sm-s9420",
+      "label": "三星 Galaxy S26",
+      "fields": {
+        "manufacturer": "samsung",
+        "brand": "samsung",
+        "model": "SM-S9420",
+        "marketname": "Galaxy S26"
+      }
+    },
+    {
+      "id": "samsung-sm-s9480",
+      "label": "三星 Galaxy S26 Ultra",
+      "fields": {
+        "manufacturer": "samsung",
+        "brand": "samsung",
+        "model": "SM-S9480",
+        "marketname": "Galaxy S26 Ultra"
+      }
+    },
+    {
+      "id": "samsung-sm-s9470",
+      "label": "三星 Galaxy S26+",
+      "fields": {
+        "manufacturer": "samsung",
+        "brand": "samsung",
+        "model": "SM-S9470",
+        "marketname": "Galaxy S26+"
+      }
+    },
+    {
+      "id": "huawei-sgt-al10",
+      "label": "华为 Mate 80 Pro Max 风驰版",
+      "fields": {
+        "manufacturer": "HUAWEI",
+        "brand": "HUAWEI",
+        "model": "SGT-AL10",
+        "marketname": "HUAWEI Mate 80 Pro Max 风驰版",
+        "device": "SGT-AL10",
+        "product": "SGT-AL10",
+        "name": "SGT-AL10",
+        "fingerprint": "HUAWEI/SGT-AL10/SGT-AL10:OpenHarmony-6.1.0.115/6.1.1.115:user/release-keys"
+      }
+    },
+    {
+      "id": "huawei-kee-al00",
+      "label": "华为 Pura 90",
+      "fields": {
+        "manufacturer": "huawei",
+        "brand": "huawei",
+        "model": "KEE-AL00",
+        "marketname": "华为 Pura 90"
+      }
+    },
+    {
+      "id": "huawei-mln-al00",
+      "label": "华为 Pura 90 Pro",
+      "fields": {
+        "manufacturer": "huawei",
+        "brand": "huawei",
+        "model": "MLN-AL00",
+        "marketname": "华为 Pura 90 Pro"
+      }
+    },
+    {
+      "id": "huawei-sca-al00",
+      "label": "华为 Pura 90 Pro Max",
+      "fields": {
+        "manufacturer": "huawei",
+        "brand": "huawei",
+        "model": "SCA-AL00",
+        "marketname": "HUAWEI Pura 90 Pro Max",
+        "device": "SCA-AL00",
+        "product": "SCA-AL00",
+        "name": "SCA-AL00",
+        "fingerprint": "huawei/SCA-AL00/SCA-AL00:OpenHarmony-6.1.1.125/OHOS.6.1.1.125/6.1.1.125:user/release-keys"
+      }
+    },
+    {
+      "id": "huawei-hop-al00",
+      "label": "华为 Pura X Max",
+      "fields": {
+        "manufacturer": "huawei",
+        "brand": "huawei",
+        "model": "HOP-AL00",
+        "marketname": "华为 Pura X Max"
+      }
+    },
+    {
+      "id": "realme-rmx8899",
+      "label": "真我 Neo 8",
+      "fields": {
+        "manufacturer": "realme",
+        "brand": "realme",
+        "model": "RMX8899",
+        "marketname": "真我 Neo 8"
+      }
+    },
+    {
+      "id": "redmi-26048rp6ac",
+      "label": "REDMI K Pad 2",
+      "fields": {
+        "manufacturer": "Xiaomi",
+        "brand": "REDMI",
+        "model": "26048RP6AC",
+        "marketname": "REDMI K Pad 2",
+        "name": "yili"
+      }
+    },
+    {
+      "id": "redmi-2604frk1ec",
+      "label": "REDMI K90 Max",
+      "fields": {
+        "manufacturer": "Xiaomi",
+        "brand": "REDMI",
+        "model": "2604FRK1EC",
+        "marketname": "REDMI K90 Max",
+        "name": "prague"
+      }
+    },
+    {
+      "id": "redmagic-nx799j",
+      "label": "红魔 11 Air",
+      "fields": {
+        "manufacturer": "nubia",
+        "brand": "REDMAGIC",
+        "model": "NX799J",
+        "marketname": "NX799J",
+        "device": "NX799J",
+        "product": "NX799J",
+        "name": "NX799J",
+        "build_id": "BQ2A.250705.001-BP2A.250605.031.A3",
+        "fingerprint": "REDMAGIC/NX799J/NX799J:16/BQ2A.250705.001-BP2A.250605.031.A3/20260109.100337:user/release-keys"
+      }
+    },
+    {
+      "id": "redmagic-nx809j",
+      "label": "红魔 11 Pro",
+      "fields": {
+        "manufacturer": "nubia",
+        "brand": "REDMAGIC",
+        "model": "NX809J",
+        "marketname": "NX809J",
+        "device": "NX809J",
+        "product": "NX809J",
+        "name": "NX809J",
+        "build_id": "BQ2A.250705.001-BP2A.250605.031.A3",
+        "fingerprint": "REDMAGIC/NX809J/NX809J:16/BQ2A.250705.001-BP2A.250605.031.A3/20250924.081558:user/release-keys"
+      }
+    },
+    {
+      "id": "nubia-np02j",
+      "label": "红魔平板 3D探索版",
+      "fields": {
+        "manufacturer": "nubia",
+        "brand": "nubia",
+        "model": "NP02J",
+        "marketname": "CN_NP02J_RM",
+        "device": "K68",
+        "product": "CN_NP02J_RM",
+        "name": "CN_NP02J_RM",
+        "build_id": "TKQ1.221220.001",
+        "fingerprint": "nubia/CN_NP02J_RM/K68:13/TKQ1.221220.001/20240816.112732:user/release-keys"
+      }
+    },
+    {
+      "id": "nubia-np06j",
+      "label": "红魔 Pad 5 Pro",
+      "fields": {
+        "manufacturer": "nubia",
+        "brand": "nubia",
+        "model": "NP06J",
+        "marketname": "红魔 Pad 5 Pro"
+      }
+    },
+    {
+      "id": "nubia-np03j",
+      "label": "红魔电竞平板 Pro",
+      "fields": {
+        "manufacturer": "nubia",
+        "brand": "nubia",
+        "model": "NP03J",
+        "marketname": "红魔电竞平板 Pro",
+        "device": "PQ83P01",
+        "product": "CN_PQ83P01",
+        "name": "CN_PQ83P01",
+        "build_id": "UKQ1.230917.001",
+        "fingerprint": "nubia/CN_PQ83P01/PQ83P01:14/UKQ1.230917.001/20250108.154650:user/release-keys"
+      }
+    },
+    {
+      "id": "nubia-np05j",
+      "label": "红魔电竞平板3 Pro",
+      "fields": {
+        "manufacturer": "nubia",
+        "brand": "nubia",
+        "model": "NP05J",
+        "marketname": "红魔电竞平板3 Pro",
+        "device": "PQ84P01",
+        "product": "CN_PQ84P01",
+        "name": "CN_PQ84P01",
+        "build_id": "AQ3A.240812.002",
+        "fingerprint": "nubia/CN_PQ84P01/PQ84P01:15/AQ3A.240812.002/20250730.005045:user/release-keys"
+      }
+    },
+    {
+      "id": "honor-ldy-an00",
+      "label": "荣耀 Magic 8 Pro Air",
+      "fields": {
+        "manufacturer": "HONOR",
+        "brand": "HONOR",
+        "model": "LDY-AN00",
+        "marketname": "荣耀 Magic 8 Pro Air"
+      }
+    },
+    {
+      "id": "honor-bkq-an20",
+      "label": "荣耀 Magic 8 RSR",
+      "fields": {
+        "manufacturer": "HONOR",
+        "brand": "HONOR",
+        "model": "BKQ-AN20",
+        "marketname": "荣耀 Magic 8 RSR"
+      }
+    },
+    {
+      "id": "honor-pnm-an10",
+      "label": "荣耀 Magic V6",
+      "fields": {
+        "manufacturer": "HONOR",
+        "brand": "HONOR",
+        "model": "PNM-AN10",
+        "marketname": "荣耀 Magic V6"
+      }
+    },
+    {
+      "id": "honor-pnm-an20",
+      "label": "荣耀 Magic V6 1TB 卫星通信版",
+      "fields": {
+        "manufacturer": "HONOR",
+        "brand": "HONOR",
+        "model": "PNM-AN20",
+        "marketname": "荣耀 Magic V6 1TB 卫星通信版"
+      }
+    },
+    {
+      "id": "honor-aak-an00",
+      "label": "荣耀 WIN RT",
+      "fields": {
+        "manufacturer": "HONOR",
+        "brand": "HONOR",
+        "model": "AAK-AN00",
+        "marketname": "荣耀 WIN RT"
+      }
+    },
+    {
+      "id": "oneplus-plk110",
+      "label": "一加15",
+      "fields": {
+        "manufacturer": "OnePlus",
+        "brand": "OnePlus",
+        "model": "PLK110",
+        "marketname": "OnePlus 15",
+        "device": "PLK110",
+        "product": "PLK110",
+        "name": "PLK110",
+        "fingerprint": "OnePlus/PLK110/PLK110:16/AP3A.240617.008/V.10eb425_12d9949_12ce9c3:user/release-keys"
+      }
+    },
+    {
+      "id": "vivo-v2505a",
+      "label": "iQOO 15",
+      "fields": {
+        "manufacturer": "vivo",
+        "brand": "vivo",
+        "model": "V2505A",
+        "marketname": "iQOO 15"
+      }
+    },
+    {
+      "id": "vivo-v2606a",
+      "label": "iQOO 16",
+      "fields": {
+        "manufacturer": "vivo",
+        "brand": "vivo",
+        "model": "V2606A",
+        "marketname": "iQOO 16"
+      }
+    },
+    {
+      "id": "oppo-pls120",
+      "label": "OPPO A6",
+      "fields": {
+        "manufacturer": "oppo",
+        "brand": "oppo",
+        "model": "PLS120",
+        "marketname": "OPPO A6"
+      }
+    },
+    {
+      "id": "oppo-plp120",
+      "label": "OPPO Find N6 卫星通信版",
+      "fields": {
+        "manufacturer": "oppo",
+        "brand": "oppo",
+        "model": "PLP120",
+        "marketname": "OPPO Find N6 卫星通信版"
+      }
+    },
+    {
+      "id": "asus-asus_ai2501_a",
+      "label": "ROG 游戏手机 9 Pro",
+      "fields": {
+        "manufacturer": "ASUS",
+        "brand": "ASUS",
+        "model": "ASUS_AI2501_A",
+        "marketname": "ROG Phone 9 Pro"
+      }
+    },
+    {
+      "id": "redmi-25102rkbec",
+      "label": "REDMI K90 Pro Max",
+      "fields": {
+        "manufacturer": "Xiaomi",
+        "brand": "REDMI",
+        "model": "25102RKBEC",
+        "marketname": "REDMI K90 Pro Max",
+        "name": "myron"
+      }
+    },
+    {
+      "id": "redmi-2510drk44c",
+      "label": "REDMI K90",
+      "fields": {
+        "manufacturer": "Xiaomi",
+        "brand": "REDMI",
+        "model": "2510DRK44C",
+        "marketname": "REDMI K90",
+        "name": "annibale"
+      }
+    },
+    {
+      "id": "lenovo-tb376fc",
+      "label": "联想AI平板 小新平板Pro 13",
+      "fields": {
+        "manufacturer": "Lenovo",
+        "brand": "Lenovo",
+        "model": "TB376FC",
+        "marketname": "小新平板Pro 13"
+      }
+    },
+    {
+      "id": "lenovo-tb378fc",
+      "label": "联想AI平板 小新平板Pro GT 13",
+      "fields": {
+        "manufacturer": "Lenovo",
+        "brand": "Lenovo",
+        "model": "TB378FC",
+        "marketname": "小新平板Pro GT 13"
+      }
+    },
+    {
+      "id": "lenovo-tb321fu",
+      "label": "拯救者平板 Y700 2025",
+      "fields": {
+        "manufacturer": "Lenovo",
+        "brand": "Lenovo",
+        "model": "TB321FU",
+        "marketname": "拯救者平板 Y700"
+      }
+    },
+    {
+      "id": "lenovo-l71091",
+      "label": "拯救者手机 Y70",
+      "fields": {
+        "manufacturer": "Lenovo",
+        "brand": "Lenovo",
+        "model": "L71091",
+        "marketname": "拯救者 Y70"
+      }
+    },
+    {
+      "id": "honor-aap-an00",
+      "label": "荣耀WIN",
+      "fields": {
+        "manufacturer": "HONOR",
+        "brand": "HONOR",
+        "model": "AAP-AN00",
+        "marketname": "荣耀WIN"
+      }
+    },
+    {
+      "id": "xiaomi-2509fpn0bc",
+      "label": "Xiaomi 17 Pro Max",
+      "fields": {
+        "manufacturer": "Xiaomi",
+        "brand": "Xiaomi",
+        "model": "2509FPN0BC",
+        "marketname": "Xiaomi 17 Pro Max",
+        "name": "popsicle"
+      }
+    },
+    {
+      "id": "xiaomi-25098pn5ac",
+      "label": "Xiaomi 17 Pro",
+      "fields": {
+        "manufacturer": "Xiaomi",
+        "brand": "Xiaomi",
+        "model": "25098PN5AC",
+        "marketname": "Xiaomi 17 Pro",
+        "name": "pandora"
+      }
+    },
+    {
+      "id": "xiaomi-25128pna1c",
+      "label": "小米 17 Ultra 双卫星通信版",
+      "fields": {
+        "manufacturer": "Xiaomi",
+        "brand": "Xiaomi",
+        "model": "25128PNA1C",
+        "marketname": "Xiaomi 17 Ultra 双卫星通信版",
+        "name": "nezha"
+      }
+    },
+    {
+      "id": "xiaomi-2512bpndac",
+      "label": "Xiaomi 17 Ultra",
+      "fields": {
+        "manufacturer": "Xiaomi",
+        "brand": "Xiaomi",
+        "model": "2512BPNDAC",
+        "marketname": "Xiaomi 17 Ultra",
+        "name": "nezha"
+      }
+    },
+    {
+      "id": "xiaomi-25113pn0ec",
+      "label": "Xiaomi 17",
+      "fields": {
+        "manufacturer": "Xiaomi",
+        "brand": "Xiaomi",
+        "model": "25113PN0EC",
+        "marketname": "Xiaomi 17",
+        "name": "pudding"
+      }
+    },
+    {
+      "id": "xiaomi-23046rp50c",
+      "label": "Xiaomi Pad 6 Pro",
+      "fields": {
+        "manufacturer": "Xiaomi",
+        "brand": "Xiaomi",
+        "model": "23046RP50C",
+        "marketname": "Xiaomi Pad 6 Pro",
+        "name": "liuqin"
+      }
+    },
+    {
+      "id": "xiaomi-23043rp34c",
+      "label": "Xiaomi Pad 6",
+      "fields": {
+        "manufacturer": "Xiaomi",
+        "brand": "Xiaomi",
+        "model": "23043RP34C",
+        "marketname": "Xiaomi Pad 6",
+        "name": "pipa"
+      }
+    },
+    {
+      "id": "xiaomi-25091rp04c",
+      "label": "Xiaomi Pad 8 Pro",
+      "fields": {
+        "manufacturer": "Xiaomi",
+        "brand": "Xiaomi",
+        "model": "25091RP04C",
+        "marketname": "Xiaomi Pad 8 Pro",
+        "name": "piano"
+      }
+    },
+    {
+      "id": "oneplus-plc110",
+      "label": "一加Ace 5 至尊版",
+      "fields": {
+        "manufacturer": "OnePlus",
+        "brand": "OnePlus",
+        "model": "PLC110",
+        "marketname": "一加Ace 5 至尊版"
+      }
+    },
+    {
+      "id": "oneplus-plq110",
+      "label": "一加Ace 6",
+      "fields": {
+        "manufacturer": "OnePlus",
+        "brand": "OnePlus",
+        "model": "PLQ110",
+        "marketname": "一加Ace 6"
+      }
+    },
+    {
+      "id": "oneplus-plr110",
+      "label": "一加Ace 6T",
+      "fields": {
+        "manufacturer": "OnePlus",
+        "brand": "OnePlus",
+        "model": "PLR110",
+        "marketname": "一加Ace 6T"
+      }
+    },
+    {
+      "id": "oneplus-plu110",
+      "label": "一加Turbo 6",
+      "fields": {
+        "manufacturer": "OnePlus",
+        "brand": "OnePlus",
+        "model": "PLU110",
+        "marketname": "一加Turbo 6"
+      }
+    },
+    {
+      "id": "oneplus-ply110",
+      "label": "一加Turbo 6V",
+      "fields": {
+        "manufacturer": "OnePlus",
+        "brand": "OnePlus",
+        "model": "PLY110",
+        "marketname": "一加Turbo 6V"
+      }
+    },
+    {
+      "id": "oneplus-opd2413",
+      "label": "一加平板 2 Pro",
+      "fields": {
+        "manufacturer": "OnePlus",
+        "brand": "OnePlus",
+        "model": "OPD2413",
+        "marketname": "一加平板 2 Pro"
+      }
+    },
+    {
+      "id": "oneplus-opd2508",
+      "label": "一加平板2",
+      "fields": {
+        "manufacturer": "OnePlus",
+        "brand": "OnePlus",
+        "model": "OPD2508",
+        "marketname": "一加平板2"
+      }
+    },
+    {
+      "id": "oppo-pkd130",
+      "label": "OPPO A3x",
+      "fields": {
+        "manufacturer": "OPPO",
+        "brand": "OPPO",
+        "model": "PKD130",
+        "marketname": "OPPO A3x"
+      }
+    },
+    {
+      "id": "oppo-pkq110",
+      "label": "OPPO A5",
+      "fields": {
+        "manufacturer": "OPPO",
+        "brand": "OPPO",
+        "model": "PKQ110",
+        "marketname": "OPPO A5"
+      }
+    },
+    {
+      "id": "oppo-pkh110",
+      "label": "OPPO Find N5",
+      "fields": {
+        "manufacturer": "OPPO",
+        "brand": "OPPO",
+        "model": "PKH110",
+        "marketname": "OPPO Find N5"
+      }
+    },
+    {
+      "id": "oppo-pfem10",
+      "label": "OPPO Find X5 Pro",
+      "fields": {
+        "manufacturer": "OPPO",
+        "brand": "OPPO",
+        "model": "PFEM10",
+        "marketname": "OPPO Find X5 Pro"
+      }
+    },
+    {
+      "id": "oppo-pkc110",
+      "label": "OPPO Find X8 Pro",
+      "fields": {
+        "manufacturer": "OPPO",
+        "brand": "OPPO",
+        "model": "PKC110",
+        "marketname": "OPPO Find X8 Pro"
+      }
+    },
+    {
+      "id": "oppo-pkb110",
+      "label": "OPPO Find X8",
+      "fields": {
+        "manufacturer": "OPPO",
+        "brand": "OPPO",
+        "model": "PKB110",
+        "marketname": "OPPO Find X8"
+      }
+    },
+    {
+      "id": "oppo-pkt110",
+      "label": "OPPO Find X8s",
+      "fields": {
+        "manufacturer": "oppo",
+        "brand": "oppo",
+        "model": "PKT110",
+        "marketname": "OPPO Find X8s"
+      }
+    },
+    {
+      "id": "oppo-plg120",
+      "label": "OPPO Find X9 Pro 卫星通信版",
+      "fields": {
+        "manufacturer": "oppo",
+        "brand": "oppo",
+        "model": "PLG120",
+        "marketname": "OPPO Find X9 Pro 卫星通信版"
+      }
+    },
+    {
+      "id": "oppo-plg110",
+      "label": "OPPO Find X9 Pro",
+      "fields": {
+        "manufacturer": "oppo",
+        "brand": "oppo",
+        "model": "PLG110",
+        "marketname": "OPPO Find X9 Pro"
+      }
+    },
+    {
+      "id": "oppo-plj110",
+      "label": "OPPO Find X9",
+      "fields": {
+        "manufacturer": "oppo",
+        "brand": "oppo",
+        "model": "PLJ110",
+        "marketname": "OPPO Find X9"
+      }
+    },
+    {
+      "id": "oppo-pks110",
+      "label": "OPPO K12 Plus",
+      "fields": {
+        "manufacturer": "oppo",
+        "brand": "oppo",
+        "model": "PKS110",
+        "marketname": "OPPO K12 Plus"
+      }
+    },
+    {
+      "id": "oppo-opd2506",
+      "label": "OPPO Pad 5",
+      "fields": {
+        "manufacturer": "oppo",
+        "brand": "oppo",
+        "model": "OPD2506",
+        "marketname": "OPPO Pad 5"
+      }
+    },
+    {
+      "id": "oneplus-pjd110",
+      "label": "一加12",
+      "fields": {
+        "manufacturer": "OnePlus",
+        "brand": "OnePlus",
+        "model": "PJD110",
+        "marketname": "一加12"
+      }
+    },
+    {
+      "id": "oneplus-pjz110",
+      "label": "一加13",
+      "fields": {
+        "manufacturer": "OnePlus",
+        "brand": "OnePlus",
+        "model": "PJZ110",
+        "marketname": "一加13"
+      }
+    },
+    {
+      "id": "oneplus-pkx110",
+      "label": "一加13T",
+      "fields": {
+        "manufacturer": "OnePlus",
+        "brand": "OnePlus",
+        "model": "PKX110",
+        "marketname": "一加13T"
+      }
+    },
+    {
+      "id": "oneplus-pja110",
+      "label": "一加Ace 2 pro",
+      "fields": {
+        "manufacturer": "OnePlus",
+        "brand": "OnePlus",
+        "model": "PJA110",
+        "marketname": "一加Ace 2 Pro"
+      }
+    },
+    {
+      "id": "oneplus-pjf110",
+      "label": "一加Ace 3V",
+      "fields": {
+        "manufacturer": "OnePlus",
+        "brand": "OnePlus",
+        "model": "PJF110",
+        "marketname": "一加Ace 3V"
+      }
+    },
+    {
+      "id": "oneplus-pkr110",
+      "label": "一加Ace 5 pro",
+      "fields": {
+        "manufacturer": "OnePlus",
+        "brand": "OnePlus",
+        "model": "PKR110",
+        "marketname": "一加Ace 5 Pro"
+      }
+    },
+    {
+      "id": "oneplus-pgkm10",
+      "label": "一加ACE",
+      "fields": {
+        "manufacturer": "OnePlus",
+        "brand": "OnePlus",
+        "model": "PGKM10",
+        "marketname": "一加ACE"
+      }
+    },
+    {
+      "id": "oneplus-opd2404",
+      "label": "一加平板 Pro",
+      "fields": {
+        "manufacturer": "OnePlus",
+        "brand": "OnePlus",
+        "model": "OPD2404",
+        "marketname": "一加平板 Pro"
+      }
+    },
+    {
+      "id": "realme-rmx6699",
+      "label": "真我 GT8 Pro",
+      "fields": {
+        "manufacturer": "realme",
+        "brand": "realme",
+        "model": "RMX6699",
+        "marketname": "真我 GT8 Pro"
+      }
+    },
+    {
+      "id": "realme-rmx5112",
+      "label": "真我15 Pro",
+      "fields": {
+        "manufacturer": "realme",
+        "brand": "realme",
+        "model": "RMX5112",
+        "marketname": "真我15 Pro"
+      }
+    },
+    {
+      "id": "realme-rmx5010",
+      "label": "真我GT7 Pro",
+      "fields": {
+        "manufacturer": "realme",
+        "brand": "realme",
+        "model": "RMX5010",
+        "marketname": "realme GT7 Pro"
+      }
+    },
+    {
+      "id": "realme-rmx6688",
+      "label": "真我GT7",
+      "fields": {
+        "manufacturer": "realme",
+        "brand": "realme",
+        "model": "RMX6688",
+        "marketname": "真我 GT7"
+      }
+    },
+    {
+      "id": "vivo-v2243a",
+      "label": "iQOO 11",
+      "fields": {
+        "manufacturer": "vivo",
+        "brand": "vivo",
+        "model": "V2243A",
+        "marketname": "iQOO 11"
+      }
+    },
+    {
+      "id": "vivo-v2329a",
+      "label": "iQOO 12 Pro",
+      "fields": {
+        "manufacturer": "vivo",
+        "brand": "vivo",
+        "model": "V2329A",
+        "marketname": "iQOO 12 Pro"
+      }
+    },
+    {
+      "id": "vivo-v2408a",
+      "label": "iQOO 13",
+      "fields": {
+        "manufacturer": "vivo",
+        "brand": "vivo",
+        "model": "V2408A",
+        "marketname": "iQOO 13"
+      }
+    },
+    {
+      "id": "vivo-v2055a",
+      "label": "iQOO Neo 5",
+      "fields": {
+        "manufacturer": "vivo",
+        "brand": "vivo",
+        "model": "V2055A",
+        "marketname": "iQOO Neo5"
+      }
+    },
+    {
+      "id": "vivo-v2426a",
+      "label": "iQOO Neo10 Pro",
+      "fields": {
+        "manufacturer": "vivo",
+        "brand": "vivo",
+        "model": "V2426A",
+        "marketname": "iQOO Neo10 Pro"
+      }
+    },
+    {
+      "id": "vivo-v2520a",
+      "label": "iQOO Neo11",
+      "fields": {
+        "manufacturer": "vivo",
+        "brand": "vivo",
+        "model": "V2520A",
+        "marketname": "iQOO Neo11"
+      }
+    },
+    {
+      "id": "vivo-ipa2575",
+      "label": "iQOO Pad5 Pro",
+      "fields": {
+        "manufacturer": "vivo",
+        "brand": "vivo",
+        "model": "iPA2575",
+        "marketname": "iQOO Pad5 Pro"
+      }
+    },
+    {
+      "id": "vivo-v2507a",
+      "label": "iQOO Z10 Turbo+",
+      "fields": {
+        "manufacturer": "vivo",
+        "brand": "vivo",
+        "model": "V2507A",
+        "marketname": "iQOO Z10 Turbo+"
+      }
+    },
+    {
+      "id": "vivo-v2352a",
+      "label": "iQOO Z9 Turbo",
+      "fields": {
+        "manufacturer": "vivo",
+        "brand": "vivo",
+        "model": "V2352A",
+        "marketname": "iQOO Z9 Turbo"
+      }
+    },
+    {
+      "id": "vivo-v2359a",
+      "label": "vivo X100s",
+      "fields": {
+        "manufacturer": "vivo",
+        "brand": "vivo",
+        "model": "V2359A",
+        "marketname": "vivo X100s"
+      }
+    },
+    {
+      "id": "vivo-v2502a",
+      "label": "vivo X300",
+      "fields": {
+        "manufacturer": "vivo",
+        "brand": "vivo",
+        "model": "V2502A",
+        "marketname": "vivo X300"
+      }
+    },
+    {
+      "id": "vivo-v2405da",
+      "label": "vivox200pro",
+      "fields": {
+        "manufacturer": "vivo",
+        "brand": "vivo",
+        "model": "V2405DA",
+        "marketname": "vivo X200Pro"
+      }
+    },
+    {
+      "id": "huawei-sgt-al00",
+      "label": "华为 Mate 80 Pro",
+      "fields": {
+        "manufacturer": "huawei",
+        "brand": "huawei",
+        "model": "SGT-AL00",
+        "marketname": "HUAWEI Mate 80 Pro"
+      }
+    },
+    {
+      "id": "huawei-sgt-al50",
+      "label": "华为 Mate 80 RS 平凡大师",
+      "fields": {
+        "manufacturer": "huawei",
+        "brand": "huawei",
+        "model": "SGT-AL50",
+        "marketname": "HUAWEI Mate 80 RS 平凡大师"
+      }
+    },
+    {
+      "id": "huawei-vyg-al00",
+      "label": "华为 Mate 80",
+      "fields": {
+        "manufacturer": "huawei",
+        "brand": "huawei",
+        "model": "VYG-AL00",
+        "marketname": "HUAWEI Mate 80"
+      }
+    },
+    {
+      "id": "huawei-del-al10",
+      "label": "华为 Mate X7标准版",
+      "fields": {
+        "manufacturer": "huawei",
+        "brand": "huawei",
+        "model": "DEL-AL10",
+        "marketname": "HUAWEI Mate X7"
+      }
+    },
+    {
+      "id": "huawei-del-al20",
+      "label": "华为 Mate X7典藏版",
+      "fields": {
+        "manufacturer": "huawei",
+        "brand": "huawei",
+        "model": "DEL-AL20",
+        "marketname": "HUAWEI Mate X7"
+      }
+    },
+    {
+      "id": "huawei-grl-al10",
+      "label": "华为 Mate XT 非凡大师",
+      "fields": {
+        "manufacturer": "huawei",
+        "brand": "huawei",
+        "model": "GRL-AL10",
+        "marketname": "华为 Mate XT 非凡大师"
+      }
+    },
+    {
+      "id": "huawei-grl-al20",
+      "label": "华为 Mate XTs 非凡大师",
+      "fields": {
+        "manufacturer": "huawei",
+        "brand": "huawei",
+        "model": "GRL-AL20",
+        "marketname": "华为 Mate XTs 非凡大师"
+      }
+    },
+    {
+      "id": "huawei-qxs-w20",
+      "label": "华为 MatePad Edge",
+      "fields": {
+        "manufacturer": "huawei",
+        "brand": "huawei",
+        "model": "QXS-W20",
+        "marketname": "HUAWEI MatePad Edge"
+      }
+    },
+    {
+      "id": "huawei-sup-al90",
+      "label": "华为Mate 70 Air",
+      "fields": {
+        "manufacturer": "huawei",
+        "brand": "huawei",
+        "model": "SUP-AL90",
+        "marketname": "HUAWEI Mate 70 Air"
+      }
+    },
+    {
+      "id": "huawei-mrdi-w00",
+      "label": "华为MatePad Pro",
+      "fields": {
+        "manufacturer": "huawei",
+        "brand": "huawei",
+        "model": "MRDI-W00",
+        "marketname": "HUAWEI MatePad Pro"
+      }
+    },
+    {
+      "id": "honor-ptp-an20",
+      "label": "荣耀 Magic7 RSR",
+      "fields": {
+        "manufacturer": "HONOR",
+        "brand": "HONOR",
+        "model": "PTP-AN20",
+        "marketname": "荣耀Magic7 RSR"
+      }
+    },
+    {
+      "id": "honor-ppg-an00",
+      "label": "荣耀GT Pro",
+      "fields": {
+        "manufacturer": "HONOR",
+        "brand": "HONOR",
+        "model": "PPG-AN00",
+        "marketname": "荣耀GT Pro"
+      }
+    },
+    {
+      "id": "honor-bkq-an90",
+      "label": "荣耀Magic8 Pro",
+      "fields": {
+        "manufacturer": "HONOR",
+        "brand": "HONOR",
+        "model": "BKQ-AN90",
+        "marketname": "荣耀Magic8 Pro"
+      }
+    },
+    {
+      "id": "honor-bkq-an80",
+      "label": "荣耀Magic8",
+      "fields": {
+        "manufacturer": "HONOR",
+        "brand": "HONOR",
+        "model": "BKQ-AN80",
+        "marketname": "荣耀Magic8"
+      }
+    },
+    {
+      "id": "honor-ylp-w00",
+      "label": "荣耀MagicPad3Pro",
+      "fields": {
+        "manufacturer": "HONOR",
+        "brand": "HONOR",
+        "model": "YLP-W00",
+        "marketname": "荣耀MagicPad3Pro 13.3 二笔"
+      }
+    },
+    {
+      "id": "motorola-tyh641m",
+      "label": "moto edge X30",
+      "fields": {
+        "manufacturer": "Motorola",
+        "brand": "Motorola",
+        "model": "TYH641M",
+        "marketname": "moto edge X30"
+      }
+    },
+    {
+      "id": "motorola-xt2241-1",
+      "label": "moto X30 Pro",
+      "fields": {
+        "manufacturer": "Motorola",
+        "brand": "Motorola",
+        "model": "XT2241-1",
+        "marketname": "moto X30 Pro"
+      }
+    },
+    {
+      "id": "nubia-nx741j",
+      "label": "努比亚Z80 Ultra",
+      "fields": {
+        "manufacturer": "nubia",
+        "brand": "nubia",
+        "model": "NX741J",
+        "marketname": "nubia Z80 Ultra"
+      }
+    },
+    {
+      "id": "redmi-2503cvpc6c",
+      "label": "小米YU7后排移动控制屏",
+      "fields": {
+        "manufacturer": "Xiaomi",
+        "brand": "Redmi",
+        "model": "2503CVPC6C",
+        "marketname": "小米YU7后排移动控制屏",
+        "name": "konghou"
+      }
+    },
+    {
+      "id": "xiaomi-mdz-30-aa",
+      "label": "小米盒子4S MAX",
+      "fields": {
+        "manufacturer": "Xiaomi",
+        "brand": "Xiaomi",
+        "model": "MDZ-30-AA",
+        "marketname": "小米盒子4S MAX",
+        "name": "xiaomi.tvbox.4smv1"
+      }
+    },
+    {
+      "id": "samsung-sm-w9026",
+      "label": "三星 W26",
+      "fields": {
+        "manufacturer": "samsung",
+        "brand": "samsung",
+        "model": "SM-W9026",
+        "marketname": "心系天下 三星 W26"
+      }
+    },
+    {
+      "id": "samsung-sm-x926n",
+      "label": "三星Galaxy Tab S10 Ultra",
+      "fields": {
+        "manufacturer": "samsung",
+        "brand": "samsung",
+        "model": "SM-X926N",
+        "marketname": "三星Galaxy Tab S10 Ultra"
+      }
+    },
+    {
+      "id": "samsung-sm-x930",
+      "label": "三星Galaxy Tab S11 Ultra",
+      "fields": {
+        "manufacturer": "samsung",
+        "brand": "samsung",
+        "model": "SM-X930",
+        "marketname": "三星Galaxy Tab S11 Ultra"
+      }
+    },
+    {
+      "id": "samsung-sm-x736b",
+      "label": "三星Galaxy Tab S11",
+      "fields": {
+        "manufacturer": "samsung",
+        "brand": "samsung",
+        "model": "SM-X736B",
+        "marketname": "三星Galaxy Tab S11"
+      }
+    },
+    {
+      "id": "redmi-m1908c3ke",
+      "label": "Redmi 8A",
+      "fields": {
+        "manufacturer": "Xiaomi",
+        "brand": "Redmi",
+        "model": "M1908C3KE",
+        "marketname": "Redmi 8A",
+        "name": "olivelite"
+      }
+    },
+    {
+      "id": "redmi-m2006c3lc",
+      "label": "Redmi 9A",
+      "fields": {
+        "manufacturer": "Xiaomi",
+        "brand": "Redmi",
+        "model": "M2006C3LC",
+        "marketname": "Redmi 9A",
+        "name": "dandelion"
+      }
+    },
+    {
+      "id": "redmi-25079rpdcc",
+      "label": "REDMI K Pad",
+      "fields": {
+        "manufacturer": "Xiaomi",
+        "brand": "REDMI",
+        "model": "25079RPDCC",
+        "marketname": "REDMI K Pad",
+        "name": "turner"
+      }
+    },
+    {
+      "id": "redmi-22081212c",
+      "label": "Redmi K50 Ultra",
+      "fields": {
+        "manufacturer": "Xiaomi",
+        "brand": "Redmi",
+        "model": "22081212C",
+        "marketname": "Redmi K50 Ultra",
+        "name": "diting"
+      }
+    },
+    {
+      "id": "redmi-22021211rc",
+      "label": "Redmi K50",
+      "fields": {
+        "manufacturer": "Xiaomi",
+        "brand": "Redmi",
+        "model": "22021211RC",
+        "marketname": "Redmi K50",
+        "name": "rubens"
+      }
+    },
+    {
+      "id": "redmi-23013rk75c",
+      "label": "Redmi K60",
+      "fields": {
+        "manufacturer": "Xiaomi",
+        "brand": "Redmi",
+        "model": "23013RK75C",
+        "marketname": "Redmi K60",
+        "name": "mondrian"
+      }
+    },
+    {
+      "id": "redmi-23113rkc6c",
+      "label": "红米 K70",
+      "fields": {
+        "manufacturer": "Xiaomi",
+        "brand": "Redmi",
+        "model": "23113RKC6C",
+        "marketname": "REDMI K70",
+        "name": "vermeer"
+      }
+    },
+    {
+      "id": "redmi-2407frk8ec",
+      "label": "Redmi K70 Ultra",
+      "fields": {
+        "manufacturer": "Xiaomi",
+        "brand": "Redmi",
+        "model": "2407FRK8EC",
+        "marketname": "Redmi K70 Ultra",
+        "name": "rothko"
+      }
+    },
+    {
+      "id": "redmi-24127rk2cc",
+      "label": "Redmi K80 Pro 冠军版",
+      "fields": {
+        "manufacturer": "Xiaomi",
+        "brand": "REDMI",
+        "model": "24127RK2CC",
+        "marketname": "REDMI K80 Pro ALSC",
+        "name": "miro"
+      }
+    },
+    {
+      "id": "redmi-25060rk16c",
+      "label": "Redmi K80 Ultra",
+      "fields": {
+        "manufacturer": "Xiaomi",
+        "brand": "REDMI",
+        "model": "25060RK16C",
+        "marketname": "REDMI K80 Ultra",
+        "name": "dali"
+      }
+    },
+    {
+      "id": "redmi-24122rkc7c",
+      "label": "Redmi K80",
+      "fields": {
+        "manufacturer": "Xiaomi",
+        "brand": "REDMI",
+        "model": "24122RKC7C",
+        "marketname": "REDMI K80",
+        "name": "zorn"
+      }
+    },
+    {
+      "id": "redmi-23049rad8c",
+      "label": "Redmi Note 12 Turbo",
+      "fields": {
+        "manufacturer": "Xiaomi",
+        "brand": "Redmi",
+        "model": "23049RAD8C",
+        "marketname": "Redmi Note 12 Turbo",
+        "name": "marble"
+      }
+    },
+    {
+      "id": "redmi-25080rabdc",
+      "label": "REDMI Note 15 Pro",
+      "fields": {
+        "manufacturer": "Xiaomi",
+        "brand": "REDMI",
+        "model": "25080RABDC",
+        "marketname": "REDMI Note 15 Pro",
+        "name": "lapis"
+      }
+    },
+    {
+      "id": "redmi-2510era8bc",
+      "label": "REDMI Note 15 Pro+",
+      "fields": {
+        "manufacturer": "Xiaomi",
+        "brand": "REDMI",
+        "model": "2510ERA8BC",
+        "marketname": "REDMI Note 15 Pro+",
+        "name": "flourite"
+      }
+    },
+    {
+      "id": "redmi-25104radac",
+      "label": "REDMI Note 15 Pro+卫星通信版",
+      "fields": {
+        "manufacturer": "Xiaomi",
+        "brand": "REDMI",
+        "model": "25104RADAC",
+        "marketname": "REDMI Note 15 Pro+",
+        "name": "flourite"
+      }
+    },
+    {
+      "id": "redmi-25098ra98c",
+      "label": "REDMI Note 15",
+      "fields": {
+        "manufacturer": "Xiaomi",
+        "brand": "REDMI",
+        "model": "25098RA98C",
+        "marketname": "REDMI Note 15",
+        "name": "kunzite"
+      }
+    },
+    {
+      "id": "xiaomi-23127pn0cc",
+      "label": "Xiaomi 14",
+      "fields": {
+        "manufacturer": "Xiaomi",
+        "brand": "Xiaomi",
+        "model": "23127PN0CC",
+        "marketname": "Xiaomi 14",
+        "name": "houji"
+      }
+    },
+    {
+      "id": "xiaomi-23116pn5bc",
+      "label": "Xiaomi 14 Pro",
+      "fields": {
+        "manufacturer": "Xiaomi",
+        "brand": "Xiaomi",
+        "model": "23116PN5BC",
+        "marketname": "Xiaomi 14 Pro",
+        "name": "shennong"
+      }
+    },
+    {
+      "id": "xiaomi-24030pn60c",
+      "label": "Xiaomi 14 Ultra",
+      "fields": {
+        "manufacturer": "Xiaomi",
+        "brand": "Xiaomi",
+        "model": "24030PN60C",
+        "marketname": "Xiaomi 14 Ultra",
+        "name": "aurora"
+      }
+    },
+    {
+      "id": "xiaomi-2407fpn8eg",
+      "label": "Xiaomi 14T Pro海外版",
+      "fields": {
+        "manufacturer": "Xiaomi",
+        "brand": "Xiaomi",
+        "model": "2407FPN8EG",
+        "marketname": "Xiaomi 14T Pro",
+        "name": "rothko"
+      }
+    },
+    {
+      "id": "xiaomi-2406apnfag",
+      "label": "Xiaomi 14T 海外版",
+      "fields": {
+        "manufacturer": "Xiaomi",
+        "brand": "Xiaomi",
+        "model": "2406APNFAG",
+        "marketname": "Xiaomi 14T",
+        "name": "degas"
+      }
+    },
+    {
+      "id": "xiaomi-25019pnf3c",
+      "label": "Xiaomi 15 Ultra(标准版)",
+      "fields": {
+        "manufacturer": "Xiaomi",
+        "brand": "Xiaomi",
+        "model": "25019PNF3C",
+        "marketname": "Xiaomi 15 Ultra",
+        "name": "xuanyuan"
+      }
+    },
+    {
+      "id": "xiaomi-25010pn30c",
+      "label": "Xiaomi 15 Ultra(顶配版)",
+      "fields": {
+        "manufacturer": "Xiaomi",
+        "brand": "Xiaomi",
+        "model": "25010PN30C",
+        "marketname": "Xiaomi 15 Ultra",
+        "name": "xuanyuan"
+      }
+    },
+    {
+      "id": "xiaomi-24129pn74c",
+      "label": "Xiaomi 15",
+      "fields": {
+        "manufacturer": "Xiaomi",
+        "brand": "Xiaomi",
+        "model": "24129PN74C",
+        "marketname": "Xiaomi 15",
+        "name": "dada"
+      }
+    },
+    {
+      "id": "xiaomi-2410dpn6cc",
+      "label": "Xiaomi 15Pro",
+      "fields": {
+        "manufacturer": "Xiaomi",
+        "brand": "Xiaomi",
+        "model": "2410DPN6CC",
+        "marketname": "Xiaomi 15 Pro",
+        "name": "haotian"
+      }
+    },
+    {
+      "id": "xiaomi-25042pn24c",
+      "label": "Xiaomi 15S pro",
+      "fields": {
+        "manufacturer": "Xiaomi",
+        "brand": "Xiaomi",
+        "model": "25042PN24C",
+        "marketname": "Xiaomi 15S Pro",
+        "name": "dijun"
+      }
+    },
+    {
+      "id": "xiaomi-24053py09c",
+      "label": "Xiaomi Civi 4 Pro",
+      "fields": {
+        "manufacturer": "Xiaomi",
+        "brand": "Xiaomi",
+        "model": "24053PY09C",
+        "marketname": "Xiaomi Civi 4 Pro",
+        "name": "chenfeng"
+      }
+    },
+    {
+      "id": "xiaomi-24072px77c",
+      "label": "Xiaomi MIX Fold 4",
+      "fields": {
+        "manufacturer": "Xiaomi",
+        "brand": "Xiaomi",
+        "model": "24072PX77C",
+        "marketname": "Xiaomi MIX Fold 4",
+        "name": "goku"
+      }
+    },
+    {
+      "id": "xiaomi-24018rpacc",
+      "label": "Xiaomi Pad 6SPro 12.4",
+      "fields": {
+        "manufacturer": "Xiaomi",
+        "brand": "Xiaomi",
+        "model": "24018RPACC",
+        "marketname": "Xiaomi Pad 6SPro 12.4",
+        "name": "sheng"
+      }
+    },
+    {
+      "id": "xiaomi-24091rpadc",
+      "label": "Xiaomi Pad 7 Pro",
+      "fields": {
+        "manufacturer": "Xiaomi",
+        "brand": "Xiaomi",
+        "model": "24091RPADC",
+        "marketname": "Xiaomi Pad 7 Pro",
+        "name": "muyu"
+      }
+    },
+    {
+      "id": "xiaomi-25053rp5cc",
+      "label": "小米平板 7S Pro 12.5",
+      "fields": {
+        "manufacturer": "Xiaomi",
+        "brand": "Xiaomi",
+        "model": "25053RP5CC",
+        "marketname": "Xiaomi Pad 7S Pro 12.5",
+        "name": "violin"
+      }
+    },
+    {
+      "id": "xiaomi-25097rp43c",
+      "label": "Xiaomi Pad 8",
+      "fields": {
+        "manufacturer": "Xiaomi",
+        "brand": "Xiaomi",
+        "model": "25097RP43C",
+        "marketname": "Xiaomi Pad 8",
+        "name": "yupei"
+      }
+    },
+    {
+      "id": "xiaomi-m1807e8s",
+      "label": "小米8透明探索版",
+      "fields": {
+        "manufacturer": "Xiaomi",
+        "brand": "Xiaomi",
+        "model": "M1807E8S",
+        "marketname": "MI 8 UD",
+        "name": "ursa"
+      }
+    },
+    {
+      "id": "lenovo-tb710fu",
+      "label": "小新平板Pro GT",
+      "fields": {
+        "manufacturer": "Lenovo",
+        "brand": "Lenovo",
+        "model": "TB710FU",
+        "marketname": "小新平板Pro GT"
+      }
+    },
+    {
+      "id": "lenovo-lcghcc700",
+      "label": "Lenovo C700 云游戏掌机",
+      "fields": {
+        "manufacturer": "LENOVO",
+        "brand": "Lenovo",
+        "model": "LCGHCC700",
+        "marketname": "Lenovo C700 云游戏掌机"
+      }
+    },
+    {
+      "id": "lenovo-tb324zc",
+      "label": "Lenovo Y700 无极",
+      "fields": {
+        "manufacturer": "LENOVO",
+        "brand": "Lenovo",
+        "model": "TB324ZC",
+        "marketname": "拯救者平板 Y700 无极",
+        "device": "TB324ZC",
+        "product": "TB324ZC",
+        "build_id": "BQ2A.250831.001-BP2A.250605.031.A3",
+        "fingerprint": "Lenovo/TB324ZC/TB324ZC:16/BQ2A.250831.001-BP2A.250605.031.A3/02.083.251119C:user/release-keys"
+      }
+    },
+    {
+      "id": "oppo-pmx110",
+      "label": "OPPO Find X10 Pro Max",
+      "fields": {
+        "manufacturer": "oppo",
+        "brand": "oppo",
+        "model": "PMX110",
+        "marketname": "OPPO Find X10 Pro Max"
+      }
+    },
+    {
+      "id": "oppo-pmw110",
+      "label": "OPPO Find X10",
+      "fields": {
+        "manufacturer": "oppo",
+        "brand": "oppo",
+        "model": "PMW110",
+        "marketname": "OPPO Find X10"
+      }
+    },
+    {
+      "id": "vivo-v2573a",
+      "label": "iQOO Neo 11 Ultra",
+      "fields": {
+        "manufacturer": "vivo",
+        "brand": "vivo",
+        "model": "V2573A",
+        "marketname": "iQOO Neo 11 Ultra"
+      }
+    },
+    {
+      "id": "vivo-v2436a",
+      "label": "vivo X Fold5",
+      "fields": {
+        "manufacturer": "vivo",
+        "brand": "vivo",
+        "model": "V2436A",
+        "marketname": "vivo X Fold5"
+      }
+    },
+    {
+      "id": "vivo-v2545a",
+      "label": "vivo X Fold6",
+      "fields": {
+        "manufacturer": "vivo",
+        "brand": "vivo",
+        "model": "V2545A",
+        "marketname": "vivo X Fold6"
+      }
+    },
+    {
+      "id": "vivo-v2612a",
+      "label": "vivo X300 E",
+      "fields": {
+        "manufacturer": "vivo",
+        "brand": "vivo",
+        "model": "V2612A",
+        "marketname": "vivo X300 E"
+      }
+    },
+    {
+      "id": "vivo-v2602a",
+      "label": "vivo X500 Pro Max",
+      "fields": {
+        "manufacturer": "vivo",
+        "brand": "vivo",
+        "model": "V2602A",
+        "marketname": "vivo X500 Pro Max"
+      }
+    },
+    {
+      "id": "vivo-v2602da",
+      "label": "vivo X500 Pro Max创作者",
+      "fields": {
+        "manufacturer": "vivo",
+        "brand": "vivo",
+        "model": "V2602DA",
+        "marketname": "vivo X500 Pro Max创作者"
+      }
+    },
+    {
+      "id": "vivo-v2609a",
+      "label": "vivo X500",
+      "fields": {
+        "manufacturer": "vivo",
+        "brand": "vivo",
+        "model": "V2609A",
+        "marketname": "vivo X500"
+      }
+    },
+    {
+      "id": "oneplus-pyb110",
+      "label": "一加 16",
+      "fields": {
+        "manufacturer": "oneplus",
+        "brand": "oneplus",
+        "model": "PYB110",
+        "marketname": "OnePlus 16"
+      }
+    },
+    {
+      "id": "samsung-sm-f7760",
+      "label": "三星 Galaxy Z Flip8",
+      "fields": {
+        "manufacturer": "samsung",
+        "brand": "samsung",
+        "model": "SM-F7760",
+        "marketname": "Galaxy Z Flip8"
+      }
+    },
+    {
+      "id": "samsung-sm-f9760",
+      "label": "三星 Galaxy Z Fold8 Ultra",
+      "fields": {
+        "manufacturer": "samsung",
+        "brand": "samsung",
+        "model": "SM-F9760",
+        "marketname": "Galaxy Z Fold8 Ultra"
+      }
+    },
+    {
+      "id": "samsung-sm-f9710",
+      "label": "三星 Galaxy Z Fold8",
+      "fields": {
+        "manufacturer": "samsung",
+        "brand": "samsung",
+        "model": "SM-F9710",
+        "marketname": "Galaxy Z Fold8"
+      }
+    },
+    {
+      "id": "samsung-sm-f9680",
+      "label": "三星 Galaxy Z TriFold",
+      "fields": {
+        "manufacturer": "samsung",
+        "brand": "samsung",
+        "model": "SM-F9680",
+        "marketname": "Galaxy Z TriFold"
+      }
+    },
+    {
+      "id": "huawei-cmm-al00",
+      "label": "华为 Mate 90 Pro Max",
+      "fields": {
+        "manufacturer": "huawei",
+        "brand": "huawei",
+        "model": "CMM-AL00",
+        "marketname": "华为 Mate 90 Pro Max"
+      }
+    },
+    {
+      "id": "huawei-cmm-al10",
+      "label": "华为 Mate 90 Pro Max 典藏版",
+      "fields": {
+        "manufacturer": "huawei",
+        "brand": "huawei",
+        "model": "CMM-AL10",
+        "marketname": "HUAWEI Mate 90 Pro Max",
+        "device": "CMM-AL10",
+        "product": "CMM-AL10",
+        "name": "CMM-AL10",
+        "fingerprint": "huawei/CMM-AL10/CMM-AL10:OpenHarmony-7.0.0.109/OHOS.7.0.0.109/7.0.0.109:user/release-keys"
+      }
+    },
+    {
+      "id": "huawei-vol-al00",
+      "label": "华为 Pura X View",
+      "fields": {
+        "manufacturer": "huawei",
+        "brand": "huawei",
+        "model": "VOL-AL00",
+        "marketname": "华为 Pura X View"
+      }
+    },
+    {
+      "id": "xiaomi-2608bpx34c",
+      "label": "小米 18 Fold",
+      "fields": {
+        "manufacturer": "Xiaomi",
+        "brand": "Xiaomi",
+        "model": "2608BPX34C",
+        "marketname": "小米 18 Fold"
+      }
+    },
+    {
+      "id": "xiaomi-m962fa",
+      "label": "小米 18 Pro Max",
+      "fields": {
+        "manufacturer": "Xiaomi",
+        "brand": "Xiaomi",
+        "model": "M962FA",
+        "marketname": "小米 18 Pro Max"
+      }
+    },
+    {
+      "id": "xiaomi-m610bb",
+      "label": "小米 18 Pro",
+      "fields": {
+        "manufacturer": "Xiaomi",
+        "brand": "Xiaomi",
+        "model": "M610BB",
+        "marketname": "小米 18 Pro"
+      }
+    },
+    {
+      "id": "xiaomi-m367fc",
+      "label": "小米 Pad 9 Pro Max",
+      "fields": {
+        "manufacturer": "Xiaomi",
+        "brand": "Xiaomi",
+        "model": "M367FC",
+        "marketname": "小米 Pad 9 Pro Max"
+      }
+    },
+    {
+      "id": "xiaomi-2612crpffc",
+      "label": "小米 Pad 9 Pro",
+      "fields": {
+        "manufacturer": "Xiaomi",
+        "brand": "Xiaomi",
+        "model": "2612CRPFFC",
+        "marketname": "小米 Pad 9 Pro"
+      }
+    },
+    {
+      "id": "xiaomi-m656ba",
+      "label": "小米 Pad 9",
+      "fields": {
+        "manufacturer": "Xiaomi",
+        "brand": "Xiaomi",
+        "model": "M656BA",
+        "marketname": "小米 Pad 9"
+      }
+    },
+    {
+      "id": "redmi-m098fe",
+      "label": "红米 K100 Pro Max",
+      "fields": {
+        "manufacturer": "Xiaomi",
+        "brand": "REDMI",
+        "model": "M098FE",
+        "marketname": "红米 K100 Pro Max"
+      }
+    },
+    {
+      "id": "redmi-m511cd",
+      "label": "红米 K100 Pro",
+      "fields": {
+        "manufacturer": "Xiaomi",
+        "brand": "REDMI",
+        "model": "M511CD",
+        "marketname": "红米 K100 Pro"
+      }
+    },
+    {
+      "id": "redmi-m332bf",
+      "label": "红米 K90 Ultra",
+      "fields": {
+        "manufacturer": "Xiaomi",
+        "brand": "REDMI",
+        "model": "M332BF",
+        "marketname": "红米 K90 Ultra"
+      }
+    },
+    {
+      "id": "honor-mlm-an00",
+      "label": "荣耀 Magic 9 超能版",
+      "fields": {
+        "manufacturer": "HONOR",
+        "brand": "HONOR",
+        "model": "MLM-AN00",
+        "marketname": "荣耀 Magic 9 超能版"
+      }
+    },
+    {
+      "id": "honor-aph-an00",
+      "label": "荣耀 Robot Phone",
+      "fields": {
+        "manufacturer": "HONOR",
+        "brand": "HONOR",
+        "model": "APH-AN00",
+        "marketname": "荣耀 Robot Phone"
+      }
+    },
+    {
+      "id": "vivo-ipa2691",
+      "label": "iQOO Pad Ultra",
+      "fields": {
+        "manufacturer": "vivo",
+        "brand": "vivo",
+        "model": "iPA2691",
+        "marketname": "IQOO Pad Ultra"
+      }
+    },
+    {
+      "id": "vivo-v2608a",
+      "label": "vivo X500 Pro",
+      "fields": {
+        "manufacturer": "vivo",
+        "brand": "vivo",
+        "model": "V2608A"
+      }
+    },
+    {
+      "id": "huawei-cmu-al10",
+      "label": "华为 Mate 90 RS 非凡大师",
+      "fields": {
+        "manufacturer": "huawei",
+        "brand": "huawei",
+        "model": "CMU-AL10"
+      }
+    },
+    {
+      "id": "huawei-lrt-w20",
+      "label": "华为 Mate Pad Air 2026",
+      "fields": {
+        "manufacturer": "huawei",
+        "brand": "huawei",
+        "model": "LRT-W20"
+      }
+    },
+    {
+      "id": "huawei-ast-w30",
+      "label": "华为 Mate Pad Air Z",
+      "fields": {
+        "manufacturer": "huawei",
+        "brand": "huawei",
+        "model": "AST-W30"
+      }
+    },
+    {
+      "id": "huawei-lap-al10",
+      "label": "华为 Mate XT2 非凡大师",
+      "fields": {
+        "manufacturer": "huawei",
+        "brand": "huawei",
+        "model": "LAP-AL10"
+      }
+    },
+    {
+      "id": "honor-wkl-an20",
+      "label": "荣耀 Magic 9 Pro Max",
+      "fields": {
+        "manufacturer": "HONOR",
+        "brand": "HONOR",
+        "model": "WKL-AN20"
+      }
+    },
+    {
+      "id": "honor-mly-an00",
+      "label": "荣耀 Magic 9",
+      "fields": {
+        "manufacturer": "HONOR",
+        "brand": "HONOR",
+        "model": "MLY-AN00"
+      }
+    },
+    {
+      "id": "honor-mla-w09",
+      "label": "荣耀 Magic Pad 4",
+      "fields": {
+        "manufacturer": "HONOR",
+        "brand": "HONOR",
+        "model": "MLA-W09"
+      }
+    }
+  ]
+}

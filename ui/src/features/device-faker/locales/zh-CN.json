@@ -52,7 +52,10 @@
     "model": "机型",
     "device": "设备代号",
     "product": "产品代号",
-    "fingerprint": "构建指纹"
+    "fingerprint": "构建指纹",
+    "marketname": "市场名称",
+    "name": "产品名称",
+    "build_id": "构建 ID"
   },
   "warnings": {
     "overlap": "{target} 存在 {count} 项重叠配置。直接应用记录整体替代模板；多个模板中以首个匹配项为准。",
@@ -79,5 +82,27 @@
   },
   "globalRecoveryReboot": "全局属性会话尚未完成，原恢复进程已退出。请停止伪装并重启后再启用。 若重启后仍有此提示，请检查恢复记录。",
   "blocked": "已启用，等待满足运行条件",
-  "globalPropsHelp": "全局属性配置仅支持 {prefix} 键。可变属性请使用进程内 COW 模式。"
+  "globalPropsHelp": "全局属性配置仅支持 {prefix} 键。可变属性请使用进程内 COW 模式。",
+  "presets": {
+    "title": "内置设备库",
+    "help": "社区收录资料，使用前请核对；缺失值保持留空，未逐一验证设备效果。",
+    "search": "搜索机型或型号",
+    "brand": "按品牌筛选",
+    "allBrands": "全部品牌",
+    "results": "找到 {count} 款设备",
+    "resultsLabel": "设备搜索结果",
+    "noResults": "没有匹配设备，请尝试其他机型或品牌。",
+    "showMore": "显示更多设备",
+    "selected": "所选设备",
+    "withFingerprint": "附有指纹，请先核对收录字段。",
+    "identityOnly": "仅有设备资料，来源未提供指纹。",
+    "conflict": "来源字段与指纹不同：{fields}。使用前请核对。",
+    "details": "查看收录字段",
+    "notSupplied": "来源未提供",
+    "use": "填入设备字段",
+    "source": "来源：Issue 48 · {author}",
+    "loaded": "已填入 {device} 的字段，核对后再追加到草稿。",
+    "reviewFields": "核对设备字段",
+    "moreFields": "更多设备字段"
+  }
 }

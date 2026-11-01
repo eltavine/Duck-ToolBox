@@ -52,7 +52,10 @@
     "model": "Model",
     "device": "Nama kode perangkat",
     "product": "Produk",
-    "fingerprint": "Sidik jari build"
+    "fingerprint": "Sidik jari build",
+    "marketname": "Nama pasar",
+    "name": "Nama produk",
+    "build_id": "ID build"
   },
   "warnings": {
     "overlap": "{target}: {count} penetapan bertumpang tindih. Catatan langsung mengganti seluruh templat; templat pertama yang cocok didahulukan.",
@@ -79,5 +82,27 @@
   },
   "globalRecoveryReboot": "Sesi properti global belum selesai dan proses pemulihannya telah berhenti. Hentikan penyamaran dan mulai ulang sebelum mengaktifkan lagi. Jika peringatan tetap muncul setelah mulai ulang, periksa catatan pemulihan.",
   "blocked": "Aktif; menunggu persyaratan terpenuhi",
-  "globalPropsHelp": "Profil properti global hanya mendukung kunci {prefix}. Gunakan mode COW privat untuk properti yang dapat berubah."
+  "globalPropsHelp": "Profil properti global hanya mendukung kunci {prefix}. Gunakan mode COW privat untuk properti yang dapat berubah.",
+  "presets": {
+    "title": "Perangkat bawaan",
+    "help": "Data komunitas. Tinjau sebelum digunakan; nilai yang tidak ada tetap kosong. Belum diverifikasi untuk setiap perangkat.",
+    "search": "Cari perangkat atau model",
+    "brand": "Filter berdasarkan merek",
+    "allBrands": "Semua merek",
+    "results": "{count} perangkat ditemukan",
+    "resultsLabel": "Hasil perangkat",
+    "noResults": "Tidak ada perangkat yang cocok. Coba model atau merek lain.",
+    "showMore": "Tampilkan perangkat lainnya",
+    "selected": "Perangkat terpilih",
+    "withFingerprint": "Menyertakan sidik jari. Tinjau kolom sebelum digunakan.",
+    "identityOnly": "Hanya data identitas; sumber tidak menyertakan sidik jari.",
+    "conflict": "Kolom sumber berbeda dari sidik jari: {fields}. Tinjau sebelum digunakan.",
+    "details": "Lihat kolom sumber",
+    "notSupplied": "Tidak disediakan",
+    "use": "Isi kolom perangkat",
+    "source": "Sumber: Issue 48 · {author}",
+    "loaded": "Kolom dari {device} dimuat. Tinjau lalu tambahkan ke draf.",
+    "reviewFields": "Tinjau kolom perangkat",
+    "moreFields": "Kolom perangkat lainnya"
+  }
 }

@@ -20,6 +20,8 @@ changed, removed or added on its own.
   [Seyud/device_faker](https://github.com/Seyud/device_faker), embedded as a normal source component.
   The WebUI edits TOML, builds template/app drafts, previews file or standalone-config
   imports, reports conflicting assignments and restores the previous configuration.
+  An offline library includes 207 community device presets from [Issue #48](https://github.com/eltavine/Duck-ToolBox/issues/48),
+  with searchable identities, editable source fields and fingerprint mismatch notices.
   Configuration and power controls are independent; empty defaults target no apps.
   Its GPLv3 engine shares the toolbox’s single Zygisk library with PI,
   with explicit callback ordering and parent disable/removal gates. Reboot after installation.

@@ -52,7 +52,10 @@
     "model": "Modell",
     "device": "Gerätecodename",
     "product": "Produkt",
-    "fingerprint": "Build-Fingerabdruck"
+    "fingerprint": "Build-Fingerabdruck",
+    "marketname": "Handelsname",
+    "name": "Produktname",
+    "build_id": "Build-ID"
   },
   "warnings": {
     "overlap": "{target}: {count} überlappende Zuweisungen. Direkte Einträge ersetzen Vorlagen vollständig; die erste passende Vorlage hat Vorrang.",
@@ -79,5 +82,27 @@
   },
   "globalRecoveryReboot": "Eine globale Eigenschaftssitzung ist unvollständig; der Wiederherstellungsprozess wurde beendet. Spoofing stoppen und vor dem erneuten Aktivieren neu starten. Bleibt die Warnung nach dem Neustart bestehen, prüfen Sie die Wiederherstellungsdaten.",
   "blocked": "Aktiviert; Voraussetzungen noch nicht erfüllt",
-  "globalPropsHelp": "Globale Eigenschaftsprofile unterstützen nur {prefix}-Schlüssel. Verwende für veränderliche Eigenschaften den privaten COW-Modus."
+  "globalPropsHelp": "Globale Eigenschaftsprofile unterstützen nur {prefix}-Schlüssel. Verwende für veränderliche Eigenschaften den privaten COW-Modus.",
+  "presets": {
+    "title": "Integrierte Geräte",
+    "help": "Daten aus der Community. Vor Verwendung prüfen; fehlende Werte bleiben leer. Nicht für jedes Gerät verifiziert.",
+    "search": "Gerät oder Modell suchen",
+    "brand": "Nach Marke filtern",
+    "allBrands": "Alle Marken",
+    "results": "Gefundene Geräte: {count}",
+    "resultsLabel": "Geräteergebnisse",
+    "noResults": "Keine passenden Geräte. Anderes Modell oder andere Marke versuchen.",
+    "showMore": "Weitere Geräte anzeigen",
+    "selected": "Ausgewähltes Gerät",
+    "withFingerprint": "Mit Fingerabdruck. Angaben vor der Verwendung prüfen.",
+    "identityOnly": "Nur Gerätedaten; kein Fingerabdruck angegeben.",
+    "conflict": "Quelldaten weichen vom Fingerabdruck ab: {fields}. Vor Verwendung prüfen.",
+    "details": "Quelldaten anzeigen",
+    "notSupplied": "Nicht angegeben",
+    "use": "Gerätefelder ausfüllen",
+    "source": "Quelle: Issue 48 · {author}",
+    "loaded": "Felder von {device} geladen. Prüfen und dann an den Entwurf anhängen.",
+    "reviewFields": "Gerätefelder prüfen",
+    "moreFields": "Weitere Gerätefelder"
+  }
 }

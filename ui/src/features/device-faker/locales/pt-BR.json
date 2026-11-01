@@ -52,7 +52,10 @@
     "model": "Modelo",
     "device": "Codinome do dispositivo",
     "product": "Produto",
-    "fingerprint": "Impressão da compilação"
+    "fingerprint": "Impressão da compilação",
+    "marketname": "Nome comercial",
+    "name": "Nome do produto",
+    "build_id": "ID da compilação"
   },
   "warnings": {
     "overlap": "{target}: {count} atribuições se sobrepõem. Registros diretos substituem modelos; o primeiro modelo correspondente tem prioridade.",
@@ -79,5 +82,27 @@
   },
   "globalRecoveryReboot": "Uma sessão de propriedades globais está incompleta e seu processo de restauração terminou. Pare a simulação e reinicie antes de ativar novamente. Se o aviso continuar após reiniciar, verifique os registros de restauração.",
   "blocked": "Ativado; aguardando as condições necessárias",
-  "globalPropsHelp": "Perfis de propriedades globais aceitam apenas chaves {prefix}. Use o modo COW privado para propriedades mutáveis."
+  "globalPropsHelp": "Perfis de propriedades globais aceitam apenas chaves {prefix}. Use o modo COW privado para propriedades mutáveis.",
+  "presets": {
+    "title": "Dispositivos incluídos",
+    "help": "Dados da comunidade. Revise antes de usar; valores ausentes ficam vazios. Nem todos os dispositivos foram verificados.",
+    "search": "Buscar dispositivo ou modelo",
+    "brand": "Filtrar por marca",
+    "allBrands": "Todas as marcas",
+    "results": "Dispositivos encontrados: {count}",
+    "resultsLabel": "Resultados de dispositivos",
+    "noResults": "Nenhum dispositivo correspondente. Tente outro modelo ou marca.",
+    "showMore": "Mostrar mais dispositivos",
+    "selected": "Dispositivo selecionado",
+    "withFingerprint": "Inclui impressão digital. Revise os campos antes de usar.",
+    "identityOnly": "Apenas dados de identidade; a fonte não inclui impressão digital.",
+    "conflict": "Os campos diferem da impressão digital: {fields}. Revise antes de usar.",
+    "details": "Ver campos da fonte",
+    "notSupplied": "Não fornecido",
+    "use": "Preencher campos do dispositivo",
+    "source": "Fonte: Issue 48 · {author}",
+    "loaded": "Campos de {device} carregados. Revise e adicione ao rascunho.",
+    "reviewFields": "Revisar campos do dispositivo",
+    "moreFields": "Mais campos do dispositivo"
+  }
 }

@@ -52,7 +52,10 @@
     "model": "Model",
     "device": "Device codename",
     "product": "Product",
-    "fingerprint": "Fingerprint"
+    "fingerprint": "Fingerprint",
+    "marketname": "Market name",
+    "name": "Product name",
+    "build_id": "Build ID"
   },
   "warnings": {
     "overlap": "{target}: {count} assignments overlap. Direct app entries replace templates; the first matching template wins.",
@@ -79,5 +82,27 @@
   },
   "globalRecoveryReboot": "An unfinished global-property session has no live recovery owner. Stop spoofing and reboot before enabling again. If the warning remains after reboot, inspect the recovery records.",
   "blocked": "Enabled; waiting for required conditions",
-  "globalPropsHelp": "Global property profiles support only {prefix} keys. Use private COW mode for mutable properties."
+  "globalPropsHelp": "Global property profiles support only {prefix} keys. Use private COW mode for mutable properties.",
+  "presets": {
+    "title": "Built-in devices",
+    "help": "Community device information. Review before use; missing values stay unset. Not tested on every device.",
+    "search": "Search device or model",
+    "brand": "Filter by brand",
+    "allBrands": "All brands",
+    "results": "Devices found: {count}",
+    "resultsLabel": "Device results",
+    "noResults": "No matching devices. Try another model or brand.",
+    "showMore": "Show more devices",
+    "selected": "Selected device",
+    "withFingerprint": "Includes a fingerprint. Review the supplied fields before using it.",
+    "identityOnly": "Identity fields only; no fingerprint was supplied.",
+    "conflict": "Source fields differ from the fingerprint: {fields}. Review before use.",
+    "details": "View supplied fields",
+    "notSupplied": "Not supplied",
+    "use": "Fill device fields",
+    "source": "Source: Issue 48 · {author}",
+    "loaded": "Fields loaded from {device}. Review them, then append to the draft.",
+    "reviewFields": "Review device fields",
+    "moreFields": "More device fields"
+  }
 }

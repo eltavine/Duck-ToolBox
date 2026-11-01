@@ -27,7 +27,7 @@ for (const locale of ["en", "zh-CN", "ar"]) {
     const builder = page
       .locator("details")
       .filter({ has: page.locator("summary", { hasText: messages.addProfile }) })
-    await builder.locator("summary").click()
+    await builder.locator(":scope > summary").click()
     await builder.getByLabel(messages.packages, { exact: true }).fill("com.example.phone")
     for (const field of ["manufacturer", "brand", "model"]) {
       const input = builder.getByLabel(messages.fields[field]!, { exact: true })

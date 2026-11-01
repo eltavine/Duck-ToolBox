@@ -1,5 +1,33 @@
 # Device Faker compatibility and validation
 
+## Built-in device presets
+
+The WebUI bundles 207 device records supplied by
+[SkyQiQiQwQ in Issue #48](https://github.com/eltavine/Duck-ToolBox/issues/48).
+The [original attachment](https://github.com/user-attachments/files/34215450/default.txt)
+has SHA-256 `3217f4e6096e9fd0ca2891d31b3a58a1ddcc1aeca38902c7cf596422af370586`.
+The catalog at `ui/src/features/device-faker/presets/devices.json` retains the record
+order, original spelling and case. The source labels map as follows:
+
+| Source field | Profile field |
+| --- | --- |
+| 制造商 / 品牌 / 型号 | `manufacturer` / `brand` / `model` |
+| 市场名称 / 设备 / 产品 | `marketname` / `device` / `product` |
+| 名称 / 构建ID / 指纹 | `name` / `build_id` / `fingerprint` |
+
+Blank source values are omitted. All 207 records contain basic identity fields;
+16 contain a fingerprint. These are community observations, not verified injection
+results or an integrity verdict. Explicit fields that disagree with a supplied
+fingerprint remain unchanged and are identified before loading the fields. Normal engine
+derivation from a fingerprint still applies after configuration parsing.
+
+Selection fills the editable profile form and clears values absent from the next
+record. It preserves template names, target packages and the current TOML draft.
+Appending, validating and applying continue through the existing revision-checked
+process interface; selecting a preset never enables the engine. No network access
+is required to search or use the bundled catalog. Contract tests validate every
+preset as a template against the real configuration parser without publication.
+
 ## Property memory
 
 Reference baseline: AOSP Android 16 release, bionic commit

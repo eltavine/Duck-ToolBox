@@ -52,7 +52,10 @@
     "model": "機型",
     "device": "裝置代號",
     "product": "產品代號",
-    "fingerprint": "建置指紋"
+    "fingerprint": "建置指紋",
+    "marketname": "市場名稱",
+    "name": "產品名稱",
+    "build_id": "組建 ID"
   },
   "warnings": {
     "overlap": "{target} 存在 {count} 項重疊設定。直接應用記錄完整取代範本；多個範本以首個符合項目為準。",
@@ -79,5 +82,27 @@
   },
   "globalRecoveryReboot": "全域屬性工作階段尚未完成，原還原程序已結束。請停止偽裝並重新啟動後再啟用。 若重新啟動後仍有此提示，請檢查還原記錄。",
   "blocked": "已啟用，等待符合執行條件",
-  "globalPropsHelp": "全域屬性設定僅支援 {prefix} 鍵。可變屬性請使用程序內 COW 模式。"
+  "globalPropsHelp": "全域屬性設定僅支援 {prefix} 鍵。可變屬性請使用程序內 COW 模式。",
+  "presets": {
+    "title": "內建裝置庫",
+    "help": "社群收錄資料，使用前請核對；缺少的值保持空白，未逐一驗證裝置效果。",
+    "search": "搜尋機型或型號",
+    "brand": "依品牌篩選",
+    "allBrands": "所有品牌",
+    "results": "找到 {count} 款裝置",
+    "resultsLabel": "裝置搜尋結果",
+    "noResults": "沒有符合的裝置，請嘗試其他機型或品牌。",
+    "showMore": "顯示更多裝置",
+    "selected": "所選裝置",
+    "withFingerprint": "附有指紋，請先核對收錄欄位。",
+    "identityOnly": "僅有裝置資料，來源未提供指紋。",
+    "conflict": "來源欄位與指紋不同：{fields}。使用前請核對。",
+    "details": "檢視收錄欄位",
+    "notSupplied": "來源未提供",
+    "use": "填入裝置欄位",
+    "source": "來源：Issue 48 · {author}",
+    "loaded": "已填入 {device} 的欄位，核對後再附加至草稿。",
+    "reviewFields": "核對裝置欄位",
+    "moreFields": "更多裝置欄位"
+  }
 }

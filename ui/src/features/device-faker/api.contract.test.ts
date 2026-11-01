@@ -6,11 +6,30 @@ import { afterEach, describe, expect, it } from "vitest"
 import type { Host } from "@/core/testing/host"
 import { CONTRACT, hasDuckd, installHost } from "@/core/testing/host"
 import { fakerApi } from "./api"
+import { devicePresets, fieldsFromPreset } from "./presets/catalog"
+import { profileSnippet } from "./profile"
 
 let host: Host | undefined
 afterEach(() => host?.dispose())
 const content = '[[apps]]\npackage = "com.example.app@999"\nmodel = "Phone"\n'
 describe.skipIf(!hasDuckd)("Device Faker real process contract", CONTRACT, () => {
+  it("validates every built-in device through the real engine without publishing or enabling", async () => {
+    host = installHost()
+    const before = await fakerApi.config()
+    for (const preset of devicePresets) {
+      const snippet = profileSnippet(
+        preset.label,
+        "com.example.preset@999",
+        fieldsFromPreset(preset),
+      )
+      const candidate = await fakerApi.preview(before.content + snippet)
+      expect(candidate.summary.targets).toEqual(["com.example.preset@999"])
+      expect(candidate.summary.global_effects).toBe(false)
+      expect(candidate.content).toContain(snippet)
+    }
+    expect(await fakerApi.config()).toEqual(before)
+    expect((await fakerApi.status()).enabled).toBe(false)
+  })
   it("previews, applies, imports and restores independently of enabling", async () => {
     host = installHost({
       files: {

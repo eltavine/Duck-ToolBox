@@ -52,7 +52,10 @@
     "model": "Modèle",
     "device": "Nom de code de l’appareil",
     "product": "Produit",
-    "fingerprint": "Empreinte"
+    "fingerprint": "Empreinte",
+    "marketname": "Nom commercial",
+    "name": "Nom du produit",
+    "build_id": "ID de compilation"
   },
   "warnings": {
     "overlap": "{target} : {count} affectations se chevauchent. Les entrées directes remplacent le modèle ; le premier modèle correspondant est prioritaire.",
@@ -79,5 +82,27 @@
   },
   "globalRecoveryReboot": "Une session de propriétés globales est inachevée et son processus de restauration est arrêté. Arrêtez la simulation puis redémarrez avant de la réactiver. Si l’avertissement persiste après le redémarrage, vérifiez les données de restauration.",
   "blocked": "Activé ; en attente des conditions requises",
-  "globalPropsHelp": "Les profils de propriétés globales acceptent uniquement les clés {prefix}. Utilisez le mode COW privé pour les propriétés modifiables."
+  "globalPropsHelp": "Les profils de propriétés globales acceptent uniquement les clés {prefix}. Utilisez le mode COW privé pour les propriétés modifiables.",
+  "presets": {
+    "title": "Appareils intégrés",
+    "help": "Données communautaires. Vérifiez-les avant utilisation ; les valeurs absentes restent vides. Chaque appareil n’a pas été vérifié.",
+    "search": "Rechercher un appareil ou modèle",
+    "brand": "Filtrer par marque",
+    "allBrands": "Toutes les marques",
+    "results": "Appareils trouvés : {count}",
+    "resultsLabel": "Résultats des appareils",
+    "noResults": "Aucun appareil correspondant. Essayez un autre modèle ou une autre marque.",
+    "showMore": "Afficher plus d’appareils",
+    "selected": "Appareil sélectionné",
+    "withFingerprint": "Empreinte fournie. Vérifiez les champs avant utilisation.",
+    "identityOnly": "Identité uniquement ; aucune empreinte fournie.",
+    "conflict": "Ces champs diffèrent de l’empreinte : {fields}. Vérifiez-les avant utilisation.",
+    "details": "Voir les champs fournis",
+    "notSupplied": "Non fourni",
+    "use": "Remplir les champs de l’appareil",
+    "source": "Source : Issue 48 · {author}",
+    "loaded": "Champs de {device} chargés. Vérifiez-les puis ajoutez-les au brouillon.",
+    "reviewFields": "Vérifier les champs de l’appareil",
+    "moreFields": "Autres champs de l’appareil"
+  }
 }

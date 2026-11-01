@@ -52,7 +52,10 @@
     "model": "Modelo",
     "device": "Nombre interno del dispositivo",
     "product": "Producto",
-    "fingerprint": "Huella de compilación"
+    "fingerprint": "Huella de compilación",
+    "marketname": "Nombre comercial",
+    "name": "Nombre del producto",
+    "build_id": "ID de compilación"
   },
   "warnings": {
     "overlap": "{target}: {count} asignaciones se solapan. Los registros directos sustituyen las plantillas; gana la primera coincidencia.",
@@ -79,5 +82,27 @@
   },
   "globalRecoveryReboot": "Hay una sesión de propiedades globales sin finalizar y su proceso de restauración terminó. Detén la simulación y reinicia antes de activarla de nuevo. Si el aviso persiste tras reiniciar, revisa los registros de restauración.",
   "blocked": "Activado; esperando los requisitos necesarios",
-  "globalPropsHelp": "Los perfiles de propiedades globales solo admiten claves {prefix}. Usa el modo COW privado para las propiedades modificables."
+  "globalPropsHelp": "Los perfiles de propiedades globales solo admiten claves {prefix}. Usa el modo COW privado para las propiedades modificables.",
+  "presets": {
+    "title": "Dispositivos incluidos",
+    "help": "Datos de la comunidad. Revísalos antes de usarlos; los valores ausentes quedan vacíos. No se ha verificado cada dispositivo.",
+    "search": "Buscar dispositivo o modelo",
+    "brand": "Filtrar por marca",
+    "allBrands": "Todas las marcas",
+    "results": "Dispositivos encontrados: {count}",
+    "resultsLabel": "Resultados de dispositivos",
+    "noResults": "No hay coincidencias. Prueba otro modelo o marca.",
+    "showMore": "Mostrar más dispositivos",
+    "selected": "Dispositivo seleccionado",
+    "withFingerprint": "Incluye huella. Revisa los campos antes de usarlos.",
+    "identityOnly": "Solo datos de identidad; la fuente no incluye huella.",
+    "conflict": "Los campos difieren de la huella: {fields}. Revísalos antes de usarlos.",
+    "details": "Ver campos de la fuente",
+    "notSupplied": "No proporcionado",
+    "use": "Rellenar campos del dispositivo",
+    "source": "Fuente: Issue 48 · {author}",
+    "loaded": "Campos de {device} cargados. Revísalos y añádelos al borrador.",
+    "reviewFields": "Revisar campos del dispositivo",
+    "moreFields": "Más campos del dispositivo"
+  }
 }

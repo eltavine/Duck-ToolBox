@@ -52,7 +52,10 @@
     "model": "Model",
     "device": "Nazwa kodowa urządzenia",
     "product": "Produkt",
-    "fingerprint": "Odcisk kompilacji"
+    "fingerprint": "Odcisk kompilacji",
+    "marketname": "Nazwa handlowa",
+    "name": "Nazwa produktu",
+    "build_id": "ID kompilacji"
   },
   "warnings": {
     "overlap": "{target}: nakładają się {count} przypisania. Wpisy bezpośrednie całkowicie zastępują szablony; pierwszy pasujący szablon ma pierwszeństwo.",
@@ -79,5 +82,27 @@
   },
   "globalRecoveryReboot": "Sesja właściwości globalnych nie została ukończona, a proces przywracania zakończył się. Zatrzymaj podszywanie i uruchom urządzenie ponownie przed włączeniem. Jeśli ostrzeżenie pozostaje po ponownym uruchomieniu, sprawdź dane przywracania.",
   "blocked": "Włączone; oczekiwanie na spełnienie warunków",
-  "globalPropsHelp": "Globalne profile właściwości obsługują tylko klucze {prefix}. Dla właściwości zmiennych użyj prywatnego trybu COW."
+  "globalPropsHelp": "Globalne profile właściwości obsługują tylko klucze {prefix}. Dla właściwości zmiennych użyj prywatnego trybu COW.",
+  "presets": {
+    "title": "Wbudowane urządzenia",
+    "help": "Dane społeczności. Sprawdź je przed użyciem; brakujące wartości pozostają puste. Nie zweryfikowano każdego urządzenia.",
+    "search": "Szukaj urządzenia lub modelu",
+    "brand": "Filtruj według marki",
+    "allBrands": "Wszystkie marki",
+    "results": "Znalezione urządzenia: {count}",
+    "resultsLabel": "Wyniki urządzeń",
+    "noResults": "Brak pasujących urządzeń. Spróbuj innego modelu lub marki.",
+    "showMore": "Pokaż więcej urządzeń",
+    "selected": "Wybrane urządzenie",
+    "withFingerprint": "Zawiera odcisk. Sprawdź pola przed użyciem.",
+    "identityOnly": "Tylko dane tożsamości; źródło nie zawiera odcisku.",
+    "conflict": "Pola różnią się od odcisku: {fields}. Sprawdź je przed użyciem.",
+    "details": "Pokaż pola źródłowe",
+    "notSupplied": "Nie podano",
+    "use": "Wypełnij pola urządzenia",
+    "source": "Źródło: Issue 48 · {author}",
+    "loaded": "Wczytano pola z {device}. Sprawdź je i dodaj do szkicu.",
+    "reviewFields": "Sprawdź pola urządzenia",
+    "moreFields": "Więcej pól urządzenia"
+  }
 }

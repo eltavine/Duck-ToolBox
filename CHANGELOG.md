@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Device Faker
+
+- Embed 207 searchable device presets contributed by SkyQiQiQwQ in Issue #48.
+  Preserve supplied identity, marketing and build fields without filling missing values.
+  Review and edit presets before adding them to a draft; saving and enabling remain separate.
+- Add brand filtering, fingerprint mismatch notices and accessible field review across
+  all 16 locales, including narrow layouts and right-to-left text.
+
 ### Play Integrity
 
 - Default the engine to disabled unless explicitly enabled. Keep existing explicit

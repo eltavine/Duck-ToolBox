@@ -52,7 +52,10 @@
     "model": "Modello",
     "device": "Nome in codice del dispositivo",
     "product": "Prodotto",
-    "fingerprint": "Impronta di compilazione"
+    "fingerprint": "Impronta di compilazione",
+    "marketname": "Nome commerciale",
+    "name": "Nome prodotto",
+    "build_id": "ID build"
   },
   "warnings": {
     "overlap": "{target}: {count} assegnazioni sovrapposte. Le voci dirette sostituiscono i modelli; prevale il primo modello corrispondente.",
@@ -79,5 +82,27 @@
   },
   "globalRecoveryReboot": "Una sessione delle proprietà globali è incompleta e il processo di ripristino è terminato. Interrompi la simulazione e riavvia prima di riattivarla. Se l’avviso persiste dopo il riavvio, controlla i dati di ripristino.",
   "blocked": "Attivato; in attesa delle condizioni richieste",
-  "globalPropsHelp": "I profili delle proprietà globali supportano solo le chiavi {prefix}. Usa la modalità COW privata per le proprietà modificabili."
+  "globalPropsHelp": "I profili delle proprietà globali supportano solo le chiavi {prefix}. Usa la modalità COW privata per le proprietà modificabili.",
+  "presets": {
+    "title": "Dispositivi inclusi",
+    "help": "Dati della comunità. Controllali prima dell’uso; i valori mancanti restano vuoti. Non verificati per ogni dispositivo.",
+    "search": "Cerca dispositivo o modello",
+    "brand": "Filtra per marca",
+    "allBrands": "Tutte le marche",
+    "results": "Dispositivi trovati: {count}",
+    "resultsLabel": "Risultati dispositivi",
+    "noResults": "Nessun dispositivo corrispondente. Prova un altro modello o marca.",
+    "showMore": "Mostra altri dispositivi",
+    "selected": "Dispositivo selezionato",
+    "withFingerprint": "Impronta inclusa. Controlla i campi prima dell’uso.",
+    "identityOnly": "Solo dati identificativi; nessuna impronta fornita.",
+    "conflict": "I campi differiscono dall’impronta: {fields}. Controllali prima dell’uso.",
+    "details": "Visualizza i campi della fonte",
+    "notSupplied": "Non fornito",
+    "use": "Compila i campi del dispositivo",
+    "source": "Fonte: Issue 48 · {author}",
+    "loaded": "Campi di {device} caricati. Controllali e aggiungili alla bozza.",
+    "reviewFields": "Controlla i campi del dispositivo",
+    "moreFields": "Altri campi del dispositivo"
+  }
 }

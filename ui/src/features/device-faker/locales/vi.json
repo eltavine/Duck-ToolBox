@@ -52,7 +52,10 @@
     "model": "Mẫu máy",
     "device": "Tên mã thiết bị",
     "product": "Sản phẩm",
-    "fingerprint": "Dấu vân tay bản dựng"
+    "fingerprint": "Dấu vân tay bản dựng",
+    "marketname": "Tên thương mại",
+    "name": "Tên sản phẩm",
+    "build_id": "ID bản dựng"
   },
   "warnings": {
     "overlap": "{target}: có {count} mục gán trùng. Bản ghi trực tiếp thay thế toàn bộ mẫu; mẫu khớp đầu tiên được ưu tiên.",
@@ -79,5 +82,27 @@
   },
   "globalRecoveryReboot": "Phiên thuộc tính toàn cục chưa hoàn tất và tiến trình khôi phục đã kết thúc. Dừng giả lập rồi khởi động lại trước khi bật lại. Nếu cảnh báo vẫn còn sau khi khởi động lại, hãy kiểm tra các bản ghi khôi phục.",
   "blocked": "Đã bật; đang chờ đáp ứng điều kiện hoạt động",
-  "globalPropsHelp": "Hồ sơ thuộc tính toàn cục chỉ hỗ trợ khóa {prefix}. Dùng chế độ COW riêng cho các thuộc tính có thể thay đổi."
+  "globalPropsHelp": "Hồ sơ thuộc tính toàn cục chỉ hỗ trợ khóa {prefix}. Dùng chế độ COW riêng cho các thuộc tính có thể thay đổi.",
+  "presets": {
+    "title": "Thiết bị tích hợp",
+    "help": "Dữ liệu cộng đồng. Hãy xem lại trước khi dùng; giá trị thiếu được để trống. Chưa xác minh từng thiết bị.",
+    "search": "Tìm thiết bị hoặc mẫu máy",
+    "brand": "Lọc theo thương hiệu",
+    "allBrands": "Tất cả thương hiệu",
+    "results": "Tìm thấy {count} thiết bị",
+    "resultsLabel": "Kết quả thiết bị",
+    "noResults": "Không có thiết bị phù hợp. Thử mẫu máy hoặc thương hiệu khác.",
+    "showMore": "Hiện thêm thiết bị",
+    "selected": "Thiết bị đã chọn",
+    "withFingerprint": "Có dấu vân tay. Xem lại các trường trước khi dùng.",
+    "identityOnly": "Chỉ có thông tin nhận dạng; nguồn không cung cấp dấu vân tay.",
+    "conflict": "Các trường khác với dấu vân tay: {fields}. Xem lại trước khi dùng.",
+    "details": "Xem các trường từ nguồn",
+    "notSupplied": "Không được cung cấp",
+    "use": "Điền các trường thiết bị",
+    "source": "Nguồn: Issue 48 · {author}",
+    "loaded": "Đã tải các trường từ {device}. Xem lại rồi thêm vào bản nháp.",
+    "reviewFields": "Xem lại các trường thiết bị",
+    "moreFields": "Các trường thiết bị khác"
+  }
 }
