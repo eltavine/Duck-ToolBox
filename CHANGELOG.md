@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Play Integrity
+
+- Default the engine to disabled unless explicitly enabled. Keep existing explicit
+  enable settings and leave configuration import, preview and application independent
+  of the power setting.
+
 ### Linux environments
 
 - Reject ARM64 core dumps, malformed load segments and unavailable ELF interpreters

@@ -178,7 +178,9 @@ describe.skipIf(!hasDuckd || !existsSync(engine))(
     it("preserves the independent engine protocol across preview, apply and restore", async () => {
       host = installHost()
       const status = await integrityApi.status()
-      expect(status.options.enabled).toBe(true)
+      expect(status.options.enabled).toBe(false)
+      expect(status.state).toBe("disabled")
+      expect((await integrityApi.power()).enabled).toBe(false)
       expect(status.verdict_verified).toBe(false)
       const before = await integrityApi.config()
       const preview = await integrityApi.preview(
@@ -189,8 +191,11 @@ describe.skipIf(!hasDuckd || !existsSync(engine))(
       expect((await integrityApi.config()).revision).toBe(before.revision)
       const saved = await integrityApi.apply(preview)
       expect(saved.config.entries.EXTRA).toBe("preserved")
+      expect((await integrityApi.power()).enabled).toBe(false)
       await expect(integrityApi.apply(preview)).rejects.toMatchObject({ code: "engine_error" })
       expect((await integrityApi.restore(saved.backup)).config.entries).toEqual({})
+      await integrityApi.options({ enabled: true })
+      expect((await integrityApi.power()).enabled).toBe(true)
     })
     it("persists interrupted cross-module work and requires confirmed, repeatable recovery", async () => {
       host = installHost({

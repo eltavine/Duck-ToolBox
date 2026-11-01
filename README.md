@@ -10,8 +10,9 @@ changed, removed or added on its own.
 
 - **Play Integrity**: an independently built GPLv3 engine derived from Play Integrity Fork,
   with configuration previews, migration, fingerprint generation, compatibility settings and
-  diagnostics in the WebUI. It is enabled by default; injection requires Zygisk and a saved
-  nonempty configuration. Full-mode global scripts also wait for configuration; explicitly
+  diagnostics in the WebUI. It is disabled by default and requires explicit enabling;
+  saved enable settings are retained. Injection requires Zygisk and a saved nonempty
+  configuration. Full-mode global scripts also wait for configuration; explicitly
   selected scripts-only mode can run without a fingerprint. A separate stop control works
   during tasks, invalid configuration and pending recovery; configuration is retained. The management code remains MIT; see [licensing boundaries](THIRD_PARTY_NOTICES.md).
 

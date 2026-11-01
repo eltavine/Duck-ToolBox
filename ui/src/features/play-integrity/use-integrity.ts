@@ -39,7 +39,7 @@ export function useIntegrity() {
   const taskId = useStorage(TASK_STORAGE_KEY, "")
   const backup = useStorage("duck-toolbox/play-integrity-backup", "")
   const options = ref<Options>({
-    enabled: true,
+    enabled: false,
     mode: "full",
     skipdelprop: false,
     skippersistprop: false,

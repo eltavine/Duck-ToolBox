@@ -40,7 +40,7 @@ const invalidProfiles = new URLSearchParams(location.search).has("corrupt-pif-li
 let corruptHistory = new URLSearchParams(location.search).has("corrupt-pif-history")
 const records: Awaited<ReturnType<typeof libraryApi.records>>["records"] = []
 const options: Options = {
-  enabled: true,
+  enabled: new URLSearchParams(location.search).get("pif-enabled") === "1",
   mode: "full",
   skipdelprop: false,
   skippersistprop: false,

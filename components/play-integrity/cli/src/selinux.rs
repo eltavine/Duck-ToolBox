@@ -140,6 +140,7 @@ mod tests {
             std::fs::write(e.device(name), "0").unwrap();
             chmod(&e.device(name), 0o644).unwrap();
         }
+        files::atomic(&e.data.join("options.json"), br#"{"enabled":true}"#).unwrap();
         apply(&e).unwrap();
         assert_eq!(mode(&enforce).unwrap(), 0o640);
         assert_eq!(files::read(&enforce).unwrap(), "0");

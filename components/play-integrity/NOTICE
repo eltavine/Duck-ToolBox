@@ -40,6 +40,10 @@ Modified 2026-10-31: the Android build composes an independent, opt-in language
 spoofing component and its pinned ART dependencies. The shared dispatcher owns
 callback ordering and library lifetime across the three components.
 
+Modified 2026-11-01: the CLI and native companion require an explicit saved
+enable setting. Missing settings default to disabled; configuration changes and
+boot stages do not implicitly enable the engine.
+
 Original PIF concepts and mechanisms are credited upstream to kdrag0n's ProtonAOSP
 and Universal SafetyNet Fix. Boot scripts derive from Displax's USNF MOD fork.
 See upstream history for the original contributions. Existing copyright and

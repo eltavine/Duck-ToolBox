@@ -25,12 +25,13 @@ PIF_ENGINE_DATA and PIF_ENGINE_SYSROOT; all must be absolute paths.
 
 Call `pif-engine stage setup`, `stage early`, `stage late` and `stage uninstall`
 from the corresponding root-manager lifecycle. The late stage must run after
-boot completion. No network request occurs at boot. Enabling is the default;
-an absent or empty configuration keeps full-mode injection and global compatibility
-scripts idle. Explicitly saving `mode=scripts-only` permits compatibility scripts
-without a fingerprint. Without a configuration, the original property handler
-retains ownership; explicit scripts-only mode can take ownership without a
-fingerprint. The independent boot-hash setting retains its existing behavior.
+boot completion. No network request occurs at boot. The engine is disabled by default;
+only a saved `enabled=true` enables it. Existing explicit enable settings are retained.
+An absent or empty configuration keeps full-mode injection and global compatibility
+scripts idle even when enabled. Explicitly saving `mode=scripts-only` on an enabled
+engine permits compatibility scripts without a fingerprint. Without a configuration,
+the original property handler retains ownership; enabled scripts-only mode can take
+ownership without a fingerprint. The independent boot-hash setting retains its existing behavior.
 
 ## Public process interface (version 1)
 

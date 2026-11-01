@@ -5,7 +5,6 @@ test("community archive previews and saves a Canary candidate without applying o
   open,
 }) => {
   await open("/play-integrity")
-  await page.getByRole("switch", { name: "Enable the engine", exact: true }).click()
   await expect(
     page.getByRole("switch", { name: "Enable the engine", exact: true }),
   ).not.toBeChecked()

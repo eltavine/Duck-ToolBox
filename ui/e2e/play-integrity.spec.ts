@@ -1,5 +1,31 @@
 import { expect, test } from "./fixtures"
 
+test("starts disabled and applies configuration without enabling the engine", async ({
+  page,
+  open,
+}) => {
+  await open("/play-integrity")
+  const power = page.getByRole("switch", { name: "Enable the engine", exact: true })
+  await expect(power).not.toBeChecked()
+  await page.getByRole("link", { name: "Fingerprints", exact: true }).click()
+  await expect(
+    page.getByRole("button", { name: "Generate fingerprint", exact: true }),
+  ).toBeDisabled()
+  await page.getByRole("link", { name: "Configuration", exact: true }).click()
+  await page.getByLabel("Device model · MODEL", { exact: true }).fill("Saved while disabled")
+  await page.getByRole("button", { name: "Preview changes", exact: true }).click()
+  await page.getByRole("button", { name: "Apply configuration", exact: true }).click()
+  await page.getByRole("link", { name: "Compatibility", exact: true }).click()
+  await page.getByRole("combobox", { name: "Engine mode", exact: true }).click()
+  await page.getByRole("option", { name: "Scripts only", exact: true }).click()
+  await page.getByRole("button", { name: "Save", exact: true }).click()
+  await page.getByRole("link", { name: "Status", exact: true }).click()
+  await expect(power).not.toBeChecked()
+  await power.click()
+  await expect(power).toBeChecked()
+  await expect(page.getByText("Scripts-only mode", { exact: true })).toBeVisible()
+})
+
 test("previews arbitrary configuration before applying and exposes GPL notices", async ({
   page,
   open,
@@ -25,7 +51,7 @@ test("previews arbitrary configuration before applying and exposes GPL notices",
   await expect(page.getByRole("link", { name: "Corresponding source", exact: true })).toBeVisible()
 })
 test("generates a candidate without replacing the saved configuration", async ({ page, open }) => {
-  await open("/play-integrity/generate")
+  await open("/play-integrity/generate", { query: { "pif-enabled": "1" } })
   await page.getByRole("button", { name: "Generate fingerprint", exact: true }).click()
   await expect(page.getByText("Candidate ready for preview", { exact: true })).toBeVisible()
   await expect(page.getByRole("button", { name: "Apply configuration", exact: true })).toBeVisible()
@@ -37,7 +63,7 @@ test("generates a candidate without replacing the saved configuration", async ({
   )
 })
 test("supports mode changes, process diagnostics and Chinese notices", async ({ page, open }) => {
-  await open("/play-integrity/compatibility")
+  await open("/play-integrity/compatibility", { query: { "pif-enabled": "1" } })
   await page.getByRole("combobox", { name: "Engine mode", exact: true }).click()
   await page.getByRole("option", { name: "Scripts only", exact: true }).click()
   await page.getByRole("button", { name: "Save", exact: true }).click()
@@ -153,7 +179,7 @@ test("disabling cancels generation and the independent power switch can enable a
   page,
   open,
 }) => {
-  await open("/play-integrity/generate")
+  await open("/play-integrity/generate", { query: { "pif-enabled": "1" } })
   await page.getByRole("button", { name: "Generate fingerprint", exact: true }).click()
   await page.getByRole("button", { name: "Disable PIF now", exact: true }).click()
   await expect(page.getByText("Generation cancelled", { exact: true })).toBeVisible()

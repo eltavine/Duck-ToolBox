@@ -257,6 +257,7 @@ mod tests {
                 module: root.path().into(),
                 sysroot: root.path().into(),
             };
+            files::atomic(&e.data.join("options.json"), br#"{"enabled":true}"#).unwrap();
             let mut api = Fake::default();
             api.set(PACKAGES[0], "com.google.android.gms", true)
                 .unwrap();
@@ -282,6 +283,7 @@ mod tests {
             module: root.path().into(),
             sysroot: root.path().into(),
         };
+        files::atomic(&e.data.join("options.json"), br#"{"enabled":true}"#).unwrap();
         let mut api = Fake::default();
         api.set(PACKAGES[0], "com.google.android.gms.original", true)
             .unwrap();

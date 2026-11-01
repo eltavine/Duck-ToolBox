@@ -34,6 +34,10 @@ fn fixture(script: &str) -> tempfile::TempDir {
     fs::write(root.path().join("module/scripts/migrate.sh"), "exit 0\n").unwrap();
     root
 }
+fn enable(root: &std::path::Path) {
+    let result = request(root, "options", json!({"enabled":true}));
+    assert_eq!(result["ok"], true, "{result}");
+}
 fn terminal(root: &std::path::Path, id: &Value) -> Value {
     let end = Instant::now() + Duration::from_secs(10);
     loop {
@@ -46,10 +50,64 @@ fn terminal(root: &std::path::Path, id: &Value) -> Value {
     }
 }
 #[test]
+fn configuration_and_boot_stages_require_explicit_enabling() {
+    let root = fixture("exit 0\n");
+    fs::write(
+        root.path().join("module/scripts/stage.sh"),
+        "printf '%s\\n' \"$1\" >> \"$PIF_ENGINE_DATA/stage.trace\"\n",
+    )
+    .unwrap();
+    let status = request(root.path(), "status", json!({}));
+    assert_eq!(status["data"]["options"]["enabled"], false);
+    assert_eq!(status["data"]["state"], "disabled");
+    assert_eq!(request(root.path(), "task-start", json!({}))["ok"], false);
+    let preview = request(root.path(), "preview", json!({"content":"MODEL=Saved"}));
+    let applied = request(
+        root.path(),
+        "apply",
+        json!({"content":"MODEL=Saved","revision":preview["data"]["revision"]}),
+    );
+    assert_eq!(applied["ok"], true, "{applied}");
+    let status = request(root.path(), "status", json!({}));
+    assert_eq!(status["data"]["has_config"], true);
+    assert_eq!(status["data"]["lifecycle_eligible"], false);
+    assert_eq!(status["data"]["options"]["enabled"], false);
+    let saved = request(root.path(), "options", json!({"mode":"scripts-only"}));
+    assert_eq!(saved["data"]["options"]["enabled"], false);
+    for phase in ["setup", "early", "late"] {
+        let output = Command::new(env!("CARGO_BIN_EXE_pif-engine"))
+            .args(["stage", phase])
+            .env("PIF_ENGINE_DATA", root.path().join("data"))
+            .env("PIF_ENGINE_MODULE", root.path().join("module"))
+            .env("PIF_ENGINE_SYSROOT", root.path().join("sys"))
+            .output()
+            .unwrap();
+        assert!(output.status.success(), "{phase}: {output:?}");
+    }
+    assert_eq!(
+        fs::read_to_string(root.path().join("data/stage.trace")).unwrap(),
+        "cleanup\n"
+    );
+    assert_eq!(
+        request(root.path(), "power", json!({}))["data"]["enabled"],
+        false
+    );
+    assert_eq!(
+        request(root.path(), "config", json!({}))["data"]["entries"]["MODEL"],
+        "Saved"
+    );
+    enable(root.path());
+    let status = request(root.path(), "status", json!({}));
+    assert_eq!(status["data"]["options"]["enabled"], true);
+    assert_eq!(status["data"]["state"], "scripts-only");
+    assert_eq!(status["data"]["lifecycle_eligible"], true);
+}
+#[test]
 fn generation_previews_without_publishing_and_import_keeps_source() {
     let root = fixture(
         "echo 'fetching fixture'; printf 'MODEL=Fixture\nSECURITY_PATCH=2026-10-05\n' > custom.pif.prop\n",
     );
+    enable(root.path());
     let status = request(root.path(), "status", json!({}));
     assert_eq!(status["data"]["options"]["enabled"], true);
     let started = request(root.path(), "task-start", json!({"strong":true}));
@@ -78,6 +136,7 @@ fn generation_previews_without_publishing_and_import_keeps_source() {
 #[test]
 fn cancellation_terminates_worker_and_preserves_live_config() {
     let root = fixture("sleep 30; echo MODEL=unexpected > custom.pif.prop\n");
+    enable(root.path());
     let started = request(root.path(), "task-start", json!({}));
     let id = &started["data"]["id"];
     assert_eq!(
@@ -116,6 +175,7 @@ while [ ! -s "$PIF_ENGINE_DATA/heartbeat" ]; do sleep 0.01; done
 {ending}
 "#
         ));
+        enable(root.path());
         let started = request(root.path(), "task-start", json!({"timeout_seconds":1}));
         assert_eq!(started["ok"], true, "{started}");
         let mut cleanup = Cleanup(vec![started["data"]["pid"].as_u64().unwrap() as i32]);
@@ -162,6 +222,7 @@ while [ ! -s "$PIF_ENGINE_DATA/heartbeat" ]; do sleep 0.01; done
 #[test]
 fn options_conflicts_and_stale_apply_are_explicit() {
     let root = fixture("exit 1\n");
+    enable(root.path());
     let conflict = root.path().join("sys/data/adb/modules/playintegrityfix");
     fs::create_dir_all(&conflict).unwrap();
     fs::write(conflict.join("module.prop"), "id=playintegrityfix").unwrap();
@@ -284,6 +345,7 @@ fn standalone_file_migration_preserves_shell_metacharacters_as_data() {
 #[test]
 fn timed_out_jobs_fail_without_publishing() {
     let root = fixture("sleep 30; echo MODEL=unexpected > custom.pif.prop\n");
+    enable(root.path());
     let started = request(root.path(), "task-start", json!({"timeout_seconds":1}));
     let result = terminal(root.path(), &started["data"]["id"]);
     assert_eq!(result["data"]["state"], "failed", "{result}");
@@ -333,6 +395,7 @@ fn lifecycle_uses_cleanup_when_disabled_and_records_the_boot_options() {
 #[test]
 fn disable_cancels_generation_and_survives_broken_options() {
     let root = fixture("sleep 30; echo MODEL=unexpected > custom.pif.prop\n");
+    enable(root.path());
     let started = request(root.path(), "task-start", json!({}));
     fs::write(root.path().join("data/options.json"), "{broken").unwrap();
     let stopped = request(root.path(), "disable", json!({}));
@@ -359,6 +422,7 @@ fn magisk_adapter_journals_cli_changes_and_retains_external_edits() {
     use std::os::unix::fs::PermissionsExt;
     let root = fixture("exit 0\n");
     fs::write(root.path().join("module/scripts/stage.sh"), "exit 0\n").unwrap();
+    enable(root.path());
     let magisk_dir = root.path().join("sys/data/adb/magisk");
     fs::create_dir_all(&magisk_dir).unwrap();
     let magisk = magisk_dir.join("magisk");

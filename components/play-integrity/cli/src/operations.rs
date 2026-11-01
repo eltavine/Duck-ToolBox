@@ -7,7 +7,7 @@ use std::{fs, process::Command};
 
 pub const UPSTREAM: &str = "23ec56c2440c4fd1a5e893a23ef7861d6366a828";
 pub fn options(engine: &Engine) -> Result<Value> {
-    let mut result = json!({"enabled":true,"mode":"full","skipdelprop":false,"skippersistprop":false,"skipmatchdevice":false});
+    let mut result = json!({"enabled":false,"mode":"full","skipdelprop":false,"skippersistprop":false,"skipmatchdevice":false});
     let stored = files::json_file(&engine.data.join("options.json"))?;
     if !stored.is_object() {
         bail!("options.json must be an object");
@@ -458,6 +458,7 @@ mod tests {
             br#"{"MODEL":"Fixture"}"#,
         )
         .unwrap();
+        save_options(&engine, &json!({"enabled":true})).unwrap();
         assert!(active(&engine).unwrap());
         for flag in ["disable", "remove"] {
             let path = engine.module.parent().unwrap().join(flag);
@@ -481,6 +482,7 @@ mod tests {
         };
         fs::create_dir_all(e.module.join("scripts")).unwrap();
         fs::write(e.module.join("scripts/stage.sh"), "printf '%s' \"$1\"\n").unwrap();
+        save_options(&e, &json!({"enabled":true})).unwrap();
         assert_eq!(stage(&e, "early").unwrap()["output"], "cleanup");
         assert!(!active(&e).unwrap());
         assert_eq!(stage(&e, "setup").unwrap()["skipped"], true);
@@ -523,12 +525,13 @@ mod tests {
             module: root.path().join("module"),
             sysroot: root.path().join("sys"),
         };
-        assert_eq!(options(&e).unwrap()["enabled"], true);
+        assert_eq!(options(&e).unwrap()["enabled"], false);
         let mut input = json!({"content":"MODEL=A\nCUSTOM=x","format":"prop"});
         let p = config::preview(&e, &input).unwrap();
         input["revision"] = p["revision"].clone();
         let applied = apply(&e, &input).unwrap();
         assert_eq!(config::current(&e).unwrap()["entries"]["MODEL"], "A");
+        assert!(!active(&e).unwrap());
         assert!(apply(&e, &input).is_err());
         restore(&e, &json!({"backup":applied["backup"]})).unwrap();
         assert_eq!(config::current(&e).unwrap()["entries"], json!({}));

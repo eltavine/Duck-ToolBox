@@ -53,13 +53,16 @@ static void gateTests() {
     const auto write=[&](const char *path,const char *value){std::ofstream(root / path)<<value;};
     write("module/play-integrity/classes.dex","dex"); write("data/custom.pif.json","{\"MODEL\":\"A\"}");
     const auto received=[](){int fd[2];assert(socketpair(AF_UNIX,SOCK_STREAM,0,fd)==0);std::thread server([&]{pif::companion(fd[1]);close(fd[1]);});std::vector<char> dex;std::string config;const bool result=pif::receive(fd[0],dex,config);close(fd[0]);server.join();return result;};
-    assert(received());
+    assert(!received());
+    for (const auto *options : {"", "{}", "{\"mode\":\"full\"}", "{\"enabled\":null}", "{\"enabled\":\"true\"}", "{\"enabled\":1}"}) {
+        write("data/options.json",options); assert(!received());
+    }
     write("data/options.json","{\"enabled\":false}"); assert(!received());
     write("data/options.json","{\"enabled\":true}"); assert(received());
     for (const auto *key : {"skipdelprop", "skippersistprop", "skipmatchdevice"}) {
-        std::ofstream(root / "data/options.json") << "{\"" << key << "\":\"false\"}";
+        std::ofstream(root / "data/options.json") << "{\"enabled\":true,\"" << key << "\":\"false\"}";
         assert(!received());
-        std::ofstream(root / "data/options.json") << "{\"" << key << "\":false}";
+        std::ofstream(root / "data/options.json") << "{\"enabled\":true,\"" << key << "\":false}";
         assert(received());
     }
     write("data/disabled",""); write("data/enabled-token",""); assert(!received());
@@ -68,8 +71,8 @@ static void gateTests() {
     write("data/disabled","later-stop"); assert(!received());
     write("data/enabled-token","later-stop"); assert(received());
     write("data/options.json","{broken"); assert(!received());
-    write("data/options.json","{\"mode\":\"scripts-only\"}"); assert(!received());
-    write("data/options.json","{}"); write("module/disable",""); assert(!received());
+    write("data/options.json","{\"enabled\":true,\"mode\":\"scripts-only\"}"); assert(!received());
+    write("data/options.json","{\"enabled\":true}"); write("module/disable",""); assert(!received());
     fs::remove(root / "module/disable"); write("data/custom.pif.json",""); assert(!received());
 }
 #endif

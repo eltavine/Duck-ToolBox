@@ -139,7 +139,7 @@ elif len(args) == 2 and args[0] == '--delete':
         for mode in ["full", "scripts-only"]:
             with self.subTest(mode=mode):
                 self.reset()
-                self.options(mode=mode)
+                self.options(mode=mode, enabled=True)
                 (self.data / "custom.pif.json").write_text('{"MODEL":"Fixture"}')
                 (self.data / "custom.app_replace_list.txt").write_text("")
                 self.run_hook("late-load.sh")
@@ -151,7 +151,7 @@ elif len(args) == 2 and args[0] == '--delete':
                 self.assert_applied()
 
     def test_existing_avb_metadata_is_preserved(self):
-        self.options(mode="scripts-only")
+        self.options(mode="scripts-only", enabled=True)
         self.state.write_text(json.dumps({**INITIAL, "ro.boot.vbmeta.size": "8192"}))
         self.run_hook("boot-completed.sh")
         self.assertEqual(self.properties()["ro.boot.vbmeta.size"], "8192")
@@ -189,7 +189,7 @@ elif len(args) == 2 and args[0] == '--delete':
                 self.assert_applied()
 
     def test_failed_engine_stage_falls_back_in_every_boot_hook(self):
-        self.options(mode="scripts-only")
+        self.options(mode="scripts-only", enabled=True)
         (self.component / "scripts/stage.sh").write_text("exit 1\n")
         for hook in ["post-fs-data.sh", "late-load.sh", "boot-completed.sh"]:
             with self.subTest(hook=hook):
@@ -230,7 +230,7 @@ elif len(args) == 2 and args[0] == '--delete':
                         (self.component / "pif-engine").symlink_to(ENGINE.resolve())
 
     def test_fallback_still_honors_the_switch_and_applies_the_hash(self):
-        self.options(mode="scripts-only")
+        self.options(mode="scripts-only", enabled=True)
         (self.adb / "disable_prop_handler").touch()
         for failed in [False, True]:
             with self.subTest(failed=failed):

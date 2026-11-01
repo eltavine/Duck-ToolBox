@@ -12,7 +12,7 @@ test.describe("Canary date-only metadata", () => {
       open,
     }, testInfo) => {
       await page.setViewportSize({ width: 320, height: 800 })
-      await open("/play-integrity/generate", { locale })
+      await open("/play-integrity/generate", { locale, query: { "pif-enabled": "1" } })
       await page.getByRole("button", { name: generate, exact: true }).click()
       await expect(page.getByText(released, { exact: true })).toBeVisible()
       await expect(page.getByText(expiry, { exact: true })).toBeVisible()
