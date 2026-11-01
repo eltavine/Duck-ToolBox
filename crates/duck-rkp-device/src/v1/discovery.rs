@@ -16,9 +16,11 @@ pub(crate) fn find_aidl_apk(sysroot: &Sysroot) -> Option<PathBuf> {
             .collect();
         entries.sort();
         for entry in entries {
-            let apk = entry.join("rkpdapp.apk");
-            if apk.is_file() {
-                return Some(apk);
+            for filename in ["rkpdapp.apk", "rkpdapp.google.apk"] {
+                let apk = entry.join(filename);
+                if apk.is_file() {
+                    return Some(apk);
+                }
             }
         }
     }
