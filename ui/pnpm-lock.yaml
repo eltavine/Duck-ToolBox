@@ -170,8 +170,8 @@ importers:
   .:
     dependencies:
       '@lucide/vue':
-        specifier: ^1.64.0
-        version: 1.64.0(vue@3.5.44(typescript-native-bridge@6.0.3-bridge.19.tsgo.7.0.2))
+        specifier: ^1.65.0
+        version: 1.65.0(vue@3.5.44(typescript-native-bridge@6.0.3-bridge.19.tsgo.7.0.2))
       '@tanstack/vue-query':
         specifier: ^5.105.0
         version: 5.105.0(vue@3.5.44(typescript-native-bridge@6.0.3-bridge.19.tsgo.7.0.2))
@@ -668,8 +668,8 @@ packages:
   '@keyv/serialize@1.1.1':
     resolution: {integrity: sha512-dXn3FZhPv0US+7dtJsIi2R+c7qWYiReoEh5zUntWCf4oSpMNib8FDhSoed6m3QyZdx5hK7iLFkYk3rNxwt8vTA==}
 
-  '@lucide/vue@1.64.0':
-    resolution: {integrity: sha512-9Ta6cbHDk49GgKkSQRRVm55Cb99lou++5p4RNzUkS2NvOqD0RlWTEvidWgKMURUkfyz+3J6eeQz7tzCj3PJ0zA==}
+  '@lucide/vue@1.65.0':
+    resolution: {integrity: sha512-J34stKcr0jKIkzhG09Hz/lJgAnl9yhGgvaUcRcTQXv4qVGdfEBDzHGsZ5skS8anlRALLHV+EekBYWswEVkcBww==}
     peerDependencies:
       vue: '>=3.0.1'
 
@@ -3007,7 +3007,7 @@ snapshots:
 
   '@keyv/serialize@1.1.1': {}
 
-  '@lucide/vue@1.64.0(vue@3.5.44(typescript-native-bridge@6.0.3-bridge.19.tsgo.7.0.2))':
+  '@lucide/vue@1.65.0(vue@3.5.44(typescript-native-bridge@6.0.3-bridge.19.tsgo.7.0.2))':
     dependencies:
       vue: 3.5.44(typescript-native-bridge@6.0.3-bridge.19.tsgo.7.0.2)
 
