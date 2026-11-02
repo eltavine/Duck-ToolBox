@@ -104,5 +104,14 @@
     "loaded": "Campos de {device} carregados. Revise e adicione ao rascunho.",
     "reviewFields": "Revisar campos do dispositivo",
     "moreFields": "Mais campos do dispositivo"
+  },
+  "apps": {
+    "title": "Selecionar aplicativos instalados",
+    "help": "Novos aplicativos usam chaves sem sufixo de usuário. As chaves existentes específicas de usuário são mantidas.",
+    "search": "Buscar aplicativos ou pacotes",
+    "noResults": "Nenhum aplicativo correspondente.",
+    "existing": "Já adicionado",
+    "selected": "Selecionados: {count}",
+    "add": "Adicionar aplicativos selecionados"
   }
 }

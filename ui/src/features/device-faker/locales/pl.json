@@ -104,5 +104,14 @@
     "loaded": "Wczytano pola z {device}. Sprawdź je i dodaj do szkicu.",
     "reviewFields": "Sprawdź pola urządzenia",
     "moreFields": "Więcej pól urządzenia"
+  },
+  "apps": {
+    "title": "Wybierz zainstalowane aplikacje",
+    "help": "Nowe aplikacje używają kluczy pakietów bez sufiksu użytkownika. Istniejące klucze przypisane do użytkowników są zachowywane.",
+    "search": "Szukaj aplikacji lub nazw pakietów",
+    "noResults": "Brak pasujących aplikacji.",
+    "existing": "Już dodano",
+    "selected": "Wybrano: {count}",
+    "add": "Dodaj wybrane aplikacje"
   }
 }

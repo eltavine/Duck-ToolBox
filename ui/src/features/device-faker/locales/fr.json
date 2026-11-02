@@ -104,5 +104,14 @@
     "loaded": "Champs de {device} chargés. Vérifiez-les puis ajoutez-les au brouillon.",
     "reviewFields": "Vérifier les champs de l’appareil",
     "moreFields": "Autres champs de l’appareil"
+  },
+  "apps": {
+    "title": "Choisir les applications installées",
+    "help": "Les nouvelles applications utilisent des clés sans suffixe utilisateur. Les clés propres à un utilisateur sont conservées.",
+    "search": "Rechercher une application ou un paquet",
+    "noResults": "Aucune application correspondante.",
+    "existing": "Déjà ajoutée",
+    "selected": "Sélectionnées : {count}",
+    "add": "Ajouter les applications sélectionnées"
   }
 }

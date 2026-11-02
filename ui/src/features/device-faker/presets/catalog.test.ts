@@ -7,6 +7,7 @@ import {
   presetBrands,
   presetFields,
   presetSource,
+  vendorDisplayName,
 } from "./catalog"
 
 describe("embedded community device presets", () => {
@@ -52,6 +53,20 @@ describe("embedded community device presets", () => {
       name: "",
     })
     expect(fieldsFromPreset()).toEqual(Object.fromEntries(presetFields.map((key) => [key, ""])))
+  })
+  it("uses consistent vendor labels without altering the supplied device identity", () => {
+    expect(vendorDisplayName("oppo")).toBe("OPPO")
+    expect(vendorDisplayName("ＯＰＰＯ")).toBe("OPPO")
+    expect(vendorDisplayName("oneplus")).toBe("OnePlus")
+    expect(vendorDisplayName("LENOVO")).toBe("Lenovo")
+    expect(vendorDisplayName("unlisted Vendor")).toBe("unlisted Vendor")
+    expect(presetBrands).toContainEqual(["oppo", "OPPO"])
+    expect(presetBrands).toContainEqual(["oneplus", "OnePlus"])
+    expect(presetBrands).toContainEqual(["samsung", "Samsung"])
+    expect(fieldsFromPreset(findPresets("TB323FU")[0]).manufacturer).toBe("LENOVO")
+    expect(new Set(findPresets("", "oppo").map(({ fields }) => fields.brand))).toEqual(
+      new Set(["oppo", "OPPO"]),
+    )
   })
   it("reports fingerprint disagreements while retaining both supplied values", () => {
     const preset = findPresets("TB322FC")[0]!

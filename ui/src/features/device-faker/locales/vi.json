@@ -104,5 +104,14 @@
     "loaded": "Đã tải các trường từ {device}. Xem lại rồi thêm vào bản nháp.",
     "reviewFields": "Xem lại các trường thiết bị",
     "moreFields": "Các trường thiết bị khác"
+  },
+  "apps": {
+    "title": "Chọn ứng dụng đã cài đặt",
+    "help": "Ứng dụng mới dùng khóa gói không có hậu tố người dùng. Các khóa theo người dùng hiện có được giữ nguyên.",
+    "search": "Tìm ứng dụng hoặc tên gói",
+    "noResults": "Không có ứng dụng phù hợp.",
+    "existing": "Đã thêm",
+    "selected": "Đã chọn: {count}",
+    "add": "Thêm ứng dụng đã chọn"
   }
 }

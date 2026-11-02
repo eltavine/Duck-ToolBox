@@ -20,9 +20,32 @@ export interface DevicePreset {
 export const presetSource = Object.freeze(catalog.source)
 export const devicePresets: readonly DevicePreset[] = catalog.devices
 const normalize = (value: string) => value.normalize("NFKC").toLowerCase().trim()
+const vendorNames: Readonly<Record<string, string>> = {
+  asus: "ASUS",
+  honor: "HONOR",
+  huawei: "HUAWEI",
+  lenovo: "Lenovo",
+  motorola: "Motorola",
+  nubia: "nubia",
+  oneplus: "OnePlus",
+  oppo: "OPPO",
+  realme: "realme",
+  redmagic: "REDMAGIC",
+  redmi: "REDMI",
+  samsung: "Samsung",
+  vivo: "vivo",
+  xiaomi: "Xiaomi",
+}
+/** Display names must not rewrite case-sensitive device properties or fingerprints. */
+export function vendorDisplayName(value: string): string {
+  return vendorNames[normalize(value)] ?? value.trim()
+}
 export const presetBrands = [
   ...new Map(
-    devicePresets.map(({ fields }) => [normalize(fields.brand ?? ""), fields.brand ?? ""]),
+    devicePresets.map(({ fields }) => [
+      normalize(fields.brand ?? ""),
+      vendorDisplayName(fields.brand ?? ""),
+    ]),
   ).entries(),
 ].sort(([left], [right]) => left.localeCompare(right))
 

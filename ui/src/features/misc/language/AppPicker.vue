@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { useQuery } from "@tanstack/vue-query"
 import { computed, ref } from "vue"
 import { useI18n } from "vue-i18n"
 import { Input } from "@/components/ui/input"
-import { bridge } from "@/core/bridge"
+import { useInstalledApps } from "@/core/installed-apps"
 import AppIcon from "@/core/components/AppIcon.vue"
 import QueryState from "@/core/components/QueryState.vue"
 import VirtualList from "@/core/components/VirtualList.vue"
@@ -13,17 +12,7 @@ const emit = defineEmits<{ select: [packageName: string] }>()
 const { t } = useMiscI18n()
 const { t: coreT } = useI18n()
 const search = ref("")
-const apps = useQuery({
-  queryKey: ["misc", "installed-apps"],
-  queryFn: async ({ signal }) => {
-    const names = await bridge().listPackages("all")
-    const metadata = await bridge().packagesInfo(names, signal)
-    const labels = new Map(metadata.map((app) => [app.packageName, app.label]))
-    return names
-      .map((packageName) => ({ packageName, label: labels.get(packageName) ?? packageName }))
-      .sort((a, b) => a.label.localeCompare(b.label))
-  },
-})
+const apps = useInstalledApps()
 const rows = computed(() => {
   const query = search.value.trim().toLocaleLowerCase()
   return (apps.data.value ?? []).filter((app) =>

@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { nextTick, ref } from "vue"
+import { nextTick, ref, watch } from "vue"
+import { ListPlus } from "@lucide/vue"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -7,11 +8,20 @@ import { useFakerI18n } from "../i18n"
 import { profileSnippet } from "../profile"
 import PresetPicker from "../presets/PresetPicker.vue"
 import { fieldsFromPreset, type DevicePreset } from "../presets/catalog"
+import AppPicker from "../apps/AppPicker.vue"
+import { appendPackageKeys } from "../apps/selection"
 
 const emit = defineEmits<{ append: [content: string] }>()
 const { t } = useFakerI18n()
 const name = ref("")
 const packages = ref("")
+const picking = ref(false)
+const pickerButton = ref<InstanceType<typeof Button>>()
+watch(picking, async (open) => {
+  if (open) return
+  await nextTick()
+  pickerButton.value?.$el.focus()
+})
 const fields = ref(fieldsFromPreset())
 const primaryFields = [
   "manufacturer",
@@ -65,6 +75,15 @@ function add() {
           autocapitalize="off"
       /></label>
       <p class="text-muted-foreground text-xs leading-5">{{ t("packageHelp") }}</p>
+      <Button ref="pickerButton" variant="secondary" class="w-full" @click="picking = true">
+        <ListPlus aria-hidden="true" />{{ t("apps.title") }}
+      </Button>
+      <AppPicker
+        v-if="picking"
+        v-model:open="picking"
+        :packages="packages"
+        @add="packages = appendPackageKeys(packages, $event)"
+      />
       <PresetPicker @select="loadPreset" />
       <p v-if="loaded" role="status" class="text-primary text-sm leading-6">
         {{ t("presets.loaded", { device: `\u2068${loaded}\u2069` }) }}

@@ -104,5 +104,14 @@
     "loaded": "Felder von {device} geladen. Prüfen und dann an den Entwurf anhängen.",
     "reviewFields": "Gerätefelder prüfen",
     "moreFields": "Weitere Gerätefelder"
+  },
+  "apps": {
+    "title": "Installierte Apps auswählen",
+    "help": "Neue Apps verwenden Paketschlüssel ohne Benutzerzusatz. Vorhandene benutzerspezifische Schlüssel bleiben erhalten.",
+    "search": "Apps oder Paketnamen suchen",
+    "noResults": "Keine passenden Apps.",
+    "existing": "Bereits hinzugefügt",
+    "selected": "Ausgewählt: {count}",
+    "add": "Ausgewählte Apps hinzufügen"
   }
 }

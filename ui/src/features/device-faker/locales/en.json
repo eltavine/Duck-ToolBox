@@ -104,5 +104,14 @@
     "loaded": "Fields loaded from {device}. Review them, then append to the draft.",
     "reviewFields": "Review device fields",
     "moreFields": "More device fields"
+  },
+  "apps": {
+    "title": "Choose installed apps",
+    "help": "New apps use bare package keys. Existing user-specific keys are kept.",
+    "search": "Search apps or package names",
+    "noResults": "No matching apps.",
+    "existing": "Already added",
+    "selected": "Selected: {count}",
+    "add": "Add selected apps"
   }
 }

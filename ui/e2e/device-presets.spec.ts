@@ -77,7 +77,7 @@ test("filters brands, recovers empty search and reveals source disagreements", a
   await search.fill("")
   await expect(page.getByRole("region", { name: t.presets.selected })).toHaveCount(0)
   await page.getByRole("combobox", { name: t.presets.brand, exact: true }).click()
-  await page.getByRole("option", { name: "oppo", exact: true }).click()
+  await page.getByRole("option", { name: "OPPO", exact: true }).click()
   await expect(
     page.getByRole("status").filter({ hasText: t.presets.results!.replace("{count}", "26") }),
   ).toBeVisible()

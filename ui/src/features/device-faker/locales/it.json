@@ -104,5 +104,14 @@
     "loaded": "Campi di {device} caricati. Controllali e aggiungili alla bozza.",
     "reviewFields": "Controlla i campi del dispositivo",
     "moreFields": "Altri campi del dispositivo"
+  },
+  "apps": {
+    "title": "Scegli app installate",
+    "help": "Le nuove app usano chiavi senza suffisso utente. Le chiavi esistenti specifiche per utente vengono mantenute.",
+    "search": "Cerca app o nomi di pacchetto",
+    "noResults": "Nessuna app corrispondente.",
+    "existing": "Già aggiunta",
+    "selected": "Selezionate: {count}",
+    "add": "Aggiungi app selezionate"
   }
 }

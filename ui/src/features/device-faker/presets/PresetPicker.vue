@@ -19,6 +19,7 @@ import {
   presetBrands,
   presetFields,
   presetSource,
+  vendorDisplayName,
   type DevicePreset,
 } from "./catalog"
 
@@ -122,7 +123,10 @@ function useSelected() {
                 >{{ preset.label }}</span
               >
               <span class="text-muted-foreground block text-xs leading-5 [overflow-wrap:anywhere]"
-                ><bdi>{{ preset.fields.brand }} · {{ preset.fields.model }}</bdi></span
+                ><bdi
+                  >{{ vendorDisplayName(preset.fields.brand ?? "") }} ·
+                  {{ preset.fields.model }}</bdi
+                ></span
               >
             </span>
             <Check

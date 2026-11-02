@@ -104,5 +104,14 @@
     "loaded": "Campos de {device} cargados. Revísalos y añádelos al borrador.",
     "reviewFields": "Revisar campos del dispositivo",
     "moreFields": "Más campos del dispositivo"
+  },
+  "apps": {
+    "title": "Elegir aplicaciones instaladas",
+    "help": "Las aplicaciones nuevas usan claves sin sufijo de usuario. Se conservan las claves específicas de usuario existentes.",
+    "search": "Buscar aplicaciones o paquetes",
+    "noResults": "No hay aplicaciones coincidentes.",
+    "existing": "Ya añadida",
+    "selected": "Seleccionadas: {count}",
+    "add": "Añadir aplicaciones seleccionadas"
   }
 }

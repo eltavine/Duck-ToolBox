@@ -104,5 +104,14 @@
     "loaded": "已填入 {device} 的字段，核对后再追加到草稿。",
     "reviewFields": "核对设备字段",
     "moreFields": "更多设备字段"
+  },
+  "apps": {
+    "title": "选择已安装应用",
+    "help": "新应用使用裸包名键，保留已有的用户限定包名键。",
+    "search": "搜索应用或包名",
+    "noResults": "没有匹配的应用。",
+    "existing": "已添加",
+    "selected": "已选择 {count} 个应用",
+    "add": "添加所选应用"
   }
 }

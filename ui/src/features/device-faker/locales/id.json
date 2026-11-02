@@ -104,5 +104,14 @@
     "loaded": "Kolom dari {device} dimuat. Tinjau lalu tambahkan ke draf.",
     "reviewFields": "Tinjau kolom perangkat",
     "moreFields": "Kolom perangkat lainnya"
+  },
+  "apps": {
+    "title": "Pilih aplikasi terinstal",
+    "help": "Aplikasi baru memakai kunci paket tanpa akhiran pengguna. Kunci khusus pengguna yang ada tetap dipertahankan.",
+    "search": "Cari aplikasi atau nama paket",
+    "noResults": "Tidak ada aplikasi yang cocok.",
+    "existing": "Sudah ditambahkan",
+    "selected": "Dipilih: {count}",
+    "add": "Tambahkan aplikasi terpilih"
   }
 }
