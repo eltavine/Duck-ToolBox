@@ -22,7 +22,7 @@
     "locales:import": "node scripts/import-tricky-addon-locales.mjs"
   },
   "dependencies": {
-    "@lucide/vue": "^1.64.0",
+    "@lucide/vue": "^1.65.0",
     "@tanstack/vue-query": "^5.105.0",
     "@tanstack/vue-virtual": "3.13.50",
     "@vueuse/core": "^15.0.0",
