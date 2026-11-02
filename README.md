@@ -268,6 +268,10 @@ Each successful package on a `main` push or manual CI run also publishes the mod
 as a GitHub prerelease. Tags use `nightly-<8-character commit hash>-<UTC timestamp>`
 (for example, `nightly-1234abcd-20261011T120000123456Z`). These releases do not replace
 the latest stable release; Telegram uploads continue on push builds.
+Published module ZIPs include GitHub build-provenance and SBOM attestations, an SPDX
+inventory and checksums. See [release verification and inventory coverage](docs/supply-chain.md).
+The `*-verified` Actions artifact contains the exact release ZIP; the legacy
+nightly.link directory archive is packaged separately and has a different digest.
 The **Stable** workflow runs when the `version` field changes in
 `module/module.prop` or through a manual request. Metadata-only edits skip publication.
 It reuses the CI checks and builds, preserves `version`

@@ -34,9 +34,9 @@ jobs:
     name: Source line-limit gate
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@v2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
       - name: Fail if any source file exceeds 600 lines
         run: cargo xtask line-limit
 
@@ -44,11 +44,11 @@ jobs:
     name: Rust checks
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
         with:
           components: rustfmt, clippy
-      - uses: Swatinem/rust-cache@v2
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
       - name: Format
         run: cargo fmt --all --check
       - name: Clippy
@@ -67,19 +67,19 @@ jobs:
     name: Independent Play Integrity engine
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-java@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6
         with:
           distribution: temurin
           java-version: '21'
-      - uses: android-actions/setup-android@v4.0.4
+      - uses: android-actions/setup-android@be39fa834029ff78f1a44aa3bb0819b8fc2bd8fd # v4.0.4
         with:
           packages: 'build-tools;37.0.0 ndk;30.0.16248370 cmake;4.1.2'
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
         with:
           targets: aarch64-linux-android
           components: rustfmt, clippy
-      - uses: Swatinem/rust-cache@v2
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
         with:
           workspaces: components/play-integrity -> ../../target/pif-engine
       - name: Engine format, lint and process tests
@@ -101,7 +101,7 @@ jobs:
         run: shellcheck -s bash --severity=error components/play-integrity/scripts/*.sh
       - name: Build engine and commit-pinned source notice
         run: python3 scripts/build-play-integrity.py
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: play-integrity
           path: |
@@ -114,19 +114,19 @@ jobs:
     name: Embedded Device Faker engine
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-java@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6
         with:
           distribution: temurin
           java-version: '21'
-      - uses: android-actions/setup-android@v4.0.4
+      - uses: android-actions/setup-android@be39fa834029ff78f1a44aa3bb0819b8fc2bd8fd # v4.0.4
         with:
           packages: 'ndk;30.0.16248370'
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
         with:
           targets: aarch64-linux-android
           components: rustfmt, clippy
-      - uses: Swatinem/rust-cache@v2
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
         with:
           workspaces: components/device-faker/manager -> ../../../target/device-faker-manager
       - name: Manager format, lint and tests
@@ -137,7 +137,7 @@ jobs:
           python3 scripts/test-device-faker.py
       - name: Build ARM64 native engine and manager
         run: python3 scripts/build-device-faker.py --lint-native
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: device-faker
           path: |
@@ -148,28 +148,28 @@ jobs:
     name: Android backend build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-java@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6
         with:
           distribution: temurin
           java-version: '21'
       - name: Install SDK tools for the V1 AIDL bridge
-        uses: android-actions/setup-android@v4.0.4
+        uses: android-actions/setup-android@be39fa834029ff78f1a44aa3bb0819b8fc2bd8fd # v4.0.4
         with:
           packages: 'build-tools;36.0.0'
       - name: Test the V1 bridge against a host AIDL fixture
         run: python3 scripts/test_rkp_v1_bridge.py
       - name: Setup Android NDK
-        uses: nttld/setup-ndk@v1
+        uses: nttld/setup-ndk@ed92fe6cadad69be94a966a7ee3271275e62f779 # v1
         id: setup-ndk
         with:
           ndk-version: ${{ env.NDK_VERSION }}
           add-to-path: false
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
         with:
           targets: ${{ env.TARGET }}
           components: clippy
-      - uses: Swatinem/rust-cache@v2
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
       - name: Build backend binary
         env:
           TOOLCHAIN: ${{ steps.setup-ndk.outputs.ndk-path }}/toolchains/llvm/prebuilt/linux-x86_64/bin
@@ -181,7 +181,7 @@ jobs:
           cargo clippy --locked --package duck-linux-env --all-targets --target "${TARGET}" -- -D warnings
           cargo build --locked --release --package duckd --target "${TARGET}"
       - name: Upload backend binary
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: duckd
           path: target/${{ env.TARGET }}/release/duckd
@@ -194,12 +194,12 @@ jobs:
       run:
         working-directory: ui
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Setup pnpm (version from packageManager)
-        uses: pnpm/action-setup@v6
+        uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6
         with:
           package_json_file: ui/package.json
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
@@ -216,7 +216,7 @@ jobs:
           VITE_DEVICE_FAKER_SOURCE_COMMIT: ${{ github.sha }}
         run: pnpm build
       - name: Upload WebUI bundle
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: webroot
           path: module/webroot
@@ -226,18 +226,18 @@ jobs:
     name: WebUI contracts against the real backend
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@v2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
       - name: Build the host backend
         run: |
           cargo build --locked --package duckd
           cargo build --locked --manifest-path components/play-integrity/Cargo.toml --target-dir target/pif-engine
           cargo build --locked --manifest-path components/device-faker/manager/Cargo.toml --target-dir target/device-faker-manager
-      - uses: pnpm/action-setup@v6
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6
         with:
           package_json_file: ui/package.json
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
@@ -259,11 +259,11 @@ jobs:
       run:
         working-directory: ui
     steps:
-      - uses: actions/checkout@v7
-      - uses: pnpm/action-setup@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6
         with:
           package_json_file: ui/package.json
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
@@ -274,7 +274,7 @@ jobs:
         run: pnpm test:e2e
       - name: Upload screenshots and report
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: webui-e2e
           path: |
@@ -286,7 +286,16 @@ jobs:
     name: Module scripts
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: scripts/supply_chain/requirements.txt
+      - name: Install locked SBOM validators
+        run: python3 -m pip install --require-hashes -r scripts/supply_chain/requirements.txt
+      - name: Supply-chain inventory and release tests
+        run: python3 -m unittest discover -s scripts/supply_chain -p 'test_*.py'
       - name: Telegram notification tests
         run: python3 -m unittest discover -s .github/workflows/scripts -p 'test_*.py'
       - name: Installer platform and API guards
@@ -296,7 +305,7 @@ jobs:
       - name: Corresponding-source checkout guards
         run: python3 scripts/test-play-integrity-package.py
       - name: ShellCheck
-        uses: ludeeus/action-shellcheck@2.0.0
+        uses: ludeeus/action-shellcheck@00cae500b08a931fb5698e11e79bfbd38e612a38 # 2.0.0
         env:
           SHELLCHECK_OPTS: -s sh
         with:
@@ -312,34 +321,37 @@ jobs:
     name: Package module
     runs-on: ubuntu-latest
     needs: [line-limit, rust, android-backend, play-integrity, device-faker, webui, contract, e2e, module]
-    permissions:
-      contents: write
-    environment: ${{ (github.event_name == 'push' || inputs.stable) && 'Telegram' || '' }}
+    outputs:
+      artifact-name: ${{ steps.assemble.outputs.artifact-name }}
+      module-file: ${{ steps.assemble.outputs.module-file }}
+      sbom-file: ${{ steps.assemble.outputs.sbom-file }}
+      module-version: ${{ steps.assemble.outputs.module-version }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
       - name: Download backend binary
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           name: duckd
           path: artifact/bin
       - name: Download WebUI bundle
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           name: webroot
           path: module/webroot
       - name: Download independent engine
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           name: play-integrity
           path: module
       - name: Download Device Faker engine
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           name: device-faker
           path: module
       - name: Assemble module
+        id: assemble
         run: |
           version="$(sed -n 's/^version=//p' module/module.prop)"
           tag=""
@@ -362,6 +374,12 @@ jobs:
             echo "ARTIFACT_NAME=${name}"
             echo "MODULE_PATH=dist/${name}.zip"
           } >> "$GITHUB_ENV"
+          {
+            echo "artifact-name=${name}-verified"
+            echo "module-file=${name}.zip"
+            echo "sbom-file=${name}.spdx.json"
+            echo "module-version=${version}"
+          } >> "$GITHUB_OUTPUT"
       - name: Validate KernelSU Modules metadata and ZIP
         id: validate-module
         uses: KernelSU-Modules/tools/actions/module-release@ca1187c92135b3c31e48d37e008d61153120a08b
@@ -370,52 +388,92 @@ jobs:
           prerelease: ${{ !inputs.stable }}
           tag: ${{ env.RELEASE_TAG }}
           dry-run: true
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: scripts/supply_chain/requirements.txt
+      - name: Install locked SBOM validators
+        run: python3 -m pip install --require-hashes -r scripts/supply_chain/requirements.txt
+      - name: Install pinned Syft
+        id: syft
+        uses: anchore/sbom-action/download-syft@e22c389904149dbc22b58101806040fa8d37a610 # v0
+        with:
+          syft-version: v1.55.0
+      - name: Generate and validate module SBOM
+        env:
+          SYFT: ${{ steps.syft.outputs.cmd }}
+        run: >-
+          python3 scripts/supply_chain/sbom.py
+          --archive "${MODULE_PATH}" --syft "${SYFT}" --commit "${GITHUB_SHA}"
       # The artifact is the module directory itself, so its nightly.link zip installs as is.
       - name: Upload module
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: ${{ env.ARTIFACT_NAME }}
           path: module/
           include-hidden-files: true
           if-no-files-found: error
-      - name: Publish release
+      - name: Upload exact release ZIP and SBOM
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: ${{ steps.assemble.outputs.artifact-name }}
+          path: dist/
+          compression-level: 0
+          if-no-files-found: error
+
+  publish:
+    name: Attest and publish module
+    timeout-minutes: 15
+    needs: package
+    if: >-
+      github.ref == 'refs/heads/main' &&
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    environment: Telegram
+    env:
+      MODULE_PATH: dist/${{ needs.package.outputs.module-file }}
+      MODULE_VERSION: ${{ needs.package.outputs.module-version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: ${{ needs.package.outputs.artifact-name }}
+          path: dist
+      - name: Check release input hashes and source commit
+        run: python3 scripts/supply_chain/release.py --check-only
+      - name: Attest module build provenance
+        id: provenance
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
+        with:
+          subject-path: |
+            ${{ env.MODULE_PATH }}
+            dist/${{ needs.package.outputs.sbom-file }}
+          create-storage-record: false
+      - name: Attest module SBOM
+        id: sbom
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
+        with:
+          subject-path: ${{ env.MODULE_PATH }}
+          sbom-path: dist/${{ needs.package.outputs.sbom-file }}
+          create-storage-record: false
+      - name: Verify attestations and publish complete release
         id: publish-release
-        if: >-
-          ${{ !cancelled() && steps.validate-module.outcome == 'success' &&
-              github.ref == 'refs/heads/main' &&
-              (github.event_name == 'push' || github.event_name == 'workflow_dispatch') }}
         env:
           GH_TOKEN: ${{ github.token }}
-          GH_REPO: ${{ github.repository }}
-        run: |
-          notes_file="$(mktemp)"
-          if [ "${RELEASE_CHANNEL}" = stable ]; then
-            tag="v${MODULE_VERSION}"
-            cat CHANGELOG.md > "${notes_file}"
-            release_flags=(--latest)
-          else
-            timestamp="$(python3 -c 'from datetime import datetime, timezone; print(datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ"))')"
-            tag="nightly-${GITHUB_SHA:0:8}-${timestamp}"
-            notes_file="$(mktemp)"
-            {
-              printf 'Canary module built from commit %s.\n\n' "${GITHUB_SHA}"
-              printf 'CI run: %s/%s/actions/runs/%s\n' "${GITHUB_SERVER_URL}" "${GITHUB_REPOSITORY}" "${GITHUB_RUN_ID}"
-            } > "${notes_file}"
-            release_flags=(--prerelease --latest=false)
-          fi
-          printf '\nGPLv3 Device Faker corresponding source (build commit): https://github.com/%s/tree/%s/components/device-faker\n' "${GITHUB_REPOSITORY}" "${GITHUB_SHA}" >> "${notes_file}"
-          printf '\nGPLv3 Play Integrity corresponding source (build commit): https://github.com/%s/tree/%s/components/play-integrity\n' "${GITHUB_REPOSITORY}" "${GITHUB_SHA}" >> "${notes_file}"
-          gh release create "${tag}" "${MODULE_PATH}" \
-            --target "${GITHUB_SHA}" \
-            --title "${tag}" \
-            --notes-file "${notes_file}" \
-            "${release_flags[@]}"
-          asset_url="$(gh release view "${tag}" --json assets --jq '.assets[0].url')"
-          if [ -z "${asset_url}" ] || [ "${asset_url}" = null ]; then
-            echo "Published release did not return a module asset URL." >&2
-            exit 1
-          fi
-          echo "asset-url=${asset_url}" >> "$GITHUB_OUTPUT"
+          PROVENANCE_BUNDLE: ${{ steps.provenance.outputs.bundle-path }}
+          SBOM_BUNDLE: ${{ steps.sbom.outputs.bundle-path }}
+        run: >-
+          python3 scripts/supply_chain/release.py
+          --provenance "${PROVENANCE_BUNDLE}" --sbom-bundle "${SBOM_BUNDLE}"
+          --channel "${RELEASE_CHANNEL}"
       - name: Notify Telegram with module or release link
         if: steps.publish-release.outcome == 'success' && (github.event_name == 'push' || inputs.stable)
         env:

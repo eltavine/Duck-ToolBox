@@ -257,6 +257,7 @@ mod tests {
         let html = r#"
             <a href="https://nightly.link/o/r/workflows/ci/main/duck-toolbox-v0.2.0-41-canary.zip">a</a>
             <a href="https://nightly.link/o/r/workflows/ci/main/duck-toolbox-v0.2.0-57-canary.zip">b</a>
+            <a href="https://nightly.link/o/r/workflows/ci/main/duck-toolbox-v0.2.0-99-canary-verified.zip">verified bundle</a>
             <a href="https://nightly.link/o/r/workflows/ci/main/duckd.zip">c</a>
             <a href="https://nightly.link/o/r/workflows/ci/main/other-v1-99-canary.zip">d</a>
         "#;
