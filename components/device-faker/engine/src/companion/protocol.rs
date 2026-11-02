@@ -4,33 +4,36 @@ use std::{
     io::{Read, Write},
     os::unix::net::UnixStream,
 };
-use zygisk_api::api::{V4, ZygiskApi};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct WriteLogRequest {
     pub lines: Vec<String>,
 }
 
-pub fn send_companion_command(
-    api: &mut ZygiskApi<V4>,
-    request: &CompanionRequest,
-) -> anyhow::Result<CompanionResponse> {
+pub(super) fn encode_request(request: &CompanionRequest) -> anyhow::Result<Vec<u8>> {
     let payload = serde_json::to_vec(request)?;
     if payload.len() > MAX_FRAME {
         anyhow::bail!("companion request exceeds limit");
     }
-    api.with_companion(|stream| -> anyhow::Result<CompanionResponse> {
-        stream.set_nonblocking(true)?;
-        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(2);
-        let mut length = (payload.len() as u32).to_le_bytes();
-        transfer(stream, &mut length, true, deadline)?;
-        let mut payload = payload;
-        transfer(stream, &mut payload, true, deadline)?;
-        let bytes = frame(stream, deadline)?;
-        Ok(serde_json::from_slice(&bytes)?)
-    })
-    .map_err(|error| anyhow::anyhow!("companion connection failed: {error}"))?
+    Ok(payload)
 }
+
+pub(super) fn exchange(
+    stream: &mut UnixStream,
+    mut payload: Vec<u8>,
+) -> anyhow::Result<CompanionResponse> {
+    stream.set_nonblocking(true)?;
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(2);
+    let mut length = (payload.len() as u32).to_le_bytes();
+    transfer(stream, &mut length, true, deadline)?;
+    transfer(stream, &mut payload, true, deadline)?;
+    let bytes = frame(stream, deadline)?;
+    Ok(serde_json::from_slice(&bytes)?)
+}
+
+#[cfg(test)]
+#[path = "protocol/tests.rs"]
+mod tests;
 
 const MAX_FRAME: usize = 256 * 1024;
 fn transfer(
@@ -113,6 +116,8 @@ pub(crate) struct ResetpropSessionRequest {
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(tag = "cmd", content = "payload")]
 pub enum CompanionRequest {
+    Resolve(String),
+    CheckGeneration(String),
     Apply(ResetpropSessionRequest),
     WriteLog(WriteLogRequest),
 }
@@ -122,6 +127,8 @@ pub struct CompanionResponse {
     pub status: i32,
     pub message: Option<String>,
     pub backups: Option<HashMap<String, String>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub activation: Option<crate::activation::Activation>,
 }
 
 impl CompanionResponse {
@@ -130,6 +137,7 @@ impl CompanionResponse {
             status: 0,
             message: None,
             backups: None,
+            activation: None,
         }
     }
 
@@ -138,6 +146,7 @@ impl CompanionResponse {
             status: -1,
             message: Some(msg.into()),
             backups: None,
+            activation: None,
         }
     }
 
@@ -146,6 +155,7 @@ impl CompanionResponse {
             status: 0,
             message: None,
             backups: Some(backups),
+            activation: None,
         }
     }
 }
