@@ -5,6 +5,10 @@ mod activation;
 mod boot;
 #[path = "../../engine/src/bounded.rs"]
 mod bounded;
+#[cfg(test)]
+#[allow(dead_code)]
+#[path = "../../engine/src/companion/protocol.rs"]
+mod companion_protocol;
 #[allow(dead_code, unused_imports)]
 #[path = "../../engine/src/config/mod.rs"]
 mod config;

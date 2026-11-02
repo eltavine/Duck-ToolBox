@@ -31,6 +31,15 @@ pub(crate) struct SessionTarget<'a> {
     pub(crate) generation: &'a str,
 }
 
+pub fn send_companion_command(
+    api: &mut ZygiskApi<V4>,
+    request: &CompanionRequest,
+) -> anyhow::Result<CompanionResponse> {
+    let payload = protocol::encode_request(request)?;
+    api.with_companion(|stream| protocol::exchange(stream, payload))
+        .map_err(|error| anyhow::anyhow!("companion connection failed: {error}"))?
+}
+
 pub fn spoof_system_props_via_companion(
     api: &mut ZygiskApi<V4>,
     prop_map: &HashMap<String, String>,

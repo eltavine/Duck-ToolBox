@@ -58,6 +58,10 @@ impl ZygiskModule for MyModule {
         if let Err(err) = self.handle_app_specialize(&mut api, &mut env, args) {
             error!("pre_app_specialize failed: {err:?}");
         }
+
+        // Include callback failures in the final flush before the child unloads the module.
+        // A flush failure must not generate another buffered message without a consumer.
+        let _ = flush_log_buffer_to_companion(&mut api);
     }
 
     fn post_app_specialize(
@@ -81,25 +85,6 @@ impl ZygiskModule for MyModule {
 
 impl MyModule {
     fn handle_app_specialize(
-        &self,
-        api: &mut ZygiskApi<V4>,
-        env: &mut EnvUnowned,
-        args: &mut <V4 as ZygiskRaw>::AppSpecializeArgs,
-    ) -> anyhow::Result<()> {
-        let result = self.do_handle_app_specialize(api, env, args);
-
-        // 在 pre_app_specialize 退出前统一 flush，确保 on_load + specialize 期间
-        // 产生的所有日志都能发给 companion 落盘。
-        if let Err(e) = flush_log_buffer_to_companion(api) {
-            // 这里不能用 error!，否则会产生新的日志又无法 flush。
-            // 静默失败，日志将丢失。
-            let _ = e;
-        }
-
-        result
-    }
-
-    fn do_handle_app_specialize(
         &self,
         api: &mut ZygiskApi<V4>,
         env: &mut EnvUnowned,
