@@ -193,6 +193,14 @@ cleanup can take longer and reports pending failures.
 
 ## Zygisk integration
 
+Activation state and configuration remain private under `/data/adb/duck-device-faker`.
+Application callbacks must resolve them through the root companion: the zygote
+SELinux domain can be denied access even while the management process reports
+the engine ready and enabled. The companion returns only a configured target's
+bounded snapshot, brackets resolution with the activation generation, and checks
+that generation again before JNI/property changes. No broader SELinux read rule
+or world-readable state is required.
+
 The public [Zygisk API v4 header](https://github.com/topjohnwu/zygisk-module-sample/blob/7bb941ac8edfcffd1d23761e401c45ca95409dc1/module/jni/zygisk.hpp)
 is the ABI contract. The composite callback table registers once and dispatches PI
 before Device Faker, deferring library unload until callbacks finish. PI-selected

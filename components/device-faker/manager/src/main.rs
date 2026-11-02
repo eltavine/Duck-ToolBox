@@ -1,4 +1,7 @@
 //! Public process interface for the separately built Device Faker engine.
+#[cfg(test)]
+#[path = "../../engine/src/activation.rs"]
+mod activation;
 mod boot;
 #[path = "../../engine/src/bounded.rs"]
 mod bounded;

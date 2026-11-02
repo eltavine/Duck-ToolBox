@@ -1,10 +1,6 @@
 //! Runtime ownership and opt-in gate for the toolbox-managed Zygisk payload.
 use std::path::Path;
 
-pub fn enabled() -> bool {
-    enabled_at(Path::new("/"))
-}
-
 fn active(root: &Path, id: &str) -> bool {
     let module = root.join("data/adb/modules").join(id);
     module.join("module.prop").is_file()
@@ -56,6 +52,8 @@ pub fn startup_ready_at(root: &Path) -> bool {
         .is_ok_and(|ready| ready == format!("{}:{BUILD}", boot.trim()))
 }
 
+// The management binary and gate fixtures use this convenience wrapper.
+#[allow(dead_code)]
 pub(crate) fn enabled_at(root: &Path) -> bool {
     activation_at(root).is_some()
 }

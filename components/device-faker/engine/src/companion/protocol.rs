@@ -113,6 +113,8 @@ pub(crate) struct ResetpropSessionRequest {
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(tag = "cmd", content = "payload")]
 pub enum CompanionRequest {
+    Resolve(String),
+    CheckGeneration(String),
     Apply(ResetpropSessionRequest),
     WriteLog(WriteLogRequest),
 }
@@ -122,6 +124,8 @@ pub struct CompanionResponse {
     pub status: i32,
     pub message: Option<String>,
     pub backups: Option<HashMap<String, String>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub activation: Option<crate::activation::Activation>,
 }
 
 impl CompanionResponse {
@@ -130,6 +134,7 @@ impl CompanionResponse {
             status: 0,
             message: None,
             backups: None,
+            activation: None,
         }
     }
 
@@ -138,6 +143,7 @@ impl CompanionResponse {
             status: -1,
             message: Some(msg.into()),
             backups: None,
+            activation: None,
         }
     }
 
@@ -146,6 +152,7 @@ impl CompanionResponse {
             status: 0,
             message: None,
             backups: Some(backups),
+            activation: None,
         }
     }
 }

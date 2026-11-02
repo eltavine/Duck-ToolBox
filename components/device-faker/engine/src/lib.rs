@@ -1,3 +1,4 @@
+mod activation;
 mod bounded;
 mod companion;
 mod config;
@@ -17,13 +18,8 @@ mod log_buffer;
 mod process_identity;
 mod prop_backend;
 
-use std::{
-    collections::{HashMap, HashSet},
-    fs,
-    path::Path,
-};
+use std::collections::{HashMap, HashSet};
 
-use anyhow::Context;
 use companion::{SessionTarget, handle_companion_request, spoof_system_props_via_companion};
 use config::Config;
 use hooks::hook_build_fields;
@@ -34,8 +30,6 @@ use zygisk_api::{
     api::{V4, ZygiskApi, v4::ZygiskOption},
     raw::ZygiskRaw,
 };
-
-const CONFIG_PATH: &str = "/data/adb/duck-device-faker/config/config.toml";
 
 #[derive(Default)]
 struct MyModule;
@@ -111,23 +105,14 @@ impl MyModule {
         env: &mut EnvUnowned,
         args: &mut <V4 as ZygiskRaw>::AppSpecializeArgs,
     ) -> anyhow::Result<()> {
-        let Some(generation) = gate::activation_at(Path::new("/")) else {
-            api.set_option(ZygiskOption::DlCloseModuleLibrary);
-            return Ok(());
-        };
         let package_name = Self::extract_package_name(env, args)?;
         let user_id = Self::extract_android_user_id(args);
         let package_with_user = format!("{package_name}@{user_id}");
-        let target = SessionTarget {
-            package: &package_with_user,
-            generation: &generation,
-        };
-
         // companion 侧现在自己管理会话状态和恢复逻辑；
         // Zygisk 模块侧不再需要跨应用恢复（ACTIVE_RESET_SESSION 已移除）。
 
-        let config = match load_config() {
-            Ok(Some(cfg)) => cfg,
+        let (generation, config) = match load_config(api, &package_with_user) {
+            Ok(Some(snapshot)) => snapshot,
             Ok(None) => {
                 api.set_option(ZygiskOption::DlCloseModuleLibrary);
                 return Ok(());
@@ -137,6 +122,10 @@ impl MyModule {
                 api.set_option(ZygiskOption::DlCloseModuleLibrary);
                 return Ok(());
             }
+        };
+        let target = SessionTarget {
+            package: &package_with_user,
+            generation: &generation,
         };
 
         configure_log_level(config.debug);
@@ -181,7 +170,13 @@ impl MyModule {
         };
 
         // Configuration and package resolution must not revive an older enable generation.
-        if gate::activation_at(Path::new("/")).as_deref() != Some(generation.as_str()) {
+        if companion::send_companion_command(
+            api,
+            &companion::CompanionRequest::CheckGeneration(generation.clone()),
+        )?
+        .status
+            != 0
+        {
             api.set_option(ZygiskOption::DlCloseModuleLibrary);
             return Ok(());
         }
@@ -362,26 +357,26 @@ impl MyModule {
     }
 }
 
-fn load_config() -> anyhow::Result<Option<Config>> {
-    if !gate::enabled() {
-        return Ok(None);
-    }
-    if !Path::new(CONFIG_PATH).exists() {
-        return Ok(None);
-    }
-
-    use std::io::Read;
-    let mut config_content = String::new();
-    fs::File::open(CONFIG_PATH)?
-        .take(48 * 1024 + 1)
-        .read_to_string(&mut config_content)
-        .with_context(|| format!("Failed to read config at {CONFIG_PATH}"))?;
+fn load_config(api: &mut ZygiskApi<V4>, package: &str) -> anyhow::Result<Option<(String, Config)>> {
+    // Private root state is intentionally inaccessible in the zygote SELinux domain.
+    let response = companion::send_companion_command(
+        api,
+        &companion::CompanionRequest::Resolve(package.to_owned()),
+    )?;
     anyhow::ensure!(
-        config_content.len() <= 48 * 1024,
+        response.status == 0,
+        "{}",
+        response.message.unwrap_or_default()
+    );
+    let Some(snapshot) = response.activation else {
+        return Ok(None);
+    };
+    anyhow::ensure!(
+        snapshot.content.len() <= 48 * 1024,
         "Configuration exceeds 48 KiB"
     );
-    let config = Config::from_toml(&config_content)?;
-    Ok(Some(config))
+    let config = Config::from_toml(&snapshot.content)?;
+    Ok(Some((snapshot.generation, config)))
 }
 
 fn configure_log_level(debug_enabled: bool) {

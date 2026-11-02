@@ -89,6 +89,29 @@ pub fn handle_companion_request(stream: &mut UnixStream) {
     };
 
     match request {
+        CompanionRequest::Resolve(package) => {
+            let response = match crate::activation::resolve_at(std::path::Path::new("/"), &package)
+            {
+                Ok(activation) => CompanionResponse {
+                    activation,
+                    ..CompanionResponse::ok()
+                },
+                Err(error) => {
+                    CompanionResponse::err(format!("Profile resolution failed: {error:#}"))
+                }
+            };
+            let _ = write_companion_response(stream, &response);
+        }
+        CompanionRequest::CheckGeneration(generation) => {
+            let response = if crate::gate::activation_at(std::path::Path::new("/")).as_deref()
+                == Some(generation.as_str())
+            {
+                CompanionResponse::ok()
+            } else {
+                CompanionResponse::err("engine disabled")
+            };
+            let _ = write_companion_response(stream, &response);
+        }
         CompanionRequest::Apply(request) => {
             if crate::gate::activation_at(std::path::Path::new("/")).as_deref()
                 != Some(request.generation.as_str())
