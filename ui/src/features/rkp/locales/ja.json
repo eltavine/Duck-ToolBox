@@ -145,7 +145,8 @@
     "challenge_unavailable": "チャレンジを取得できませんでした。証明書申請は送信していません。",
     "submission_unknown": "送信結果が不明です。自動で再試行しないでください。",
     "invalid_endpoint": "サーバーのアドレスが無効です。HTTPS を使用してください。",
-    "certificate_validation_failed": "サーバーは応答しましたが、証明書の検証に失敗しました。Keybox は出力していません。"
+    "certificate_validation_failed": "サーバーは応答しましたが、証明書の検証に失敗しました。Keybox は出力していません。",
+    "profile_changed": "設定が変更されたため操作を中止しました。設定を確認して再試行してください。"
   },
   "import": {
     "title": "DICE 素材をインポート",

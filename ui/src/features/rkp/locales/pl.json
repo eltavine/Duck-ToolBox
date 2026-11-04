@@ -145,7 +145,8 @@
     "challenge_unavailable": "Nie udało się uzyskać challenge'a. Żadne żądanie certyfikatu nie zostało wysłane.",
     "submission_unknown": "Wynik przesłania jest nieznany. Nie ponawiaj próby automatycznie.",
     "invalid_endpoint": "Nieprawidłowy adres serwera. Użyj protokołu HTTPS.",
-    "certificate_validation_failed": "Serwer odpowiedział, ale weryfikacja certyfikatu nie powiodła się. Plik keybox nie został wyeksportowany."
+    "certificate_validation_failed": "Serwer odpowiedział, ale weryfikacja certyfikatu nie powiodła się. Plik keybox nie został wyeksportowany.",
+    "profile_changed": "Konfiguracja uległa zmianie; operacja została anulowana. Sprawdź ją i spróbuj ponownie."
   },
   "import": {
     "title": "Importuj materiał DICE",

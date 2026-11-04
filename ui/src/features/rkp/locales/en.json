@@ -145,7 +145,8 @@
     "challenge_unavailable": "Could not obtain a challenge. No certificate request was submitted.",
     "submission_unknown": "The submission outcome is unknown. Do not retry automatically.",
     "invalid_endpoint": "Invalid server address. Use HTTPS.",
-    "certificate_validation_failed": "The server responded, but certificate validation failed. No keybox was exported."
+    "certificate_validation_failed": "The server responded, but certificate validation failed. No keybox was exported.",
+    "profile_changed": "Configuration changed; operation cancelled. Review it and retry."
   },
   "import": {
     "title": "Import DICE material",

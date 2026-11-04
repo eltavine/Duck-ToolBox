@@ -177,7 +177,11 @@ const mock: MockModule = {
       stage: "diagnostic",
       material: imported(flags),
       csr_path: `${paths.outputs_dir}/rkp-diagnostic/csr.cbor`,
-      local_verify: report,
+      local_verify: {
+        ...report,
+        unverified_fingerprint:
+          flags["include-fingerprint"] === "true" ? "synthetic/imported/build" : null,
+      },
       diagnostic_only: true,
     }),
     "rkp.import.issue": (_args, flags) => ({
@@ -187,7 +191,11 @@ const mock: MockModule = {
       keybox_path: `${paths.outputs_dir}/rkp-import/keybox.xml`,
       device_id: "duck-imported",
       chain_summary: { certificates: 3, subjects: ["CN=Droid CA3"] },
-      local_verify: report,
+      local_verify: {
+        ...report,
+        unverified_fingerprint:
+          flags["include-fingerprint"] === "true" ? "synthetic/imported/build" : null,
+      },
       server_accepted: true,
       certificates_verified: true,
       keybox_exported: true,

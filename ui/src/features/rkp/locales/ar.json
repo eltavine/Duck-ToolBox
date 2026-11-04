@@ -145,7 +145,8 @@
     "challenge_unavailable": "تعذر الحصول على التحدي. لم يُرسل طلب شهادة.",
     "submission_unknown": "نتيجة الإرسال غير معروفة. لا تُعد المحاولة تلقائيًا.",
     "invalid_endpoint": "عنوان الخادم غير صالح. استخدم HTTPS.",
-    "certificate_validation_failed": "استجاب الخادم، لكن التحقق من الشهادة فشل. لم يُصدَّر أي keybox."
+    "certificate_validation_failed": "استجاب الخادم، لكن التحقق من الشهادة فشل. لم يُصدَّر أي keybox.",
+    "profile_changed": "تغيّر الإعداد؛ أُلغيت العملية. راجعه وأعد المحاولة."
   },
   "import": {
     "title": "استيراد مواد DICE",

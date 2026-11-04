@@ -145,7 +145,8 @@
     "challenge_unavailable": "Die Challenge konnte nicht abgerufen werden. Es wurde keine Zertifikatsanfrage gesendet.",
     "submission_unknown": "Das Ergebnis der Übermittlung ist unbekannt. Nicht automatisch erneut versuchen.",
     "invalid_endpoint": "Ungültige Serveradresse. HTTPS verwenden.",
-    "certificate_validation_failed": "Der Server hat geantwortet, aber die Zertifikatsprüfung ist fehlgeschlagen. Keine Keybox wurde exportiert."
+    "certificate_validation_failed": "Der Server hat geantwortet, aber die Zertifikatsprüfung ist fehlgeschlagen. Keine Keybox wurde exportiert.",
+    "profile_changed": "Die Konfiguration wurde geändert; der Vorgang wurde abgebrochen. Prüfen Sie sie und versuchen Sie es erneut."
   },
   "import": {
     "title": "DICE-Material importieren",

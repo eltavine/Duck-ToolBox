@@ -145,7 +145,8 @@
     "challenge_unavailable": "Impossible d’obtenir un défi. Aucune demande de certificat n’a été envoyée.",
     "submission_unknown": "Le résultat de l’envoi est inconnu. Ne réessayez pas automatiquement.",
     "invalid_endpoint": "L’adresse du serveur est invalide. Utilisez HTTPS.",
-    "certificate_validation_failed": "Le serveur a répondu, mais la validation du certificat a échoué. Aucun keybox n’a été exporté."
+    "certificate_validation_failed": "Le serveur a répondu, mais la validation du certificat a échoué. Aucun keybox n’a été exporté.",
+    "profile_changed": "La configuration a changé ; opération annulée. Vérifiez-la et réessayez."
   },
   "import": {
     "title": "Importer le matériel DICE",

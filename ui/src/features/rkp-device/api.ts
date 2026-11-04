@@ -150,8 +150,9 @@ export const rkpDeviceApi = {
    * Sends the acknowledgement the backend requires. It is the flag a user has to give,
    * not a default, so the button that reaches this call is always an explicit one.
    */
-  provision: (protocol: Protocol = "auto", includeFingerprint = false, fingerprint = "") =>
-    duckd(
+  provision: (protocol: Protocol = "auto", includeFingerprint = false, fingerprint = "") => {
+    const explicitFingerprint = fingerprint.trim()
+    return duckd(
       [
         "rkp-device",
         "provision",
@@ -160,10 +161,18 @@ export const rkpDeviceApi = {
         protocol,
         "--include-fingerprint",
         String(includeFingerprint),
-        ...(fingerprint.trim() ? ["--fingerprint", fingerprint.trim()] : []),
+        ...(explicitFingerprint ? ["--fingerprint", explicitFingerprint] : []),
       ],
       {
-        schema: provisionSchema,
+        schema: provisionSchema.refine(
+          (data) =>
+            data.include_fingerprint === includeFingerprint &&
+            (!explicitFingerprint || data.fingerprint === explicitFingerprint) &&
+            (protocol === "auto" ||
+              (data.attempts.length === 1 && data.attempts[0]?.method === protocol)),
+          { message: "Issuance result disagrees with the requested fingerprint or protocol" },
+        ),
       },
-    ),
+    )
+  },
 }

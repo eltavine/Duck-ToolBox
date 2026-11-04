@@ -192,6 +192,15 @@ pub(crate) async fn provision(
     let fingerprint = explicit_fingerprint
         .unwrap_or(prerequisites.fingerprint.trim())
         .to_owned();
+    if options.include_fingerprint {
+        let metadata = duck_rkp::request::unverified_device_info(Some(&fingerprint))?;
+        if duck_rkp::cbor::encode(&metadata)?.len() >= crate::protocol::BUFFER_SIZE {
+            return Err(DeviceRkpError::InvalidCsr(
+                "build fingerprint leaves no room for the device CSR".into(),
+            )
+            .into());
+        }
+    }
     let key = key_source.generate()?;
     let mut attempts = Vec::new();
     let mut issued = None;

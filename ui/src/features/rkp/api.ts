@@ -173,6 +173,22 @@ function importArgs(action: string, input: ImportDraft): string[] {
   return ["rkp", "import", action, ...source, ...config, ...fingerprint]
 }
 
+function withImportFingerprintPolicy<T extends { local_verify: VerifyReport }>(
+  schema: z.ZodType<T>,
+  input: ImportDraft,
+) {
+  const policy = input.fingerprintPolicy
+  return schema.refine(
+    (data) => {
+      const fingerprint = data.local_verify.unverified_fingerprint
+      if (policy === "include") return typeof fingerprint === "string" && !!fingerprint.trim()
+      if (policy === "omit") return fingerprint === null
+      return true
+    },
+    { message: "CSR metadata disagrees with the requested fingerprint policy" },
+  )
+}
+
 export const rkpApi = {
   show: () => duckd(["rkp", "profile", "show"], { schema: profileEnvelopeSchema }),
   save: (profile: Profile) =>
@@ -187,7 +203,11 @@ export const rkpApi = {
   importValidate: async (input: ImportDraft) =>
     duckd(importArgs("validate", input), { schema: importedValidationSchema }),
   importDiagnose: async (input: ImportDraft) =>
-    duckd(importArgs("diagnose", input), { schema: importedDiagnosticSchema }),
+    duckd(importArgs("diagnose", input), {
+      schema: withImportFingerprintPolicy(importedDiagnosticSchema, input),
+    }),
   importIssue: async (input: ImportDraft) =>
-    duckd(importArgs("issue", input), { schema: importedIssueSchema }),
+    duckd(importArgs("issue", input), {
+      schema: withImportFingerprintPolicy(importedIssueSchema, input),
+    }),
 }

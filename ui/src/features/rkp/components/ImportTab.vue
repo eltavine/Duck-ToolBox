@@ -63,7 +63,15 @@ const materialRows = computed(() => {
 const resultRows = computed(() => {
   const result = importResult.value
   if (!result || result.stage === "validated") return []
-  const rows = [{ label: t("verify.path"), value: result.csr_path, mono: true, copy: true }]
+  const rows = [
+    { label: t("verify.path"), value: result.csr_path, mono: true, copy: true },
+    {
+      label: t("verify.unverifiedFingerprint"),
+      value: result.local_verify.unverified_fingerprint ?? "—",
+      mono: true,
+      copy: false,
+    },
+  ]
   if (result.stage === "exported") {
     rows.push(
       { label: t("keybox.path"), value: result.keybox_path, mono: true, copy: true },

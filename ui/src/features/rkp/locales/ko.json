@@ -145,7 +145,8 @@
     "challenge_unavailable": "챌린지를 가져오지 못했습니다. 인증서 신청은 제출되지 않았습니다.",
     "submission_unknown": "제출 결과를 알 수 없습니다. 자동으로 재시도하지 마세요.",
     "invalid_endpoint": "서버 주소가 올바르지 않습니다. HTTPS를 사용하세요.",
-    "certificate_validation_failed": "서버가 응답했으나 인증서 검증에 실패했습니다. Keybox는 내보내지 않았습니다."
+    "certificate_validation_failed": "서버가 응답했으나 인증서 검증에 실패했습니다. Keybox는 내보내지 않았습니다.",
+    "profile_changed": "설정이 변경되어 작업을 취소했습니다. 설정을 확인하고 다시 시도하세요."
   },
   "import": {
     "title": "DICE 자료 가져오기",

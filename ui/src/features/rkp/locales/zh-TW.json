@@ -145,7 +145,8 @@
     "challenge_unavailable": "取得挑戰失敗，未提交憑證申請。",
     "submission_unknown": "提交結果未知，請勿自動重試。",
     "invalid_endpoint": "服務位址無效，請使用 HTTPS。",
-    "certificate_validation_failed": "伺服器已回應，但憑證驗證未通過，未匯出 Keybox。"
+    "certificate_validation_failed": "伺服器已回應，但憑證驗證未通過，未匯出 Keybox。",
+    "profile_changed": "設定已變更，本次操作已取消。請檢查設定後重試。"
   },
   "import": {
     "title": "匯入 DICE 材料",

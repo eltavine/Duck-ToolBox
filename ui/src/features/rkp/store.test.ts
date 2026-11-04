@@ -45,6 +45,35 @@ beforeEach(() => setActivePinia(createPinia()))
 afterEach(() => vi.restoreAllMocks())
 
 describe("RKP operations", () => {
+  it.each(["runProvision", "runKeybox"] as const)(
+    "does not send %s when the fingerprint policy changes during profile saving",
+    async (action) => {
+      let finish!: (result: typeof shown) => void
+      vi.spyOn(rkpApi, "save").mockImplementation(
+        () =>
+          new Promise((resolve) => {
+            finish = resolve
+          }),
+      )
+      const provision = vi
+        .spyOn(rkpApi, "provision")
+        .mockRejectedValue(new Error("stale request sent"))
+      const keybox = vi.spyOn(rkpApi, "keybox").mockRejectedValue(new Error("stale request sent"))
+      const store = useRkpStore()
+      store.draft = { ...toDraft(profile), include_fingerprint: true }
+      const pending = store[action]().catch((error: unknown) => error)
+      store.draft.include_fingerprint = false
+      finish({
+        ...shown,
+        profile: { ...profile, fingerprint: { ...profile.fingerprint, include_fingerprint: true } },
+      })
+      expect(await pending).toMatchObject({ code: "profile_changed" })
+      expect(provision).not.toHaveBeenCalled()
+      expect(keybox).not.toHaveBeenCalled()
+      expect(store.draft.include_fingerprint).toBe(false)
+      expect(store.profileBusy).toBe(false)
+    },
+  )
   it("prevents overlapping profile operations across tabs and releases the guard", async () => {
     let finish!: (result: typeof shown) => void
     vi.spyOn(rkpApi, "save").mockImplementation(
@@ -71,15 +100,16 @@ describe("RKP operations", () => {
           finish = resolve
         }),
     )
-    vi.spyOn(rkpApi, "info").mockResolvedValue(info)
+    const check = vi.spyOn(rkpApi, "info").mockResolvedValue(info)
     const store = useRkpStore()
     store.draft = toDraft(profile)
     const pending = store.checkKey()
     store.draft.fingerprint = "edited"
     finish(shown)
-    await pending
+    await expect(pending).rejects.toMatchObject({ code: "profile_changed" })
     expect(store.draft.fingerprint).toBe("edited")
     expect(store.info).toBeNull()
+    expect(check).not.toHaveBeenCalled()
   })
 
   it("discards a result if the profile changes while the command is running", async () => {

@@ -100,6 +100,58 @@ fn wrapping_preserves_noncanonical_and_indefinite_original_items() {
 }
 
 #[test]
+fn signed_upstream_requests_preserve_alternate_container_encodings() {
+    let fixture: serde_json::Value =
+        serde_json::from_str(include_str!("fixtures/upstream-fingerprint.json")).unwrap();
+    for vector in fixture["vectors"].as_array().unwrap() {
+        let original = hex::decode(vector["csr_hex"].as_str().unwrap()).unwrap();
+        let parts = array_items_raw(&original).unwrap();
+        assert_eq!(parts[1], [0xa0]);
+        assert_eq!(parts[2][0], 0x82);
+        assert_eq!(parts[3][0], 0x84);
+        for indefinite_dice in [false, true] {
+            for indefinite_signed in [false, true] {
+                for uds in [vec![0xa0], vec![0xb8, 0]] {
+                    let mut contents = parts[0].to_vec();
+                    contents.extend_from_slice(&uds);
+                    contents.push(if indefinite_dice { 0x9f } else { 0x98 });
+                    if !indefinite_dice {
+                        contents.push(2);
+                    }
+                    contents.extend_from_slice(&parts[2][1..]);
+                    if indefinite_dice {
+                        contents.push(0xff);
+                    }
+                    contents.push(if indefinite_signed { 0x9f } else { 0x98 });
+                    if !indefinite_signed {
+                        contents.push(4);
+                    }
+                    contents.extend_from_slice(&parts[3][1..]);
+                    if indefinite_signed {
+                        contents.push(0xff);
+                    }
+                    for header in [vec![0x84], vec![0x98, 4], vec![0x9f]] {
+                        let mut raw = header.clone();
+                        raw.extend_from_slice(&contents);
+                        if header == [0x9f] {
+                            raw.push(0xff);
+                        }
+                        assert!(verify_csr(&raw).unwrap().signature_valid);
+                        assert_eq!(with_fingerprint(&raw, None).unwrap(), raw);
+                        let sent = with_fingerprint(&raw, Some(FINGERPRINT)).unwrap();
+                        assert_eq!(&sent[1..1 + contents.len()], contents.as_slice());
+                        assert_eq!(
+                            verify_csr(&sent).unwrap().unverified_fingerprint.as_deref(),
+                            Some(FINGERPRINT)
+                        );
+                    }
+                }
+            }
+        }
+    }
+}
+
+#[test]
 fn malformed_or_already_wrapped_requests_are_rejected() {
     for input in [
         vec![],

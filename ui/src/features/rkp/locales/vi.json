@@ -145,7 +145,8 @@
     "challenge_unavailable": "Không lấy được thử thách. Chưa gửi yêu cầu chứng chỉ.",
     "submission_unknown": "Chưa rõ kết quả gửi. Không tự động thử lại.",
     "invalid_endpoint": "Địa chỉ máy chủ không hợp lệ. Hãy dùng HTTPS.",
-    "certificate_validation_failed": "Máy chủ đã phản hồi nhưng xác minh chứng chỉ thất bại. Chưa xuất keybox."
+    "certificate_validation_failed": "Máy chủ đã phản hồi nhưng xác minh chứng chỉ thất bại. Chưa xuất keybox.",
+    "profile_changed": "Cấu hình đã thay đổi; thao tác đã bị hủy. Hãy kiểm tra và thử lại."
   },
   "import": {
     "title": "Nhập vật liệu DICE",

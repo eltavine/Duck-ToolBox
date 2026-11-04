@@ -145,7 +145,8 @@
     "challenge_unavailable": "Tidak dapat memperoleh tantangan. Tidak ada permintaan sertifikat yang dikirim.",
     "submission_unknown": "Hasil pengiriman tidak diketahui. Jangan mencoba ulang secara otomatis.",
     "invalid_endpoint": "Alamat server tidak valid. Gunakan HTTPS.",
-    "certificate_validation_failed": "Server telah merespons, tetapi validasi sertifikat gagal. Tidak ada keybox yang diekspor."
+    "certificate_validation_failed": "Server telah merespons, tetapi validasi sertifikat gagal. Tidak ada keybox yang diekspor.",
+    "profile_changed": "Konfigurasi berubah; operasi dibatalkan. Periksa dan coba lagi."
   },
   "import": {
     "title": "Impor materi DICE",

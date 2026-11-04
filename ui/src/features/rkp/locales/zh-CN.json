@@ -145,7 +145,8 @@
     "challenge_unavailable": "获取挑战失败，未提交证书申请。",
     "submission_unknown": "提交结果未知，请勿自动重试。",
     "invalid_endpoint": "服务地址无效，请使用 HTTPS。",
-    "certificate_validation_failed": "服务器已返回响应，但证书校验未通过，未导出 Keybox。"
+    "certificate_validation_failed": "服务器已返回响应，但证书校验未通过，未导出 Keybox。",
+    "profile_changed": "配置已变化，本次操作已取消。请检查配置后重试。"
   },
   "import": {
     "title": "导入 DICE 材料",

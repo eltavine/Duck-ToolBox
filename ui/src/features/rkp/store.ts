@@ -115,6 +115,13 @@ export const useRkpStore = defineStore("rkp", () => {
   function run<T>(action: () => Promise<T>, apply: (result: T) => void) {
     return exclusive(async () => {
       const revision = await saveProfile()
+      if (revision === null || revision !== profileRevision) {
+        throw new DuckError(
+          "profile_changed",
+          "The RKP configuration changed while saving; no certificate request was sent. Review the configuration and retry.",
+          "rkp",
+        )
+      }
       const result = await action()
       if (revision === profileRevision) apply(result)
     })

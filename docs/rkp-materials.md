@@ -125,6 +125,15 @@ unchanged. Saved CSR artifacts contain the bytes submitted to the server.
 `rkp verify` accepts both four-item HAL requests and five-item server requests and
 reports `unverified_fingerprint` separately from signature validity.
 
+The WebUI rejects a successful response that disagrees with an explicitly selected
+fingerprint policy. Device issuance also checks explicit fingerprint and protocol
+overrides against the result. Changing the profile while it is being saved cancels
+the subsequent operation before certificate issuance. Imported diagnostic and
+issuance results display the unverified fingerprint separately from signature checks.
+For device issuance, fingerprint metadata that cannot fit by itself in the CSR buffer
+is rejected before fetching a challenge or invoking the TA; the assembled request
+must still satisfy the full request-size limit.
+
 Regression vectors in `crates/duck-rkp/src/request/fixtures/upstream-fingerprint.json`
 contain Ed25519 and P-256 CSRs produced by that upstream revision. The inputs use
 canonical DeviceInfo map ordering, a synthetic `21`-repeated 32-byte signing seed,

@@ -38,6 +38,11 @@ test("changing the imported fingerprint policy requires fresh validation", async
   await expect(issue).toBeDisabled()
   await validate.click()
   await expect(issue).toBeEnabled()
+  await page.getByRole("button", { name: "Build diagnostic CSR (offline)", exact: true }).click()
+  await expect(page.getByText("synthetic/imported/build", { exact: true })).toBeVisible()
+  await expect(page.getByText("Build fingerprint (unverified)", { exact: true })).toBeVisible()
+  await issue.click()
+  await expect(page.getByText("synthetic/imported/build", { exact: true })).toBeVisible()
   await page.screenshot({ path: "test-results/rkp-import-fingerprint.png", fullPage: true })
 })
 

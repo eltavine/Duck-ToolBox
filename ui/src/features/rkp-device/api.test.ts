@@ -38,6 +38,45 @@ function respond(data: Provision) {
 }
 
 describe("device RKP successful-response validation", () => {
+  it.each(["auto", "v1", "v2", "v1-native"] as const)(
+    "rejects a self-consistent %s response that ignored the requested fingerprint policy",
+    async (protocol) => {
+      history.replaceState(null, "", "/")
+      for (const include of [false, true]) {
+        const data = result(protocol)
+        data.include_fingerprint = !include
+        if (data.local_verify)
+          data.local_verify.unverified_fingerprint = !include ? data.fingerprint : null
+        respond(data)
+        await expect(rkpDeviceApi.provision(protocol, include)).rejects.toMatchObject({
+          code: "contract_mismatch",
+        })
+      }
+    },
+  )
+
+  it("rejects a self-consistent response for another explicitly requested fingerprint", async () => {
+    history.replaceState(null, "", "/")
+    respond(result("v2"))
+    await expect(rkpDeviceApi.provision("v2", false, "another/build")).rejects.toMatchObject({
+      code: "contract_mismatch",
+    })
+  })
+
+  it.each([
+    ["v2", "v1"],
+    ["v1", "v1-native"],
+    ["v1-native", "v2"],
+  ] as const)(
+    "rejects successful protocol %s when %s was explicitly requested",
+    async (actual, requested) => {
+      history.replaceState(null, "", "/")
+      respond(result(actual))
+      await expect(rkpDeviceApi.provision(requested)).rejects.toMatchObject({
+        code: "contract_mismatch",
+      })
+    },
+  )
   it.each([false, true])(
     "passes fingerprint inclusion %s and safely quotes an explicit build",
     async (include) => {
