@@ -113,6 +113,8 @@ struct FreshServer {
     inner: FakeServer,
     challenges: Mutex<Vec<Vec<u8>>>,
     stages: Vec<ServerResult>,
+    fingerprints: Mutex<Vec<String>>,
+    submissions: Mutex<Vec<Vec<u8>>>,
 }
 
 impl FreshServer {
@@ -121,6 +123,8 @@ impl FreshServer {
             inner: seeded_server(),
             challenges: Mutex::new(vec![]),
             stages,
+            fingerprints: Mutex::new(vec![]),
+            submissions: Mutex::new(vec![]),
         }
     }
 }
@@ -128,6 +132,10 @@ impl FreshServer {
 impl Server for FreshServer {
     fn challenge<'a>(&'a self, fingerprint: &'a str) -> BoxFuture<'a, anyhow::Result<EekResponse>> {
         Box::pin(async move {
+            self.fingerprints
+                .lock()
+                .unwrap()
+                .push(fingerprint.to_owned());
             let challenge = {
                 let mut challenges = self.challenges.lock().unwrap();
                 let challenge = vec![(challenges.len() + 1) as u8; 32];
@@ -160,6 +168,7 @@ impl Server for FreshServer {
         challenge: &'a [u8],
     ) -> BoxFuture<'a, anyhow::Result<Vec<Vec<u8>>>> {
         Box::pin(async move {
+            self.submissions.lock().unwrap().push(csr.to_vec());
             let index = {
                 let challenges = self.challenges.lock().unwrap();
                 assert_eq!(challenge, challenges.last().unwrap());
@@ -187,6 +196,68 @@ impl Server for FreshServer {
             }
             self.inner.certificates(csr, &self.inner.challenge).await
         })
+    }
+}
+
+#[tokio::test]
+async fn server_rejections_do_not_change_fingerprint_policy_during_protocol_fallback() {
+    for include in [false, true] {
+        let (_dir, ctx) = working_dir("rkp-fallback-fingerprint");
+        let methods = Methods::new(&ctx, [ResultKind::Good; 3]);
+        let server = FreshServer::new(vec![
+            ServerResult::Reject,
+            ServerResult::Reject,
+            ServerResult::Good,
+        ]);
+        let fingerprint = "explicit/source/build";
+        let data = provision(
+            &ctx,
+            true,
+            Options {
+                include_fingerprint: include,
+                fingerprint: Some(fingerprint.into()),
+                ..Options::default()
+            },
+            &FixedKeys,
+            &methods,
+            &server,
+            &FakeEnvironment,
+        )
+        .await
+        .unwrap();
+        assert_eq!(
+            *methods.calls.borrow(),
+            [Method::V2, Method::V1, Method::V1Native]
+        );
+        assert_eq!(
+            *server.fingerprints.lock().unwrap(),
+            vec![fingerprint.to_owned(); 3]
+        );
+        let submissions = server.submissions.lock().unwrap();
+        assert_eq!(submissions.len(), 3);
+        for (index, csr) in submissions.iter().enumerate() {
+            let value = duck_rkp::cbor::decode(csr).unwrap();
+            let fields = value.as_array().unwrap();
+            let expected =
+                duck_rkp::request::unverified_device_info(include.then_some(fingerprint)).unwrap();
+            if index == 0 {
+                let report =
+                    protocol::validate_csr(csr, &[1; 32], &cose_public_of(&test_key())).unwrap();
+                assert_eq!(
+                    report.unverified_fingerprint.as_deref(),
+                    include.then_some(fingerprint)
+                );
+                assert_eq!(fields.len(), if include { 5 } else { 4 });
+                if include {
+                    assert_eq!(fields[4], expected);
+                }
+            } else {
+                assert_eq!(fields[0].as_array().unwrap()[1], expected);
+                assert_eq!(fields[1], bytes(vec![(index + 1) as u8; 32]));
+            }
+        }
+        assert_eq!(fs::read(&data.artifacts.csr_path).unwrap(), submissions[2]);
+        assert_eq!(data.include_fingerprint, include);
     }
 }
 

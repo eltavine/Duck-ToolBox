@@ -11,6 +11,13 @@ import { Field, FieldDescription, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Spinner } from "@/components/ui/spinner"
 import KeyboxCompatibilityDialog from "@/core/components/KeyboxCompatibilityDialog.vue"
 import KeyValueList from "@/core/components/KeyValueList.vue"
@@ -56,7 +63,15 @@ const materialRows = computed(() => {
 const resultRows = computed(() => {
   const result = importResult.value
   if (!result || result.stage === "validated") return []
-  const rows = [{ label: t("verify.path"), value: result.csr_path, mono: true, copy: true }]
+  const rows = [
+    { label: t("verify.path"), value: result.csr_path, mono: true, copy: true },
+    {
+      label: t("verify.unverifiedFingerprint"),
+      value: result.local_verify.unverified_fingerprint ?? "—",
+      mono: true,
+      copy: false,
+    },
+  ]
   if (result.stage === "exported") {
     rows.push(
       { label: t("keybox.path"), value: result.keybox_path, mono: true, copy: true },
@@ -76,6 +91,25 @@ const resultRows = computed(() => {
         <p class="text-muted-foreground text-sm">{{ t("import.workflow") }}</p>
         <p class="text-sm">{{ t("import.description") }}</p>
         <fieldset :disabled="importBusy || install.isPending.value" class="flex flex-col gap-5">
+          <Field>
+            <FieldLabel for="import-fingerprint-policy">{{
+              t("profile.includeFingerprint")
+            }}</FieldLabel>
+            <Select
+              v-model="importDraft.fingerprintPolicy"
+              :disabled="importBusy || install.isPending.value"
+            >
+              <SelectTrigger id="import-fingerprint-policy" class="w-full"
+                ><SelectValue
+              /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="config">{{ t("import.fingerprintFromConfig") }}</SelectItem>
+                <SelectItem value="include">{{ t("import.fingerprintInclude") }}</SelectItem>
+                <SelectItem value="omit">{{ t("import.fingerprintOmit") }}</SelectItem>
+              </SelectContent>
+            </Select>
+            <FieldDescription>{{ t("import.fingerprintHint") }}</FieldDescription>
+          </Field>
           <RadioGroup v-model="importDraft.mode" class="gap-3">
             <Label for="import-bundle" class="items-start font-normal">
               <RadioGroupItem id="import-bundle" value="bundle" />{{ t("import.bundle") }}

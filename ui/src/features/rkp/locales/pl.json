@@ -57,7 +57,9 @@
     "check": "Sprawdź wyznaczony klucz",
     "mode": "Tryb",
     "publicKey": "Klucz publiczny",
-    "seedHex": "Seed"
+    "seedHex": "Seed",
+    "includeFingerprint": "Dołącz odcisk kompilacji do żądania podpisu",
+    "includeFingerprintHint": "Dodaje skonfigurowany odcisk do CSR. Powinien wskazywać tę samą kompilację firmware co skrót VBMeta w żądaniu. Po wyłączeniu odcisk nadal jest wysyłany przy pobieraniu challenge."
   },
   "choices": {
     "ed25519": "Ed25519",
@@ -113,7 +115,8 @@
     "keysToSign": "Klucze do podpisania",
     "diceEntries": "Wpisy DICE",
     "certType": "Typ certyfikatu",
-    "version": "Wersja CSR"
+    "version": "Wersja CSR",
+    "unverifiedFingerprint": "Odcisk kompilacji (niepotwierdzony podpisem)"
   },
   "errors": {
     "unsupported_profile": "Nazwa profilu nie jest obsługiwana.",
@@ -142,7 +145,8 @@
     "challenge_unavailable": "Nie udało się uzyskać challenge'a. Żadne żądanie certyfikatu nie zostało wysłane.",
     "submission_unknown": "Wynik przesłania jest nieznany. Nie ponawiaj próby automatycznie.",
     "invalid_endpoint": "Nieprawidłowy adres serwera. Użyj protokołu HTTPS.",
-    "certificate_validation_failed": "Serwer odpowiedział, ale weryfikacja certyfikatu nie powiodła się. Plik keybox nie został wyeksportowany."
+    "certificate_validation_failed": "Serwer odpowiedział, ale weryfikacja certyfikatu nie powiodła się. Plik keybox nie został wyeksportowany.",
+    "profile_changed": "Konfiguracja uległa zmianie; operacja została anulowana. Sprawdź ją i spróbuj ponownie."
   },
   "import": {
     "title": "Importuj materiał DICE",
@@ -174,7 +178,11 @@
     "exported": "Serwer zaakceptował żądanie. Certyfikaty zostały zweryfikowane, a plik keybox wyeksportowany.",
     "result": "Pliki wynikowe",
     "server": "Akceptacja serwera",
-    "certificates": "Weryfikacja certyfikatów"
+    "certificates": "Weryfikacja certyfikatów",
+    "fingerprintFromConfig": "Użyj konfiguracji materiałów (domyślnie wyłączone)",
+    "fingerprintInclude": "Dołącz odcisk",
+    "fingerprintOmit": "Pomiń odcisk",
+    "fingerprintHint": "Używa issuance.fingerprint z importowanej konfiguracji, a nie odcisku tego urządzenia ani profilu roboczego. Powinien wskazywać tę samą kompilację firmware co skrót VBMeta."
   },
   "experimental": {
     "title": "Tryb eksperymentalny",

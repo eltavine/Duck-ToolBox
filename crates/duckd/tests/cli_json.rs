@@ -129,6 +129,7 @@ fn profile_save_then_info_round_trip() {
         device: DeviceInfo::default(),
         fingerprint: FingerprintConfig {
             value: "duck/device/model:13/ABC/1:user/release-keys".into(),
+            include_fingerprint: false,
         },
         server_url: "https://example.invalid".into(),
         num_keys: 2,
@@ -252,7 +253,7 @@ fn features_manifest_lists_every_registered_tool() {
         .iter()
         .find(|feature| feature["id"] == "rkp-device")
         .unwrap();
-    assert_eq!(device["contract"], 6);
+    assert_eq!(device["contract"], 7);
 }
 
 #[test]

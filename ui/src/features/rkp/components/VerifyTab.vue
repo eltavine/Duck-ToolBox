@@ -45,6 +45,7 @@ const rows = computed(() => {
     { label: t("verify.certType"), value: report.cert_type },
     { label: t("verify.diceEntries"), value: report.dice_entries },
     { label: t("verify.keysToSign"), value: report.keys_to_sign },
+    { label: t("verify.unverifiedFingerprint"), value: report.unverified_fingerprint, mono: true },
     { label: t("verify.udsPub"), value: report.uds_pub_hex, mono: true, copy: true },
   ]
 })

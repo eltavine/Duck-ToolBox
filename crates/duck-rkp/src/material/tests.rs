@@ -171,10 +171,21 @@ fn direct_ec_scalars_sign_with_the_leaf_curve_of_a_mixed_chain() {
         let material = load(Some(&path), None, None, None).unwrap();
         assert_eq!(material.algorithm(), algorithm);
         assert_eq!(material.root_algorithm(), -8);
-        let csr = material
-            .build_csr(&[0x44; 32], &[generate_ec_keypair().unwrap().cose_public])
-            .unwrap();
-        assert!(verify_csr(&csr).unwrap().signature_valid);
+        let public = [generate_ec_keypair().unwrap().cose_public];
+        let csr = material.build_csr(&[0x44; 32], &public).unwrap();
+        for fingerprint in [None, Some("source/device/build")] {
+            let submitted = crate::request::with_fingerprint(&csr, fingerprint).unwrap();
+            let report =
+                crate::workflow::validate_request_binding(&submitted, &[0x44; 32], &public)
+                    .unwrap();
+            assert!(report.signature_valid);
+            assert_eq!(report.unverified_fingerprint.as_deref(), fingerprint);
+            assert!(
+                submitted
+                    .windows(original.len())
+                    .any(|bytes| bytes == original)
+            );
+        }
     }
 }
 

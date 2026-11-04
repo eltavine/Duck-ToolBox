@@ -36,6 +36,8 @@ pub struct MaterialReport {
 #[serde(deny_unknown_fields)]
 pub struct IssuanceConfig {
     pub fingerprint: String,
+    #[serde(default)]
+    pub include_fingerprint: bool,
     pub server_url: String,
     pub protocol: String,
 }

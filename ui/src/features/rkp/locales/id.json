@@ -57,7 +57,9 @@
     "check": "Periksa kunci turunan",
     "mode": "Mode",
     "publicKey": "Kunci publik",
-    "seedHex": "Seed"
+    "seedHex": "Seed",
+    "includeFingerprint": "Sertakan sidik jari build dalam permintaan penandatanganan",
+    "includeFingerprintHint": "Menambahkan sidik jari yang dikonfigurasi ke CSR. Nilainya harus merujuk ke build firmware yang sama dengan digest VBMeta dalam permintaan. Saat dinonaktifkan, sidik jari tetap dikirim saat mengambil challenge."
   },
   "choices": {
     "ed25519": "Ed25519",
@@ -113,7 +115,8 @@
     "keysToSign": "Kunci untuk ditandatangani",
     "diceEntries": "Entri DICE",
     "certType": "Jenis sertifikat",
-    "version": "Versi CSR"
+    "version": "Versi CSR",
+    "unverifiedFingerprint": "Sidik jari build (tidak diautentikasi oleh tanda tangan)"
   },
   "errors": {
     "unsupported_profile": "Nama profil tidak didukung.",
@@ -142,7 +145,8 @@
     "challenge_unavailable": "Tidak dapat memperoleh tantangan. Tidak ada permintaan sertifikat yang dikirim.",
     "submission_unknown": "Hasil pengiriman tidak diketahui. Jangan mencoba ulang secara otomatis.",
     "invalid_endpoint": "Alamat server tidak valid. Gunakan HTTPS.",
-    "certificate_validation_failed": "Server telah merespons, tetapi validasi sertifikat gagal. Tidak ada keybox yang diekspor."
+    "certificate_validation_failed": "Server telah merespons, tetapi validasi sertifikat gagal. Tidak ada keybox yang diekspor.",
+    "profile_changed": "Konfigurasi berubah; operasi dibatalkan. Periksa dan coba lagi."
   },
   "import": {
     "title": "Impor materi DICE",
@@ -174,7 +178,11 @@
     "exported": "Server menerima permintaan. Sertifikat telah diverifikasi dan keybox diekspor.",
     "result": "Berkas hasil",
     "server": "Penerimaan server",
-    "certificates": "Verifikasi sertifikat"
+    "certificates": "Verifikasi sertifikat",
+    "fingerprintFromConfig": "Ikuti konfigurasi material (nonaktif jika tidak diatur)",
+    "fingerprintInclude": "Sertakan sidik jari",
+    "fingerprintOmit": "Jangan sertakan sidik jari",
+    "fingerprintHint": "Menggunakan issuance.fingerprint dari konfigurasi yang diimpor, bukan sidik jari perangkat ini atau profil kerja. Nilainya harus merujuk ke build firmware yang sama dengan digest VBMeta."
   },
   "experimental": {
     "title": "Mode eksperimental",

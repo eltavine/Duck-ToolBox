@@ -60,6 +60,7 @@ fn runtime_overrides(
         kdf_label: shared.kdf_label.clone(),
         curve: shared.curve,
         server_url: shared.server_url.clone(),
+        include_fingerprint: shared.include_fingerprint,
         num_keys,
         output_path,
     }

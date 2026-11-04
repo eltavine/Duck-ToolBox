@@ -57,7 +57,9 @@
     "check": "Comprobar clave derivada",
     "mode": "Modo",
     "publicKey": "Clave pública",
-    "seedHex": "Semilla"
+    "seedHex": "Semilla",
+    "includeFingerprint": "Incluir huella de compilación en la solicitud de firma",
+    "includeFingerprintHint": "Añade la huella configurada al CSR. Debe corresponder a la misma compilación del firmware que el resumen VBMeta de la solicitud. Al desactivarlo, la solicitud de challenge sigue enviando la huella."
   },
   "choices": {
     "ed25519": "Ed25519",
@@ -113,7 +115,8 @@
     "keysToSign": "Claves para firmar",
     "diceEntries": "Entradas DICE",
     "certType": "Tipo de certificado",
-    "version": "Versión de la CSR"
+    "version": "Versión de la CSR",
+    "unverifiedFingerprint": "Huella de compilación (sin autenticar por firma)"
   },
   "errors": {
     "unsupported_profile": "No se admite este nombre de perfil.",
@@ -142,7 +145,8 @@
     "challenge_unavailable": "No se pudo obtener el desafío. No se envió ninguna solicitud de certificado.",
     "submission_unknown": "Se desconoce el resultado del envío. No reintentes automáticamente.",
     "invalid_endpoint": "La dirección del servidor no es válida. Usa HTTPS.",
-    "certificate_validation_failed": "El servidor respondió, pero la validación del certificado falló. No se exportó ningún keybox."
+    "certificate_validation_failed": "El servidor respondió, pero la validación del certificado falló. No se exportó ningún keybox.",
+    "profile_changed": "La configuración ha cambiado; operación cancelada. Revísala y vuelve a intentarlo."
   },
   "import": {
     "title": "Importar material DICE",
@@ -174,7 +178,11 @@
     "exported": "El servidor aceptó la solicitud. Se verificaron los certificados y se exportó el keybox.",
     "result": "Archivos de resultado",
     "server": "Aceptación del servidor",
-    "certificates": "Verificación de certificados"
+    "certificates": "Verificación de certificados",
+    "fingerprintFromConfig": "Usar configuración del material (desactivado si falta)",
+    "fingerprintInclude": "Incluir huella",
+    "fingerprintOmit": "Omitir huella",
+    "fingerprintHint": "Usa issuance.fingerprint de la configuración importada, no la huella de este dispositivo ni del perfil de trabajo. Debe corresponder a la misma compilación del firmware que el resumen VBMeta."
   },
   "experimental": {
     "title": "Modo experimental",

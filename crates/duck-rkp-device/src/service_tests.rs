@@ -22,6 +22,8 @@ use crate::{protocol, status::DeviceStatus};
 const CHALLENGE: [u8; 32] = [0x5A; 32];
 const FINGERPRINT: &str = "google/husky/husky:15/AP3A/1:user/release-keys";
 
+use metadata::assert_fingerprint_metadata;
+
 /// A device that claims every prerequisite, so the pipeline itself is what is tested.
 struct FakeEnvironment;
 
@@ -388,6 +390,7 @@ async fn provision_completes_the_round_trip_and_writes_artifacts() {
         Options {
             protocol: super::Protocol::Auto,
             fingerprint: Some(FINGERPRINT.into()),
+            include_fingerprint: false,
             output: None,
         },
         &FixedKeys,
@@ -481,6 +484,7 @@ async fn provision_mirrors_the_keybox_to_an_explicit_output() {
         Options {
             protocol: super::Protocol::Auto,
             fingerprint: None,
+            include_fingerprint: false,
             output: Some(output.clone()),
         },
         &FixedKeys,
@@ -538,3 +542,6 @@ mod legacy;
 
 #[path = "service_fallback_tests.rs"]
 mod fallback;
+
+#[path = "service_metadata_tests.rs"]
+mod metadata;

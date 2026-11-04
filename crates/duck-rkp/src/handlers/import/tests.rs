@@ -71,6 +71,7 @@ fn split_inputs(directory: &tempfile::TempDir, chain: &[u8]) -> (AppPaths, Impor
             chain: Some("chain.cbor".into()),
             signing: Some("signing.json".into()),
             config: Some("config.json".into()),
+            include_fingerprint: None,
         },
     )
 }
@@ -159,6 +160,25 @@ async fn validation_accepts_the_complete_csr_size_limit_without_persisting_a_key
         .unwrap();
     assert_eq!(csr.len(), MAX_INPUT_BYTES);
     assert_eq!(&csr[3..3 + chain.len()], chain);
+}
+
+#[tokio::test]
+async fn metadata_size_is_included_in_import_readiness_and_before_network_access() {
+    let directory = tempfile::tempdir().unwrap();
+    let (paths, mut args) = split_inputs(&directory, &signed_chain(261_478));
+    args.include_fingerprint = Some(true);
+    let error = run(&paths, &args, Operation::Validate).await.unwrap_err();
+    assert_eq!(material::error_code(&error), Some("material_configuration"));
+    assert!(format!("{error:#}").contains("CSR exceeds the input limit"));
+    // This endpoint is unreachable; a size error proves issuance stops before HTTP.
+    let error = run(&paths, &args, Operation::Issue).await.unwrap_err();
+    assert!(format!("{error:#}").contains("CSR exceeds the input limit"));
+    assert!(!paths.var_dir.exists());
+    args.include_fingerprint = Some(false);
+    assert_eq!(
+        run(&paths, &args, Operation::Validate).await.unwrap()["ready_for_issuance"],
+        true
+    );
 }
 
 #[tokio::test]

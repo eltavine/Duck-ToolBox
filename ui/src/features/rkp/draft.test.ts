@@ -24,13 +24,29 @@ const profile: Profile = {
     dice_issuer: "Android",
     dice_subject: "KeyMint",
   },
-  fingerprint: { value: " google/caiman/caiman:16/BP3A/1:user/release-keys " },
+  fingerprint: {
+    value: " google/caiman/caiman:16/BP3A/1:user/release-keys ",
+    include_fingerprint: false,
+  },
   server_url: "https://remoteprovisioning.googleapis.com/v1",
   num_keys: 1,
   output_path: "var/outputs/keybox.xml",
 }
 
 describe("RKP drafts", () => {
+  it("preserves an enabled fingerprint policy when detecting device values", () => {
+    const draft = { ...toDraft(profile), include_fingerprint: true }
+    const detected = {
+      ...profile,
+      fingerprint: { value: "detected/build", include_fingerprint: false },
+    }
+    const next = applyDetected(draft, detected)
+    expect(next.include_fingerprint).toBe(true)
+    expect(toProfile(next).fingerprint).toEqual({
+      value: "detected/build",
+      include_fingerprint: true,
+    })
+  })
   it("round-trips a profile and fills the default KDF label", () => {
     const draft = toDraft(profile)
     expect(draft.kdf_label).toBe(DEFAULT_KDF_LABEL)

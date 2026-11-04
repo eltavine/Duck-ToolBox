@@ -26,7 +26,7 @@ const profile: Profile = {
     dice_issuer: "Android",
     dice_subject: "KeyMint",
   },
-  fingerprint: { value: "test" },
+  fingerprint: { value: "test", include_fingerprint: false },
   server_url: "https://example.org",
   num_keys: 1,
   output_path: "/tmp/keybox.xml",
@@ -45,6 +45,82 @@ beforeEach(() => setActivePinia(createPinia()))
 afterEach(() => vi.restoreAllMocks())
 
 describe("RKP operations", () => {
+  it("does not overwrite a newer loaded profile or its edits with an older response", async () => {
+    let first!: (value: typeof shown) => void
+    let second!: (value: typeof shown) => void
+    vi.spyOn(rkpApi, "show")
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            first = resolve
+          }),
+      )
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            second = resolve
+          }),
+      )
+    const store = useRkpStore()
+    const older = store.load()
+    const newer = store.load()
+    second({
+      ...shown,
+      profile: { ...profile, fingerprint: { value: "newer/build", include_fingerprint: true } },
+    })
+    await newer
+    store.draft!.fingerprint = "edited/newer/build"
+    first(shown)
+    await older
+    expect(store.draft!.fingerprint).toBe("edited/newer/build")
+    expect(store.draft!.include_fingerprint).toBe(true)
+  })
+
+  it("keeps edits made while a forced profile reload is pending", async () => {
+    let finish!: (value: typeof shown) => void
+    vi.spyOn(rkpApi, "show").mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          finish = resolve
+        }),
+    )
+    const store = useRkpStore()
+    store.draft = toDraft(profile)
+    const pending = store.load(true)
+    store.draft.include_fingerprint = true
+    finish(shown)
+    await pending
+    expect(store.draft.include_fingerprint).toBe(true)
+  })
+  it.each(["runProvision", "runKeybox"] as const)(
+    "does not send %s when the fingerprint policy changes during profile saving",
+    async (action) => {
+      let finish!: (result: typeof shown) => void
+      vi.spyOn(rkpApi, "save").mockImplementation(
+        () =>
+          new Promise((resolve) => {
+            finish = resolve
+          }),
+      )
+      const provision = vi
+        .spyOn(rkpApi, "provision")
+        .mockRejectedValue(new Error("stale request sent"))
+      const keybox = vi.spyOn(rkpApi, "keybox").mockRejectedValue(new Error("stale request sent"))
+      const store = useRkpStore()
+      store.draft = { ...toDraft(profile), include_fingerprint: true }
+      const pending = store[action]().catch((error: unknown) => error)
+      store.draft.include_fingerprint = false
+      finish({
+        ...shown,
+        profile: { ...profile, fingerprint: { ...profile.fingerprint, include_fingerprint: true } },
+      })
+      expect(await pending).toMatchObject({ code: "profile_changed" })
+      expect(provision).not.toHaveBeenCalled()
+      expect(keybox).not.toHaveBeenCalled()
+      expect(store.draft.include_fingerprint).toBe(false)
+      expect(store.profileBusy).toBe(false)
+    },
+  )
   it("prevents overlapping profile operations across tabs and releases the guard", async () => {
     let finish!: (result: typeof shown) => void
     vi.spyOn(rkpApi, "save").mockImplementation(
@@ -71,15 +147,16 @@ describe("RKP operations", () => {
           finish = resolve
         }),
     )
-    vi.spyOn(rkpApi, "info").mockResolvedValue(info)
+    const check = vi.spyOn(rkpApi, "info").mockResolvedValue(info)
     const store = useRkpStore()
     store.draft = toDraft(profile)
     const pending = store.checkKey()
     store.draft.fingerprint = "edited"
     finish(shown)
-    await pending
+    await expect(pending).rejects.toMatchObject({ code: "profile_changed" })
     expect(store.draft.fingerprint).toBe("edited")
     expect(store.info).toBeNull()
+    expect(check).not.toHaveBeenCalled()
   })
 
   it("discards a result if the profile changes while the command is running", async () => {

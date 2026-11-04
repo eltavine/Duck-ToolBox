@@ -57,7 +57,9 @@
     "check": "유도된 키 확인",
     "mode": "모드",
     "publicKey": "공개 키",
-    "seedHex": "시드"
+    "seedHex": "시드",
+    "includeFingerprint": "서명 요청에 빌드 지문 포함",
+    "includeFingerprintHint": "설정된 지문을 CSR에 추가합니다. 요청의 VBMeta 다이제스트와 같은 펌웨어 빌드여야 합니다. 꺼도 challenge 요청에는 지문을 전송합니다."
   },
   "choices": {
     "ed25519": "Ed25519",
@@ -113,7 +115,8 @@
     "keysToSign": "서명할 키",
     "diceEntries": "DICE 항목",
     "certType": "인증서 유형",
-    "version": "CSR 버전"
+    "version": "CSR 버전",
+    "unverifiedFingerprint": "빌드 지문(서명으로 인증되지 않음)"
   },
   "errors": {
     "unsupported_profile": "지원되지 않는 프로필 이름입니다.",
@@ -142,7 +145,8 @@
     "challenge_unavailable": "챌린지를 가져오지 못했습니다. 인증서 신청은 제출되지 않았습니다.",
     "submission_unknown": "제출 결과를 알 수 없습니다. 자동으로 재시도하지 마세요.",
     "invalid_endpoint": "서버 주소가 올바르지 않습니다. HTTPS를 사용하세요.",
-    "certificate_validation_failed": "서버가 응답했으나 인증서 검증에 실패했습니다. Keybox는 내보내지 않았습니다."
+    "certificate_validation_failed": "서버가 응답했으나 인증서 검증에 실패했습니다. Keybox는 내보내지 않았습니다.",
+    "profile_changed": "설정이 변경되어 작업을 취소했습니다. 설정을 확인하고 다시 시도하세요."
   },
   "import": {
     "title": "DICE 자료 가져오기",
@@ -174,7 +178,11 @@
     "exported": "서버가 신청을 수락했고 인증서 검증과 Keybox 내보내기가 완료되었습니다.",
     "result": "결과 파일",
     "server": "서버 수락",
-    "certificates": "인증서 검증"
+    "certificates": "인증서 검증",
+    "fingerprintFromConfig": "자료 설정 사용(미설정 시 끔)",
+    "fingerprintInclude": "지문 포함",
+    "fingerprintOmit": "지문 제외",
+    "fingerprintHint": "가져온 설정의 issuance.fingerprint를 사용하며 이 기기나 작업대 지문은 사용하지 않습니다. VBMeta 다이제스트와 같은 펌웨어 빌드인지 확인하세요."
   },
   "experimental": {
     "title": "실험 모드",

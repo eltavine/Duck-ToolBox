@@ -32,6 +32,11 @@ const rows = computed(() => {
       value: data.local_verify.signature_valid ? t("provision.valid") : t("provision.invalid"),
     },
     { label: t("provision.challenge"), value: data.challenge_hex, mono: true, copy: true },
+    {
+      label: t("verify.unverifiedFingerprint"),
+      value: data.local_verify.unverified_fingerprint,
+      mono: true,
+    },
     { label: t("provision.csr"), value: data.csr_path, mono: true, copy: true },
     {
       label: t("provision.protectedData"),

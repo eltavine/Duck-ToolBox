@@ -76,7 +76,10 @@
     "structureOnly": "Structure checked; encrypted evidence is verified by the server",
     "backend": "Backend",
     "attempts": "Attempts",
-    "succeeded": "Succeeded"
+    "succeeded": "Succeeded",
+    "includeFingerprint": "Include build fingerprint in signing request",
+    "includeFingerprintHint": "The fingerprint should identify the same firmware build as the VBMeta digest in the TA request. Disabling this does not remove the fingerprint from the challenge request.",
+    "fingerprintHint": "Leave blank to read the device fingerprint at issuance time. An override applies to both challenge retrieval and CSR metadata."
   },
   "confirm": {
     "title": "Send a request to the KeyMint TA?",

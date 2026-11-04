@@ -57,7 +57,9 @@
     "check": "Abgeleiteten Schlüssel prüfen",
     "mode": "Modus",
     "publicKey": "Öffentlicher Schlüssel",
-    "seedHex": "Seed"
+    "seedHex": "Seed",
+    "includeFingerprint": "Build-Fingerabdruck der Signaturanfrage beifügen",
+    "includeFingerprintHint": "Fügt den konfigurierten Fingerabdruck dem CSR hinzu. Er muss denselben Firmware-Build wie der VBMeta-Digest der Anfrage bezeichnen. Auch bei deaktivierter Option wird er beim Challenge-Abruf gesendet."
   },
   "choices": {
     "ed25519": "Ed25519",
@@ -113,7 +115,8 @@
     "keysToSign": "Zu signierende Schlüssel",
     "diceEntries": "DICE-Einträge",
     "certType": "Zertifikatstyp",
-    "version": "CSR-Version"
+    "version": "CSR-Version",
+    "unverifiedFingerprint": "Build-Fingerabdruck (nicht durch Signatur bestätigt)"
   },
   "errors": {
     "unsupported_profile": "Dieser Profilname wird nicht unterstützt.",
@@ -142,7 +145,8 @@
     "challenge_unavailable": "Die Challenge konnte nicht abgerufen werden. Es wurde keine Zertifikatsanfrage gesendet.",
     "submission_unknown": "Das Ergebnis der Übermittlung ist unbekannt. Nicht automatisch erneut versuchen.",
     "invalid_endpoint": "Ungültige Serveradresse. HTTPS verwenden.",
-    "certificate_validation_failed": "Der Server hat geantwortet, aber die Zertifikatsprüfung ist fehlgeschlagen. Keine Keybox wurde exportiert."
+    "certificate_validation_failed": "Der Server hat geantwortet, aber die Zertifikatsprüfung ist fehlgeschlagen. Keine Keybox wurde exportiert.",
+    "profile_changed": "Die Konfiguration wurde geändert; der Vorgang wurde abgebrochen. Prüfen Sie sie und versuchen Sie es erneut."
   },
   "import": {
     "title": "DICE-Material importieren",
@@ -174,7 +178,11 @@
     "exported": "Der Server hat die Anfrage angenommen. Zertifikate geprüft und Keybox exportiert.",
     "result": "Ergebnisdateien",
     "server": "Serverannahme",
-    "certificates": "Zertifikatsprüfung"
+    "certificates": "Zertifikatsprüfung",
+    "fingerprintFromConfig": "Materialkonfiguration verwenden (ohne Angabe aus)",
+    "fingerprintInclude": "Fingerabdruck beifügen",
+    "fingerprintOmit": "Fingerabdruck weglassen",
+    "fingerprintHint": "Verwendet issuance.fingerprint der importierten Konfiguration, nicht den Fingerabdruck dieses Geräts oder Arbeitsprofils. Er muss denselben Firmware-Build wie der VBMeta-Digest bezeichnen."
   },
   "experimental": {
     "title": "Experimenteller Modus",

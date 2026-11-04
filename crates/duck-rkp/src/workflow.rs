@@ -49,6 +49,7 @@ pub(crate) fn validate_request_binding(
 
 pub(crate) async fn issue(
     fingerprint: &str,
+    include_fingerprint: bool,
     server_url: &str,
     count: u32,
     build: impl Fn(&[u8], &[Value]) -> Result<Vec<u8>>,
@@ -69,8 +70,14 @@ pub(crate) async fn issue(
         .iter()
         .map(|key| key.cose_public.clone())
         .collect::<Vec<_>>();
+    let build = |challenge: &[u8], public: &[Value]| {
+        crate::request::with_fingerprint(
+            &build(challenge, public)?,
+            include_fingerprint.then_some(fingerprint),
+        )
+    };
     // validate local material and configuration before contacting the server
-    validate_request_binding(&build(&[0; 32], &public_keys)?, &[0; 32], &public_keys)?;
+    validate_request_binding(&build(&[0; 64], &public_keys)?, &[0; 64], &public_keys)?;
     let client = rkp_client()?;
     let challenge = fetch_challenge(&client, fingerprint, server_url).await?;
     let csr = build(&challenge, &public_keys)?;

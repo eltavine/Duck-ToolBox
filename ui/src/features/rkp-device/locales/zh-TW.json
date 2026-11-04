@@ -76,7 +76,10 @@
     "structureOnly": "僅檢查結構；加密簽章資料由伺服器驗證",
     "backend": "呼叫後端",
     "attempts": "嘗試記錄",
-    "succeeded": "成功"
+    "succeeded": "成功",
+    "includeFingerprint": "在簽發請求中附帶建構指紋",
+    "includeFingerprintHint": "請確認指紋與 TA 請求中的 VBMeta 摘要對應同一韌體建構。關閉後，取得 challenge 時仍會傳送指紋。",
+    "fingerprintHint": "留空時於簽發時讀取裝置指紋；手動指定的值同時用於取得 challenge 與 CSR 中繼資料。"
   },
   "confirm": {
     "title": "要向 KeyMint TA 傳送請求嗎？",

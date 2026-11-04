@@ -61,6 +61,7 @@ async fn provision_honors_an_explicit_fingerprint() {
         Options {
             protocol: crate::issuance::Protocol::Auto,
             fingerprint: Some("custom/fingerprint".into()),
+            include_fingerprint: false,
             output: None,
         },
         &FixedKeys,
@@ -113,6 +114,7 @@ async fn an_explicit_fingerprint_satisfies_only_the_fingerprint_prerequisite() {
             Options {
                 protocol: crate::issuance::Protocol::Auto,
                 fingerprint: Some("  custom/fingerprint  ".into()),
+                include_fingerprint: false,
                 output: None,
             },
             &FixedKeys,

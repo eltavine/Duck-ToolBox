@@ -51,7 +51,14 @@ pub(crate) async fn run(paths: &AppPaths, args: &ProvisionArgs) -> Result<Provis
         let public = (0..resolved.profile.num_keys)
             .map(|_| generate_ec_keypair().map(|key| key.cose_public))
             .collect::<anyhow::Result<Vec<_>>>()?;
-        let csr = build(&challenge, &public)?;
+        let csr = crate::request::with_fingerprint(
+            &build(&challenge, &public)?,
+            resolved
+                .profile
+                .fingerprint
+                .include_fingerprint
+                .then_some(resolved.profile.fingerprint.value.as_str()),
+        )?;
         let report = validate_request_binding(&csr, &challenge, &public)?;
         let directory = private_run(paths, "rkp-experimental-diagnostic-")?;
         let path = directory.path().join("diagnostic-only.cbor");
@@ -70,6 +77,7 @@ pub(crate) async fn run(paths: &AppPaths, args: &ProvisionArgs) -> Result<Provis
         let server_url = ensure_request_context(&resolved.profile)?;
         let issued = issue(
             &resolved.profile.fingerprint.value,
+            resolved.profile.fingerprint.include_fingerprint,
             &server_url,
             resolved.profile.num_keys,
             build,

@@ -4,8 +4,9 @@ import { computed, ref } from "vue"
 
 import { Card, CardContent } from "@/components/ui/card"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
-import { Field, FieldLabel } from "@/components/ui/field"
+import { Field, FieldDescription, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { Switch } from "@/components/ui/switch"
 
 import type { Draft } from "../draft"
 import { useRkpI18n } from "../i18n"
@@ -60,6 +61,15 @@ function setDevice(key: DeviceKey, value: string | number, numeric?: boolean) {
           <Field>
             <FieldLabel for="fingerprint">{{ t("profile.fingerprint") }}</FieldLabel>
             <Input id="fingerprint" v-model="draft.fingerprint" class="font-mono text-sm" />
+          </Field>
+          <Field>
+            <div class="flex items-center justify-between gap-4">
+              <FieldLabel for="include-fingerprint">{{
+                t("profile.includeFingerprint")
+              }}</FieldLabel>
+              <Switch id="include-fingerprint" v-model="draft.include_fingerprint" />
+            </div>
+            <FieldDescription>{{ t("profile.includeFingerprintHint") }}</FieldDescription>
           </Field>
           <Field>
             <FieldLabel for="server-url">{{ t("profile.serverUrl") }}</FieldLabel>

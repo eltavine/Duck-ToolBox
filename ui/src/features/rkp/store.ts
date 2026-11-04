@@ -19,12 +19,14 @@ export const useRkpStore = defineStore("rkp", () => {
   const verifyPath = ref("")
   const profileBusy = ref(false)
   let profileRevision = 0
+  let loadRevision = 0
   const importDraft = ref<ImportDraft>({
     mode: "bundle",
     bundlePath: "",
     chainPath: "",
     signingPath: "",
     configPath: "",
+    fingerprintPolicy: "config",
   })
   const importResult = ref<ImportResult | null>(null)
   const importBusy = ref(false)
@@ -79,12 +81,16 @@ export const useRkpStore = defineStore("rkp", () => {
 
   async function load(discard = false) {
     if (draft.value && !discard) return
+    const request = ++loadRevision
+    const revision = profileRevision
     const shown = await rkpApi.show()
-    secretsPath.value = shown.paths.profile_secrets_path
+    if (request !== loadRevision || revision !== profileRevision) return
     let next = toDraft(shown.profile)
     if (hasGenericDevice(next)) {
       next = applyDetected(next, (await rkpApi.detect()).profile)
     }
+    if (request !== loadRevision || revision !== profileRevision) return
+    secretsPath.value = shown.paths.profile_secrets_path
     draft.value = next
   }
 
@@ -114,6 +120,13 @@ export const useRkpStore = defineStore("rkp", () => {
   function run<T>(action: () => Promise<T>, apply: (result: T) => void) {
     return exclusive(async () => {
       const revision = await saveProfile()
+      if (revision === null || revision !== profileRevision) {
+        throw new DuckError(
+          "profile_changed",
+          "The RKP configuration changed while saving; no certificate request was sent. Review the configuration and retry.",
+          "rkp",
+        )
+      }
       const result = await action()
       if (revision === profileRevision) apply(result)
     })

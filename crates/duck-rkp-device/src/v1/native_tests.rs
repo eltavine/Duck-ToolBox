@@ -81,7 +81,7 @@ fn native_reply_reuses_the_aidl_csr_layout_and_preserves_exact_evidence() {
     let parsed = response(&payload, &request.mac_tag).unwrap();
     assert_eq!(parsed.device_info, evidence.device_info);
     assert_eq!(parsed.protected_data, evidence.protected_data);
-    let csr = assemble(parsed, &[3; 32], &public_key()).unwrap();
+    let csr = assemble(parsed, &[3; 32], &public_key(), None).unwrap();
     let Value::Array(fields) = decode(&csr).unwrap() else {
         panic!("CSR array")
     };
@@ -117,5 +117,5 @@ fn malformed_native_replies_are_never_accepted_as_csr_evidence() {
     ]))
     .unwrap();
     let parsed = response(&payload, &[7; 32]).unwrap();
-    assert!(assemble(parsed, &[3; 32], &public_key()).is_err());
+    assert!(assemble(parsed, &[3; 32], &public_key(), None).is_err());
 }

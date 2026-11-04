@@ -57,7 +57,9 @@
     "check": "检查派生密钥",
     "mode": "模式",
     "publicKey": "公钥",
-    "seedHex": "Seed"
+    "seedHex": "Seed",
+    "includeFingerprint": "在签发请求中附带构建指纹",
+    "includeFingerprintHint": "将配置中的指纹附加到 CSR。请确认它与请求中的 VBMeta 摘要对应同一固件构建。关闭后，获取 challenge 时仍会发送指纹。"
   },
   "choices": {
     "ed25519": "Ed25519",
@@ -113,7 +115,8 @@
     "keysToSign": "待签名密钥",
     "diceEntries": "DICE 条目",
     "certType": "证书类型",
-    "version": "CSR 版本"
+    "version": "CSR 版本",
+    "unverifiedFingerprint": "构建指纹（未经签名认证）"
   },
   "errors": {
     "unsupported_profile": "不支持该配置名称。",
@@ -142,7 +145,8 @@
     "challenge_unavailable": "获取挑战失败，未提交证书申请。",
     "submission_unknown": "提交结果未知，请勿自动重试。",
     "invalid_endpoint": "服务地址无效，请使用 HTTPS。",
-    "certificate_validation_failed": "服务器已返回响应，但证书校验未通过，未导出 Keybox。"
+    "certificate_validation_failed": "服务器已返回响应，但证书校验未通过，未导出 Keybox。",
+    "profile_changed": "配置已变化，本次操作已取消。请检查配置后重试。"
   },
   "import": {
     "title": "导入 DICE 材料",
@@ -174,7 +178,11 @@
     "exported": "服务器已接受申请，证书校验通过，Keybox 已导出。",
     "result": "结果文件",
     "server": "服务器接受",
-    "certificates": "证书校验"
+    "certificates": "证书校验",
+    "fingerprintFromConfig": "随材料配置（未设置时关闭）",
+    "fingerprintInclude": "附带指纹",
+    "fingerprintOmit": "不附带指纹",
+    "fingerprintHint": "使用导入配置的 issuance.fingerprint，不使用本机或工作台的指纹。请确认它与请求中的 VBMeta 摘要对应同一固件构建。"
   },
   "experimental": {
     "title": "实验模式",

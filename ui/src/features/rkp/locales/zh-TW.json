@@ -57,7 +57,9 @@
     "check": "檢查衍生金鑰",
     "mode": "模式",
     "publicKey": "公開金鑰",
-    "seedHex": "Seed"
+    "seedHex": "Seed",
+    "includeFingerprint": "在簽發請求中附帶建構指紋",
+    "includeFingerprintHint": "將設定中的指紋附加至 CSR。請確認它與請求中的 VBMeta 摘要對應同一韌體建構。關閉後，取得 challenge 時仍會傳送指紋。"
   },
   "choices": {
     "ed25519": "Ed25519",
@@ -113,7 +115,8 @@
     "keysToSign": "待簽署金鑰",
     "diceEntries": "DICE 項目",
     "certType": "憑證類型",
-    "version": "CSR 版本"
+    "version": "CSR 版本",
+    "unverifiedFingerprint": "建構指紋（未經簽章認證）"
   },
   "errors": {
     "unsupported_profile": "不支援此設定檔名稱。",
@@ -142,7 +145,8 @@
     "challenge_unavailable": "取得挑戰失敗，未提交憑證申請。",
     "submission_unknown": "提交結果未知，請勿自動重試。",
     "invalid_endpoint": "服務位址無效，請使用 HTTPS。",
-    "certificate_validation_failed": "伺服器已回應，但憑證驗證未通過，未匯出 Keybox。"
+    "certificate_validation_failed": "伺服器已回應，但憑證驗證未通過，未匯出 Keybox。",
+    "profile_changed": "設定已變更，本次操作已取消。請檢查設定後重試。"
   },
   "import": {
     "title": "匯入 DICE 材料",
@@ -174,7 +178,11 @@
     "exported": "伺服器已接受申請，憑證驗證通過，Keybox 已匯出。",
     "result": "結果檔案",
     "server": "伺服器接受",
-    "certificates": "憑證驗證"
+    "certificates": "憑證驗證",
+    "fingerprintFromConfig": "依材料設定（未設定時關閉）",
+    "fingerprintInclude": "附帶指紋",
+    "fingerprintOmit": "不附帶指紋",
+    "fingerprintHint": "使用匯入設定的 issuance.fingerprint，不使用本機或工作台的指紋。請確認它與請求中的 VBMeta 摘要對應同一韌體建構。"
   },
   "experimental": {
     "title": "實驗模式",

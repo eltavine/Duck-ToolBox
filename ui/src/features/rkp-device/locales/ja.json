@@ -76,7 +76,10 @@
     "structureOnly": "構造のみ確認。暗号化された署名情報はサーバーで検証",
     "backend": "バックエンド",
     "attempts": "試行履歴",
-    "succeeded": "成功"
+    "succeeded": "成功",
+    "includeFingerprint": "署名リクエストにビルド指紋を含める",
+    "includeFingerprintHint": "指紋は TA リクエストの VBMeta ダイジェストと同じファームウェアビルドを示す必要があります。無効時も challenge の取得時には指紋を送信します。",
+    "fingerprintHint": "空欄なら署名時に端末の指紋を読み取ります。指定値は challenge の取得と CSR メタデータの両方に適用します。"
   },
   "confirm": {
     "title": "KeyMint TA にリクエストを送信しますか？",

@@ -59,7 +59,7 @@ fn mac_matches_an_independent_hkdf_hmac_vector() {
 
 #[test]
 fn legacy_csr_preserves_server_evidence_challenge_and_requested_key() {
-    let csr = assemble(response(), &[3; 32], &public_key()).unwrap();
+    let csr = assemble(response(), &[3; 32], &public_key(), None).unwrap();
     let csr = decode_exact(&csr).unwrap();
     let fields = as_array(&csr, "CSR").unwrap();
     assert_eq!(fields.len(), 4);
@@ -97,21 +97,30 @@ fn legacy_csr_keeps_the_exact_hal_encodings() {
     let original_device = result.device_info.clone();
     let original_protected = result.protected_data.clone();
     let challenge = [3; 32];
-    let csr = assemble(result, &challenge, &public_key()).unwrap();
-    let device_start = 2; // CSR array and [verified, unverified] DeviceInfo array.
-    assert_eq!(
-        &csr[device_start..device_start + original_device.len()],
-        original_device
-    );
-    let protected_start = device_start
-        + original_device.len()
-        + 1
-        + encode(&bytes(challenge.to_vec())).unwrap().len();
-    assert_eq!(
-        &csr[protected_start..protected_start + original_protected.len()],
-        original_protected
-    );
-    assert!(decode_exact(&csr).is_ok());
+    for fingerprint in [None, Some("source/device/build")] {
+        let result = Response {
+            mac: result.mac.clone(),
+            device_info: result.device_info.clone(),
+            protected_data: result.protected_data.clone(),
+        };
+        let csr = assemble(result, &challenge, &public_key(), fingerprint).unwrap();
+        let device_start = 2; // CSR array and [verified, unverified] DeviceInfo array.
+        assert_eq!(
+            &csr[device_start..device_start + original_device.len()],
+            original_device
+        );
+        let protected_start = device_start
+            + original_device.len()
+            + encode(&duck_rkp::request::unverified_device_info(fingerprint).unwrap())
+                .unwrap()
+                .len()
+            + encode(&bytes(challenge.to_vec())).unwrap().len();
+        assert_eq!(
+            &csr[protected_start..protected_start + original_protected.len()],
+            original_protected
+        );
+        assert!(decode_exact(&csr).is_ok());
+    }
 }
 
 #[test]
@@ -133,7 +142,7 @@ fn invalid_legacy_evidence_is_rejected_before_submission() {
         });
     }
     for value in variants {
-        assert!(assemble(value, &[3; 32], &public_key()).is_err());
+        assert!(assemble(value, &[3; 32], &public_key(), None).is_err());
     }
     assert!(request(&[], &public_key(), &[]).is_err());
     assert!(request(&[0; 65], &public_key(), &[]).is_err());
@@ -155,7 +164,7 @@ fn malformed_recipient_structures_are_rejected() {
         };
         fields[3] = Value::Array(vec![recipient]);
         value.protected_data = encode(&encrypted).unwrap();
-        assert!(assemble(value, &[3; 32], &public_key()).is_err());
+        assert!(assemble(value, &[3; 32], &public_key(), None).is_err());
     }
 }
 

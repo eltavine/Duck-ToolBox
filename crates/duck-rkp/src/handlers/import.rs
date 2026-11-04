@@ -38,8 +38,7 @@ pub(crate) async fn run(
         if ready {
             // the largest challenge and fixed-size P-256 key bound online request size
             let public = [generate_ec_keypair()?.cose_public];
-            material
-                .build_csr(&[0; 64], &public)
+            build_request(&material, args.include_fingerprint, &[0; 64], &public)
                 .context("imported material cannot prepare a CSR for online issuance")
                 .context(material::MaterialError::Configuration)?;
         }
@@ -58,7 +57,7 @@ pub(crate) async fn run(
             .map_err(|_| anyhow::anyhow!("diagnostic challenge unavailable"))?;
         let key = generate_ec_keypair()?;
         let public = [key.cose_public];
-        let csr = material.build_csr(&challenge, &public)?;
+        let csr = build_request(&material, args.include_fingerprint, &challenge, &public)?;
         let report = validate_request_binding(&csr, &challenge, &public)?;
         let directory = private_run(paths, "rkp-diagnostic-")?;
         let path = directory.path().join("diagnostic-only.cbor");
@@ -78,6 +77,8 @@ pub(crate) async fn run(
     );
     let issued = issue(
         &config.fingerprint,
+        args.include_fingerprint
+            .unwrap_or(config.include_fingerprint),
         &config.server_url,
         1,
         |challenge, public| material.build_csr(challenge, public),
@@ -91,6 +92,26 @@ pub(crate) async fn run(
         "local_verify":issued.report, "server_accepted":true,
         "certificates_verified":true, "keybox_exported":true,
     }))
+}
+
+fn build_request(
+    material: &material::ImportedMaterial,
+    include: Option<bool>,
+    challenge: &[u8],
+    public: &[ciborium::value::Value],
+) -> Result<Vec<u8>> {
+    let config = material.issuance();
+    let fingerprint = if include.unwrap_or(config.is_some_and(|value| value.include_fingerprint)) {
+        Some(
+            config
+                .context("explicit issuance configuration is required to include a fingerprint")?
+                .fingerprint
+                .as_str(),
+        )
+    } else {
+        None
+    };
+    crate::request::with_fingerprint(&material.build_csr(challenge, public)?, fingerprint)
 }
 
 #[cfg(test)]

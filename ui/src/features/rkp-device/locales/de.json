@@ -76,7 +76,10 @@
     "structureOnly": "Struktur geprüft; verschlüsselte Nachweise prüft der Server",
     "backend": "Backend",
     "attempts": "Versuche",
-    "succeeded": "Erfolgreich"
+    "succeeded": "Erfolgreich",
+    "includeFingerprint": "Build-Fingerabdruck der Signaturanfrage beifügen",
+    "includeFingerprintHint": "Der Fingerabdruck muss denselben Firmware-Build wie der VBMeta-Digest der TA-Anfrage bezeichnen. Auch bei deaktivierter Option wird er beim Challenge-Abruf gesendet.",
+    "fingerprintHint": "Leer lassen, um den Gerätefingerabdruck bei der Signaturanfrage zu lesen. Eine explizite Angabe gilt für den Challenge-Abruf und die CSR-Metadaten."
   },
   "confirm": {
     "title": "Eine Anfrage an den KeyMint TA senden?",

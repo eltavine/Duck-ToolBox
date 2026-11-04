@@ -6,6 +6,7 @@ import type { RootBridge } from "@/core/bridge"
 
 import { rkpApi } from "./api"
 import { useRkpStore } from "./store"
+import mock from "./mock"
 
 const material = {
   material_type: "dice-chain",
@@ -37,10 +38,10 @@ function host(exec: RootBridge["exec"]): RootBridge {
   }
 }
 
-function response(data: unknown) {
+function response(data: unknown, command = "rkp.import.validate") {
   return {
     errno: 0,
-    stdout: JSON.stringify({ ok: true, api: 1, command: "rkp.import.validate", data }),
+    stdout: JSON.stringify({ ok: true, api: 1, command, data }),
     stderr: "",
   }
 }
@@ -49,6 +50,135 @@ beforeEach(() => setActivePinia(createPinia()))
 afterEach(() => setBridge(null))
 
 describe("DICE material import", () => {
+  it("clears readiness and results when issuance returns an invalid local signature report", async () => {
+    const data = structuredClone(
+      mock.handlers["rkp.import.issue"]!([], { bundle: "/tmp/material.json" }, undefined),
+    ) as { local_verify: Record<string, unknown> }
+    data.local_verify.signature_valid = false
+    setBridge(
+      host(async (command) =>
+        command.includes("'validate'") ? response(validated) : response(data, "rkp.import.issue"),
+      ),
+    )
+    const store = useRkpStore()
+    store.importDraft = { ...draft }
+    await store.validateImport()
+    expect(store.importReady).toBe(true)
+    await expect(store.issueImport()).rejects.toMatchObject({ code: "contract_mismatch" })
+    expect(store.importReady).toBe(false)
+    expect(store.importResult).toBeNull()
+    expect(store.importBusy).toBe(false)
+    expect(store.importDraft.bundlePath).toBe(draft.bundlePath)
+  })
+  it("keeps the requested fingerprint policy when the caller changes its draft during diagnosis", async () => {
+    const input = { ...draft, fingerprintPolicy: "include" as "include" | "omit" }
+    const data = {
+      stage: "diagnostic",
+      material,
+      csr_path: "/tmp/request.cbor",
+      local_verify: {
+        version: 1,
+        dice_entries: 2,
+        uds_pub_hex: "00",
+        signature_valid: true,
+        csr_version: 3,
+        cert_type: "keymint",
+        keys_to_sign: 1,
+        unverified_fingerprint: "source/build",
+      },
+      diagnostic_only: true,
+    }
+    let finish!: (result: ReturnType<typeof response>) => void
+    setBridge(
+      host(
+        () =>
+          new Promise((resolve) => {
+            finish = resolve
+          }),
+      ),
+    )
+    const pending = rkpApi.importDiagnose(input)
+    input.fingerprintPolicy = "omit"
+    finish(response(data, "rkp.import.diagnose"))
+    await expect(pending).resolves.toEqual(data)
+  })
+  it.each(["diagnose", "issue"] as const)(
+    "accepts %s only when CSR metadata honors an explicit fingerprint policy",
+    async (action) => {
+      for (const fingerprintPolicy of ["include", "omit", "config"] as const) {
+        for (const fingerprint of [null, "source/build"] as const) {
+          const local_verify = {
+            version: 1,
+            dice_entries: 2,
+            uds_pub_hex: "00",
+            signature_valid: true,
+            csr_version: 3,
+            cert_type: "keymint",
+            keys_to_sign: 1,
+            unverified_fingerprint: fingerprint,
+          }
+          const data =
+            action === "diagnose"
+              ? {
+                  stage: "diagnostic",
+                  material,
+                  csr_path: "/tmp/request.cbor",
+                  local_verify,
+                  diagnostic_only: true,
+                }
+              : {
+                  stage: "exported",
+                  material,
+                  csr_path: "/tmp/request.cbor",
+                  keybox_path: "/tmp/keybox.xml",
+                  device_id: "synthetic",
+                  chain_summary: { certificates: 2, subjects: [] },
+                  local_verify,
+                  server_accepted: true,
+                  certificates_verified: true,
+                  keybox_exported: true,
+                }
+          setBridge(host(async () => response(data, `rkp.import.${action}`)))
+          const pending = (action === "diagnose" ? rkpApi.importDiagnose : rkpApi.importIssue)({
+            ...draft,
+            fingerprintPolicy,
+          })
+          const expected =
+            fingerprintPolicy === "config" ||
+            (fingerprintPolicy === "include") === (fingerprint !== null)
+          const outcome = await pending.then(
+            (value) => ({ data: value }),
+            (error: unknown) => ({ error }),
+          )
+          expect(outcome).toMatchObject(
+            expected ? { data } : { error: { code: "contract_mismatch" } },
+          )
+        }
+      }
+    },
+  )
+  it.each(["include", "omit"] as const)(
+    "sends an explicit %s override without changing the default policy",
+    async (fingerprintPolicy) => {
+      let command = ""
+      setBridge(host(async (value) => ((command = value), response(validated))))
+      await rkpApi.importValidate({ ...draft, fingerprintPolicy })
+      expect(command).toContain(`'--include-fingerprint' '${fingerprintPolicy === "include"}'`)
+      await rkpApi.importValidate({ ...draft, fingerprintPolicy: "config" })
+      expect(command).not.toContain("--include-fingerprint")
+    },
+  )
+
+  it("invalidates readiness when the fingerprint policy changes", async () => {
+    setBridge(host(async () => response(validated)))
+    const store = useRkpStore()
+    store.importDraft = { ...draft }
+    await store.validateImport()
+    expect(store.importReady).toBe(true)
+    store.importDraft.fingerprintPolicy = "include"
+    expect(store.importReady).toBe(false)
+    expect(store.importResult).toBeNull()
+  })
   it("passes only trimmed file paths to the backend without a shell heredoc", async () => {
     let command = ""
     setBridge(host(async (value) => ((command = value), response(validated))))

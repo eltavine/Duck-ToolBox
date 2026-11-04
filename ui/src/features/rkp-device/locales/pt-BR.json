@@ -76,7 +76,10 @@
     "structureOnly": "Estrutura verificada; as provas criptografadas são verificadas pelo servidor",
     "backend": "Backend",
     "attempts": "Tentativas",
-    "succeeded": "Sucesso"
+    "succeeded": "Sucesso",
+    "includeFingerprint": "Incluir impressão digital da compilação na solicitação de assinatura",
+    "includeFingerprintHint": "A impressão digital deve corresponder à mesma compilação do firmware que o resumo VBMeta da solicitação do TA. Desativar mantém seu envio ao obter o challenge.",
+    "fingerprintHint": "Deixe em branco para ler a impressão digital do dispositivo ao assinar. Um valor explícito se aplica ao challenge e aos metadados do CSR."
   },
   "confirm": {
     "title": "Enviar uma requisição ao KeyMint TA?",

@@ -48,14 +48,15 @@ const deviceStatusSchema = z
 export type DeviceStatus = z.infer<typeof deviceStatusSchema>
 
 const reportSchema = z.object({
-  version: z.number(),
+  version: z.literal(1),
   dice_entries: z.number(),
   uds_pub_hex: z.string(),
   signature_valid: z.boolean(),
-  csr_version: z.number(),
+  csr_version: z.literal(3),
   cert_type: z.string(),
   brand: z.string().nullable().optional(),
   keys_to_sign: z.number(),
+  unverified_fingerprint: z.string().nullable().optional(),
 })
 
 const chainSummarySchema = z.object({
@@ -90,6 +91,7 @@ const provisionSchema = z
       .max(3),
     fingerprint: z.string(),
     challenge_hex: z.string(),
+    include_fingerprint: z.boolean(),
     csr_len: z.number(),
     local_verify: reportSchema.nullable(),
     chain: chainSummarySchema,
@@ -112,6 +114,15 @@ const provisionSchema = z
   .refine((data) => data.csr_backend !== "aidl" || data.csr_protocol === "v1", {
     message: "The AIDL backend only implements V1",
   })
+  .refine(
+    (data) =>
+      data.local_verify === null ||
+      data.local_verify.unverified_fingerprint ===
+        (data.include_fingerprint ? data.fingerprint : null),
+    {
+      message: "V2 CSR metadata disagrees with the reported fingerprint policy",
+    },
+  )
   .refine(
     (data) => {
       const last = data.attempts.at(-1)
@@ -139,8 +150,29 @@ export const rkpDeviceApi = {
    * Sends the acknowledgement the backend requires. It is the flag a user has to give,
    * not a default, so the button that reaches this call is always an explicit one.
    */
-  provision: (protocol: Protocol = "auto") =>
-    duckd(["rkp-device", "provision", "--acknowledge-limitations", "--protocol", protocol], {
-      schema: provisionSchema,
-    }),
+  provision: (protocol: Protocol = "auto", includeFingerprint = false, fingerprint = "") => {
+    const explicitFingerprint = fingerprint.trim()
+    return duckd(
+      [
+        "rkp-device",
+        "provision",
+        "--acknowledge-limitations",
+        "--protocol",
+        protocol,
+        "--include-fingerprint",
+        String(includeFingerprint),
+        ...(explicitFingerprint ? ["--fingerprint", explicitFingerprint] : []),
+      ],
+      {
+        schema: provisionSchema.refine(
+          (data) =>
+            data.include_fingerprint === includeFingerprint &&
+            (!explicitFingerprint || data.fingerprint === explicitFingerprint) &&
+            (protocol === "auto" ||
+              (data.attempts.length === 1 && data.attempts[0]?.method === protocol)),
+          { message: "Issuance result disagrees with the requested fingerprint or protocol" },
+        ),
+      },
+    )
+  },
 }

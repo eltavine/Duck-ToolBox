@@ -18,6 +18,7 @@ pub mod material;
 pub mod patch_level;
 pub mod private_output;
 pub mod profile;
+pub mod request;
 pub mod validate;
 pub mod verify;
 mod workflow;

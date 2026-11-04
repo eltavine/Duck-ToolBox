@@ -1,13 +1,16 @@
 <script setup lang="ts">
 import { useMutation, useQuery } from "@tanstack/vue-query"
 import { Cpu, FileKey2, RefreshCw, ShieldCheck, TriangleAlert } from "@lucide/vue"
-import { computed, ref } from "vue"
+import { useStorage } from "@vueuse/core"
+import { computed, ref, watch } from "vue"
 import { useI18n } from "vue-i18n"
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
+import { Input } from "@/components/ui/input"
+import { Switch } from "@/components/ui/switch"
 import {
   Select,
   SelectContent,
@@ -47,10 +50,29 @@ const status = useQuery({
 const result = ref<Provision | null>(null)
 const confirmOpen = ref(false)
 const protocol = ref<Protocol>("auto")
+const includeFingerprint = useStorage("duck-toolbox/rkp-device/include-fingerprint", false)
+const fingerprint = useStorage("duck-toolbox/rkp-device/fingerprint", "")
+const blockers = computed(() =>
+  (status.data.value?.blockers ?? []).filter(
+    (blocker) => blocker !== "fingerprint_missing" || !fingerprint.value.trim(),
+  ),
+)
+const prerequisitesMet = computed(() => !!status.data.value && blockers.value.length === 0)
+let inputRevision = 0
+watch(
+  [protocol, includeFingerprint, fingerprint],
+  () => {
+    inputRevision++
+    result.value = null
+    confirmOpen.value = false
+  },
+  { flush: "sync" },
+)
 const canRun = computed(() => {
   const data = status.data.value
   return (
-    data?.prerequisites_met &&
+    data &&
+    prerequisitesMet.value &&
     (protocol.value === "auto" ||
       { v1: data.v1_available, v2: data.v2_available, "v1-native": data.v1_native_available }[
         protocol.value
@@ -64,11 +86,14 @@ const keyboxTargets = contributions("keyboxTargets")
 const compatibility = useKeyboxInstallConfirmation()
 
 const run = useMutation({
-  mutationFn: () => rkpDeviceApi.provision(protocol.value),
+  mutationFn: () =>
+    rkpDeviceApi.provision(protocol.value, includeFingerprint.value, fingerprint.value),
   onMutate: () => {
     result.value = null
+    return inputRevision
   },
-  onSuccess: (data) => {
+  onSuccess: (data, _variables, revision) => {
+    if (revision !== inputRevision) return
     result.value = data
     notifySuccess(t("run.done"))
   },
@@ -152,6 +177,10 @@ const resultRows = computed<Row[]>(() => {
     { label: t("run.protocol"), value: data.csr_protocol.toUpperCase() },
     { label: t("run.backend"), value: data.csr_backend === "aidl" ? "AIDL" : "Native" },
     { label: t("run.fingerprint"), value: data.fingerprint },
+    {
+      label: t("run.includeFingerprint"),
+      value: data.include_fingerprint ? t("status.yes") : t("status.no"),
+    },
     { label: t("run.challenge"), value: data.challenge_hex, mono: true },
     { label: t("run.csr"), value: data.artifacts.csr_path, mono: true, copy: true },
     {
@@ -206,21 +235,19 @@ const resultRows = computed<Row[]>(() => {
 
           <div class="flex flex-col gap-4">
             <div class="flex flex-wrap items-center gap-2">
-              <Badge :variant="status.data.value.prerequisites_met ? 'secondary' : 'destructive'">
+              <Badge :variant="prerequisitesMet ? 'secondary' : 'destructive'">
                 {{
-                  status.data.value.prerequisites_met
-                    ? t("status.prerequisitesMet")
-                    : t("status.prerequisitesMissing")
+                  prerequisitesMet ? t("status.prerequisitesMet") : t("status.prerequisitesMissing")
                 }}
               </Badge>
             </div>
 
-            <Alert v-if="status.data.value.blockers.length" variant="destructive">
+            <Alert v-if="blockers.length" variant="destructive">
               <TriangleAlert />
               <AlertTitle>{{ t("status.blockers") }}</AlertTitle>
               <AlertDescription>
                 <ul class="flex list-disc flex-col gap-1 ps-4">
-                  <li v-for="blocker in status.data.value.blockers" :key="blocker">
+                  <li v-for="blocker in blockers" :key="blocker">
                     {{ blockerText(blocker) }}
                   </li>
                 </ul>
@@ -267,6 +294,27 @@ const resultRows = computed<Row[]>(() => {
           </Select>
         </div>
 
+        <div class="flex flex-col gap-3">
+          <div class="flex items-center justify-between gap-4">
+            <Label for="device-include-fingerprint">{{ t("run.includeFingerprint") }}</Label>
+            <Switch
+              id="device-include-fingerprint"
+              v-model="includeFingerprint"
+              :disabled="run.isPending.value || confirmOpen"
+            />
+          </div>
+          <p class="text-muted-foreground text-sm">{{ t("run.includeFingerprintHint") }}</p>
+          <Label for="device-fingerprint">{{ t("run.fingerprint") }}</Label>
+          <Input
+            id="device-fingerprint"
+            v-model="fingerprint"
+            :placeholder="status.data.value.fingerprint"
+            :disabled="run.isPending.value || confirmOpen"
+            class="font-mono text-sm"
+          />
+          <p class="text-muted-foreground text-sm">{{ t("run.fingerprintHint") }}</p>
+        </div>
+
         <Button
           size="lg"
           :disabled="run.isPending.value || status.isFetching.value || !canRun"
@@ -277,7 +325,7 @@ const resultRows = computed<Row[]>(() => {
           {{ t("run.provision") }}
         </Button>
 
-        <p v-if="!status.data.value.prerequisites_met" class="text-muted-foreground text-sm">
+        <p v-if="!prerequisitesMet" class="text-muted-foreground text-sm">
           {{ t("run.blocked") }}
         </p>
       </template>

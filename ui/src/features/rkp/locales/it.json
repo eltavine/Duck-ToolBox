@@ -57,7 +57,9 @@
     "check": "Controlla chiave derivata",
     "mode": "Modalità",
     "publicKey": "Chiave pubblica",
-    "seedHex": "Seed"
+    "seedHex": "Seed",
+    "includeFingerprint": "Includi l’impronta della build nella richiesta di firma",
+    "includeFingerprintHint": "Aggiunge l’impronta configurata al CSR. Deve indicare la stessa build del firmware del digest VBMeta della richiesta. Se disattivato, la richiesta di challenge continua a inviare l’impronta."
   },
   "choices": {
     "ed25519": "Ed25519",
@@ -113,7 +115,8 @@
     "keysToSign": "Chiavi da firmare",
     "diceEntries": "Voci DICE",
     "certType": "Tipo di certificato",
-    "version": "Versione CSR"
+    "version": "Versione CSR",
+    "unverifiedFingerprint": "Impronta della build (non autenticata dalla firma)"
   },
   "errors": {
     "unsupported_profile": "Il nome del profilo non è supportato.",
@@ -142,7 +145,8 @@
     "challenge_unavailable": "Impossibile ottenere la challenge. Nessuna richiesta di certificato è stata inviata.",
     "submission_unknown": "L’esito dell’invio è sconosciuto. Non riprovare automaticamente.",
     "invalid_endpoint": "Indirizzo del server non valido. Usa HTTPS.",
-    "certificate_validation_failed": "Il server ha risposto, ma la verifica del certificato non è riuscita. Nessun keybox è stato esportato."
+    "certificate_validation_failed": "Il server ha risposto, ma la verifica del certificato non è riuscita. Nessun keybox è stato esportato.",
+    "profile_changed": "La configurazione è cambiata; operazione annullata. Controllala e riprova."
   },
   "import": {
     "title": "Importa materiale DICE",
@@ -174,7 +178,11 @@
     "exported": "Il server ha accettato la richiesta. Certificati verificati e keybox esportato.",
     "result": "File risultanti",
     "server": "Accettazione del server",
-    "certificates": "Verifica dei certificati"
+    "certificates": "Verifica dei certificati",
+    "fingerprintFromConfig": "Usa configurazione del materiale (disattivato se assente)",
+    "fingerprintInclude": "Includi impronta",
+    "fingerprintOmit": "Ometti impronta",
+    "fingerprintHint": "Usa issuance.fingerprint della configurazione importata, non l’impronta di questo dispositivo o del profilo di lavoro. Deve indicare la stessa build del firmware del digest VBMeta."
   },
   "experimental": {
     "title": "Modalità sperimentale",

@@ -76,7 +76,10 @@
     "structureOnly": "Đã kiểm tra cấu trúc; máy chủ xác minh dữ liệu mã hóa",
     "backend": "Backend",
     "attempts": "Các lần thử",
-    "succeeded": "Thành công"
+    "succeeded": "Thành công",
+    "includeFingerprint": "Đính kèm dấu vân tay bản dựng trong yêu cầu ký",
+    "includeFingerprintHint": "Dấu vân tay phải thuộc cùng bản dựng phần sụn với mã băm VBMeta trong yêu cầu TA. Khi tắt, yêu cầu lấy challenge vẫn gửi dấu vân tay.",
+    "fingerprintHint": "Để trống để đọc dấu vân tay thiết bị khi ký. Giá trị nhập thủ công dùng cho cả yêu cầu lấy challenge và siêu dữ liệu CSR."
   },
   "confirm": {
     "title": "Gửi yêu cầu tới KeyMint TA?",

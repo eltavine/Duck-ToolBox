@@ -1,6 +1,6 @@
-import { afterEach, describe, expect, it } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 
-import { setBridge } from "@/core/bridge"
+import { bridge, setBridge } from "@/core/bridge"
 
 import type { Protocol, Provision } from "./api"
 import { rkpDeviceApi } from "./api"
@@ -38,6 +38,61 @@ function respond(data: Provision) {
 }
 
 describe("device RKP successful-response validation", () => {
+  it.each(["auto", "v1", "v2", "v1-native"] as const)(
+    "rejects a self-consistent %s response that ignored the requested fingerprint policy",
+    async (protocol) => {
+      history.replaceState(null, "", "/")
+      for (const include of [false, true]) {
+        const data = result(protocol)
+        data.include_fingerprint = !include
+        if (data.local_verify)
+          data.local_verify.unverified_fingerprint = !include ? data.fingerprint : null
+        respond(data)
+        await expect(rkpDeviceApi.provision(protocol, include)).rejects.toMatchObject({
+          code: "contract_mismatch",
+        })
+      }
+    },
+  )
+
+  it("rejects a self-consistent response for another explicitly requested fingerprint", async () => {
+    history.replaceState(null, "", "/")
+    respond(result("v2"))
+    await expect(rkpDeviceApi.provision("v2", false, "another/build")).rejects.toMatchObject({
+      code: "contract_mismatch",
+    })
+  })
+
+  it.each([
+    ["v2", "v1"],
+    ["v1", "v1-native"],
+    ["v1-native", "v2"],
+  ] as const)(
+    "rejects successful protocol %s when %s was explicitly requested",
+    async (actual, requested) => {
+      history.replaceState(null, "", "/")
+      respond(result(actual))
+      await expect(rkpDeviceApi.provision(requested)).rejects.toMatchObject({
+        code: "contract_mismatch",
+      })
+    },
+  )
+  it.each([false, true])(
+    "passes fingerprint inclusion %s and safely quotes an explicit build",
+    async (include) => {
+      history.replaceState(null, "", "/")
+      const data = result("v2")
+      data.include_fingerprint = include
+      data.fingerprint = "source/build'value"
+      data.local_verify!.unverified_fingerprint = include ? data.fingerprint : null
+      respond(data)
+      const exec = vi.spyOn(bridge(), "exec")
+      await rkpDeviceApi.provision("v2", include, "  source/build'value  ")
+      expect(exec.mock.calls[0]![0]).toContain(`'--include-fingerprint' '${include}'`)
+      expect(exec.mock.calls[0]![0]).toContain("'--fingerprint' 'source/build'\\''value'")
+      exec.mockRestore()
+    },
+  )
   it("accepts MediaTek AIDL and rejects a claimed Qualcomm native capability", async () => {
     history.replaceState(null, "", "/?soc=mediatek")
     const data = result()
@@ -46,6 +101,16 @@ describe("device RKP successful-response validation", () => {
     data.prerequisites.v2_available = true
     respond(data)
     await expect(rkpDeviceApi.provision()).rejects.toMatchObject({ code: "contract_mismatch" })
+  })
+
+  it("rejects V2 metadata that disagrees with the reported policy", async () => {
+    history.replaceState(null, "", "/")
+    const data = result("v2")
+    data.include_fingerprint = true
+    respond(data)
+    await expect(rkpDeviceApi.provision("v2", true)).rejects.toMatchObject({
+      code: "contract_mismatch",
+    })
   })
 
   it.each(["auto", "v1", "v2", "v1-native"] as const)(
@@ -58,18 +123,21 @@ describe("device RKP successful-response validation", () => {
     },
   )
 
-  it.each([{ signature_valid: false }, { cert_type: "widevine" }, { keys_to_sign: 2 }])(
-    "rejects a V2 success report with %j",
-    async (invalid) => {
-      history.replaceState(null, "", "/")
-      const data = result("v2")
-      Object.assign(data.local_verify!, invalid)
-      respond(data)
-      await expect(rkpDeviceApi.provision("v2")).rejects.toMatchObject({
-        code: "contract_mismatch",
-      })
-    },
-  )
+  it.each([
+    { signature_valid: false },
+    { cert_type: "widevine" },
+    { keys_to_sign: 2 },
+    { version: 3 },
+    { csr_version: 2 },
+  ])("rejects a V2 success report with %j", async (invalid) => {
+    history.replaceState(null, "", "/")
+    const data = result("v2")
+    Object.assign(data.local_verify!, invalid)
+    respond(data)
+    await expect(rkpDeviceApi.provision("v2")).rejects.toMatchObject({
+      code: "contract_mismatch",
+    })
+  })
 
   it.each(["v2,v1", "v2"])("accepts ordered fallback after %s fail", async (failures) => {
     history.replaceState(null, "", `/?rkp_fail=${failures}`)

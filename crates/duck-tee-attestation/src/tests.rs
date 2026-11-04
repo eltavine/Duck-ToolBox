@@ -372,6 +372,18 @@ fn verifies_the_actual_dice_leaf_instead_of_accepting_any_32_bytes() {
 }
 
 #[test]
+fn identity_matching_accepts_server_csr_metadata_without_trusting_its_fingerprint() {
+    let original = [0x11; 32];
+    let raw = csr(&DeviceKeys::from_seed(original));
+    for fingerprint in ["source/device/build", "unrelated/build"] {
+        let request = duck_rkp::request::with_fingerprint(&raw, Some(fingerprint)).unwrap();
+        let report = seed::verify(&original, &request, seed::Derivation::Ed25519Seed).unwrap();
+        assert!(report.identity_matches && report.csr_signature_valid);
+        assert!(!report.trust_verified);
+    }
+}
+
+#[test]
 fn p256_seed_derivation_is_distinct_from_a_direct_private_scalar() {
     let request = csr(&DeviceKeys::from_seed_with_curve([0; 32], DiceCurve::P256));
     assert!(

@@ -34,8 +34,9 @@ use crate::{
 #[derive(Debug, Clone, Default)]
 pub(crate) struct Options {
     pub protocol: Protocol,
-    /// Override the build fingerprint sent to `fetchEekChain`.
+    /// Override the build fingerprint used for this issuance.
     pub fingerprint: Option<String>,
+    pub include_fingerprint: bool,
     /// Also write `keybox.xml` here, instead of only inside the timestamped run directory.
     pub output: Option<PathBuf>,
 }
@@ -146,6 +147,7 @@ pub(crate) struct ProvisionData {
     pub csr_backend: issuance::Backend,
     pub attempts: Vec<issuance::Attempt>,
     pub fingerprint: String,
+    pub include_fingerprint: bool,
     pub challenge_hex: String,
     pub csr_len: usize,
     pub local_verify: Option<VerifyReport>,
@@ -190,6 +192,15 @@ pub(crate) async fn provision(
     let fingerprint = explicit_fingerprint
         .unwrap_or(prerequisites.fingerprint.trim())
         .to_owned();
+    if options.include_fingerprint {
+        let metadata = duck_rkp::request::unverified_device_info(Some(&fingerprint))?;
+        if duck_rkp::cbor::encode(&metadata)?.len() >= crate::protocol::BUFFER_SIZE {
+            return Err(DeviceRkpError::InvalidCsr(
+                "build fingerprint leaves no room for the device CSR".into(),
+            )
+            .into());
+        }
+    }
     let key = key_source.generate()?;
     let mut attempts = Vec::new();
     let mut issued = None;
@@ -197,6 +208,7 @@ pub(crate) async fn provision(
         match attempt(
             method,
             &fingerprint,
+            options.include_fingerprint,
             &prerequisites.soc_manufacturer,
             &key,
             exchange,
@@ -248,6 +260,7 @@ pub(crate) async fn provision(
 
     Ok(report(
         &fingerprint,
+        options.include_fingerprint,
         &eek,
         signed,
         artifacts,
@@ -265,6 +278,7 @@ struct Issued {
 async fn attempt(
     method: issuance::Method,
     fingerprint: &str,
+    include_fingerprint: bool,
     manufacturer: &str,
     key: &EcKeyPair,
     exchange: &dyn Exchange,
@@ -278,7 +292,13 @@ async fn attempt(
         )
         .into());
     }
-    let signed = issuance::issue(method, exchange, key, &eek)?;
+    let signed = issuance::issue(
+        method,
+        exchange,
+        key,
+        &eek,
+        include_fingerprint.then_some(fingerprint),
+    )?;
     let chains = server.certificates(&signed.bytes, &eek.challenge).await?;
     let chain_der = single_chain(&chains)?;
     let prepared = artifacts::prepare(&key.secret_key, chain_der, manufacturer)?;
@@ -291,6 +311,7 @@ async fn attempt(
 
 fn report(
     fingerprint: &str,
+    include_fingerprint: bool,
     eek: &EekResponse,
     signed: issuance::SignedCsr,
     artifacts: Artifacts,
@@ -305,6 +326,7 @@ fn report(
         csr_backend: signed.backend,
         attempts,
         fingerprint: fingerprint.to_owned(),
+        include_fingerprint,
         challenge_hex: eek.challenge_hex.clone(),
         csr_len: signed.bytes.len(),
         local_verify: signed.local_verify,

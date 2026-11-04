@@ -27,6 +27,7 @@ pub(crate) async fn run(paths: &AppPaths, args: &KeyboxArgs) -> Result<Value> {
     );
     let issued = issue(
         &resolved.profile.fingerprint.value,
+        resolved.profile.fingerprint.include_fingerprint,
         &server_url,
         1,
         |challenge, public| {

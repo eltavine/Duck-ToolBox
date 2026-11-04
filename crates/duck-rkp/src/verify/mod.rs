@@ -53,6 +53,8 @@ pub struct VerifyReport {
     pub cert_type: String,
     pub brand: Option<String>,
     pub keys_to_sign: usize,
+    /// Host-provided metadata; it is not covered by the CSR signature.
+    pub unverified_fingerprint: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -84,7 +86,12 @@ pub fn verify_dice_chain(bytes: &[u8]) -> Result<DiceChainReport> {
 pub fn verify_csr(bytes: &[u8]) -> Result<VerifyReport> {
     let value = decode(bytes)?;
     let csr = as_array(&value, "CSR")?;
-    ensure_array_len(csr, 4, "CSR")?;
+    if !(4..=5).contains(&csr.len()) {
+        return Err(anyhow!("CSR must contain four or five items"));
+    }
+    if let Some(metadata) = csr.get(4) {
+        crate::request::validate_unverified_device_info(metadata)?;
+    }
 
     let version = as_i128(&csr[0], "CSR version")?;
     if version != AUTHENTICATED_REQUEST_VERSION {
@@ -151,5 +158,10 @@ pub fn verify_csr(bytes: &[u8]) -> Result<VerifyReport> {
         cert_type,
         brand: Some(brand),
         keys_to_sign: keys_to_sign.len(),
+        unverified_fingerprint: csr.get(4).and_then(|metadata| {
+            crate::cbor::map_get_text(metadata.as_map()?, "fingerprint")?
+                .as_text()
+                .map(str::to_owned)
+        }),
     })
 }

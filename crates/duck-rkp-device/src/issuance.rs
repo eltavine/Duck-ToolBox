@@ -131,15 +131,23 @@ pub(crate) fn issue(
     exchange: &dyn Exchange,
     key: &EcKeyPair,
     eek: &EekResponse,
+    fingerprint: Option<&str>,
 ) -> Result<SignedCsr> {
     match method {
-        Method::V1 => return issue_v1(exchange, key, eek),
-        Method::V1Native => return issue_native_v1(exchange, key, eek),
+        Method::V1 => return issue_v1(exchange, key, eek, fingerprint),
+        Method::V1Native => return issue_native_v1(exchange, key, eek, fingerprint),
         Method::V2 => {}
     }
     let request = protocol::build_request(&eek.challenge, &key.cose_public)?;
     let signed = exchange.csr(&request)?;
     let bytes = protocol::unwrap_csr(&signed)?;
+    let bytes = duck_rkp::request::with_fingerprint(&bytes, fingerprint)
+        .map_err(|error| DeviceRkpError::InvalidCsr(format!("V2 metadata: {error:#}")))?;
+    if bytes.len() > protocol::BUFFER_SIZE {
+        return Err(
+            DeviceRkpError::InvalidCsr("device CSR exceeds the response limit".into()).into(),
+        );
+    }
     let report = protocol::validate_csr(&bytes, &eek.challenge, &key.cose_public)?;
     Ok(SignedCsr {
         bytes,
@@ -149,16 +157,22 @@ pub(crate) fn issue(
     })
 }
 
-fn issue_v1(exchange: &dyn Exchange, key: &EcKeyPair, eek: &EekResponse) -> Result<SignedCsr> {
+fn issue_v1(
+    exchange: &dyn Exchange,
+    key: &EcKeyPair,
+    eek: &EekResponse,
+    fingerprint: Option<&str>,
+) -> Result<SignedCsr> {
     let request = v1::request(&eek.challenge, &key.cose_public, &eek.eek_chains)?;
     let response = exchange.csr_v1(&request)?;
-    finish_v1(response, Backend::Aidl, key, eek)
+    finish_v1(response, Backend::Aidl, key, eek, fingerprint)
 }
 
 fn issue_native_v1(
     exchange: &dyn Exchange,
     key: &EcKeyPair,
     eek: &EekResponse,
+    fingerprint: Option<&str>,
 ) -> Result<SignedCsr> {
     let chain = eek
         .eek_chains
@@ -172,7 +186,7 @@ fn issue_native_v1(
     let payload = exchange.csr(&request.bytes)?;
     let response = v1::native::response(&payload, &request.mac_tag)
         .map_err(|error| DeviceRkpError::InvalidResponse(format!("native V1: {error:#}")))?;
-    finish_v1(response, Backend::Native, key, eek)
+    finish_v1(response, Backend::Native, key, eek, fingerprint)
 }
 
 fn finish_v1(
@@ -180,8 +194,9 @@ fn finish_v1(
     backend: Backend,
     key: &EcKeyPair,
     eek: &EekResponse,
+    fingerprint: Option<&str>,
 ) -> Result<SignedCsr> {
-    let bytes = v1::assemble(response, &eek.challenge, &key.cose_public)
+    let bytes = v1::assemble(response, &eek.challenge, &key.cose_public, fingerprint)
         .map_err(|error| DeviceRkpError::InvalidCsr(format!("V1: {error:#}")))?;
     Ok(SignedCsr {
         bytes,

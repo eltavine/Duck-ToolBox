@@ -67,7 +67,14 @@ impl Default for State {
 
 pub struct Store {
     directory: PathBuf,
-    _lock: fs::File,
+    lock: fs::File,
+}
+impl Drop for Store {
+    fn drop(&mut self) {
+        // A concurrently spawned child can retain the open file description until exec.
+        // Unlock explicitly so releasing the store does not depend on that child closing it.
+        let _ = self.lock.unlock();
+    }
 }
 impl Store {
     pub fn open(ctx: &Context) -> Result<Self> {
@@ -102,10 +109,7 @@ impl Store {
             }
             Err(fs::TryLockError::Error(e)) => return Err(e.into()),
         }
-        Ok(Self {
-            directory,
-            _lock: lock,
-        })
+        Ok(Self { directory, lock })
     }
     pub fn load(&self) -> Result<State> {
         Self::read_state(&self.directory)
@@ -298,5 +302,31 @@ impl State {
         );
         self.boot_claimed.push(profile.device.clone());
         Ok(())
+    }
+}
+
+#[cfg(all(test, unix))]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn dropping_store_releases_lock_with_a_duplicated_handle() {
+        let root = tempfile::tempdir().unwrap();
+        let ctx = Context {
+            paths: duck_core::AppPaths::for_root(root.path(), root.path()),
+            sysroot: duck_core::Sysroot::new(root.path()),
+        };
+        let store = Store::open(&ctx).unwrap();
+        let inherited = store.lock.try_clone().unwrap();
+        drop(store);
+
+        let reopened = Store::open(&ctx).unwrap();
+        drop(inherited);
+        assert_eq!(
+            crate::code_of(&Store::open(&ctx).err().unwrap()),
+            "operation_busy"
+        );
+        drop(reopened);
+        assert!(Store::open(&ctx).is_ok());
     }
 }

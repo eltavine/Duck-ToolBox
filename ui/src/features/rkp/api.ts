@@ -35,7 +35,7 @@ const profileSchema = z.object({
   key_source: keySourceSchema,
   curve: z.enum(curves),
   device: deviceSchema,
-  fingerprint: z.object({ value: z.string() }),
+  fingerprint: z.object({ value: z.string(), include_fingerprint: z.boolean() }),
   server_url: z.string(),
   num_keys: z.number(),
   output_path: z.string(),
@@ -70,8 +70,18 @@ const reportSchema = z.object({
   cert_type: z.string(),
   brand: z.string().nullable().optional(),
   keys_to_sign: z.number(),
+  unverified_fingerprint: z.string().nullable().optional(),
 })
 export type VerifyReport = z.infer<typeof reportSchema>
+
+const signingReportSchema = reportSchema.extend({
+  version: z.literal(1),
+  csr_version: z.literal(3),
+  cert_type: z.literal("keymint"),
+  signature_valid: z.literal(true),
+  keys_to_sign: z.number().int().min(1).max(16),
+})
+const importedReportSchema = signingReportSchema.extend({ keys_to_sign: z.literal(1) })
 
 const provisionSchema = z.object({
   curve: z.string(),
@@ -79,7 +89,7 @@ const provisionSchema = z.object({
   csr_path: z.string(),
   csr_len: z.number(),
   protected_data_len: z.number(),
-  local_verify: reportSchema,
+  local_verify: signingReportSchema,
   cert_chains: z.array(
     z.object({ index: z.number(), path: z.string(), summary: chainSummarySchema }),
   ),
@@ -106,6 +116,7 @@ export interface ImportDraft {
   chainPath: string
   signingPath: string
   configPath: string
+  fingerprintPolicy?: "config" | "include" | "omit"
 }
 
 const materialSchema = z.object({
@@ -125,7 +136,7 @@ const importedDiagnosticSchema = z.object({
   stage: z.literal("diagnostic"),
   material: materialSchema,
   csr_path: z.string(),
-  local_verify: reportSchema,
+  local_verify: importedReportSchema,
   diagnostic_only: z.literal(true),
 })
 const importedIssueSchema = z.object({
@@ -135,7 +146,7 @@ const importedIssueSchema = z.object({
   keybox_path: z.string(),
   device_id: z.string(),
   chain_summary: chainSummarySchema,
-  local_verify: reportSchema,
+  local_verify: importedReportSchema,
   server_accepted: z.literal(true),
   certificates_verified: z.literal(true),
   keybox_exported: z.literal(true),
@@ -164,13 +175,44 @@ function importArgs(action: string, input: ImportDraft): string[] {
       ? ["--bundle", input.bundlePath.trim()]
       : ["--chain", input.chainPath.trim(), "--signing", input.signingPath.trim()]
   const config = input.configPath.trim() ? ["--config", input.configPath.trim()] : []
-  return ["rkp", "import", action, ...source, ...config]
+  const fingerprint =
+    input.fingerprintPolicy === "include" || input.fingerprintPolicy === "omit"
+      ? ["--include-fingerprint", String(input.fingerprintPolicy === "include")]
+      : []
+  return ["rkp", "import", action, ...source, ...config, ...fingerprint]
+}
+
+function withImportFingerprintPolicy<T extends { local_verify: VerifyReport }>(
+  schema: z.ZodType<T>,
+  input: ImportDraft,
+) {
+  const policy = input.fingerprintPolicy
+  return schema.refine(
+    (data) => {
+      const fingerprint = data.local_verify.unverified_fingerprint
+      if (policy === "include") return typeof fingerprint === "string" && !!fingerprint.trim()
+      if (policy === "omit") return fingerprint === null
+      return true
+    },
+    { message: "CSR metadata disagrees with the requested fingerprint policy" },
+  )
 }
 
 export const rkpApi = {
   show: () => duckd(["rkp", "profile", "show"], { schema: profileEnvelopeSchema }),
-  save: (profile: Profile) =>
-    duckd(["rkp", "profile", "save"], { input: profile, schema: profileEnvelopeSchema }),
+  save: (profile: Profile) => {
+    const fingerprint = profile.fingerprint.value.trim()
+    const includeFingerprint = profile.fingerprint.include_fingerprint
+    return duckd(["rkp", "profile", "save"], {
+      input: profile,
+      schema: profileEnvelopeSchema.refine(
+        (data) =>
+          data.profile.fingerprint.value === fingerprint &&
+          data.profile.fingerprint.include_fingerprint === includeFingerprint,
+        { message: "Saved profile disagrees with the requested fingerprint configuration" },
+      ),
+    })
+  },
   clear: () => duckd(["rkp", "profile", "clear"]),
   detect: () => duckd(["rkp", "profile", "detect"], { schema: detectSchema }),
   info: () => duckd(["rkp", "info"], { schema: infoSchema }),
@@ -181,7 +223,11 @@ export const rkpApi = {
   importValidate: async (input: ImportDraft) =>
     duckd(importArgs("validate", input), { schema: importedValidationSchema }),
   importDiagnose: async (input: ImportDraft) =>
-    duckd(importArgs("diagnose", input), { schema: importedDiagnosticSchema }),
+    duckd(importArgs("diagnose", input), {
+      schema: withImportFingerprintPolicy(importedDiagnosticSchema, input),
+    }),
   importIssue: async (input: ImportDraft) =>
-    duckd(importArgs("issue", input), { schema: importedIssueSchema }),
+    duckd(importArgs("issue", input), {
+      schema: withImportFingerprintPolicy(importedIssueSchema, input),
+    }),
 }
