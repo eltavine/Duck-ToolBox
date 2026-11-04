@@ -22,7 +22,10 @@ const genericProfile = () => ({
     dice_issuer: "Android",
     dice_subject: "KeyMint",
   },
-  fingerprint: { value: "generic/default/default:13/TP1A.220624.014/0:user/release-keys" },
+  fingerprint: {
+    value: "generic/default/default:13/TP1A.220624.014/0:user/release-keys",
+    include_fingerprint: false,
+  },
   server_url: "https://remoteprovisioning.googleapis.com/v1",
   num_keys: 1,
   output_path: "var/outputs/keybox.xml",
@@ -72,7 +75,7 @@ function imported(flags: Record<string, string | true>) {
 }
 
 const mock: MockModule = {
-  feature: { id: "rkp", contract: 2 },
+  feature: { id: "rkp", contract: 3 },
   handlers: {
     "rkp.profile.show": () => ({ profile, paths }),
     "rkp.profile.save": (_args, _flags, input) => {
@@ -99,7 +102,10 @@ const mock: MockModule = {
           boot_patch_level: 20260905,
           vbmeta_digest: "a1".repeat(32),
         },
-        fingerprint: { value: "google/caiman/caiman:16/BP3A.250905.014/1:user/release-keys" },
+        fingerprint: {
+          value: "google/caiman/caiman:16/BP3A.250905.014/1:user/release-keys",
+          include_fingerprint: false,
+        },
       },
     }),
     "rkp.info": () => {
@@ -111,7 +117,7 @@ const mock: MockModule = {
         output_path: paths.outputs_dir,
       }
     },
-    "rkp.provision": () => {
+    "rkp.provision": (_args, flags) => {
       requireKey()
       return {
         curve: profile.curve,
@@ -119,7 +125,16 @@ const mock: MockModule = {
         csr_path: `${paths.outputs_dir}/rkp-provision-20260928/csr.cbor`,
         csr_len: 1536,
         protected_data_len: 0,
-        local_verify: report,
+        local_verify: {
+          ...report,
+          unverified_fingerprint: (
+            flags["include-fingerprint"] === undefined
+              ? profile.fingerprint.include_fingerprint
+              : flags["include-fingerprint"] === "true"
+          )
+            ? profile.fingerprint.value
+            : null,
+        },
         cert_chains: [
           {
             index: 0,
@@ -144,7 +159,15 @@ const mock: MockModule = {
         chain_summary: { certificates: 3, subjects: ["CN=Droid CA3"] },
       }
     },
-    "rkp.verify": (args) => ({ path: args[0], report }),
+    "rkp.verify": (args) => ({
+      path: args[0],
+      report: {
+        ...report,
+        unverified_fingerprint: profile.fingerprint.include_fingerprint
+          ? profile.fingerprint.value
+          : null,
+      },
+    }),
     "rkp.import.validate": (_args, flags) => ({
       stage: "validated",
       material: imported(flags),

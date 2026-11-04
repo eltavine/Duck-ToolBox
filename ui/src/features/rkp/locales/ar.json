@@ -57,7 +57,9 @@
     "check": "فحص المفتاح المشتق",
     "mode": "الوضع",
     "publicKey": "المفتاح العام",
-    "seedHex": "البذرة"
+    "seedHex": "البذرة",
+    "includeFingerprint": "إرفاق بصمة الإصدار بطلب التوقيع",
+    "includeFingerprintHint": "يضيف البصمة المضبوطة إلى CSR. يجب أن تشير إلى إصدار البرنامج الثابت نفسه الذي تشير إليه خلاصة VBMeta في الطلب. عند التعطيل، يستمر إرسال البصمة عند طلب challenge."
   },
   "choices": {
     "ed25519": "Ed25519",
@@ -113,7 +115,8 @@
     "keysToSign": "المفاتيح المطلوب توقيعها",
     "diceEntries": "إدخالات DICE",
     "certType": "نوع الشهادة",
-    "version": "إصدار CSR"
+    "version": "إصدار CSR",
+    "unverifiedFingerprint": "بصمة الإصدار (غير موثّقة بالتوقيع)"
   },
   "errors": {
     "unsupported_profile": "اسم ملف التعريف غير مدعوم.",
@@ -174,7 +177,11 @@
     "exported": "قبل الخادم الطلب. تم التحقق من الشهادات وتصدير keybox.",
     "result": "ملفات النتائج",
     "server": "قبول الخادم",
-    "certificates": "التحقق من الشهادات"
+    "certificates": "التحقق من الشهادات",
+    "fingerprintFromConfig": "استخدام إعداد المواد (معطّل إن لم يُحدّد)",
+    "fingerprintInclude": "إرفاق البصمة",
+    "fingerprintOmit": "عدم إرفاق البصمة",
+    "fingerprintHint": "يستخدم issuance.fingerprint من الإعداد المستورد، وليس بصمة هذا الجهاز أو ملف العمل. يجب أن تشير إلى إصدار البرنامج الثابت نفسه الذي تشير إليه خلاصة VBMeta."
   },
   "experimental": {
     "title": "وضع تجريبي",

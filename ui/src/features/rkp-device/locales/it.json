@@ -76,7 +76,10 @@
     "structureOnly": "Struttura verificata; le prove cifrate sono verificate dal server",
     "backend": "Backend",
     "attempts": "Tentativi",
-    "succeeded": "Riuscito"
+    "succeeded": "Riuscito",
+    "includeFingerprint": "Includi l’impronta della build nella richiesta di firma",
+    "includeFingerprintHint": "L’impronta deve indicare la stessa build del firmware del digest VBMeta della richiesta del TA. Se disattivato, la richiesta di challenge continua a inviare l’impronta.",
+    "fingerprintHint": "Lascia vuoto per leggere l’impronta del dispositivo al momento della firma. Un valore esplicito si applica al challenge e ai metadati del CSR."
   },
   "confirm": {
     "title": "Inviare una richiesta al KeyMint TA?",

@@ -76,7 +76,10 @@
     "structureOnly": "Structure vérifiée ; les preuves chiffrées sont vérifiées par le serveur",
     "backend": "Backend",
     "attempts": "Tentatives",
-    "succeeded": "Réussi"
+    "succeeded": "Réussi",
+    "includeFingerprint": "Joindre l’empreinte de compilation à la demande de signature",
+    "includeFingerprintHint": "L’empreinte doit désigner la même compilation du micrologiciel que le condensat VBMeta de la demande du TA. Sa désactivation conserve l’envoi de l’empreinte pour le challenge.",
+    "fingerprintHint": "Laisser vide pour lire l’empreinte de l’appareil lors de la signature. Une valeur explicite s’applique au challenge et aux métadonnées du CSR."
   },
   "confirm": {
     "title": "Envoyer une requête au KeyMint TA ?",

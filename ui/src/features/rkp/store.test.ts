@@ -26,7 +26,7 @@ const profile: Profile = {
     dice_issuer: "Android",
     dice_subject: "KeyMint",
   },
-  fingerprint: { value: "test" },
+  fingerprint: { value: "test", include_fingerprint: false },
   server_url: "https://example.org",
   num_keys: 1,
   output_path: "/tmp/keybox.xml",

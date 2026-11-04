@@ -25,6 +25,7 @@ export const useRkpStore = defineStore("rkp", () => {
     chainPath: "",
     signingPath: "",
     configPath: "",
+    fingerprintPolicy: "config",
   })
   const importResult = ref<ImportResult | null>(null)
   const importBusy = ref(false)

@@ -57,7 +57,9 @@
     "check": "Check derived key",
     "mode": "Mode",
     "publicKey": "Public key",
-    "seedHex": "Seed"
+    "seedHex": "Seed",
+    "includeFingerprint": "Include build fingerprint in signing request",
+    "includeFingerprintHint": "Attach the configured fingerprint to the CSR. It should identify the same firmware build as the request’s VBMeta digest. Disabling this does not remove the fingerprint from the challenge request."
   },
   "choices": {
     "ed25519": "Ed25519",
@@ -113,7 +115,8 @@
     "keysToSign": "Keys to sign",
     "diceEntries": "DICE entries",
     "certType": "Certificate type",
-    "version": "CSR version"
+    "version": "CSR version",
+    "unverifiedFingerprint": "Build fingerprint (unverified)"
   },
   "errors": {
     "unsupported_profile": "The profile name is not supported.",
@@ -174,7 +177,11 @@
     "exported": "The server accepted the request. Certificates were verified and the keybox was exported.",
     "result": "Result files",
     "server": "Server acceptance",
-    "certificates": "Certificate verification"
+    "certificates": "Certificate verification",
+    "fingerprintFromConfig": "Use material configuration (off if absent)",
+    "fingerprintInclude": "Include fingerprint",
+    "fingerprintOmit": "Omit fingerprint",
+    "fingerprintHint": "Uses issuance.fingerprint from the imported configuration, not this device or the workbench profile. The fingerprint and VBMeta digest should identify the same firmware build."
   },
   "experimental": {
     "title": "Experimental mode",

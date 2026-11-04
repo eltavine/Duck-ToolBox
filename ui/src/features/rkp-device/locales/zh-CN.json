@@ -76,7 +76,10 @@
     "structureOnly": "仅结构校验；加密签名材料由服务器验证",
     "backend": "调用后端",
     "attempts": "尝试记录",
-    "succeeded": "成功"
+    "succeeded": "成功",
+    "includeFingerprint": "在签发请求中附带构建指纹",
+    "includeFingerprintHint": "请确认指纹与 TA 请求中的 VBMeta 摘要对应同一固件构建。关闭后，获取 challenge 时仍会发送指纹。",
+    "fingerprintHint": "留空时在签发时读取设备指纹；手动指定的值同时用于获取 challenge 和 CSR 元数据。"
   },
   "confirm": {
     "title": "向 KeyMint TA 发送请求？",

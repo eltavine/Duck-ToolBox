@@ -57,7 +57,9 @@
     "check": "導出した鍵を確認",
     "mode": "モード",
     "publicKey": "公開鍵",
-    "seedHex": "シード"
+    "seedHex": "シード",
+    "includeFingerprint": "署名リクエストにビルド指紋を含める",
+    "includeFingerprintHint": "設定した指紋を CSR に追加します。指紋とリクエストの VBMeta ダイジェストは同じファームウェアビルドを示す必要があります。無効時も challenge の取得時には指紋を送信します。"
   },
   "choices": {
     "ed25519": "Ed25519",
@@ -113,7 +115,8 @@
     "keysToSign": "署名対象の鍵",
     "diceEntries": "DICE エントリ",
     "certType": "証明書の種類",
-    "version": "CSR バージョン"
+    "version": "CSR バージョン",
+    "unverifiedFingerprint": "ビルド指紋（署名で未認証）"
   },
   "errors": {
     "unsupported_profile": "このプロファイル名はサポートされていません。",
@@ -174,7 +177,11 @@
     "exported": "サーバーが申請を受理し、証明書を検証して Keybox を出力しました。",
     "result": "結果ファイル",
     "server": "サーバーによる受理",
-    "certificates": "証明書の検証"
+    "certificates": "証明書の検証",
+    "fingerprintFromConfig": "材料の設定に従う（未設定時は無効）",
+    "fingerprintInclude": "指紋を含める",
+    "fingerprintOmit": "指紋を含めない",
+    "fingerprintHint": "インポート設定の issuance.fingerprint を使用します。この端末や作業台の指紋は使用しません。VBMeta ダイジェストと同じファームウェアビルドを指定してください。"
   },
   "experimental": {
     "title": "実験モード",

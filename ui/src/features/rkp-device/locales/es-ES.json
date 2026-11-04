@@ -76,7 +76,10 @@
     "structureOnly": "Estructura comprobada; el servidor verifica las pruebas cifradas",
     "backend": "Backend",
     "attempts": "Intentos",
-    "succeeded": "Correcto"
+    "succeeded": "Correcto",
+    "includeFingerprint": "Incluir huella de compilación en la solicitud de firma",
+    "includeFingerprintHint": "La huella debe corresponder a la misma compilación del firmware que el resumen VBMeta de la solicitud del TA. Al desactivarlo, la solicitud de challenge sigue enviando la huella.",
+    "fingerprintHint": "Déjalo vacío para leer la huella del dispositivo al solicitar la firma. Un valor manual se aplica al challenge y a los metadatos del CSR."
   },
   "confirm": {
     "title": "¿Enviar una petición al KeyMint TA?",

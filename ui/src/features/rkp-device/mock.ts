@@ -104,7 +104,7 @@ function deviceStatus(): DeviceStatus {
 }
 
 const mock: MockModule = {
-  feature: { id: "rkp-device", contract: 6 },
+  feature: { id: "rkp-device", contract: 7 },
   handlers: {
     "rkp-device.status": deviceStatus,
     "rkp-device.provision": (_args, flags) => {
@@ -114,6 +114,12 @@ const mock: MockModule = {
       }
       if (flags["acknowledge-limitations"] !== true) {
         throw new MockFailure("acknowledgement_required", "The limitations were not acknowledged")
+      }
+      if (
+        flags["include-fingerprint"] !== undefined &&
+        !["true", "false"].includes(String(flags["include-fingerprint"]))
+      ) {
+        throw new MockFailure("usage_error", "Invalid fingerprint inclusion value")
       }
       const status = deviceStatus()
       if (
@@ -164,7 +170,8 @@ const mock: MockModule = {
         csr_protocol: v1 ? "v1" : "v2",
         csr_backend: selected === "v1" ? "aidl" : "native",
         attempts,
-        fingerprint: status.fingerprint,
+        fingerprint: String(flags.fingerprint ?? status.fingerprint).trim(),
+        include_fingerprint: flags["include-fingerprint"] === "true",
         challenge_hex: "9f2c1d4b6a8e0f3c5b7d9a1e2f4c6b8d0a2e4f6c8b0d2e4f6a8c0e2f4b6d8a0c",
         csr_len: 1284,
         local_verify: v1
@@ -178,6 +185,10 @@ const mock: MockModule = {
               cert_type: "keymint",
               brand: "google",
               keys_to_sign: 1,
+              unverified_fingerprint:
+                flags["include-fingerprint"] === "true"
+                  ? String(flags.fingerprint ?? status.fingerprint).trim()
+                  : null,
             },
         chain: {
           certificates: 4,

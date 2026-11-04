@@ -9,7 +9,7 @@ pub static FEATURE: ClapFeature<Command> = ClapFeature::new(
     FeatureInfo {
         id: "rkp-device",
         summary: "Device-backed RKP issuance on compatible Qualcomm or MediaTek firmware",
-        contract: 6,
+        contract: 7,
     },
     dispatch,
 );
@@ -26,9 +26,12 @@ pub enum Command {
         /// Acknowledge that only some devices work and that only RKP certificates are issued.
         #[arg(long)]
         acknowledge_limitations: bool,
-        /// Build fingerprint sent to `fetchEekChain` instead of the device's own.
+        /// Build fingerprint used for this issuance instead of the device's own.
         #[arg(long)]
         fingerprint: Option<String>,
+        /// Include the effective build fingerprint in the signing CSR.
+        #[arg(long, action = clap::ArgAction::Set, default_value = "false")]
+        include_fingerprint: bool,
         /// RKP server base URL (for example a local proxy during development).
         #[arg(long)]
         server_url: Option<String>,
@@ -55,12 +58,14 @@ fn dispatch<'a>(command: Command, ctx: &'a Context) -> BoxFuture<'a, CommandResu
                 protocol,
                 acknowledge_limitations,
                 fingerprint,
+                include_fingerprint,
                 server_url,
                 output,
             } => {
                 let options = service::Options {
                     protocol,
                     fingerprint,
+                    include_fingerprint,
                     output: output.map(|path| ctx.paths.resolve_in_root(&path)),
                 };
                 let server = service::Google::new(server_url);

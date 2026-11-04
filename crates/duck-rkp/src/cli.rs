@@ -7,7 +7,7 @@ pub static FEATURE: ClapFeature<Command> = ClapFeature::new(
     FeatureInfo {
         id: "rkp",
         summary: "Remote Key Provisioning workbench",
-        contract: 2,
+        contract: 3,
     },
     dispatch,
 );
@@ -61,6 +61,9 @@ pub struct ImportArgs {
     /// optional JSON device/issuance configuration
     #[arg(long)]
     pub config: Option<String>,
+    /// Override whether the signing CSR includes the configured build fingerprint.
+    #[arg(long, action = clap::ArgAction::Set)]
+    pub include_fingerprint: Option<bool>,
 }
 
 #[derive(Debug, Subcommand)]
@@ -101,6 +104,9 @@ pub struct SharedRunArgs {
     pub curve: Option<DiceCurve>,
     #[arg(long)]
     pub server_url: Option<String>,
+    /// Include the build fingerprint in the signing CSR (default: saved configuration).
+    #[arg(long, action = clap::ArgAction::Set)]
+    pub include_fingerprint: Option<bool>,
 }
 
 #[derive(Debug, Args, Clone)]

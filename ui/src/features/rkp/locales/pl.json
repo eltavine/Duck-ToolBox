@@ -57,7 +57,9 @@
     "check": "Sprawdź wyznaczony klucz",
     "mode": "Tryb",
     "publicKey": "Klucz publiczny",
-    "seedHex": "Seed"
+    "seedHex": "Seed",
+    "includeFingerprint": "Dołącz odcisk kompilacji do żądania podpisu",
+    "includeFingerprintHint": "Dodaje skonfigurowany odcisk do CSR. Powinien wskazywać tę samą kompilację firmware co skrót VBMeta w żądaniu. Po wyłączeniu odcisk nadal jest wysyłany przy pobieraniu challenge."
   },
   "choices": {
     "ed25519": "Ed25519",
@@ -113,7 +115,8 @@
     "keysToSign": "Klucze do podpisania",
     "diceEntries": "Wpisy DICE",
     "certType": "Typ certyfikatu",
-    "version": "Wersja CSR"
+    "version": "Wersja CSR",
+    "unverifiedFingerprint": "Odcisk kompilacji (niepotwierdzony podpisem)"
   },
   "errors": {
     "unsupported_profile": "Nazwa profilu nie jest obsługiwana.",
@@ -174,7 +177,11 @@
     "exported": "Serwer zaakceptował żądanie. Certyfikaty zostały zweryfikowane, a plik keybox wyeksportowany.",
     "result": "Pliki wynikowe",
     "server": "Akceptacja serwera",
-    "certificates": "Weryfikacja certyfikatów"
+    "certificates": "Weryfikacja certyfikatów",
+    "fingerprintFromConfig": "Użyj konfiguracji materiałów (domyślnie wyłączone)",
+    "fingerprintInclude": "Dołącz odcisk",
+    "fingerprintOmit": "Pomiń odcisk",
+    "fingerprintHint": "Używa issuance.fingerprint z importowanej konfiguracji, a nie odcisku tego urządzenia ani profilu roboczego. Powinien wskazywać tę samą kompilację firmware co skrót VBMeta."
   },
   "experimental": {
     "title": "Tryb eksperymentalny",

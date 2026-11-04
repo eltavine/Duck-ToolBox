@@ -77,6 +77,7 @@ pub(crate) fn assemble(
     response: Response,
     challenge: &[u8],
     public_key: &Value,
+    fingerprint: Option<&str>,
 ) -> Result<Vec<u8>> {
     protocol::validate_inputs(challenge, public_key)?;
     if response.mac.len() != 32 {
@@ -125,7 +126,9 @@ pub(crate) fn assemble(
     // its encoding, nor any opaque ProtectedData returned by the HAL.
     let mut csr = vec![0x84, 0x82]; // [ [verified DeviceInfo, unverified DeviceInfo], ... ]
     csr.extend_from_slice(&response.device_info);
-    csr.push(0xa0); // empty unverified DeviceInfo
+    csr.extend_from_slice(&encode(&duck_rkp::request::unverified_device_info(
+        fingerprint,
+    )?)?);
     csr.extend_from_slice(&encode(&bytes(challenge.to_vec()))?);
     csr.extend_from_slice(&response.protected_data);
     csr.extend_from_slice(&maced_keys);

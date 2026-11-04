@@ -35,7 +35,7 @@ const profileSchema = z.object({
   key_source: keySourceSchema,
   curve: z.enum(curves),
   device: deviceSchema,
-  fingerprint: z.object({ value: z.string() }),
+  fingerprint: z.object({ value: z.string(), include_fingerprint: z.boolean() }),
   server_url: z.string(),
   num_keys: z.number(),
   output_path: z.string(),
@@ -70,6 +70,7 @@ const reportSchema = z.object({
   cert_type: z.string(),
   brand: z.string().nullable().optional(),
   keys_to_sign: z.number(),
+  unverified_fingerprint: z.string().nullable().optional(),
 })
 export type VerifyReport = z.infer<typeof reportSchema>
 
@@ -106,6 +107,7 @@ export interface ImportDraft {
   chainPath: string
   signingPath: string
   configPath: string
+  fingerprintPolicy?: "config" | "include" | "omit"
 }
 
 const materialSchema = z.object({
@@ -164,7 +166,11 @@ function importArgs(action: string, input: ImportDraft): string[] {
       ? ["--bundle", input.bundlePath.trim()]
       : ["--chain", input.chainPath.trim(), "--signing", input.signingPath.trim()]
   const config = input.configPath.trim() ? ["--config", input.configPath.trim()] : []
-  return ["rkp", "import", action, ...source, ...config]
+  const fingerprint =
+    input.fingerprintPolicy === "include" || input.fingerprintPolicy === "omit"
+      ? ["--include-fingerprint", String(input.fingerprintPolicy === "include")]
+      : []
+  return ["rkp", "import", action, ...source, ...config, ...fingerprint]
 }
 
 export const rkpApi = {

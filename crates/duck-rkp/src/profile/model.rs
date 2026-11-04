@@ -108,12 +108,15 @@ impl Default for DeviceInfo {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct FingerprintConfig {
     pub value: String,
+    #[serde(default)]
+    pub include_fingerprint: bool,
 }
 
 impl Default for FingerprintConfig {
     fn default() -> Self {
         Self {
             value: DEFAULT_GENERIC_FINGERPRINT.into(),
+            include_fingerprint: false,
         }
     }
 }

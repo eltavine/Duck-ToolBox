@@ -27,6 +27,7 @@ async fn simulated_server_binds_fresh_request_and_selects_the_matching_response(
     let keys = DeviceKeys::from_seed([4; 32]);
     let issued = issue(
         "synthetic/fingerprint",
+        false,
         &server.url,
         1,
         |challenge, public| {
@@ -55,7 +56,7 @@ async fn simulated_server_binds_fresh_request_and_selects_the_matching_response(
 async fn local_failure_makes_zero_network_requests() {
     let server = super::mock_server::Server::start(super::mock_server::Reply::Valid);
     assert!(
-        issue("fingerprint", &server.url, 1, |_, _| anyhow::bail!(
+        issue("fingerprint", false, &server.url, 1, |_, _| anyhow::bail!(
             "invalid local material"
         ))
         .await
@@ -76,7 +77,7 @@ async fn server_rejection_unknown_result_and_wrong_key_are_errors_without_retry(
     ] {
         let server = super::mock_server::Server::start(reply);
         let keys = DeviceKeys::from_seed([4; 32]);
-        let error = issue("fingerprint", &server.url, 1, |challenge, public| {
+        let error = issue("fingerprint", false, &server.url, 1, |challenge, public| {
             build_experimental_csr_v3(&keys, challenge, public, &DeviceInfo::default())
         })
         .await
@@ -110,6 +111,7 @@ fn imported_bundle(
             chain: None,
             signing: None,
             config: None,
+            include_fingerprint: None,
         },
         chain,
     )
@@ -157,11 +159,130 @@ async fn failed_import_issuance_leaves_no_keybox_and_partial_response_fails() {
     let server = super::mock_server::Server::start(super::mock_server::Reply::Valid);
     let keys = DeviceKeys::from_seed([4; 32]);
     assert!(
-        issue("fingerprint", &server.url, 2, |challenge, public| {
+        issue("fingerprint", false, &server.url, 2, |challenge, public| {
             build_experimental_csr_v3(&keys, challenge, public, &DeviceInfo::default())
         })
         .await
         .is_err()
     );
     assert_eq!(server.requests.lock().unwrap().len(), 2);
+}
+
+fn assert_submission_metadata(csr: &[u8], expected: Option<&str>) {
+    let value = decode(csr).unwrap();
+    let fields = as_array(&value, "CSR").unwrap();
+    assert_eq!(fields.len(), if expected.is_some() { 5 } else { 4 });
+    let report = crate::verify::verify_csr(csr).unwrap();
+    assert_eq!(report.unverified_fingerprint.as_deref(), expected);
+}
+
+#[tokio::test]
+async fn both_profile_issuance_commands_submit_and_save_the_selected_metadata() {
+    use crate::{
+        cli::{KeyboxArgs, ProvisionArgs, SharedRunArgs},
+        profile::{KeySource, ProfileData, save_profile},
+    };
+    for include in [false, true] {
+        for keybox in [false, true] {
+            let server = super::mock_server::Server::start(super::mock_server::Reply::Valid);
+            let directory = tempfile::tempdir().unwrap();
+            let paths = duck_core::AppPaths::for_root(directory.path(), directory.path());
+            let mut profile = ProfileData {
+                key_source: KeySource::Seed {
+                    seed_hex: "44".repeat(32),
+                },
+                server_url: server.url.clone(),
+                ..ProfileData::default()
+            };
+            profile.fingerprint.value = "synthetic/profile/build".into();
+            profile.fingerprint.include_fingerprint = include;
+            save_profile(&paths, None, &profile).unwrap();
+            let result = if keybox {
+                crate::handlers::keybox::run(
+                    &paths,
+                    &KeyboxArgs {
+                        shared: SharedRunArgs::default(),
+                        output: None,
+                    },
+                )
+                .await
+                .unwrap()
+            } else {
+                serde_json::to_value(
+                    crate::handlers::provision::run(
+                        &paths,
+                        &ProvisionArgs {
+                            shared: SharedRunArgs::default(),
+                            num_keys: None,
+                            offline: false,
+                        },
+                    )
+                    .await
+                    .unwrap(),
+                )
+                .unwrap()
+            };
+            let requests = server.requests.lock().unwrap();
+            assert_eq!(requests.len(), 2);
+            assert_submission_metadata(
+                &requests[1].1,
+                include.then_some("synthetic/profile/build"),
+            );
+            assert_eq!(
+                std::fs::read(result["csr_path"].as_str().unwrap()).unwrap(),
+                requests[1].1
+            );
+            let challenge = decode(&requests[0].1).unwrap();
+            assert_eq!(
+                crate::cbor::map_get_text(challenge.as_map().unwrap(), "fingerprint")
+                    .unwrap()
+                    .as_text(),
+                Some("synthetic/profile/build")
+            );
+        }
+    }
+}
+
+#[tokio::test]
+async fn imported_issuance_honors_configuration_and_explicit_boolean_overrides() {
+    use crate::handlers::import::{Operation, run};
+    for (configured, override_value, expected) in [
+        (false, None, false),
+        (true, None, true),
+        (false, Some(true), true),
+        (true, Some(false), false),
+    ] {
+        let server = super::mock_server::Server::start(super::mock_server::Reply::Valid);
+        let directory = tempfile::tempdir().unwrap();
+        let (paths, mut args, original_chain) = imported_bundle(&directory, &server.url);
+        let path = std::path::Path::new(args.bundle.as_ref().unwrap());
+        let mut bundle: serde_json::Value =
+            serde_json::from_slice(&std::fs::read(path).unwrap()).unwrap();
+        bundle["issuance"]["include_fingerprint"] = configured.into();
+        std::fs::write(path, serde_json::to_vec(&bundle).unwrap()).unwrap();
+        args.include_fingerprint = override_value;
+        assert_eq!(
+            run(&paths, &args, Operation::Validate).await.unwrap()["ready_for_issuance"],
+            true
+        );
+        let diagnostic = run(&paths, &args, Operation::Diagnose).await.unwrap();
+        assert_submission_metadata(
+            &std::fs::read(diagnostic["csr_path"].as_str().unwrap()).unwrap(),
+            expected.then_some("synthetic/explicit/identity"),
+        );
+        assert!(server.requests.lock().unwrap().is_empty());
+        let result = run(&paths, &args, Operation::Issue).await.unwrap();
+        let requests = server.requests.lock().unwrap();
+        assert_eq!(requests.len(), 2);
+        let sent = &requests[1].1;
+        assert_submission_metadata(sent, expected.then_some("synthetic/explicit/identity"));
+        assert!(
+            sent.windows(original_chain.len())
+                .any(|part| part == original_chain)
+        );
+        assert_eq!(
+            std::fs::read(result["csr_path"].as_str().unwrap()).unwrap(),
+            *sent
+        );
+    }
 }

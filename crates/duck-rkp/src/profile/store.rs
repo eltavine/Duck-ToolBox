@@ -26,6 +26,7 @@ pub struct RunOverrides {
     pub kdf_label: Option<String>,
     pub curve: Option<DiceCurve>,
     pub server_url: Option<String>,
+    pub include_fingerprint: Option<bool>,
     pub num_keys: Option<u32>,
     pub output_path: Option<String>,
 }
@@ -164,6 +165,10 @@ fn resolve_profile_with(
 
     if let Some(server_url) = overrides.server_url.clone() {
         profile.server_url = server_url;
+    }
+
+    if let Some(include) = overrides.include_fingerprint {
+        profile.fingerprint.include_fingerprint = include;
     }
 
     if let Some(curve) = overrides.curve {

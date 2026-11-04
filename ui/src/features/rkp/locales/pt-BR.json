@@ -57,7 +57,9 @@
     "check": "Verificar chave derivada",
     "mode": "Modo",
     "publicKey": "Chave pública",
-    "seedHex": "Semente"
+    "seedHex": "Semente",
+    "includeFingerprint": "Incluir impressão digital da compilação na solicitação de assinatura",
+    "includeFingerprintHint": "Adiciona a impressão digital configurada ao CSR. Ela deve corresponder à mesma compilação do firmware que o resumo VBMeta da solicitação. Desativar mantém seu envio ao obter o challenge."
   },
   "choices": {
     "ed25519": "Ed25519",
@@ -113,7 +115,8 @@
     "keysToSign": "Chaves a assinar",
     "diceEntries": "Entradas DICE",
     "certType": "Tipo de certificado",
-    "version": "Versão do CSR"
+    "version": "Versão do CSR",
+    "unverifiedFingerprint": "Impressão digital da compilação (não autenticada por assinatura)"
   },
   "errors": {
     "unsupported_profile": "O nome do perfil não é compatível.",
@@ -174,7 +177,11 @@
     "exported": "O servidor aceitou a solicitação. Certificados verificados e keybox exportado.",
     "result": "Arquivos resultantes",
     "server": "Aceitação do servidor",
-    "certificates": "Verificação de certificados"
+    "certificates": "Verificação de certificados",
+    "fingerprintFromConfig": "Usar configuração do material (desativado se ausente)",
+    "fingerprintInclude": "Incluir impressão digital",
+    "fingerprintOmit": "Omitir impressão digital",
+    "fingerprintHint": "Usa issuance.fingerprint da configuração importada, não a impressão digital deste dispositivo ou do perfil de trabalho. Ela deve corresponder à mesma compilação do firmware que o resumo VBMeta."
   },
   "experimental": {
     "title": "Modo experimental",

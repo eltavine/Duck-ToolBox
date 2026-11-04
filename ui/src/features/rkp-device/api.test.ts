@@ -1,6 +1,6 @@
-import { afterEach, describe, expect, it } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 
-import { setBridge } from "@/core/bridge"
+import { bridge, setBridge } from "@/core/bridge"
 
 import type { Protocol, Provision } from "./api"
 import { rkpDeviceApi } from "./api"
@@ -38,6 +38,22 @@ function respond(data: Provision) {
 }
 
 describe("device RKP successful-response validation", () => {
+  it.each([false, true])(
+    "passes fingerprint inclusion %s and safely quotes an explicit build",
+    async (include) => {
+      history.replaceState(null, "", "/")
+      const data = result("v2")
+      data.include_fingerprint = include
+      data.fingerprint = "source/build'value"
+      data.local_verify!.unverified_fingerprint = include ? data.fingerprint : null
+      respond(data)
+      const exec = vi.spyOn(bridge(), "exec")
+      await rkpDeviceApi.provision("v2", include, "  source/build'value  ")
+      expect(exec.mock.calls[0]![0]).toContain(`'--include-fingerprint' '${include}'`)
+      expect(exec.mock.calls[0]![0]).toContain("'--fingerprint' 'source/build'\\''value'")
+      exec.mockRestore()
+    },
+  )
   it("accepts MediaTek AIDL and rejects a claimed Qualcomm native capability", async () => {
     history.replaceState(null, "", "/?soc=mediatek")
     const data = result()
@@ -46,6 +62,16 @@ describe("device RKP successful-response validation", () => {
     data.prerequisites.v2_available = true
     respond(data)
     await expect(rkpDeviceApi.provision()).rejects.toMatchObject({ code: "contract_mismatch" })
+  })
+
+  it("rejects V2 metadata that disagrees with the reported policy", async () => {
+    history.replaceState(null, "", "/")
+    const data = result("v2")
+    data.include_fingerprint = true
+    respond(data)
+    await expect(rkpDeviceApi.provision("v2", true)).rejects.toMatchObject({
+      code: "contract_mismatch",
+    })
   })
 
   it.each(["auto", "v1", "v2", "v1-native"] as const)(

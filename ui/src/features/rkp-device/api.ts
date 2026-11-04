@@ -56,6 +56,7 @@ const reportSchema = z.object({
   cert_type: z.string(),
   brand: z.string().nullable().optional(),
   keys_to_sign: z.number(),
+  unverified_fingerprint: z.string().nullable().optional(),
 })
 
 const chainSummarySchema = z.object({
@@ -90,6 +91,7 @@ const provisionSchema = z
       .max(3),
     fingerprint: z.string(),
     challenge_hex: z.string(),
+    include_fingerprint: z.boolean(),
     csr_len: z.number(),
     local_verify: reportSchema.nullable(),
     chain: chainSummarySchema,
@@ -112,6 +114,15 @@ const provisionSchema = z
   .refine((data) => data.csr_backend !== "aidl" || data.csr_protocol === "v1", {
     message: "The AIDL backend only implements V1",
   })
+  .refine(
+    (data) =>
+      data.local_verify === null ||
+      data.local_verify.unverified_fingerprint ===
+        (data.include_fingerprint ? data.fingerprint : null),
+    {
+      message: "V2 CSR metadata disagrees with the reported fingerprint policy",
+    },
+  )
   .refine(
     (data) => {
       const last = data.attempts.at(-1)
@@ -139,8 +150,20 @@ export const rkpDeviceApi = {
    * Sends the acknowledgement the backend requires. It is the flag a user has to give,
    * not a default, so the button that reaches this call is always an explicit one.
    */
-  provision: (protocol: Protocol = "auto") =>
-    duckd(["rkp-device", "provision", "--acknowledge-limitations", "--protocol", protocol], {
-      schema: provisionSchema,
-    }),
+  provision: (protocol: Protocol = "auto", includeFingerprint = false, fingerprint = "") =>
+    duckd(
+      [
+        "rkp-device",
+        "provision",
+        "--acknowledge-limitations",
+        "--protocol",
+        protocol,
+        "--include-fingerprint",
+        String(includeFingerprint),
+        ...(fingerprint.trim() ? ["--fingerprint", fingerprint.trim()] : []),
+      ],
+      {
+        schema: provisionSchema,
+      },
+    ),
 }

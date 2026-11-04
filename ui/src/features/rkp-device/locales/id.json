@@ -76,7 +76,10 @@
     "structureOnly": "Struktur diperiksa; bukti terenkripsi diverifikasi oleh server",
     "backend": "Backend",
     "attempts": "Riwayat percobaan",
-    "succeeded": "Berhasil"
+    "succeeded": "Berhasil",
+    "includeFingerprint": "Sertakan sidik jari build dalam permintaan penandatanganan",
+    "includeFingerprintHint": "Sidik jari harus merujuk ke build firmware yang sama dengan digest VBMeta dalam permintaan TA. Saat dinonaktifkan, sidik jari tetap dikirim saat mengambil challenge.",
+    "fingerprintHint": "Kosongkan untuk membaca sidik jari perangkat saat penandatanganan. Nilai manual digunakan untuk pengambilan challenge dan metadata CSR."
   },
   "confirm": {
     "title": "Kirim permintaan ke KeyMint TA?",

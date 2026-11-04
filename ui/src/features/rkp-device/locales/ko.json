@@ -76,7 +76,10 @@
     "structureOnly": "구조만 확인됨. 암호화된 서명 자료는 서버에서 검증",
     "backend": "백엔드",
     "attempts": "시도 기록",
-    "succeeded": "성공"
+    "succeeded": "성공",
+    "includeFingerprint": "서명 요청에 빌드 지문 포함",
+    "includeFingerprintHint": "지문은 TA 요청의 VBMeta 다이제스트와 같은 펌웨어 빌드여야 합니다. 꺼도 challenge 요청에는 지문을 전송합니다.",
+    "fingerprintHint": "비워 두면 서명 시 기기 지문을 읽습니다. 직접 지정한 값은 challenge 요청과 CSR 메타데이터에 모두 적용됩니다."
   },
   "confirm": {
     "title": "KeyMint TA로 요청을 보낼까요?",

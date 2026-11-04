@@ -68,6 +68,7 @@ Placeholders below must be replaced locally; they are not usable signing materia
   },
   "issuance": {
     "fingerprint": "<actual build fingerprint>",
+    "include_fingerprint": false,
     "server_url": "https://remoteprovisioning.googleapis.com/v1",
     "protocol": "v3"
   }
@@ -87,6 +88,49 @@ The split signing JSON contains just the `signing` object's fields. A split conf
 file contains optional `device`, `issuance` and `uds_certs_hex` fields. A bundle can also
 use `--config` to supply missing sections; providing the same section in both places is
 a configuration conflict and never silently replaces material.
+
+## Build fingerprint in signing requests
+
+`issuance.include_fingerprint` opts into appending an unverified device-info map
+`{"fingerprint": "<issuance.fingerprint>"}` as the fifth item of the server-facing
+AuthenticatedRequest. It defaults to `false`, including for existing bundles. The
+fingerprint comes only from the imported issuance configuration. The import page can
+follow that configuration or explicitly include/omit the field; CLI commands accept
+`--include-fingerprint true|false` with the same override semantics. Validation includes
+the selected metadata in the maximum-size preflight, and diagnosis emits that same
+request shape without contacting a server.
+
+The experimental profile uses `fingerprint.include_fingerprint`, also defaulting to
+`false`, for both `rkp provision` and `rkp keybox`. The same CLI option temporarily
+overrides the saved value. Device-backed issuance accepts
+`rkp-device provision --include-fingerprint true` and uses its effective
+`--fingerprint` override or the device fingerprint. This covers V2, V1 AIDL and native
+V1, including automatic protocol fallback. V1 places the map inside the DeviceInfo
+pair, rather than adding a fifth outer item.
+
+Challenge retrieval still sends the effective fingerprint when this option is off.
+When enabled, both requests use the same value. The fingerprint and the request's
+VBMeta digest should describe the same firmware build. Reading device properties
+does not establish that relationship, particularly when properties have been
+overridden; imported materials must use their source device's build information.
+Local validation checks structure, signatures and request binding, not the server's
+build database or acceptance policy.
+
+This follows the server-facing metadata added in
+[google-rkp-sw revision 7071b29](https://github.com/MhmRdd/google-rkp-sw/commit/7071b29203a5ea131f324dfa50f4095807d907cc)
+and AOSP's
+[request composition](https://android.googlesource.com/platform/system/security/+/refs/heads/main/provisioner/rkp_factory_extraction_lib.cpp).
+Original authenticated CBOR items and V1 encrypted evidence remain byte-for-byte
+unchanged. Saved CSR artifacts contain the bytes submitted to the server.
+`rkp verify` accepts both four-item HAL requests and five-item server requests and
+reports `unverified_fingerprint` separately from signature validity.
+
+Regression vectors in `crates/duck-rkp/src/request/fixtures/upstream-fingerprint.json`
+contain Ed25519 and P-256 CSRs produced by that upstream revision. The inputs use
+canonical DeviceInfo map ordering, a synthetic `21`-repeated 32-byte signing seed,
+a `22`-repeated 32-byte challenge and an `ab`-repeated 32-byte VBMeta digest. The
+tests verify the signatures, strip the fifth item without re-encoding the other
+items and require reattachment to reproduce the original request exactly.
 
 Host-only server URLs use `/v1`; trailing slashes are removed before RPC methods are
 appended. HTTPS and endpoint safety checks still apply.

@@ -57,7 +57,9 @@
     "check": "Kiểm tra khóa dẫn xuất",
     "mode": "Chế độ",
     "publicKey": "Khóa công khai",
-    "seedHex": "Seed"
+    "seedHex": "Seed",
+    "includeFingerprint": "Đính kèm dấu vân tay bản dựng trong yêu cầu ký",
+    "includeFingerprintHint": "Thêm dấu vân tay đã cấu hình vào CSR. Giá trị phải thuộc cùng bản dựng phần sụn với mã băm VBMeta trong yêu cầu. Khi tắt, yêu cầu lấy challenge vẫn gửi dấu vân tay."
   },
   "choices": {
     "ed25519": "Ed25519",
@@ -113,7 +115,8 @@
     "keysToSign": "Khóa cần ký",
     "diceEntries": "Mục DICE",
     "certType": "Loại chứng chỉ",
-    "version": "Phiên bản CSR"
+    "version": "Phiên bản CSR",
+    "unverifiedFingerprint": "Dấu vân tay bản dựng (chưa được xác thực bằng chữ ký)"
   },
   "errors": {
     "unsupported_profile": "Tên hồ sơ không được hỗ trợ.",
@@ -174,7 +177,11 @@
     "exported": "Máy chủ đã chấp nhận yêu cầu. Chứng chỉ đã được xác minh và keybox đã được xuất.",
     "result": "Tệp kết quả",
     "server": "Máy chủ chấp nhận",
-    "certificates": "Xác minh chứng chỉ"
+    "certificates": "Xác minh chứng chỉ",
+    "fingerprintFromConfig": "Theo cấu hình dữ liệu (tắt nếu chưa đặt)",
+    "fingerprintInclude": "Đính kèm dấu vân tay",
+    "fingerprintOmit": "Không đính kèm dấu vân tay",
+    "fingerprintHint": "Dùng issuance.fingerprint từ cấu hình đã nhập, không dùng dấu vân tay của thiết bị này hoặc hồ sơ làm việc. Giá trị phải thuộc cùng bản dựng phần sụn với mã băm VBMeta."
   },
   "experimental": {
     "title": "Chế độ thử nghiệm",

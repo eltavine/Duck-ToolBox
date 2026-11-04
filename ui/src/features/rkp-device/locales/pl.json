@@ -76,7 +76,10 @@
     "structureOnly": "Sprawdzono strukturę; zaszyfrowane dane potwierdzające są weryfikowane przez serwer",
     "backend": "Backend",
     "attempts": "Próby",
-    "succeeded": "Zakończono pomyślnie"
+    "succeeded": "Zakończono pomyślnie",
+    "includeFingerprint": "Dołącz odcisk kompilacji do żądania podpisu",
+    "includeFingerprintHint": "Odcisk powinien wskazywać tę samą kompilację firmware co skrót VBMeta w żądaniu TA. Po wyłączeniu nadal jest wysyłany przy pobieraniu challenge.",
+    "fingerprintHint": "Pozostaw puste, aby odczytać odcisk urządzenia podczas podpisywania. Podana wartość służy do pobierania challenge i jako metadane CSR."
   },
   "confirm": {
     "title": "Wysłać żądanie do KeyMint TA?",

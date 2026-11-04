@@ -49,6 +49,28 @@ beforeEach(() => setActivePinia(createPinia()))
 afterEach(() => setBridge(null))
 
 describe("DICE material import", () => {
+  it.each(["include", "omit"] as const)(
+    "sends an explicit %s override without changing the default policy",
+    async (fingerprintPolicy) => {
+      let command = ""
+      setBridge(host(async (value) => ((command = value), response(validated))))
+      await rkpApi.importValidate({ ...draft, fingerprintPolicy })
+      expect(command).toContain(`'--include-fingerprint' '${fingerprintPolicy === "include"}'`)
+      await rkpApi.importValidate({ ...draft, fingerprintPolicy: "config" })
+      expect(command).not.toContain("--include-fingerprint")
+    },
+  )
+
+  it("invalidates readiness when the fingerprint policy changes", async () => {
+    setBridge(host(async () => response(validated)))
+    const store = useRkpStore()
+    store.importDraft = { ...draft }
+    await store.validateImport()
+    expect(store.importReady).toBe(true)
+    store.importDraft.fingerprintPolicy = "include"
+    expect(store.importReady).toBe(false)
+    expect(store.importResult).toBeNull()
+  })
   it("passes only trimmed file paths to the backend without a shell heredoc", async () => {
     let command = ""
     setBridge(host(async (value) => ((command = value), response(validated))))

@@ -57,7 +57,9 @@
     "check": "Vérifier la clé dérivée",
     "mode": "Mode",
     "publicKey": "Clé publique",
-    "seedHex": "Graine"
+    "seedHex": "Graine",
+    "includeFingerprint": "Joindre l’empreinte de compilation à la demande de signature",
+    "includeFingerprintHint": "Ajoute l’empreinte configurée au CSR. Elle doit désigner la même compilation du micrologiciel que le condensat VBMeta de la demande. Sa désactivation conserve l’envoi de l’empreinte pour le challenge."
   },
   "choices": {
     "ed25519": "Ed25519",
@@ -113,7 +115,8 @@
     "keysToSign": "Clés à signer",
     "diceEntries": "Entrées DICE",
     "certType": "Type de certificat",
-    "version": "Version de la CSR"
+    "version": "Version de la CSR",
+    "unverifiedFingerprint": "Empreinte de compilation (non authentifiée par signature)"
   },
   "errors": {
     "unsupported_profile": "Le nom de profil n’est pas pris en charge.",
@@ -174,7 +177,11 @@
     "exported": "Le serveur a accepté la demande. Les certificats ont été vérifiés et le keybox exporté.",
     "result": "Fichiers de résultat",
     "server": "Acceptation du serveur",
-    "certificates": "Vérification des certificats"
+    "certificates": "Vérification des certificats",
+    "fingerprintFromConfig": "Suivre la configuration des matériaux (désactivé si absent)",
+    "fingerprintInclude": "Joindre l’empreinte",
+    "fingerprintOmit": "Omettre l’empreinte",
+    "fingerprintHint": "Utilise issuance.fingerprint de la configuration importée, pas l’empreinte de cet appareil ou du profil de travail. Elle doit désigner la même compilation du micrologiciel que le condensat VBMeta."
   },
   "experimental": {
     "title": "Mode expérimental",

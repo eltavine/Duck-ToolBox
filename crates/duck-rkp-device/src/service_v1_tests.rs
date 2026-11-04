@@ -17,6 +17,33 @@ impl LegacyTa {
     }
 }
 
+#[tokio::test]
+async fn aidl_and_v2_fallback_share_the_v1_fingerprint_policy_on_both_vendors() {
+    for include in [false, true] {
+        for environment in [&FakeEnvironment as &dyn Environment, &MediaTekEnvironment] {
+            let (_dir, ctx) = working_dir("rkp-aidl-metadata");
+            let server = seeded_server();
+            let ta = LegacyTa::new(-40);
+            let data = provision(
+                &ctx,
+                true,
+                Options {
+                    include_fingerprint: include,
+                    ..Options::default()
+                },
+                &FixedKeys,
+                &ta,
+                &server,
+                environment,
+            )
+            .await
+            .unwrap();
+            assert_fingerprint_metadata(&data, &server, include, FINGERPRINT);
+            assert!(data.local_verify.is_none());
+        }
+    }
+}
+
 impl Exchange for LegacyTa {
     fn csr(&self, request: &[u8]) -> anyhow::Result<Vec<u8>> {
         self.calls

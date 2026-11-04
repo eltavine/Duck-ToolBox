@@ -56,6 +56,35 @@ impl Exchange for NativeTa {
 }
 
 struct NativeEnvironment;
+
+#[tokio::test]
+async fn native_v1_submits_metadata_in_the_nested_unverified_map() {
+    for include in [false, true] {
+        let (_dir, ctx) = working_dir("rkp-native-metadata");
+        let server = seeded_server();
+        let ta = NativeTa {
+            calls: RefCell::new(0),
+            outcome: Outcome::Valid,
+        };
+        let data = provision(
+            &ctx,
+            true,
+            Options {
+                protocol: Protocol::V1Native,
+                include_fingerprint: include,
+                ..Options::default()
+            },
+            &FixedKeys,
+            &ta,
+            &server,
+            &NativeEnvironment,
+        )
+        .await
+        .unwrap();
+        assert_fingerprint_metadata(&data, &server, include, FINGERPRINT);
+        assert!(data.local_verify.is_none());
+    }
+}
 impl Environment for NativeEnvironment {
     fn capabilities(&self, ctx: &Context) -> DeviceStatus {
         let mut status = FakeEnvironment.capabilities(ctx);

@@ -18,6 +18,7 @@ fn fixture(fingerprint: &str) -> tempfile::TempDir {
         },
         fingerprint: FingerprintConfig {
             value: fingerprint.into(),
+            include_fingerprint: false,
         },
         server_url: "http://127.0.0.1:9/v1".into(),
         ..ProfileData::default()
@@ -79,4 +80,39 @@ fn offline_cli_rejects_excessive_key_counts_without_output() {
     assert!(!success, "{result}");
     assert_eq!(result["ok"], false);
     assert_eq!(fs::read_dir(paths.outputs_dir).unwrap().count(), 0);
+}
+
+#[test]
+fn offline_cli_emits_the_selected_fingerprint_metadata_without_network_access() {
+    let directory = fixture("synthetic/source/build");
+    for (flag, expected) in [("true", Some("synthetic/source/build")), ("false", None)] {
+        let (success, result) = run(
+            directory.path(),
+            &[
+                "rkp",
+                "provision",
+                "--offline",
+                "--include-fingerprint",
+                flag,
+            ],
+        );
+        assert!(success, "{result}");
+        let csr = fs::read(result["data"]["csr_path"].as_str().unwrap()).unwrap();
+        assert_eq!(
+            verify_csr(&csr).unwrap().unverified_fingerprint.as_deref(),
+            expected
+        );
+    }
+    let (success, result) = run(
+        directory.path(),
+        &[
+            "rkp",
+            "provision",
+            "--offline",
+            "--include-fingerprint",
+            "invalid",
+        ],
+    );
+    assert!(!success);
+    assert_eq!(result["error"]["code"], "usage_error");
 }

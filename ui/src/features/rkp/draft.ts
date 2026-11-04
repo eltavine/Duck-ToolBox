@@ -11,6 +11,7 @@ export interface Draft {
   curve: Curve
   device: Omit<DeviceInfo, "vbmeta_digest"> & { vbmeta_digest: string }
   fingerprint: string
+  include_fingerprint: boolean
   server_url: string
   num_keys: number
   output_path: string
@@ -26,6 +27,7 @@ export function toDraft(profile: Profile): Draft {
     curve: profile.curve,
     device: { ...profile.device, vbmeta_digest: profile.device.vbmeta_digest ?? "" },
     fingerprint: profile.fingerprint.value,
+    include_fingerprint: profile.fingerprint.include_fingerprint,
     server_url: profile.server_url,
     num_keys: profile.num_keys,
     output_path: profile.output_path,
@@ -59,7 +61,10 @@ export function toProfile(draft: Draft): Profile {
     key_source: keySource,
     curve: draft.curve,
     device: { ...device, vbmeta_digest: device.vbmeta_digest || null },
-    fingerprint: { value: draft.fingerprint.trim() },
+    fingerprint: {
+      value: draft.fingerprint.trim(),
+      include_fingerprint: draft.include_fingerprint,
+    },
     server_url: draft.server_url.trim(),
     num_keys: Math.max(1, Math.round(Number(draft.num_keys) || 1)),
     output_path: draft.output_path.trim(),
