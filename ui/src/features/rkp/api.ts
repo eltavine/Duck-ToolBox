@@ -74,13 +74,22 @@ const reportSchema = z.object({
 })
 export type VerifyReport = z.infer<typeof reportSchema>
 
+const signingReportSchema = reportSchema.extend({
+  version: z.literal(1),
+  csr_version: z.literal(3),
+  cert_type: z.literal("keymint"),
+  signature_valid: z.literal(true),
+  keys_to_sign: z.number().int().min(1).max(16),
+})
+const importedReportSchema = signingReportSchema.extend({ keys_to_sign: z.literal(1) })
+
 const provisionSchema = z.object({
   curve: z.string(),
   challenge_hex: z.string(),
   csr_path: z.string(),
   csr_len: z.number(),
   protected_data_len: z.number(),
-  local_verify: reportSchema,
+  local_verify: signingReportSchema,
   cert_chains: z.array(
     z.object({ index: z.number(), path: z.string(), summary: chainSummarySchema }),
   ),
@@ -127,7 +136,7 @@ const importedDiagnosticSchema = z.object({
   stage: z.literal("diagnostic"),
   material: materialSchema,
   csr_path: z.string(),
-  local_verify: reportSchema,
+  local_verify: importedReportSchema,
   diagnostic_only: z.literal(true),
 })
 const importedIssueSchema = z.object({
@@ -137,7 +146,7 @@ const importedIssueSchema = z.object({
   keybox_path: z.string(),
   device_id: z.string(),
   chain_summary: chainSummarySchema,
-  local_verify: reportSchema,
+  local_verify: importedReportSchema,
   server_accepted: z.literal(true),
   certificates_verified: z.literal(true),
   keybox_exported: z.literal(true),
@@ -191,8 +200,19 @@ function withImportFingerprintPolicy<T extends { local_verify: VerifyReport }>(
 
 export const rkpApi = {
   show: () => duckd(["rkp", "profile", "show"], { schema: profileEnvelopeSchema }),
-  save: (profile: Profile) =>
-    duckd(["rkp", "profile", "save"], { input: profile, schema: profileEnvelopeSchema }),
+  save: (profile: Profile) => {
+    const fingerprint = profile.fingerprint.value.trim()
+    const includeFingerprint = profile.fingerprint.include_fingerprint
+    return duckd(["rkp", "profile", "save"], {
+      input: profile,
+      schema: profileEnvelopeSchema.refine(
+        (data) =>
+          data.profile.fingerprint.value === fingerprint &&
+          data.profile.fingerprint.include_fingerprint === includeFingerprint,
+        { message: "Saved profile disagrees with the requested fingerprint configuration" },
+      ),
+    })
+  },
   clear: () => duckd(["rkp", "profile", "clear"]),
   detect: () => duckd(["rkp", "profile", "detect"], { schema: detectSchema }),
   info: () => duckd(["rkp", "info"], { schema: infoSchema }),

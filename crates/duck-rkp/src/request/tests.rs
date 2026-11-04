@@ -170,6 +170,28 @@ fn malformed_or_already_wrapped_requests_are_rejected() {
 }
 
 #[test]
+fn utf8_fingerprint_respects_the_exact_encoded_request_size_limit() {
+    let keys = DeviceKeys::from_seed([7; 32]);
+    let public = [generate_ec_keypair().unwrap().cose_public];
+    let raw = build_experimental_csr_v3(&keys, &[8; 32], &public, &DeviceInfo::default()).unwrap();
+    // One map header, the encoded "fingerprint" key, and a five-byte text header.
+    let fingerprint_bytes = MAX_INPUT_BYTES - raw.len() - 18;
+    assert!(fingerprint_bytes > 65535);
+    let mut fingerprint = "界".repeat(fingerprint_bytes / 3);
+    fingerprint.push_str(&"x".repeat(fingerprint_bytes % 3));
+    let submitted = with_fingerprint(&raw, Some(&fingerprint)).unwrap();
+    assert_eq!(submitted.len(), MAX_INPUT_BYTES);
+    let report = validate_request_binding(&submitted, &[8; 32], &public).unwrap();
+    assert_eq!(
+        report.unverified_fingerprint.as_deref(),
+        Some(fingerprint.as_str())
+    );
+    fingerprint.push('x');
+    assert!(with_fingerprint(&raw, Some(&fingerprint)).is_err());
+    assert_eq!(with_fingerprint(&raw, None).unwrap(), raw);
+}
+
+#[test]
 fn optional_metadata_does_not_relax_request_or_signature_validation() {
     let keys = DeviceKeys::from_seed([7; 32]);
     let public = [generate_ec_keypair().unwrap().cose_public];

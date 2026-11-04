@@ -48,11 +48,11 @@ const deviceStatusSchema = z
 export type DeviceStatus = z.infer<typeof deviceStatusSchema>
 
 const reportSchema = z.object({
-  version: z.number(),
+  version: z.literal(1),
   dice_entries: z.number(),
   uds_pub_hex: z.string(),
   signature_valid: z.boolean(),
-  csr_version: z.number(),
+  csr_version: z.literal(3),
   cert_type: z.string(),
   brand: z.string().nullable().optional(),
   keys_to_sign: z.number(),

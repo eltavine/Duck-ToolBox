@@ -38,7 +38,7 @@ const paths = {
   outputs_dir: "/data/adb/duck-toolbox/var/outputs",
 }
 const report = {
-  version: 3,
+  version: 1,
   dice_entries: 2,
   uds_pub_hex: "d04ab232742bb4ab3a1368bd4615e4e6d0224ab71a016baf8520a332c9778737",
   signature_valid: true,

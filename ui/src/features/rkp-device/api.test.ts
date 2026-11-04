@@ -123,18 +123,21 @@ describe("device RKP successful-response validation", () => {
     },
   )
 
-  it.each([{ signature_valid: false }, { cert_type: "widevine" }, { keys_to_sign: 2 }])(
-    "rejects a V2 success report with %j",
-    async (invalid) => {
-      history.replaceState(null, "", "/")
-      const data = result("v2")
-      Object.assign(data.local_verify!, invalid)
-      respond(data)
-      await expect(rkpDeviceApi.provision("v2")).rejects.toMatchObject({
-        code: "contract_mismatch",
-      })
-    },
-  )
+  it.each([
+    { signature_valid: false },
+    { cert_type: "widevine" },
+    { keys_to_sign: 2 },
+    { version: 3 },
+    { csr_version: 2 },
+  ])("rejects a V2 success report with %j", async (invalid) => {
+    history.replaceState(null, "", "/")
+    const data = result("v2")
+    Object.assign(data.local_verify!, invalid)
+    respond(data)
+    await expect(rkpDeviceApi.provision("v2")).rejects.toMatchObject({
+      code: "contract_mismatch",
+    })
+  })
 
   it.each(["v2,v1", "v2"])("accepts ordered fallback after %s fail", async (failures) => {
     history.replaceState(null, "", `/?rkp_fail=${failures}`)

@@ -45,6 +45,53 @@ beforeEach(() => setActivePinia(createPinia()))
 afterEach(() => vi.restoreAllMocks())
 
 describe("RKP operations", () => {
+  it("does not overwrite a newer loaded profile or its edits with an older response", async () => {
+    let first!: (value: typeof shown) => void
+    let second!: (value: typeof shown) => void
+    vi.spyOn(rkpApi, "show")
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            first = resolve
+          }),
+      )
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            second = resolve
+          }),
+      )
+    const store = useRkpStore()
+    const older = store.load()
+    const newer = store.load()
+    second({
+      ...shown,
+      profile: { ...profile, fingerprint: { value: "newer/build", include_fingerprint: true } },
+    })
+    await newer
+    store.draft!.fingerprint = "edited/newer/build"
+    first(shown)
+    await older
+    expect(store.draft!.fingerprint).toBe("edited/newer/build")
+    expect(store.draft!.include_fingerprint).toBe(true)
+  })
+
+  it("keeps edits made while a forced profile reload is pending", async () => {
+    let finish!: (value: typeof shown) => void
+    vi.spyOn(rkpApi, "show").mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          finish = resolve
+        }),
+    )
+    const store = useRkpStore()
+    store.draft = toDraft(profile)
+    const pending = store.load(true)
+    store.draft.include_fingerprint = true
+    finish(shown)
+    await pending
+    expect(store.draft.include_fingerprint).toBe(true)
+  })
   it.each(["runProvision", "runKeybox"] as const)(
     "does not send %s when the fingerprint policy changes during profile saving",
     async (action) => {

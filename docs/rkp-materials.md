@@ -134,6 +134,16 @@ For device issuance, fingerprint metadata that cannot fit by itself in the CSR b
 is rejected before fetching a challenge or invoking the TA; the assembled request
 must still satisfy the full request-size limit.
 
+Profile saves must echo the requested fingerprint and inclusion policy, with normal
+surrounding whitespace removed. Older profile-load responses cannot replace a newer
+load or edits made while a load was pending. Device issuance remembers an explicit
+fingerprint override together with the inclusion preference in browser storage; an
+empty override continues to read the current device fingerprint at issuance time.
+Changing these inputs in another open page closes a pending issuance confirmation.
+Successful signing responses must report a valid KeyMint signature and the supported
+AuthenticatedRequest/CSR versions. Imported signing requests contain exactly one key;
+experimental profile requests contain between one and sixteen keys.
+
 Regression vectors in `crates/duck-rkp/src/request/fixtures/upstream-fingerprint.json`
 contain Ed25519 and P-256 CSRs produced by that upstream revision. The inputs use
 canonical DeviceInfo map ordering, a synthetic `21`-repeated 32-byte signing seed,

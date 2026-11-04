@@ -19,6 +19,7 @@ export const useRkpStore = defineStore("rkp", () => {
   const verifyPath = ref("")
   const profileBusy = ref(false)
   let profileRevision = 0
+  let loadRevision = 0
   const importDraft = ref<ImportDraft>({
     mode: "bundle",
     bundlePath: "",
@@ -80,12 +81,16 @@ export const useRkpStore = defineStore("rkp", () => {
 
   async function load(discard = false) {
     if (draft.value && !discard) return
+    const request = ++loadRevision
+    const revision = profileRevision
     const shown = await rkpApi.show()
-    secretsPath.value = shown.paths.profile_secrets_path
+    if (request !== loadRevision || revision !== profileRevision) return
     let next = toDraft(shown.profile)
     if (hasGenericDevice(next)) {
       next = applyDetected(next, (await rkpApi.detect()).profile)
     }
+    if (request !== loadRevision || revision !== profileRevision) return
+    secretsPath.value = shown.paths.profile_secrets_path
     draft.value = next
   }
 

@@ -51,7 +51,7 @@ const result = ref<Provision | null>(null)
 const confirmOpen = ref(false)
 const protocol = ref<Protocol>("auto")
 const includeFingerprint = useStorage("duck-toolbox/rkp-device/include-fingerprint", false)
-const fingerprint = ref("")
+const fingerprint = useStorage("duck-toolbox/rkp-device/fingerprint", "")
 const blockers = computed(() =>
   (status.data.value?.blockers ?? []).filter(
     (blocker) => blocker !== "fingerprint_missing" || !fingerprint.value.trim(),
@@ -64,6 +64,7 @@ watch(
   () => {
     inputRevision++
     result.value = null
+    confirmOpen.value = false
   },
   { flush: "sync" },
 )

@@ -6,6 +6,7 @@ import type { RootBridge } from "@/core/bridge"
 
 import { rkpApi } from "./api"
 import { useRkpStore } from "./store"
+import mock from "./mock"
 
 const material = {
   material_type: "dice-chain",
@@ -49,6 +50,26 @@ beforeEach(() => setActivePinia(createPinia()))
 afterEach(() => setBridge(null))
 
 describe("DICE material import", () => {
+  it("clears readiness and results when issuance returns an invalid local signature report", async () => {
+    const data = structuredClone(
+      mock.handlers["rkp.import.issue"]!([], { bundle: "/tmp/material.json" }, undefined),
+    ) as { local_verify: Record<string, unknown> }
+    data.local_verify.signature_valid = false
+    setBridge(
+      host(async (command) =>
+        command.includes("'validate'") ? response(validated) : response(data, "rkp.import.issue"),
+      ),
+    )
+    const store = useRkpStore()
+    store.importDraft = { ...draft }
+    await store.validateImport()
+    expect(store.importReady).toBe(true)
+    await expect(store.issueImport()).rejects.toMatchObject({ code: "contract_mismatch" })
+    expect(store.importReady).toBe(false)
+    expect(store.importResult).toBeNull()
+    expect(store.importBusy).toBe(false)
+    expect(store.importDraft.bundlePath).toBe(draft.bundlePath)
+  })
   it("keeps the requested fingerprint policy when the caller changes its draft during diagnosis", async () => {
     const input = { ...draft, fingerprintPolicy: "include" as "include" | "omit" }
     const data = {

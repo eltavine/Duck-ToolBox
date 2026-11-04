@@ -57,9 +57,10 @@ test("device fingerprint inclusion persists and changed parameters clear old res
   const toggle = page.getByRole("switch", { name: "在签发请求中附带构建指纹" })
   await expect(toggle).not.toBeChecked()
   await toggle.click()
+  await page.getByLabel("指纹", { exact: true }).fill("synthetic/source/build")
   await page.reload()
   await expect(toggle).toBeChecked()
-  await page.getByLabel("指纹", { exact: true }).fill("synthetic/source/build")
+  await expect(page.getByLabel("指纹", { exact: true })).toHaveValue("synthetic/source/build")
   await page.getByRole("button", { name: "签发 RKP keybox", exact: true }).click()
   await page
     .getByRole("alertdialog")
@@ -70,4 +71,26 @@ test("device fingerprint inclusion persists and changed parameters clear old res
   await page.screenshot({ path: "test-results/rkp-device-fingerprint-zh.png", fullPage: true })
   await toggle.click()
   await expect(page.getByRole("heading", { name: "结果", exact: true })).toHaveCount(0)
+})
+
+test("a fingerprint change from another page cancels pending device confirmation", async ({
+  page,
+  open,
+}) => {
+  await page.addInitScript(() =>
+    localStorage.setItem("duck-toolbox/acknowledged", JSON.stringify(["rkp-device"])),
+  )
+  await open("/rkp-device")
+  await page.getByLabel("Fingerprint", { exact: true }).fill("first/source/build")
+  await page.getByRole("button", { name: "Issue RKP keybox", exact: true }).click()
+  await expect(page.getByRole("alertdialog")).toBeVisible()
+  const other = await page.context().newPage()
+  await other.goto(page.url())
+  await other.evaluate(() =>
+    localStorage.setItem("duck-toolbox/rkp-device/fingerprint", "second/source/build"),
+  )
+  await expect(page.getByLabel("Fingerprint", { exact: true })).toHaveValue("second/source/build")
+  await expect(page.getByRole("alertdialog")).toHaveCount(0)
+  await expect(page.getByRole("heading", { name: "Result", exact: true })).toHaveCount(0)
+  await other.close()
 })
