@@ -52,7 +52,12 @@ if(NOT EXISTS "${DUCK_RUNTIME_DIR}/entry.cpp")
     message(FATAL_ERROR "Build through scripts/build-play-integrity.py with the composite runtime")
 endif()
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE
-    ${DUCK_RUNTIME_DIR}/entry.cpp ${DUCK_RUNTIME_DIR}/engine.cpp ${DUCK_RUNTIME_DIR}/channel.cpp)
+    ${DUCK_RUNTIME_DIR}/entry.cpp ${DUCK_RUNTIME_DIR}/engine.cpp ${DUCK_RUNTIME_DIR}/channel.cpp
+    ${DUCK_RUNTIME_DIR}/pthread_keys.cpp)
+target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE "${DUCK_RUNTIME_DIR}")
+# Keep static runtime helpers (including compiler-rt emutls) local to this DSO.
+target_link_options(${CMAKE_PROJECT_NAME} PRIVATE
+    -Wl,--wrap=pthread_key_create -Wl,--wrap=pthread_key_delete -Wl,--exclude-libs,ALL)
 set(DUCK_LANGUAGE_DIR "" CACHE PATH "Process-local language spoofing source")
 if(NOT EXISTS "${DUCK_LANGUAGE_DIR}/native/entry.cpp")
     message(FATAL_ERROR "Build with the independent language spoofing component")
@@ -74,5 +79,4 @@ if(CMAKE_ANDROID_ARCH_ABI STREQUAL "arm64-v8a")
     endif()
     target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE DUCK_HAS_DEVICE_FAKER=1)
     target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE "${DUCK_FAKER_LIBRARY}" dl m)
-    target_link_options(${CMAKE_PROJECT_NAME} PRIVATE -Wl,--exclude-libs,ALL)
 endif()

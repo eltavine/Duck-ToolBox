@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 #include "runtime.hpp"
+#include "pthread_keys.hpp"
 #include <fcntl.h>
 #include <unistd.h>
 
@@ -56,7 +57,8 @@ public:
 private:
     void release() {
         // A child can never unload code while the other child still needs it.
-        if (integrity.unload && faker.unload && language.unload && host->setOption)
+        if (integrity.unload && faker.unload && language.unload && host->setOption
+            && duck::pthread_keys_allow_unload())
             host->setOption(host->impl, zygisk::DLCLOSE_MODULE_LIBRARY);
     }
 };
@@ -74,6 +76,7 @@ void zygisk_companion_entry(int fd) {
     struct Close { int fd; ~Close() { close(fd); } } owned_client{fd};
     unsigned char identity = 255;
     if (!duck::channel(fd, identity, false)) return;
+    duck::keep_pthread_keys();
     if (identity == 0) duck_pif_companion(fd);
 #ifdef DUCK_HAS_LANGUAGE_SPOOF
     else if (identity == 2) duck_language_companion(fd);

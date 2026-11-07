@@ -5,9 +5,7 @@ use prop_rs_android::mmap_prop_area::MmapPropArea;
 
 use crate::prop_backend::PropBackend;
 
-use super::area::{
-    open_area, original_area_start, readonly_area, writable_area_for, writable_area_for_mapping,
-};
+use super::area::{AreaClones, readonly_area};
 use super::mappings::{PropAreaMapping, is_build_area};
 use super::symbols::FnSystemPropertyFind;
 
@@ -18,6 +16,7 @@ pub(super) fn cow_patch_existing(
     mappings: &[PropAreaMapping],
     mut serial_pa: Option<&mut MmapPropArea>,
     backend: Option<&PropBackend>,
+    clones: &mut AreaClones,
 ) -> anyhow::Result<bool> {
     let ckey =
         std::ffi::CString::new(key).map_err(|_| anyhow::anyhow!("invalid property name: {key}"))?;
@@ -27,13 +26,14 @@ pub(super) fn cow_patch_existing(
     }
 
     // 该属性所属的**原始**属性区（prop_ptr 可能已落在私有副本里）。
-    let primary_orig = original_area_start(prop_ptr as usize, mappings);
+    let primary_orig = clones.original_area_start(prop_ptr as usize, mappings);
 
     // ── Phase 1: patch __system_property_find 返回的区（即其私有副本）──
-    let Ok((area_addr, area_size)) = writable_area_for(prop_ptr as usize, mappings, backend) else {
+    let Ok((area_addr, area_size)) = clones.writable_area_for(prop_ptr as usize, mappings, backend)
+    else {
         return Ok(false);
     };
-    let mut area = open_area(area_addr, area_size)?;
+    let area = clones.open_area(area_addr, area_size)?;
 
     let data_off = match area.find(key)? {
         Some(off) => off,
@@ -102,7 +102,7 @@ pub(super) fn cow_patch_existing(
             }
         }
 
-        let (maddr, msize) = match writable_area_for_mapping(mapping, mappings, backend) {
+        let (maddr, msize) = match clones.writable_area_for_mapping(mapping, backend) {
             Ok(v) => v,
             Err(e) => {
                 log::debug!(
@@ -112,7 +112,7 @@ pub(super) fn cow_patch_existing(
                 continue;
             }
         };
-        let mut cross_area = match open_area(maddr, msize) {
+        let cross_area = match clones.open_area(maddr, msize) {
             Ok(a) => a,
             Err(e) => {
                 info!(

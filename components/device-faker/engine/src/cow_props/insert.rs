@@ -1,6 +1,5 @@
 //! 新属性插入：按 property context 路由定位目标 area，再在私有副本里做 trie 插入。
 
-use std::cell::RefCell;
 use std::collections::HashMap;
 
 use log::{info, warn};
@@ -8,19 +7,9 @@ use prop_rs_android::mmap_prop_area::PROP_INFO_LONG_FLAG;
 
 use crate::prop_backend::PropBackend;
 
-use super::area::{open_area, readonly_area, writable_area_for_mapping};
+use super::area::{AreaClones, readonly_area};
 use super::mappings::PropAreaMapping;
 use super::symbols::PROP_VALUE_MAX;
-
-// ── 前缀 → area 路径缓存（per-thread，首次遍历后记住正确的 area）──────────
-
-thread_local! {
-    // HashMap::new 在此 toolchain 上非 const fn，无法按 clippy 建议包成 const。
-    #[allow(clippy::missing_const_for_thread_local)]
-    static PREFIX_AREA_CACHE: RefCell<HashMap<String, Vec<String>>> = RefCell::new(HashMap::new());
-}
-
-// ── 新增属性：COW trie 插入 ───────────────────────────────────────────────
 
 /// SIBLING_PROBES：sys_prop 不可用时的降级定位手段，用已有属性按前缀猜测 area。
 /// 不能作为主路径：猜测结果与 property_contexts 的真实路由经常不一致。
@@ -85,6 +74,8 @@ pub(super) fn cow_patch_new(
     value: &str,
     mappings: &[PropAreaMapping],
     backend: Option<&PropBackend>,
+    clones: &mut AreaClones,
+    prefix_areas: &mut HashMap<String, Vec<String>>,
 ) -> anyhow::Result<bool> {
     let key_prefix = match key.rfind('.') {
         Some(end) => &key[..end],
@@ -103,7 +94,7 @@ pub(super) fn cow_patch_new(
         }
     } else {
         // 2. sys_prop 不可用的降级路径：检查 prefix → area 路径缓存
-        let cached_paths = PREFIX_AREA_CACHE.with(|c| c.borrow().get(key_prefix).cloned());
+        let cached_paths = prefix_areas.get(key_prefix).cloned();
 
         if let Some(paths) = cached_paths {
             // 缓存命中
@@ -140,10 +131,7 @@ pub(super) fn cow_patch_new(
                     found_paths.push(mapping.path.clone());
                 }
             }
-            PREFIX_AREA_CACHE.with(|c| {
-                c.borrow_mut()
-                    .insert(key_prefix.to_string(), found_paths.clone());
-            });
+            prefix_areas.insert(key_prefix.to_string(), found_paths.clone());
             found_paths
         }
     };
@@ -160,10 +148,10 @@ pub(super) fn cow_patch_new(
             None => continue,
         };
 
-        let Ok((addr, size)) = writable_area_for_mapping(mapping, mappings, backend) else {
+        let Ok((addr, size)) = clones.writable_area_for_mapping(mapping, backend) else {
             continue;
         };
-        let Ok(mut area) = open_area(addr, size) else {
+        let Ok(area) = clones.open_area(addr, size) else {
             continue;
         };
 

@@ -9,6 +9,7 @@
 #include "transport.hpp"
 #include "settings.hpp"
 #include "property_hook.hpp"
+#include "pthread_keys.hpp"
 #include "java_injection.hpp"
 #include "observation.hpp"
 #define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG, "PIF/Native", __VA_ARGS__)
@@ -40,8 +41,10 @@ public:
     }
     void postAppSpecialize(const zygisk::AppSpecializeArgs *) override {
         if(!ready) return;
+        const bool injectJava=settings.injectJava();
+        if(settings.spoofProps || injectJava) duck::keep_pthread_keys();
         const bool propertyHook=settings.spoofProps && hooks.install(settings);
-        if(settings.injectJava()) java.initialize(env,std::move(dex),settings);
+        if(injectJava) java.initialize(env,std::move(dex),settings);
         pif::observe(env,raw,process,boot,start,propertyHook);
         std::string().swap(raw);
         LOGD("Specialization initialized for %s",process.c_str());
