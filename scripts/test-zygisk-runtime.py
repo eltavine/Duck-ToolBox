@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Exercise real v4 ABI composition, ownership, unload and channel deadlines."""
+"""Exercise v4 composition, channel deadlines and pthread key cleanup at dlclose."""
 import os
 from pathlib import Path
 import subprocess
@@ -19,11 +19,23 @@ if not java_home:
 include = Path(java_home) / "include"
 platform = "darwin" if (include / "darwin").is_dir() else "linux"
 with tempfile.TemporaryDirectory(prefix="duck-runtime-") as directory:
-    binary = Path(directory) / "runtime-test"
-    subprocess.run([os.environ.get("CXX", "c++"), "-std=c++20", "-Wall", "-Wextra", "-Werror", "-pthread",
+    directory = Path(directory)
+    binary = directory / "runtime-test"
+    cxx = [os.environ.get("CXX", "c++"), "-std=c++20", "-Wall", "-Wextra", "-Werror", "-pthread"]
+    subprocess.run([*cxx,
                     "-DDUCK_HAS_DEVICE_FAKER=1", "-DDUCK_HAS_LANGUAGE_SPOOF=1", "-I", str(SOURCE), "-I", str(HEADER),
                     "-I", str(include), "-I", str(include / platform),
                     str(SOURCE / "tests/runtime.cpp"), str(SOURCE / "entry.cpp"),
                     str(SOURCE / "engine.cpp"), str(SOURCE / "channel.cpp"), "-o", str(binary)], check=True)
     subprocess.run([str(binary)], check=True, timeout=15)
-print("Zygisk v4 composition, channels, fd ownership and bounded waits passed")
+    source = SOURCE / "tests/pthread_keys.cpp"
+    fixture = directory / "keys-fixture.so"
+    key_test = directory / "keys-test"
+    shared = ["-dynamiclib"] if platform == "darwin" else [
+        "-shared", "-fPIC", "-Wl,--wrap=pthread_key_create", "-Wl,--wrap=pthread_key_delete",
+    ]
+    subprocess.run([*cxx, *shared, "-DDUCK_KEY_FIXTURE", "-I", SOURCE,
+                    source, SOURCE / "pthread_keys.cpp", "-o", fixture], check=True)
+    subprocess.run([*cxx, source, "-ldl", "-o", key_test], check=True)
+    subprocess.run([key_test, fixture], check=True, timeout=15)
+print("Zygisk v4 composition, channels, fd ownership, bounded waits and pthread key cleanup passed")

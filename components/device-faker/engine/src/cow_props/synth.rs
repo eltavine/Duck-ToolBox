@@ -6,7 +6,6 @@
 //! context 的节点上，并把节点的 `context_` 换成 app 可读的 context 名，使 bionic
 //! specialize 后的 SELinux 复查不再回收它。
 
-use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
 
 use log::{info, warn};
@@ -38,19 +37,6 @@ use super::symbols::{FnSystemPropertyFind, sys_prop_find};
 // 把路由到该区的那个 context 节点指过去。于是 `SystemProperties.get`、
 // `__system_property_find`、`__system_property_foreach` 在本进程内都能读到，
 // 而真实属性区文件、全局属性、SELinux 策略一概不动。
-
-/// 一个进程内合成的属性区（无真实文件来源）。
-struct SynthArea {
-    /// 被合成取代的 context 路由路径（`/dev/__properties__/...`）
-    path: String,
-    start: usize,
-    end: usize,
-}
-
-thread_local! {
-    #[allow(clippy::missing_const_for_thread_local)]
-    static SYNTH_AREAS: RefCell<Vec<SynthArea>> = const { RefCell::new(Vec::new()) };
-}
 
 /// 对「路由区在本进程不可读」的显式属性合成进程内匿名属性区。
 ///
@@ -158,16 +144,6 @@ pub fn apply_unreadable_ctx_synth(
         }
     }
     if total > 0 {
-        SYNTH_AREAS.with(|c| {
-            for a in c.borrow().iter() {
-                info!(
-                    "unreadable-context synth area: {path} [{start:#x}-{end:#x}]",
-                    path = a.path,
-                    start = a.start,
-                    end = a.end
-                );
-            }
-        });
         info!("unreadable-context synth: {total} explicit prop(s) made readable in-process");
     }
     Ok(total)
@@ -260,14 +236,6 @@ fn synth_and_attach(
 
     // The published read-only mapping must outlive the module and its Rust owner.
     std::mem::forget(area);
-
-    SYNTH_AREAS.with(|c| {
-        c.borrow_mut().push(SynthArea {
-            path: path.to_string(),
-            start,
-            end: start + size,
-        })
-    });
 
     info!(
         "unreadable-context synth: {} prop(s) -> context node #{idx} @{start:#x} size={size:#x} ({path}) pid={}",

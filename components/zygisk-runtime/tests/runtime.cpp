@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 #include "runtime.hpp"
+#include "pthread_keys.hpp"
 #include <cassert>
 #include <chrono>
 #include <fcntl.h>
@@ -9,7 +10,9 @@
 namespace {
 duck::Abi *registered = nullptr;
 unsigned unloads = 0, forces = 0, faker_calls = 0, language_calls = 0;
+unsigned keeps_keys = 0;
 bool pif_keeps = false, faker_keeps = false, language_keeps = false;
+bool persistent_keys = false;
 int socket_fd = -1;
 bool register_root(duck::Table *, duck::Abi *abi) { registered = abi; return abi->api_version == 4; }
 void host_option(void *, zygisk::Option option) {
@@ -38,7 +41,7 @@ Probe pif_probe, faker_probe, language_probe;
 duck::Abi pif_abi(&pif_probe), faker_abi(&faker_probe), language_abi(&language_probe);
 void specialize(bool keep_pif, bool keep_faker, bool keep_language) {
     pif_keeps = keep_pif; faker_keeps = keep_faker; language_keeps = keep_language;
-    unloads = forces = faker_calls = language_calls = 0;
+    unloads = forces = faker_calls = language_calls = keeps_keys = 0;
     duck::Table host{};
     host.registerModule = register_root;
     host.setOption = host_option;
@@ -61,6 +64,8 @@ void specialize(bool keep_pif, bool keep_faker, bool keep_language) {
     assert(unloads == before + 1);
 }
 }
+void duck::keep_pthread_keys() { ++keeps_keys; persistent_keys = true; }
+bool duck::pthread_keys_allow_unload() { return !persistent_keys; }
 extern "C" void duck_pif_module_entry(duck::Table *table, JNIEnv *) {
     pif_probe.table = table;
     assert(table->registerModule(table, &pif_abi));
@@ -80,10 +85,21 @@ int main() {
     static_assert(ZYGISK_API_VERSION == 4);
     static_assert(sizeof(duck::Table) == 10 * sizeof(void *));
     for (bool pif : {false,true}) for (bool faker : {false,true}) for (bool language : {false,true}) specialize(pif, faker, language);
+    persistent_keys = true;
+    duck::Table host{};
+    host.registerModule = register_root;
+    host.setOption = host_option;
+    zygisk_module_entry(&host, nullptr);
+    registered->preServerSpecialize(registered->impl, nullptr);
+    auto before = unloads;
+    registered->postServerSpecialize(registered->impl, nullptr);
+    assert(unloads == before);
     for (unsigned char identity : {0,1,2}) {
         int pair[2]; assert(socketpair(AF_UNIX, SOCK_STREAM, 0, pair) == 0);
         assert(duck::channel(pair[0], identity, true));
+        auto keeps_before = keeps_keys;
         zygisk_companion_entry(pair[1]);
+        assert(keeps_keys == keeps_before + 1);
         char response = 0; assert(read(pair[0], &response, 1) == 1);
         assert(response == (identity == 0 ? 'P' : identity == 1 ? 'F' : 'L'));
         assert(fcntl(pair[1], F_GETFD) < 0); // Root entry closes the incoming descriptor once.

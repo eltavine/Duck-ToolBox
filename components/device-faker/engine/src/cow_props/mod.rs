@@ -20,7 +20,6 @@ mod anon_name;
 mod area;
 mod insert;
 mod mappings;
-mod owned;
 mod patch;
 mod relabel;
 mod serial;
@@ -37,7 +36,7 @@ use log::{info, warn};
 use crate::prop_backend::PropBackend;
 
 use self::{
-    area::seal_area_clones,
+    area::AreaClones,
     insert::{context_area_path, cow_patch_new, sys_prop_available},
     mappings::collect_prop_area_mappings,
     patch::cow_patch_existing,
@@ -126,6 +125,8 @@ pub fn apply_cow_spoof(
     let mut cow_skipped = 0usize;
     let mut cow_patch_only_skipped = 0usize;
 
+    let mut clones = AreaClones::default();
+    let mut prefix_areas = HashMap::new();
     for (key, value) in &filtered {
         // Context 路由目标 area 未映射进本进程（预热后仍未映射 = SELinux
         // 拒绝，如 build_bootimage_prop 仅 shell/update_engine 可读）⇒
@@ -139,7 +140,15 @@ pub fn apply_cow_spoof(
             continue;
         }
 
-        match cow_patch_existing(find_fn, key, value, &mappings, serial_pa.as_mut(), backend) {
+        match cow_patch_existing(
+            find_fn,
+            key,
+            value,
+            &mappings,
+            serial_pa.as_mut(),
+            backend,
+            &mut clones,
+        ) {
             Ok(true) => cow_patched += 1,
             Ok(false) => {
                 // 「本机可能不存在」的 key（dlkm 分区副本、OEM 营销名族与别名）只在部分
@@ -155,7 +164,14 @@ pub fn apply_cow_spoof(
                     cow_patch_only_skipped += 1;
                 } else {
                     // 属性不存在 → 尝试在私有副本中插入新 trie 节点
-                    match cow_patch_new(key, value, &mappings, backend) {
+                    match cow_patch_new(
+                        key,
+                        value,
+                        &mappings,
+                        backend,
+                        &mut clones,
+                        &mut prefix_areas,
+                    ) {
                         Ok(true) => {
                             if explicit.contains(*key) {
                                 info!("COW insert '{key}' (explicit custom_prop)");
@@ -177,7 +193,7 @@ pub fn apply_cow_spoof(
     }
 
     // 全部 patch 完成：副本降回只读，形态与正常共享只读属性区一致。
-    seal_area_clones();
+    clones.seal();
 
     if cow_patched > 0 || cow_inserted > 0 || cow_patch_only_skipped > 0 {
         info!(

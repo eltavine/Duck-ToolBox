@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 #include "language.hpp"
 #include "lsplant.hpp"
+#include "pthread_keys.hpp"
 #include "shadowhook.h"
 #include "xdl.h"
 #include <android/log.h>
@@ -50,6 +51,9 @@ bool install(JNIEnv *env, const std::string &locale, std::vector<char> &dex) {
         void *art = xdl_open("libart.so", XDL_DEFAULT);
         if (!art) return;
         struct Symbols { void *handle; ~Symbols() { xdl_close(handle); } } symbols{art};
+        // ShadowHook can install process-wide signal handlers even if initialization fails.
+        resident = true;
+        duck::keep_pthread_keys();
         if (shadowhook_init(SHADOWHOOK_MODE_UNIQUE, false) != 0) return;
         lsplant::InitInfo info{
             .inline_hooker = [](void *target, void *replacement) -> void * {
@@ -80,8 +84,6 @@ bool install(JNIEnv *env, const std::string &locale, std::vector<char> &dex) {
             .generated_class_name = "DuckLanguageHook_",
             .generated_source_name = "LanguageOverrides",
         };
-        // Initialization itself may install ART hooks; never unload their owner.
-        resident = true;
         bool initialized = lsplant::Init(env, info);
         // The pinned LSPlant resolves symbols during InitNative; cached addresses
         // point into ART itself, so xDL's lookup metadata is released on return.
