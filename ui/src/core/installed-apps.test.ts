@@ -11,13 +11,13 @@ afterEach(() => {
   cleanups.splice(0).forEach((cleanup) => cleanup())
   vi.resetAllMocks()
 })
-function setup() {
+function setup(scope?: Parameters<typeof useInstalledApps>[0]) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   let query!: ReturnType<typeof useInstalledApps>
   const wrapper = mount(
     defineComponent({
       setup() {
-        query = useInstalledApps()
+        query = useInstalledApps(scope)
         return () => h("div")
       },
     }),
@@ -67,4 +67,25 @@ it("does not start metadata batches after the last picker is unmounted", async (
   finish(["com.example.app"])
   await flushPromises()
   expect(packagesInfo).not.toHaveBeenCalled()
+})
+
+it("exposes each known user to scoped callers and one row to package callers", async () => {
+  const listPackages = vi.fn().mockResolvedValue(["com.example.app"])
+  const packagesInfo = vi.fn().mockResolvedValue([
+    { packageName: "com.example.app", label: "Example" },
+    { packageName: "com.example.app", label: "Example", userId: 999 },
+    { packageName: "com.example.app", label: "Example", userId: 0 },
+    { packageName: "com.example.app", label: "Example", userId: 999 },
+  ])
+  vi.mocked(bridge).mockReturnValue({ listPackages, packagesInfo } as unknown as ReturnType<
+    typeof bridge
+  >)
+  const { query: users } = setup("user")
+  const { query: packages } = setup()
+  await flushPromises()
+  expect(users.data.value).toEqual([
+    { packageName: "com.example.app", label: "Example", userId: 0 },
+    { packageName: "com.example.app", label: "Example", userId: 999 },
+  ])
+  expect(packages.data.value).toEqual([{ packageName: "com.example.app", label: "Example" }])
 })

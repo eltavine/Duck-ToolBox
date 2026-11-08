@@ -9,6 +9,7 @@ export interface InstalledPackage {
   packageName: string
   label: string
   system: boolean
+  userId?: number
 }
 
 export interface HostModule {
@@ -29,8 +30,8 @@ export interface RootBridge {
   hostModule(): HostModule | null
   listPackages(kind: "user" | "system" | "all"): Promise<string[]>
   /**
-   * Labels for the given packages; unknown packages are omitted. Aborting stops queued
-   * metadata batches, but an in-progress native call is synchronous.
+   * Metadata for the given packages, with one entry per installed user when known.
+   * Aborting stops queued batches, but an in-progress native call is synchronous.
    */
   packagesInfo(packageNames: string[], signal?: AbortSignal): Promise<InstalledPackage[]>
   /** URL that renders an app icon, or null when the host cannot serve icons. */

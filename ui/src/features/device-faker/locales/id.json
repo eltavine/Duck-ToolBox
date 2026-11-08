@@ -107,7 +107,7 @@
   },
   "apps": {
     "title": "Pilih aplikasi terinstal",
-    "help": "Aplikasi baru memakai kunci paket tanpa akhiran pengguna. Kunci khusus pengguna yang ada tetap dipertahankan.",
+    "help": "Pilihan dengan ID pengguna Android hanya berlaku untuk pengguna tersebut. Nama paket tanpa ID berlaku untuk semua pengguna.",
     "search": "Cari aplikasi atau nama paket",
     "noResults": "Tidak ada aplikasi yang cocok.",
     "existing": "Sudah ditambahkan",

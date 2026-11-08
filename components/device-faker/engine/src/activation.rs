@@ -1,5 +1,8 @@
 //! Root-owned activation snapshots. Zygote cannot read the private state directory.
-use crate::{config::Config, gate};
+use crate::{
+    config::{Config, MergedAppConfig},
+    gate,
+};
 use anyhow::{Context, Result, ensure};
 use serde::{Deserialize, Serialize};
 use std::{io::Read, path::Path};
@@ -7,7 +10,9 @@ use std::{io::Read, path::Path};
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Activation {
     pub generation: String,
-    pub content: String,
+    pub profile: MergedAppConfig,
+    pub debug: bool,
+    pub warnings: Vec<String>,
 }
 
 pub fn resolve_at(root: &Path, package: &str) -> Result<Option<Activation>> {
@@ -23,17 +28,37 @@ pub fn resolve_at(root: &Path, package: &str) -> Result<Option<Activation>> {
     ensure!(content.len() <= 48 * 1024, "Configuration exceeds 48 KiB");
     let config = Config::from_toml(&content)?;
     let base = package.split('@').next().unwrap_or(package);
-    if config
+    let Some(profile) = config
         .get_merged_config(package)
         .or_else(|| config.get_merged_config(base))
-        .is_none()
-        || gate::activation_at(root).as_deref() != Some(generation.as_str())
-    {
+    else {
+        return Ok(None);
+    };
+    let mut warnings = Vec::new();
+    if config.debug {
+        for key in [Some(package), (base != package).then_some(base)]
+            .into_iter()
+            .flatten()
+        {
+            let templates = config.conflicting_templates_for_package(key);
+            if templates.len() > 1 {
+                warnings.push(format!(
+                    "Package {key} is claimed by {} templates [{}]; '{}' takes precedence",
+                    templates.len(),
+                    templates.join(", "),
+                    templates[0]
+                ));
+            }
+        }
+    }
+    if gate::activation_at(root).as_deref() != Some(generation.as_str()) {
         return Ok(None);
     }
     Ok(Some(Activation {
         generation,
-        content,
+        profile,
+        debug: config.debug,
+        warnings,
     }))
 }
 
@@ -72,20 +97,43 @@ mod tests {
             .unwrap()
             .unwrap();
         assert_eq!(selected.generation, "initial");
-        let config = Config::from_toml(&selected.content).unwrap();
-        assert_eq!(
-            config
-                .get_merged_config("com.example.app")
-                .unwrap()
-                .model
-                .as_deref(),
-            Some("V2546A")
-        );
+        assert_eq!(selected.profile.model.as_deref(), Some("V2546A"));
         assert!(
             resolve_at(root.path(), "com.other.app@0")
                 .unwrap()
                 .is_none()
         );
+    }
+
+    #[test]
+    fn a_user_override_is_resolved_without_disclosing_other_profiles() {
+        let root = fixture();
+        fs::write(
+            root.path()
+                .join("data/adb/duck-device-faker/config/config.toml"),
+            r#"
+[[apps]]
+package = "com.example.app"
+model = "Base"
+
+[[apps]]
+package = "com.example.app@999"
+model = "Clone"
+
+[[apps]]
+package = "com.other.app"
+model = "Unrelated"
+"#,
+        )
+        .unwrap();
+        let snapshot = resolve_at(root.path(), "com.example.app@999")
+            .unwrap()
+            .unwrap();
+        assert_eq!(snapshot.profile.model.as_deref(), Some("Clone"));
+        let response = serde_json::to_string(&snapshot).unwrap();
+        for unrelated in ["Base", "Unrelated", "com.other.app"] {
+            assert!(!response.contains(unrelated));
+        }
     }
 
     #[test]
@@ -145,7 +193,7 @@ mod tests {
             .unwrap();
         assert_ne!(initial.generation, next.generation);
         assert_eq!(gate::activation_at(root.path()), Some(next.generation));
-        assert_eq!(initial.content, next.content);
+        assert_eq!(initial.profile.model, next.profile.model);
     }
 
     #[test]
@@ -162,7 +210,7 @@ mod tests {
             let selected = resolve_at(root.path(), "com.example.app@999")
                 .unwrap()
                 .unwrap();
-            assert_eq!(selected.content, content);
+            assert_eq!(selected.profile.model.as_deref(), Some("Phone"));
             for package in ["com.example.app@0", "com.example.app", "com.other.app@999"] {
                 assert!(
                     resolve_at(root.path(), package).unwrap().is_none(),
@@ -196,8 +244,10 @@ mod tests {
             resolve_at(root.path(), "com.example.app@0")
                 .unwrap()
                 .unwrap()
-                .content,
-            content
+                .profile
+                .model
+                .as_deref(),
+            Some("V2546A")
         );
         content.push('x');
         fs::write(&path, content).unwrap();

@@ -107,7 +107,7 @@
   },
   "apps": {
     "title": "Choisir les applications installées",
-    "help": "Les nouvelles applications utilisent des clés sans suffixe utilisateur. Les clés propres à un utilisateur sont conservées.",
+    "help": "Une sélection avec un identifiant utilisateur Android s’applique uniquement à cet utilisateur. Sans identifiant, le paquet s’applique à tous les utilisateurs.",
     "search": "Rechercher une application ou un paquet",
     "noResults": "Aucune application correspondante.",
     "existing": "Déjà ajoutée",

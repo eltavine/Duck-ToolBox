@@ -1,4 +1,4 @@
-import { exec, getPackagesInfo, isKsuWebui, listPackages, toast } from "kernelsu-alt"
+import { exec, isKsuWebui, pm, toast } from "kernelsu-alt"
 
 import type { HostModule, InstalledPackage, RootBridge } from "./types"
 
@@ -98,7 +98,7 @@ export function createKernelSuBridge(): RootBridge {
 
     async listPackages(kind) {
       try {
-        return await listPackages(kind)
+        return await pm.listPackages(kind)
       } catch {
         return []
       }
@@ -113,16 +113,19 @@ export function createKernelSuBridge(): RootBridge {
         await new Promise<void>((resolve) => setTimeout(resolve, 0))
         signal?.throwIfAborted()
         try {
-          const infos = await getPackagesInfo(packageNames.slice(offset, offset + 24))
-          result.push(
-            ...(Array.isArray(infos) ? infos : [infos])
-              .filter((info) => typeof info?.packageName === "string" && !("error" in info))
-              .map<InstalledPackage>((info) => ({
-                packageName: info.packageName,
-                label: info.appLabel || info.packageName,
-                system: Boolean(info.isSystem),
-              })),
-          )
+          const infos = await pm.getPackagesInfo(packageNames.slice(offset, offset + 24))
+          for (const info of infos) {
+            if (typeof info?.packageName !== "string" || "error" in info) continue
+            const userId = info.userId
+            result.push({
+              packageName: info.packageName,
+              label: info.appLabel || info.packageName,
+              system: Boolean(info.isSystem),
+              ...(typeof userId === "number" &&
+                Number.isSafeInteger(userId) &&
+                userId >= 0 && { userId }),
+            })
+          }
         } catch {
           // Unsupported hosts keep package names; preserve any batches already loaded.
           break

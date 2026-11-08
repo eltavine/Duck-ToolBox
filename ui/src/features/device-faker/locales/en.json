@@ -107,7 +107,7 @@
   },
   "apps": {
     "title": "Choose installed apps",
-    "help": "New apps use bare package keys. Existing user-specific keys are kept.",
+    "help": "Selections with an Android user ID apply to that user only. Package names without a user ID apply to all users.",
     "search": "Search apps or package names",
     "noResults": "No matching apps.",
     "existing": "Already added",

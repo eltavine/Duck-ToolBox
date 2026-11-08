@@ -107,7 +107,7 @@
   },
   "apps": {
     "title": "Installierte Apps auswählen",
-    "help": "Neue Apps verwenden Paketschlüssel ohne Benutzerzusatz. Vorhandene benutzerspezifische Schlüssel bleiben erhalten.",
+    "help": "Wenn ein Android-Nutzer bekannt ist, gilt die Auswahl nur für ihn. Paketnamen ohne Nutzer-ID gelten für alle Nutzer.",
     "search": "Apps oder Paketnamen suchen",
     "noResults": "Keine passenden Apps.",
     "existing": "Bereits hinzugefügt",

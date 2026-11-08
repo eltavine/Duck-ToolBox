@@ -1,6 +1,6 @@
 use anyhow::Result;
 use indexmap::IndexMap;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 
 mod profile;
@@ -327,7 +327,7 @@ impl Config {
 }
 
 /// 合并后的应用配置（模板 + 直接配置）
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct MergedAppConfig {
     pub manufacturer: Option<String>,
     pub brand: Option<String>,

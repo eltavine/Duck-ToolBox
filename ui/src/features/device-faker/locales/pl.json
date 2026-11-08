@@ -107,7 +107,7 @@
   },
   "apps": {
     "title": "Wybierz zainstalowane aplikacje",
-    "help": "Nowe aplikacje używają kluczy pakietów bez sufiksu użytkownika. Istniejące klucze przypisane do użytkowników są zachowywane.",
+    "help": "Wybór z identyfikatorem użytkownika Androida dotyczy tylko tego użytkownika. Nazwa pakietu bez identyfikatora dotyczy wszystkich użytkowników.",
     "search": "Szukaj aplikacji lub nazw pakietów",
     "noResults": "Brak pasujących aplikacji.",
     "existing": "Już dodano",

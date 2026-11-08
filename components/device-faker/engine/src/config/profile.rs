@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use anyhow::Result;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize, Serializer};
 
 pub const DPI_MIN: u32 = 120;
 pub const DPI_MAX: u32 = 640;
@@ -194,6 +194,15 @@ impl NumberSetting {
 
     pub fn is_delete(self) -> bool {
         matches!(self, Self::Delete)
+    }
+}
+
+impl Serialize for NumberSetting {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        match self {
+            Self::Value(value) => serializer.serialize_u32(*value),
+            Self::Delete => serializer.serialize_str("__DELETE__"),
+        }
     }
 }
 

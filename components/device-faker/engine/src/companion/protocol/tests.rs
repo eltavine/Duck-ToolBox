@@ -1,19 +1,30 @@
 use super::*;
-use crate::activation::Activation;
+use crate::{activation::Activation, config::Config};
 use std::{
     thread,
     time::{Duration, Instant},
 };
 
 #[test]
-fn resolve_transfers_a_maximum_size_private_snapshot() {
+fn resolve_transfers_the_profile_with_its_property_semantics() {
     let (mut client, mut server) = UnixStream::pair().unwrap();
-    let mut content = "[[apps]]\npackage='com.example.app@999'\nmodel='Phone'\n#".to_owned();
-    // Tabs require JSON escaping while remaining valid TOML comment characters.
-    content.push_str(&"\t".repeat(48 * 1024 - content.len()));
-    let expected = content.clone();
+    let profile = Config::from_toml(
+        r#"
+[[apps]]
+package = "com.example.app@999"
+fingerprint = "brand/product/device:16/ID/123:user/release-keys"
+sdk_int = "__DELETE__"
+custom_props = { "ro.product.model" = "__EMPTY__" }
+"#,
+    )
+    .unwrap()
+    .get_merged_config("com.example.app@999")
+    .unwrap();
+    let expected = Config::build_merged_property_map_with_explicit(&profile);
+    let deletions = Config::build_delete_props_list(&profile);
     let worker = thread::spawn(move || {
-        let CompanionRequest::Resolve(package) = read_companion_request(&mut server).unwrap()
+        let CompanionRequest::ResolveProfile(package) =
+            read_companion_request(&mut server).unwrap()
         else {
             panic!("expected a profile resolution request");
         };
@@ -23,21 +34,33 @@ fn resolve_transfers_a_maximum_size_private_snapshot() {
             &CompanionResponse {
                 activation: Some(Activation {
                     generation: "initial".into(),
-                    content,
+                    profile,
+                    debug: true,
+                    warnings: Vec::new(),
                 }),
                 ..CompanionResponse::ok()
             },
         )
         .unwrap();
     });
-    let request = encode_request(&CompanionRequest::Resolve("com.example.app@999".into())).unwrap();
+    let request = encode_request(&CompanionRequest::ResolveProfile(
+        "com.example.app@999".into(),
+    ))
+    .unwrap();
     let response = exchange(&mut client, request).unwrap();
     worker.join().unwrap();
     assert_eq!(response.status, 0);
     let snapshot = response.activation.unwrap();
     assert_eq!(snapshot.generation, "initial");
-    assert_eq!(snapshot.content, expected);
-    assert!(crate::config::Config::from_toml(&snapshot.content).is_ok());
+    assert!(snapshot.debug);
+    assert_eq!(
+        Config::build_merged_property_map_with_explicit(&snapshot.profile),
+        expected
+    );
+    assert_eq!(
+        Config::build_delete_props_list(&snapshot.profile),
+        deletions
+    );
 }
 
 #[test]
@@ -53,7 +76,7 @@ fn generation_rejection_and_an_unselected_target_remain_distinct() {
                 assert_eq!(generation, "old-generation");
                 CompanionResponse::err("engine disabled")
             } else {
-                assert!(matches!(request, CompanionRequest::Resolve(_)));
+                assert!(matches!(request, CompanionRequest::ResolveProfile(_)));
                 CompanionResponse::ok()
             };
             write_companion_response(&mut server, &response).unwrap();
@@ -61,7 +84,7 @@ fn generation_rejection_and_an_unselected_target_remain_distinct() {
         let request = if selected {
             CompanionRequest::CheckGeneration("old-generation".into())
         } else {
-            CompanionRequest::Resolve("com.other.app@0".into())
+            CompanionRequest::ResolveProfile("com.other.app@0".into())
         };
         let response = exchange(&mut client, encode_request(&request).unwrap()).unwrap();
         worker.join().unwrap();
@@ -145,7 +168,7 @@ fn malformed_or_closed_responses_never_become_success() {
 
 #[test]
 fn oversized_requests_and_responses_are_rejected_before_writing() {
-    assert!(encode_request(&CompanionRequest::Resolve("x".repeat(MAX_FRAME))).is_err());
+    assert!(encode_request(&CompanionRequest::ResolveProfile("x".repeat(MAX_FRAME))).is_err());
     let (mut writer, mut reader) = UnixStream::pair().unwrap();
     let response = CompanionResponse::err("x".repeat(MAX_FRAME));
     assert!(write_companion_response(&mut writer, &response).is_err());

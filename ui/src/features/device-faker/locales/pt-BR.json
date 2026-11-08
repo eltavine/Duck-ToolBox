@@ -107,7 +107,7 @@
   },
   "apps": {
     "title": "Selecionar aplicativos instalados",
-    "help": "Novos aplicativos usam chaves sem sufixo de usuário. As chaves existentes específicas de usuário são mantidas.",
+    "help": "As seleções com ID de usuário do Android se aplicam apenas a esse usuário. Nomes de pacotes sem ID se aplicam a todos os usuários.",
     "search": "Buscar aplicativos ou pacotes",
     "noResults": "Nenhum aplicativo correspondente.",
     "existing": "Já adicionado",

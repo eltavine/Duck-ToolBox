@@ -98,7 +98,7 @@ pub fn handle_companion_request(stream: &mut UnixStream) {
     };
 
     match request {
-        CompanionRequest::Resolve(package) => {
+        CompanionRequest::ResolveProfile(package) => {
             let response = match crate::activation::resolve_at(std::path::Path::new("/"), &package)
             {
                 Ok(activation) => CompanionResponse {
@@ -106,7 +106,8 @@ pub fn handle_companion_request(stream: &mut UnixStream) {
                     ..CompanionResponse::ok()
                 },
                 Err(error) => {
-                    CompanionResponse::err(format!("Profile resolution failed: {error:#}"))
+                    error!("Profile resolution failed: {error:#}");
+                    CompanionResponse::err("Profile resolution failed")
                 }
             };
             let _ = write_companion_response(stream, &response);

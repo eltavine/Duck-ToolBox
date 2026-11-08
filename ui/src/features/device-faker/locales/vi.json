@@ -107,7 +107,7 @@
   },
   "apps": {
     "title": "Chọn ứng dụng đã cài đặt",
-    "help": "Ứng dụng mới dùng khóa gói không có hậu tố người dùng. Các khóa theo người dùng hiện có được giữ nguyên.",
+    "help": "Lựa chọn có mã người dùng Android chỉ áp dụng cho người dùng đó. Tên gói không có mã áp dụng cho mọi người dùng.",
     "search": "Tìm ứng dụng hoặc tên gói",
     "noResults": "Không có ứng dụng phù hợp.",
     "existing": "Đã thêm",

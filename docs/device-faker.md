@@ -196,10 +196,19 @@ cleanup can take longer and reports pending failures.
 Activation state and configuration remain private under `/data/adb/duck-device-faker`.
 Application callbacks must resolve them through the root companion: the zygote
 SELinux domain can be denied access even while the management process reports
-the engine ready and enabled. The companion returns only a configured target's
-bounded snapshot, brackets resolution with the activation generation, and checks
-that generation again before JNI/property changes. No broader SELinux read rule
-or world-readable state is required.
+the engine ready and enabled. The companion validates the saved configuration,
+selects the exact package and Android user with a bare-package fallback, and
+returns only the merged profile and its diagnostics. It checks the activation
+generation during resolution and again before JNI or property changes.
+
+Upstream Device Faker also moves profile selection into the companion for Zygisk
+Next 1.5.3. The embedded engine reads the saved file on each resolution so a
+new app process uses the latest saved configuration.
+[Upstream commit](https://github.com/Seyud/device_faker/commit/e43b74ed7986114ee5bafab7c0291428ba53d6c5)
+
+The picker uses the installed KernelSU package API to distinguish Android users.
+When the host has no user metadata, the picker offers the package-wide key and
+preserves existing user-specific assignments.
 
 The public [Zygisk API v4 header](https://github.com/topjohnwu/zygisk-module-sample/blob/7bb941ac8edfcffd1d23761e401c45ca95409dc1/module/jni/zygisk.hpp)
 is the ABI contract. The composite callback table registers once and dispatches PI

@@ -20,6 +20,7 @@ mod prop_backend;
 
 use std::collections::{HashMap, HashSet};
 
+use activation::Activation;
 use companion::{SessionTarget, handle_companion_request, spoof_system_props_via_companion};
 use config::Config;
 use hooks::hook_build_fields;
@@ -96,7 +97,12 @@ impl MyModule {
         // companion 侧现在自己管理会话状态和恢复逻辑；
         // Zygisk 模块侧不再需要跨应用恢复（ACTIVE_RESET_SESSION 已移除）。
 
-        let (generation, config) = match load_config(api, &package_with_user) {
+        let Activation {
+            generation,
+            profile: mut merged,
+            debug,
+            warnings,
+        } = match load_profile(api, &package_with_user) {
             Ok(Some(snapshot)) => snapshot,
             Ok(None) => {
                 api.set_option(ZygiskOption::DlCloseModuleLibrary);
@@ -113,46 +119,10 @@ impl MyModule {
             generation: &generation,
         };
 
-        configure_log_level(config.debug);
-
-        if config.debug {
-            info!(
-                "Config loaded with {} apps and {} templates",
-                config.apps.len(),
-                config.templates.len()
-            );
+        configure_log_level(debug);
+        for warning in warnings {
+            warn!("{warning}");
         }
-
-        // 同一包名被多个模板声明时，只有书写顺序最先的那个生效，其余被静默丢弃。
-        // 这是最常见的「配了 A 机型却生效了 B 机型」成因，必须留痕。
-        // 注意：非 debug 下日志级别为 Off，此告警只在 debug = true 时落盘；
-        // 用户侧的主要提示在 WebUI（保存/列表处）。
-        if config.debug {
-            for key in [package_with_user.as_str(), package_name.as_str()] {
-                let claimants = config.conflicting_templates_for_package(key);
-                if claimants.len() > 1 {
-                    warn!(
-                        "Package {key} is claimed by {} templates [{}]; only '{}' takes effect, \
-                         the rest are silently ignored. Assign a package to at most one template.",
-                        claimants.len(),
-                        claimants.join(", "),
-                        claimants[0]
-                    );
-                }
-            }
-        }
-
-        let merged = config
-            .get_merged_config(&package_with_user)
-            .or_else(|| config.get_merged_config(&package_name));
-
-        let Some(mut merged) = merged else {
-            if config.debug {
-                info!("App {package_name} (user {user_id}) not in config, unloading module");
-            }
-            api.set_option(ZygiskOption::DlCloseModuleLibrary);
-            return Ok(());
-        };
 
         // Configuration and package resolution must not revive an older enable generation.
         if companion::send_companion_command(
@@ -168,7 +138,7 @@ impl MyModule {
 
         if merged.force_denylist_unmount {
             api.set_option(ZygiskOption::ForceDenylistUnmount);
-            if config.debug {
+            if debug {
                 info!("Force denylist unmount enabled for {package_name}");
             }
         }
@@ -177,7 +147,7 @@ impl MyModule {
         // JNI and property adapters consume the same final plan, including explicit overrides.
         let (prop_map, explicit_props) = Config::build_merged_property_map_with_explicit(&merged);
         hook_build_fields(env, &prop_map)?;
-        if config.debug {
+        if debug {
             info!("Build fields faked successfully");
         }
 
@@ -188,7 +158,7 @@ impl MyModule {
         }
 
         // Prepare process-local properties before any foreground-only global session.
-        if config.debug {
+        if debug {
             info!(
                 "Property map: {} entries ({} explicit custom_props)",
                 prop_map.len(),
@@ -209,7 +179,9 @@ impl MyModule {
             //      （见 `PropBackend::repoint_area_and_relabel`），否则 bionic 在
             //      specialize 后的 SELinux 复查会 munmap 掉克隆（真机实测）。
             // 全局与进程内写的是同一批值，getprop 与进程内读取仍然一致。
-            let _ = cow_props::apply_cow_spoof(&prop_map, &explicit_props);
+            if let Err(error) = cow_props::apply_cow_spoof(&prop_map, &explicit_props) {
+                error!("Hybrid COW spoof failed: {error:#}");
+            }
 
             let delete_props = Config::build_delete_props_list(&merged);
             if !prop_map.is_empty() || !delete_props.is_empty() || merged.dpi.is_some() {
@@ -220,10 +192,10 @@ impl MyModule {
                     &delete_props,
                     target,
                     merged.dpi,
-                    config.debug,
+                    debug,
                 ) {
                     error!("Companion resetprop (full) failed: {e:?}");
-                } else if config.debug {
+                } else if debug {
                     info!(
                         "Companion resetprop (full): {} set + {} delete for {package_name}",
                         prop_map.len(),
@@ -272,10 +244,10 @@ impl MyModule {
                     &[],
                     target,
                     merged.dpi,
-                    config.debug,
+                    debug,
                 ) {
                     error!("Companion dpi failed: {e:?}");
-                } else if config.debug {
+                } else if debug {
                     info!("Companion dpi applied for {package_name}");
                 }
             }
@@ -342,26 +314,18 @@ impl MyModule {
     }
 }
 
-fn load_config(api: &mut ZygiskApi<V4>, package: &str) -> anyhow::Result<Option<(String, Config)>> {
+fn load_profile(api: &mut ZygiskApi<V4>, package: &str) -> anyhow::Result<Option<Activation>> {
     // Private root state is intentionally inaccessible in the zygote SELinux domain.
     let response = companion::send_companion_command(
         api,
-        &companion::CompanionRequest::Resolve(package.to_owned()),
+        &companion::CompanionRequest::ResolveProfile(package.to_owned()),
     )?;
     anyhow::ensure!(
         response.status == 0,
         "{}",
         response.message.unwrap_or_default()
     );
-    let Some(snapshot) = response.activation else {
-        return Ok(None);
-    };
-    anyhow::ensure!(
-        snapshot.content.len() <= 48 * 1024,
-        "Configuration exceeds 48 KiB"
-    );
-    let config = Config::from_toml(&snapshot.content)?;
-    Ok(Some((snapshot.generation, config)))
+    Ok(response.activation)
 }
 
 fn configure_log_level(debug_enabled: bool) {

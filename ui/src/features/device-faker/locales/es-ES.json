@@ -107,7 +107,7 @@
   },
   "apps": {
     "title": "Elegir aplicaciones instaladas",
-    "help": "Las aplicaciones nuevas usan claves sin sufijo de usuario. Se conservan las claves específicas de usuario existentes.",
+    "help": "Las selecciones con un ID de usuario de Android solo se aplican a ese usuario. Los paquetes sin ID se aplican a todos los usuarios.",
     "search": "Buscar aplicaciones o paquetes",
     "noResults": "No hay aplicaciones coincidentes.",
     "existing": "Ya añadida",

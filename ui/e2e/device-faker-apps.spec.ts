@@ -76,6 +76,42 @@ test("cancel discards pending selections and restores keyboard focus", async ({ 
   await expect(dialog.getByRole("button", { name: t.apps.add, exact: true })).toBeDisabled()
 })
 
+test("adds a separate Android user when the other instance is already configured", async ({
+  page,
+  open,
+}) => {
+  const t = messages("en")
+  await open("/device-faker", { locale: "en" })
+  await page.evaluate(() => {
+    const host = (window as unknown as { ksu: { getPackagesInfo: (input: string) => string } }).ksu
+    const previous = host.getPackagesInfo.bind(host)
+    host.getPackagesInfo = (input) =>
+      JSON.stringify(
+        (JSON.parse(previous(input)) as { packageName: string }[]).flatMap((app) =>
+          app.packageName === "com.tencent.mm"
+            ? [
+                { ...app, uid: 10123 },
+                { ...app, uid: 99910123 },
+              ]
+            : [app],
+        ),
+      )
+  })
+  await page.getByText(t.addProfile, { exact: true }).click()
+  const keys = page.getByLabel(t.packages, { exact: true })
+  await keys.fill("com.tencent.mm@999")
+  await page.getByRole("button", { name: t.apps.title, exact: true }).click()
+  const dialog = page.getByRole("dialog")
+  await dialog.getByRole("searchbox").fill("com.tencent.mm")
+  const clone = dialog.locator("label").filter({ hasText: "com.tencent.mm@999" })
+  const primary = dialog.locator("label").filter({ hasText: "com.tencent.mm@0" })
+  await expect(clone.getByRole("checkbox")).toBeDisabled()
+  await expect(primary.getByRole("checkbox")).toBeEnabled()
+  await primary.click()
+  await dialog.getByRole("button", { name: t.apps.add, exact: true }).click()
+  await expect(keys).toHaveValue("com.tencent.mm@999\ncom.tencent.mm@0")
+})
+
 test("keeps manual entry available when the host returns no installed apps", async ({
   page,
   open,

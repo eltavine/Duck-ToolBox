@@ -116,7 +116,7 @@ pub(crate) struct ResetpropSessionRequest {
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(tag = "cmd", content = "payload")]
 pub enum CompanionRequest {
-    Resolve(String),
+    ResolveProfile(String),
     CheckGeneration(String),
     Apply(ResetpropSessionRequest),
     WriteLog(WriteLogRequest),
