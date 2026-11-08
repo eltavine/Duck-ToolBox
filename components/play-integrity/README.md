@@ -123,6 +123,27 @@ readings using a bounded read-only command. Existing modules may already affect
 those system readings. Target-process values remain unobserved unless measured;
 the comparison does not establish injection or a Google Play Integrity verdict.
 
+## Full injection
+
+Advanced configuration enables `fullInjection` by default for the two PI target
+processes. GMS and Play Store use native JNI to write configured fields in
+`Build` and `Build.VERSION`. GMS accepts the same scalar types as the legacy
+path. The Play Store writes string fields and defaults to this mode when no
+fingerprint or SDK mode was selected. Explicit `spoofVendingBuild=1` gives Build
+mode priority, and `spoofVendingBuild=0` lets the legacy modes decide. Provider
+and signature compatibility retain their Java initialization order when enabled.
+The companion supplies DEX only when a configured path uses it. Set `fullInjection=0` for the legacy
+Build and property paths. [KOW v4.9 behavioral reference](https://github.com/KOWX712/PlayIntegrityFix/releases/tag/v4.9-inject-s)
+
+In ARM64 GMS, property overrides use Device Faker's private property areas and
+patch existing keys. Exact configured keys take precedence over suffix rules,
+which take precedence over baseline values derived from the identity or fixed
+by the reference profile. A cloned area is a process-local snapshot. Readbacks
+count matching keys across the callback API and the direct API where Bionic
+supports the value length. Unsupported ABIs and private writes that apply no
+changes use the legacy callback with the configured property rules when changes
+are needed. A partially applied private configuration reports its match count.
+
 ## Pixel release candidates and activation
 
 `pixel-devices` returns the supported device catalog with `bluejay` (Pixel 6a) as

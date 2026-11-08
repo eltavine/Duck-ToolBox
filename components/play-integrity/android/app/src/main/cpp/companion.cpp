@@ -3,6 +3,7 @@
 // Modified 2026-10-24: checked complete IO, fixed-width lengths, bounded files,
 // lifecycle options and a shared monotonic exchange deadline; payload receipt is not injection proof.
 #include "transport.hpp"
+#include "settings.hpp"
 #include <cerrno>
 #include <cstdio>
 #include <fstream>
@@ -80,15 +81,22 @@ bool receive(int fd, std::vector<char> &dex, std::string &config) {
     dex.clear(); config.clear();
     const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(2);
     uint32_t header[3]{};
-    if (!transfer(fd, header, sizeof(header), false, deadline) || header[0] != magic || !header[1] || header[1] > max_dex || !header[2] || header[2] > max_config) return false;
+    if (!transfer(fd, header, sizeof(header), false, deadline) || header[0] != magic || header[1] > max_dex || !header[2] || header[2] > max_config) return false;
     dex.resize(header[1]); config.resize(header[2]);
     if (!transfer(fd, dex.data(), dex.size(), false, deadline) || !transfer(fd, config.data(), config.size(), false, deadline)) { dex.clear(); config.clear(); return false; }
     return true;
 }
 void companion(int fd) {
     const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(2);
-    auto dex = active() ? file(PIF_MODULE_DIR "/classes.dex", max_dex) : std::vector<char>{};
-    auto config = dex.empty() ? std::vector<char>{} : file(PIF_DATA_DIR "/custom.pif.json", max_config);
+    auto config = active() ? file(PIF_DATA_DIR "/custom.pif.json", max_config) : std::vector<char>{};
+    std::vector<char> dex;
+    if (!config.empty()) {
+        auto parsed = parse(std::string(config.begin(),config.end()));
+        if (!parsed.is_object() || parsed.empty()) config.clear();
+        else if (settings(parsed,false).injectDex() || settings(std::move(parsed),true).injectDex()) {
+            dex=file(PIF_MODULE_DIR "/classes.dex",max_dex);
+        }
+    }
     if (!active()) { dex.clear(); config.clear(); }
     uint32_t header[]{magic, static_cast<uint32_t>(dex.size()), static_cast<uint32_t>(config.size())};
     if (!transfer(fd, header, sizeof(header), true, deadline)) return;

@@ -81,6 +81,7 @@
   "denylistHelp": "Gestion automatique de Magisk DenyList : le mode complet retire GMS et Play Store ; le mode scripts seuls les ajoute. La liste du gestionnaire root est modifiée.",
   "selinuxHelp": "En mode permissif, le comportement amont restreint la lecture des fichiers SELinux enforce/policy. Le noyau ne passe pas en mode enforcing.",
   "flagHelp": {
+    "fullInjection": "Utilise l’injection native de Build et les propriétés privées au processus sur ARM64. Désactivez cette option pour revenir aux anciennes méthodes.",
     "spoofBuild": "Remplacer les champs Build dans le processus cible.",
     "spoofProps": "Remplacer la lecture des propriétés système dans le processus cible.",
     "spoofProvider": "Compatibilité ancienne : bloquer les demandes de chaîne de certificats de DroidGuard. Peut perturber l’attestation matérielle.",
@@ -97,6 +98,7 @@
     "wildcard": "Motif non pris en charge : seul * initial pour un suffixe est implémenté.",
     "canary": "Canary conserve les heuristiques amont : Pixel 10a utilise API 35 (réel 36 selon la note), appareils inconnus 37, board API 32. Les six semaines et la valeur de patch de secours sont des estimations, pas une acceptation Google ni une validité de certificat.",
     "vending_priority": "La compatibilité SDK du Play Store est prioritaire sur l’empreinte.",
+    "vending_build_priority": "L’injection Build du Play Store prime sur les modes SDK et empreinte.",
     "pixel_patch_unknown": "Les données Google ne fournissent pas de date de correctif exacte ; le candidat la laisse vide."
   },
   "strongHelp": "Définit spoofProvider=0 pour ce candidat. Les valeurs de patch Build et propriété restent cohérentes ; aucun verdict n’est garanti.",
@@ -123,6 +125,7 @@
     "SECURITY_PATCH": "Date du correctif de sécurité",
     "DEVICE_INITIAL_SDK_INT": "API au lancement de l’appareil",
     "advanced": "Options avancées",
+    "fullInjection": "Injection complète",
     "spoofBuild": "Remplacer les champs Build",
     "spoofProps": "Remplacer la lecture des propriétés",
     "spoofProvider": "Compatibilité Provider héritée",
@@ -146,6 +149,7 @@
     "invalid": "Cet instantané est illisible. Les autres restent disponibles."
   },
   "inspection": {
+    "private": "Propriétés privées correspondantes · {matched}/{total}",
     "title": "Comparaison des informations",
     "help": "Compare les propriétés système actuelles aux remplacements Build et propriétés enregistrés. D’autres modules peuvent déjà modifier les valeurs système.",
     "refresh": "Actualiser les valeurs",
@@ -207,6 +211,7 @@
     "legacySource": "Cet ancien enregistrement de provenance identifie uniquement l’appareil et la version. Il ne lie pas l’empreinte complète, le modèle ni l’API de lancement."
   },
   "quick": {
+    "build": "Utiliser les champs Build configurés",
     "title": "Réglages de l’empreinte",
     "vending": "Mode de remplacement du Play Store",
     "vendingHelp": "Le mode empreinte modifie uniquement FINGERPRINT. La compatibilité SDK est prioritaire.",

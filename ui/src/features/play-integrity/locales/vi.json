@@ -81,6 +81,7 @@
   "denylistHelp": "Tự quản lý Magisk DenyList: chế độ đầy đủ xóa GMS và Play Store; chế độ chỉ tập lệnh thêm chúng. Danh sách trình quản lý root sẽ thay đổi.",
   "selinuxHelp": "Ở chế độ permissive, hành vi thượng nguồn hạn chế đọc SELinux enforce/policy. Điều này không chuyển nhân sang enforcing.",
   "flagHelp": {
+    "fullInjection": "Dùng cơ chế chèn Build gốc và thuộc tính riêng của tiến trình trên ARM64. Tắt để dùng cách chèn cũ.",
     "spoofBuild": "Ghi đè trường Build trong tiến trình đích.",
     "spoofProps": "Ghi đè đọc thuộc tính hệ thống trong tiến trình đích.",
     "spoofProvider": "Tương thích cũ: chặn yêu cầu chuỗi chứng chỉ DroidGuard. Có thể xung đột với chứng thực phần cứng.",
@@ -97,6 +98,7 @@
     "wildcard": "Mẫu không hỗ trợ: chỉ triển khai * ở đầu để khớp hậu tố.",
     "canary": "Canary giữ kinh nghiệm thượng nguồn: Pixel 10a dùng API 35 (ghi chú thực tế 36), máy chưa biết dùng 37, board API 32. Sáu tuần và mức vá dự phòng là ước tính, không phải sự chấp nhận của Google hay hạn chứng chỉ.",
     "vending_priority": "Tương thích SDK của Play Store được ưu tiên hơn ghi đè dấu vân tay.",
+    "vending_build_priority": "Chèn Build của Cửa hàng Play được ưu tiên hơn chế độ SDK và dấu vân tay.",
     "pixel_patch_unknown": "Dữ liệu Google không cung cấp ngày bản vá chính xác; cấu hình đề xuất để trống ngày."
   },
   "strongHelp": "Đặt spoofProvider=0 cho ứng viên. Giữ mức vá Build và thuộc tính nhất quán; không bảo đảm kết quả.",
@@ -123,6 +125,7 @@
     "SECURITY_PATCH": "Ngày vá bảo mật",
     "DEVICE_INITIAL_SDK_INT": "API khi thiết bị ra mắt",
     "advanced": "Tùy chọn nâng cao",
+    "fullInjection": "Chèn đầy đủ",
     "spoofBuild": "Ghi đè trường Build",
     "spoofProps": "Ghi đè việc đọc thuộc tính",
     "spoofProvider": "Tương thích Provider cũ",
@@ -146,6 +149,7 @@
     "invalid": "Không đọc được bản chụp này. Các bản khác vẫn dùng được."
   },
   "inspection": {
+    "private": "Thuộc tính riêng khớp · {matched}/{total}",
     "title": "Đối chiếu thông tin",
     "help": "So sánh thuộc tính hệ thống hiện tại với giá trị Build và thuộc tính đã lưu. Mô-đun khác có thể đã ảnh hưởng đến số liệu hệ thống.",
     "refresh": "Đọc lại giá trị",
@@ -207,6 +211,7 @@
     "legacySource": "Bản ghi nguồn cũ này chỉ xác định thiết bị và bản dựng. Chưa liên kết toàn bộ dấu vân tay, mẫu máy hoặc API khi ra mắt."
   },
   "quick": {
+    "build": "Dùng các trường Build đã cấu hình",
     "title": "Thiết lập dấu vân tay",
     "vending": "Chế độ ghi đè Play Store",
     "vendingHelp": "Chế độ dấu vân tay chỉ đổi FINGERPRINT. Tương thích SDK được ưu tiên.",

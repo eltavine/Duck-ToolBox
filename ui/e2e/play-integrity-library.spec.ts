@@ -82,7 +82,7 @@ test("starts with common paired fields and keeps advanced values until explicitl
   await page.getByRole("button", { name: "Advanced options", exact: true }).click()
   await page.getByRole("combobox", { name: "Legacy Provider compatibility", exact: true }).click()
   await expect(
-    page.getByRole("option", { name: "Not set · legacy default on", exact: true }),
+    page.getByRole("option", { name: "Not set · default off", exact: true }),
   ).toBeVisible()
   await page.keyboard.press("Escape")
   await page.getByRole("button", { name: "Preview changes", exact: true }).click()

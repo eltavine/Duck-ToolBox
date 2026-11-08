@@ -81,6 +81,7 @@
   "denylistHelp": "自动管理 Magisk DenyList：完整模式移除 GMS 和 Play 商店，scripts-only 模式添加它们。这会改变 root 管理器的名单。",
   "selinuxHelp": "SELinux 为 permissive 时，沿用上游限制读取 enforce／policy 文件的兼容行为；这不会让内核变为 enforcing。",
   "flagHelp": {
+    "fullInjection": "使用原生 Build 注入，并在 ARM64 上使用进程私有属性。关闭后使用旧版注入路径。",
     "spoofBuild": "在目标进程内覆盖 Build 字段。",
     "spoofProps": "在目标进程内覆盖系统属性读取。",
     "spoofProvider": "旧版兼容：阻止 DroidGuard 获取证书链，可能与硬件证明路径冲突。",
@@ -97,6 +98,7 @@
     "wildcard": "不支持此通配符写法：仅实现开头 * 的后缀匹配。",
     "canary": "Canary 保留上游经验规则：Pixel 10a 使用 API 35（上游注释实际为 36），未知机型使用 37，board API 使用 32。六周失效日期及补丁回退值均为估计，不代表 Google 接受或证书有效期。",
     "vending_priority": "已启用 Play 商店 SDK 兼容，其优先级高于商店指纹替换。",
+    "vending_build_priority": "Play 商店 Build 注入优先于 SDK 和指纹模式。",
     "pixel_patch_unknown": "Google 构建元数据未提供精确安全补丁日期，候选配置将其留空。"
   },
   "strongHelp": "为候选设置 spoofProvider=0；保留一致的 Build／属性补丁值，不保证完整性判定结果。",
@@ -123,6 +125,7 @@
     "SECURITY_PATCH": "安全补丁日期",
     "DEVICE_INITIAL_SDK_INT": "设备首发 API",
     "advanced": "高级选项",
+    "fullInjection": "全注入",
     "spoofBuild": "覆盖 Build 字段",
     "spoofProps": "覆盖系统属性读取",
     "spoofProvider": "旧版 Provider 兼容",
@@ -146,6 +149,7 @@
     "invalid": "无法读取此方案，其他方案仍可使用。"
   },
   "inspection": {
+    "private": "进程私有属性匹配 · {matched}/{total}",
     "title": "信息对照",
     "help": "对照当前系统属性读数与已保存的 Build、属性覆盖值。系统读数可能已受其他模块影响。",
     "refresh": "刷新读数",
@@ -207,6 +211,7 @@
     "legacySource": "此旧版来源记录仅包含设备代号和构建号，未绑定完整指纹、型号或首发 API。"
   },
   "quick": {
+    "build": "使用配置中的 Build 字段",
     "title": "指纹快捷配置",
     "vending": "Play 商店替换模式",
     "vendingHelp": "商店指纹模式只替换 FINGERPRINT。SDK 兼容模式优先于指纹替换。",

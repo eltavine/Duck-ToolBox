@@ -3,6 +3,7 @@
 // Modified 2026-10-24: scalar normalization, rejected invalid UTF-8 and bounded parsing.
 #include "transport.hpp"
 #include "settings.hpp"
+#include <array>
 #include <charconv>
 #include <sstream>
 namespace pif {
@@ -61,29 +62,86 @@ nlohmann::json parse(const std::string &raw) {
 }
 
 namespace pif {
+const std::string *propertyOverride(const PropertyValues &rules, std::string_view name) {
+    if (auto exact = rules.find(name); exact != rules.end()) return &exact->second;
+    for (const auto &[key, value] : rules) {
+        if (key.starts_with('*') && name.ends_with(std::string_view(key).substr(1))) return &value;
+    }
+    return nullptr;
+}
+
+static void expandFingerprint(nlohmann::json &config) {
+    static constexpr std::array fields{"BRAND", "PRODUCT", "DEVICE", "RELEASE", "ID", "INCREMENTAL", "TYPE", "TAGS"};
+    std::string fingerprint = config.value("FINGERPRINT", std::string{});
+    std::array<std::string_view, fields.size()> values;
+    size_t start = 0;
+    for (size_t i = 0; i < fields.size(); ++i) {
+        const auto end = fingerprint.find_first_of("/:", start);
+        if (end == start || (end == std::string::npos) != (i == fields.size() - 1)) return;
+        values[i] = std::string_view(fingerprint).substr(start, end - start);
+        if (values[i].empty()) return;
+        start = end + 1;
+    }
+    for (size_t i = 0; i < fields.size(); ++i) {
+        if (config.value(fields[i], std::string{}).empty()) config[fields[i]] = values[i];
+    }
+}
+
+static void fillPrivateDefaults(Settings &result) {
+    result.privateDefaults = {
+        {"ro.board.first_api_level", "32"}, {"init.svc.adbd", "stopped"}, {"sys.usb.state", "mtp"},
+    };
+    for (const auto &[field, property] : std::array{
+        std::pair{"FINGERPRINT", "ro.build.fingerprint"}, std::pair{"ID", "ro.build.id"},
+        std::pair{"DEVICE", "ro.product.device"}, std::pair{"PRODUCT", "ro.product.name"},
+        std::pair{"BRAND", "ro.product.brand"}, std::pair{"MODEL", "ro.product.model"},
+        std::pair{"SECURITY_PATCH", "ro.build.version.security_patch"},
+        std::pair{"DEVICE_INITIAL_SDK_INT", "ro.product.first_api_level"},
+    }) {
+        auto value = result.build.value(field, std::string{});
+        if (!value.empty()) result.privateDefaults.emplace(property, std::move(value));
+    }
+}
+
 Settings settings(nlohmann::json config, bool vending) {
     Settings result; result.vending=vending;
-    auto take=[&](const char *key,int fallback) { auto value=config.contains(key)?number(config[key],fallback):fallback; config.erase(key); return value; };
-    result.verboseLogs=take("verboseLogs",0);
+    auto take=[&](const char *key,int fallback) {
+        auto value=config.value(key,std::string{});
+        config.erase(key);
+        if (value=="true") return 1;
+        if (value=="false") return 0;
+        return number(value,fallback);
+    };
+    result.fullInjection=take("fullInjection",1)!=0;
+    const auto debug=take("DEBUG",0);
+    result.verboseLogs=take("verboseLogs",debug);
     result.spoofBuild=take("spoofBuild",1); result.spoofProps=take("spoofProps",1);
-    result.spoofProvider=take("spoofProvider",1); result.spoofSignature=take("spoofSignature",0);
+    result.spoofProvider=take("spoofProvider",result.fullInjection ? 0 : 1); result.spoofSignature=take("spoofSignature",0);
     result.spoofVendingSdk=take("spoofVendingSdk",0);
     auto finger=config.value("spoofVendingFinger",std::string("0")); config.erase("spoofVendingFinger");
-    if (finger=="0" || finger=="1") {
+    const bool legacyFingerprint=!finger.empty() && finger!="0";
+    if (finger.empty() || finger=="0" || finger=="1") {
         result.spoofVendingFinger=finger=="1";
         result.vendingFingerprint=config.value("FINGERPRINT",std::string());
         if(result.vendingFingerprint.empty()) result.spoofVendingFinger=0;
     } else { result.spoofVendingFinger=1; result.vendingFingerprint=finger; }
+    const bool vendingBuild=take("spoofVendingBuild",!result.spoofVendingSdk && !legacyFingerprint)!=0;
+    if (result.fullInjection) expandFingerprint(config);
+    result.build=nlohmann::json::object();
     if(vending) {
         result.spoofBuild=result.spoofProps=result.spoofProvider=result.spoofSignature=0;
-        result.build=nlohmann::json::object(); return result;
+        result.nativeBuild=result.fullInjection && vendingBuild;
+        if (!result.nativeBuild) return result;
     }
     result.spoofVendingFinger=result.spoofVendingSdk=0;
-    result.build=nlohmann::json::object();
     for(const auto &entry:config.items()) {
         if(entry.key().find_first_of("*.")!=std::string::npos) {
-            if(!entry.value().get<std::string>().empty()) result.properties.emplace(entry.key(),entry.value().get<std::string>());
+            if(!vending && !entry.value().get<std::string>().empty()) result.properties.emplace(entry.key(),entry.value().get<std::string>());
         } else result.build[entry.key()]=entry.value();
+    }
+    if (!vending && result.fullInjection) {
+        result.nativeBuild=result.spoofBuild && !result.spoofProvider && !result.spoofSignature;
+        if (result.spoofProps) fillPrivateDefaults(result);
     }
     return result;
 }

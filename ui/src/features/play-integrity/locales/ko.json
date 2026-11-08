@@ -81,6 +81,7 @@
   "denylistHelp": "Magisk DenyList를 자동 관리합니다. 전체 모드에서는 GMS와 Play 스토어를 제거하고 스크립트 전용 모드에서는 추가합니다. root 관리자의 목록이 변경됩니다.",
   "selinuxHelp": "permissive 모드에서 상위 프로젝트의 호환 동작에 따라 SELinux enforce/policy 읽기를 제한합니다. 커널을 enforcing으로 바꾸지는 않습니다.",
   "flagHelp": {
+    "fullInjection": "네이티브 Build 주입과 ARM64의 프로세스 전용 속성을 사용합니다. 끄면 기존 주입 경로를 사용합니다.",
     "spoofBuild": "대상 프로세스의 Build 필드를 덮어씁니다.",
     "spoofProps": "대상 프로세스의 시스템 속성 읽기를 덮어씁니다.",
     "spoofProvider": "이전 버전 호환: DroidGuard의 인증서 체인 요청을 차단하며 하드웨어 증명과 충돌할 수 있습니다.",
@@ -97,6 +98,7 @@
     "wildcard": "지원하지 않는 와일드카드입니다. 맨 앞 * 접미사 일치만 구현되었습니다.",
     "canary": "Canary는 상위 경험 규칙을 유지합니다. Pixel 10a는 API 35(주석상 실제 36), 알 수 없는 기기는 37, board API는 32입니다. 6주 만료일과 패치 대체값은 추정이며 Google 수락이나 인증서 유효 기간을 뜻하지 않습니다.",
     "vending_priority": "Play 스토어 SDK 호환 모드가 지문 재정의보다 우선합니다.",
+    "vending_build_priority": "Play 스토어 Build 주입은 SDK 및 지문 모드보다 우선합니다.",
     "pixel_patch_unknown": "Google 빌드 정보에 정확한 패치 날짜가 없어 후보에서 비워 둡니다."
   },
   "strongHelp": "후보에 spoofProvider=0을 설정합니다. Build와 속성 패치 값을 일치시키며 판정 결과는 보장하지 않습니다.",
@@ -123,6 +125,7 @@
     "SECURITY_PATCH": "보안 패치 날짜",
     "DEVICE_INITIAL_SDK_INT": "기기 출시 API",
     "advanced": "고급 옵션",
+    "fullInjection": "전체 주입",
     "spoofBuild": "Build 필드 덮어쓰기",
     "spoofProps": "속성 읽기 덮어쓰기",
     "spoofProvider": "기존 Provider 호환",
@@ -146,6 +149,7 @@
     "invalid": "이 스냅샷을 읽을 수 없습니다. 다른 설정은 사용할 수 있습니다."
   },
   "inspection": {
+    "private": "일치한 프로세스 전용 속성 · {matched}/{total}",
     "title": "정보 비교",
     "help": "현재 시스템 속성과 저장된 Build 및 속성 덮어쓰기 값을 비교합니다. 시스템 값은 다른 모듈의 영향을 받았을 수 있습니다.",
     "refresh": "값 새로고침",
@@ -207,6 +211,7 @@
     "legacySource": "이 이전 출처 기록은 기기와 빌드만 식별합니다. 전체 지문, 모델 또는 출시 API는 연결되어 있지 않습니다."
   },
   "quick": {
+    "build": "설정한 Build 필드 사용",
     "title": "지문 빠른 설정",
     "vending": "Play 스토어 재정의 모드",
     "vendingHelp": "지문 모드는 FINGERPRINT만 변경합니다. SDK 호환 모드가 우선합니다.",

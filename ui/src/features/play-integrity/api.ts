@@ -27,6 +27,7 @@ export const previewSchema = configSchema.extend({
           "canary",
           "patch_scope",
           "vending_priority",
+          "vending_build_priority",
           "pixel_patch_unknown",
         ]),
         fields: z.array(z.string()),

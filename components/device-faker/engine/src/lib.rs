@@ -15,6 +15,8 @@ mod global_marker;
 mod hooks;
 mod jni_policy;
 mod log_buffer;
+#[cfg(target_os = "android")]
+mod private_properties;
 mod process_identity;
 mod prop_backend;
 

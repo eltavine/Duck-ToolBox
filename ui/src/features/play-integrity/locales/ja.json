@@ -81,6 +81,7 @@
   "denylistHelp": "Magisk DenyList を自動管理します。完全モードでは GMS と Play ストアを削除し、スクリプトのみでは追加します。root 管理アプリのリストが変更されます。",
   "selinuxHelp": "permissive 時は上流の互換動作に従い SELinux enforce／policy の読み取りを制限します。カーネルは enforcing になりません。",
   "flagHelp": {
+    "fullInjection": "ネイティブの Build 注入と、ARM64 でプロセス専用のプロパティを使用します。オフにすると従来の注入方式に戻ります。",
     "spoofBuild": "対象プロセスの Build フィールドを上書きします。",
     "spoofProps": "対象プロセスのシステムプロパティ読み取りを上書きします。",
     "spoofProvider": "旧版互換：DroidGuard の証明書チェーン要求を阻止し、ハードウェア認証と競合する場合があります。",
@@ -97,6 +98,7 @@
     "wildcard": "非対応のワイルドカードです。先頭 * による後方一致のみ実装しています。",
     "canary": "Canary は上流の経験則を維持します。Pixel 10a は API 35（注記は実際 36）、未知の端末は 37、board API は 32。6週間の失効日とパッチ代替値は推定であり、Google の承認や証明書の有効期間ではありません。",
     "vending_priority": "Play ストアの SDK 互換モードが指紋の上書きより優先されます。",
+    "vending_build_priority": "Play ストアの Build 注入は SDK とフィンガープリントのモードより優先されます。",
     "pixel_patch_unknown": "Google のビルド情報に正確なパッチ日がないため、候補では未設定にします。"
   },
   "strongHelp": "候補に spoofProvider=0 を設定します。Build とプロパティのパッチ値は対応させます。判定結果は保証されません。",
@@ -123,6 +125,7 @@
     "SECURITY_PATCH": "セキュリティパッチ日",
     "DEVICE_INITIAL_SDK_INT": "端末発売時の API",
     "advanced": "詳細設定",
+    "fullInjection": "完全注入",
     "spoofBuild": "Build 項目を上書き",
     "spoofProps": "プロパティの読み取りを上書き",
     "spoofProvider": "旧 Provider 互換機能",
@@ -146,6 +149,7 @@
     "invalid": "このスナップショットを読めません。他の設定は利用できます。"
   },
   "inspection": {
+    "private": "一致したプロセス専用プロパティ · {matched}/{total}",
     "title": "情報の比較",
     "help": "現在のシステムプロパティと保存した Build・プロパティの上書き値を比較します。システム値は他のモジュールの影響を受けている場合があります。",
     "refresh": "値を再取得",
@@ -207,6 +211,7 @@
     "legacySource": "この古い出典記録はデバイスとビルドのみを識別します。完全なフィンガープリント、モデル、発売時 API は紐付けられていません。"
   },
   "quick": {
+    "build": "設定済みの Build フィールドを使用",
     "title": "指紋の簡易設定",
     "vending": "Play ストアの上書きモード",
     "vendingHelp": "指紋モードは FINGERPRINT のみを変更します。SDK 互換モードが優先されます。",

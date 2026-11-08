@@ -10,6 +10,7 @@
 namespace pif {
 // Configuration text is standard UTF-8, while NewStringUTF expects Modified UTF-8.
 jstring javaString(JNIEnv *env, std::string_view text);
+void applyBuildFields(JNIEnv *env, const nlohmann::json &build, bool allowPrimitives);
 class JavaInjection {
 public:
     void initialize(JNIEnv *environment, std::vector<char> dex, const Settings &settings);

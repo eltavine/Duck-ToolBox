@@ -16,7 +16,7 @@ private:
     struct Context { const PropertyHook *owner; Callback callback; void *cookie; };
     static void read(const prop_info *,Callback,void *);
     static void modify(void *,const char *,const char *,uint32_t);
-    std::map<std::string,std::string> properties;
+    PropertyValues properties;
     Read original=nullptr;
     int logLevel=0;
 };

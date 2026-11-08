@@ -41,6 +41,20 @@ pub fn parse(engine: &Engine, raw: &str, revision: &str) -> Vec<Value> {
         if value.get("observed_at").is_some_and(|v| !v.is_u64()) {
             continue;
         }
+        match (
+            value.get("private_requested"),
+            value.get("private_matching"),
+        ) {
+            (None, None) => {}
+            (Some(requested), Some(matching))
+                if requested
+                    .as_u64()
+                    .zip(matching.as_u64())
+                    .is_some_and(|(n, m)| {
+                        m <= n && n <= 1024 && (n == 0 || value["property_hook"] == false)
+                    }) => {}
+            _ => continue,
+        }
         if !live(engine, &value, revision, boot.trim()) {
             continue;
         }
@@ -62,13 +76,14 @@ pub fn read(engine: &Engine, revision: &str) -> Value {
     if engine.sysroot != std::path::Path::new("/") {
         return json!({"processes":[],"read_error":null});
     }
+    // A line-count tail is applied before tag filtering and can omit live targets.
     let output = command::run(
         Command::new("logcat").args([
             "-d",
+            "-b",
+            "main",
             "-v",
             "raw",
-            "-t",
-            "256",
             "-s",
             "PIF/Observation:I",
             "*:S",

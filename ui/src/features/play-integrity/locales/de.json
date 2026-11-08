@@ -81,6 +81,7 @@
   "denylistHelp": "Magisk DenyList wird automatisch verwaltet: Der Vollmodus entfernt GMS und Play Store, der Skriptmodus fügt sie hinzu. Die Liste des Root-Managers wird geändert.",
   "selinuxHelp": "Im permissiven Modus beschränkt das Upstream-Verhalten den Lesezugriff auf SELinux enforce/policy. Der Kernel wechselt dadurch nicht zu enforcing.",
   "flagHelp": {
+    "fullInjection": "Verwendet native Build-Injektion und prozessprivate Eigenschaften auf ARM64. Bei Deaktivierung gelten die bisherigen Injektionswege.",
     "spoofBuild": "Build-Felder im Zielprozess überschreiben.",
     "spoofProps": "Systemeigenschaftsabfragen im Zielprozess überschreiben.",
     "spoofProvider": "Alte Kompatibilität: DroidGuard-Zertifikatsketten blockieren. Kann Hardwareattestierung beeinträchtigen.",
@@ -97,6 +98,7 @@
     "wildcard": "Nicht unterstütztes Muster: Nur ein führendes * für Suffixabgleich ist implementiert.",
     "canary": "Canary behält Upstream-Heuristiken: Pixel 10a nutzt API 35 (laut Hinweis tatsächlich 36), unbekannte Geräte 37, board API 32. Sechs Wochen und Ersatz-Patchwerte sind Schätzungen, keine Google-Zusage oder Zertifikatsgültigkeit.",
     "vending_priority": "SDK-Kompatibilität des Play Store hat Vorrang vor dem Fingerprint.",
+    "vending_build_priority": "Die Build-Injektion im Play Store hat Vorrang vor dem SDK- und Fingerabdruckmodus.",
     "pixel_patch_unknown": "Google-Build-Daten enthalten kein genaues Patchdatum; der Kandidat lässt es frei."
   },
   "strongHelp": "Setzt spoofProvider=0 für diesen Kandidaten. Build- und Eigenschafts-Patchwerte bleiben gleich; kein Urteil wird garantiert.",
@@ -123,6 +125,7 @@
     "SECURITY_PATCH": "Sicherheitspatch-Datum",
     "DEVICE_INITIAL_SDK_INT": "API bei Geräteauslieferung",
     "advanced": "Erweiterte Optionen",
+    "fullInjection": "Vollständige Injektion",
     "spoofBuild": "Build-Felder überschreiben",
     "spoofProps": "Eigenschaftsabfragen überschreiben",
     "spoofProvider": "Ältere Provider-Kompatibilität",
@@ -146,6 +149,7 @@
     "invalid": "Dieser Schnappschuss ist nicht lesbar. Andere bleiben verfügbar."
   },
   "inspection": {
+    "private": "Passende prozessprivate Eigenschaften · {matched}/{total}",
     "title": "Informationsvergleich",
     "help": "Vergleicht aktuelle Systemeigenschaften mit gespeicherten Build- und Eigenschaftswerten. Andere Module können die Systemwerte bereits beeinflussen.",
     "refresh": "Werte aktualisieren",
@@ -207,6 +211,7 @@
     "legacySource": "Dieser ältere Herkunftseintrag enthält nur Gerät und Build. Er bindet weder den vollständigen Fingerprint noch Modell oder Start-API."
   },
   "quick": {
+    "build": "Konfigurierte Build-Felder verwenden",
     "title": "Fingerprint-Einstellungen",
     "vending": "Überschreibmodus des Play Store",
     "vendingHelp": "Der Fingerprint-Modus ändert nur FINGERPRINT. SDK-Kompatibilität hat Vorrang.",

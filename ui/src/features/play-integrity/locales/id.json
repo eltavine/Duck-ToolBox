@@ -81,6 +81,7 @@
   "denylistHelp": "Magisk DenyList dikelola otomatis: mode penuh menghapus GMS dan Play Store; mode skrip saja menambahkannya. Daftar pengelola root akan berubah.",
   "selinuxHelp": "Dalam mode permissive, perilaku hulu membatasi pembacaan SELinux enforce/policy. Ini tidak mengubah kernel menjadi enforcing.",
   "flagHelp": {
+    "fullInjection": "Menggunakan injeksi Build native dan properti privat proses pada ARM64. Nonaktifkan untuk menggunakan jalur injeksi lama.",
     "spoofBuild": "Timpa kolom Build di proses target.",
     "spoofProps": "Timpa pembacaan properti sistem di proses target.",
     "spoofProvider": "Kompatibilitas lama: blokir permintaan rantai sertifikat DroidGuard. Dapat mengganggu atestasi perangkat keras.",
@@ -97,6 +98,7 @@
     "wildcard": "Pola tidak didukung: hanya * awal untuk akhiran yang diterapkan.",
     "canary": "Canary mempertahankan heuristik hulu: Pixel 10a memakai API 35 (catatan: aktual 36), perangkat tidak dikenal 37, board API 32. Enam minggu dan patch cadangan adalah perkiraan, bukan penerimaan Google atau masa berlaku sertifikat.",
     "vending_priority": "Kompatibilitas SDK Play Store mengesampingkan penggantian sidik jari.",
+    "vending_build_priority": "Injeksi Build Play Store diutamakan daripada mode SDK dan sidik jari.",
     "pixel_patch_unknown": "Metadata Google tidak memberikan tanggal patch yang tepat; kandidat membiarkannya kosong."
   },
   "strongHelp": "Mengatur spoofProvider=0 untuk kandidat ini. Nilai patch Build dan properti tetap selaras; hasil tidak dijamin.",
@@ -123,6 +125,7 @@
     "SECURITY_PATCH": "Tanggal patch keamanan",
     "DEVICE_INITIAL_SDK_INT": "API saat perangkat dirilis",
     "advanced": "Opsi lanjutan",
+    "fullInjection": "Injeksi penuh",
     "spoofBuild": "Timpa kolom Build",
     "spoofProps": "Timpa pembacaan properti",
     "spoofProvider": "Kompatibilitas Provider lama",
@@ -146,6 +149,7 @@
     "invalid": "Snapshot ini tidak dapat dibaca. Snapshot lain tetap tersedia."
   },
   "inspection": {
+    "private": "Properti privat yang cocok · {matched}/{total}",
     "title": "Perbandingan informasi",
     "help": "Bandingkan properti sistem saat ini dengan nilai Build dan properti tersimpan. Modul lain mungkin sudah memengaruhi pembacaan sistem.",
     "refresh": "Segarkan pembacaan",
@@ -207,6 +211,7 @@
     "legacySource": "Catatan sumber lama ini hanya mengidentifikasi perangkat dan build. Sidik jari lengkap, model, dan API saat peluncuran belum terikat."
   },
   "quick": {
+    "build": "Gunakan kolom Build yang dikonfigurasi",
     "title": "Pengaturan sidik jari",
     "vending": "Mode penggantian Play Store",
     "vendingHelp": "Mode sidik jari hanya mengubah FINGERPRINT. Kompatibilitas SDK diprioritaskan.",

@@ -7,14 +7,22 @@
 #include "transport.hpp"
 #include <map>
 namespace pif {
+using PropertyValues = std::map<std::string,std::string,std::less<>>;
+const std::string *propertyOverride(const PropertyValues &rules, std::string_view name);
+
 struct Settings {
     bool vending=false;
+    bool fullInjection=true, nativeBuild=false;
     int verboseLogs=0, spoofBuild=1, spoofProps=1, spoofProvider=1, spoofSignature=0;
     int spoofVendingFinger=0, spoofVendingSdk=0;
     std::string vendingFingerprint;
     nlohmann::json build;
-    std::map<std::string,std::string> properties;
-    bool injectJava() const { return spoofBuild || spoofProvider || spoofSignature || spoofVendingFinger || spoofVendingSdk; }
+    PropertyValues properties;
+    PropertyValues privateDefaults;
+    bool injectDex() const {
+        return (!nativeBuild && spoofBuild) || spoofProvider || spoofSignature || spoofVendingFinger || spoofVendingSdk;
+    }
+    bool injectJava() const { return nativeBuild || injectDex(); }
 };
 Settings settings(nlohmann::json config, bool vending);
 }

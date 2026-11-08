@@ -35,7 +35,7 @@ include_directories(
     ${shadowhook_SOURCE_DIR}/shadowhook/src/main/cpp/third_party/xdl
 )
 
-add_library(${CMAKE_PROJECT_NAME} SHARED main.cpp companion.cpp config.cpp property_hook.cpp java_injection.cpp observation.cpp ${PIF_VENDOR_DIR}/local_cxa_atexit_finalize_impl/atexit.cpp ${SHADOWHOOK_SRC} ${SHADOWHOOK_ARCH_SRC})
+add_library(${CMAKE_PROJECT_NAME} SHARED main.cpp companion.cpp config.cpp property_hook.cpp private_properties.cpp java_injection.cpp observation.cpp ${PIF_VENDOR_DIR}/local_cxa_atexit_finalize_impl/atexit.cpp ${SHADOWHOOK_SRC} ${SHADOWHOOK_ARCH_SRC})
 
 target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE log)
 

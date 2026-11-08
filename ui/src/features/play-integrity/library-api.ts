@@ -70,6 +70,8 @@ export const inspectionSchema = z.object({
         boot_id: z.string(),
         revision: z.string(),
         property_hook: z.boolean(),
+        private_requested: z.number().int().nonnegative().max(1024).default(0),
+        private_matching: z.number().int().nonnegative().max(1024).default(0),
         observed_at: z.number().optional(),
         build: z.record(z.string(), z.string()),
         properties: z.record(z.string(), z.string()),

@@ -81,6 +81,7 @@
   "denylistHelp": "Gestión automática de Magisk DenyList: el modo completo elimina GMS y Play Store; solo scripts los añade. Se modifica la lista del gestor root.",
   "selinuxHelp": "En modo permisivo, el comportamiento original restringe la lectura de SELinux enforce/policy. No cambia el kernel a enforcing.",
   "flagHelp": {
+    "fullInjection": "Usa la inyección nativa de Build y propiedades privadas del proceso en ARM64. Desactívala para usar las rutas anteriores.",
     "spoofBuild": "Sobrescribe campos Build en el proceso de destino.",
     "spoofProps": "Sobrescribe la lectura de propiedades en el proceso de destino.",
     "spoofProvider": "Compatibilidad antigua: bloquea solicitudes de cadenas de certificados de DroidGuard. Puede interferir con la atestación por hardware.",
@@ -97,6 +98,7 @@
     "wildcard": "Patrón no compatible: solo se implementa * inicial para sufijos.",
     "canary": "Canary conserva heurísticas originales: Pixel 10a usa API 35 (nota: real 36), dispositivos desconocidos 37, board API 32. Las seis semanas y el parche alternativo son estimaciones, no aceptación de Google ni vigencia de certificados.",
     "vending_priority": "La compatibilidad SDK de Play Store tiene prioridad sobre la huella.",
+    "vending_build_priority": "La inyección Build de Play Store tiene prioridad sobre los modos SDK y huella.",
     "pixel_patch_unknown": "Los datos de Google no indican la fecha exacta del parche; el candidato la deja sin establecer."
   },
   "strongHelp": "Establece spoofProvider=0 para el candidato. Conserva valores de parche coherentes entre Build y propiedad; no garantiza resultados.",
@@ -123,6 +125,7 @@
     "SECURITY_PATCH": "Fecha del parche de seguridad",
     "DEVICE_INITIAL_SDK_INT": "API de lanzamiento del dispositivo",
     "advanced": "Opciones avanzadas",
+    "fullInjection": "Inyección completa",
     "spoofBuild": "Sustituir campos Build",
     "spoofProps": "Sustituir lecturas de propiedades",
     "spoofProvider": "Compatibilidad Provider heredada",
@@ -146,6 +149,7 @@
     "invalid": "No se pudo leer esta instantánea. Las demás siguen disponibles."
   },
   "inspection": {
+    "private": "Propiedades privadas coincidentes · {matched}/{total}",
     "title": "Comparación de información",
     "help": "Compara las propiedades actuales del sistema con los valores Build y propiedades guardados. Otros módulos pueden haber alterado las lecturas.",
     "refresh": "Actualizar lecturas",
@@ -207,6 +211,7 @@
     "legacySource": "Este registro de origen antiguo solo identifica el dispositivo y la compilación. No vincula la huella completa, el modelo ni la API de lanzamiento."
   },
   "quick": {
+    "build": "Usar los campos Build configurados",
     "title": "Controles de huella",
     "vending": "Modo de sustitución de Play Store",
     "vendingHelp": "El modo de huella solo cambia FINGERPRINT. La compatibilidad SDK tiene prioridad.",

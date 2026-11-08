@@ -81,6 +81,7 @@
   "denylistHelp": "Magisk DenyList è gestita automaticamente: la modalità completa rimuove GMS e Play Store; solo script li aggiunge. Viene modificato l’elenco del gestore root.",
   "selinuxHelp": "In modalità permissive, il comportamento originale limita la lettura di SELinux enforce/policy. Non porta il kernel in modalità enforcing.",
   "flagHelp": {
+    "fullInjection": "Usa l’iniezione nativa di Build e le proprietà private del processo su ARM64. Disattivala per usare i percorsi precedenti.",
     "spoofBuild": "Sovrascrive i campi Build nel processo di destinazione.",
     "spoofProps": "Sovrascrive la lettura delle proprietà nel processo di destinazione.",
     "spoofProvider": "Compatibilità precedente: blocca le richieste di catene di certificati di DroidGuard. Può interferire con l’attestazione hardware.",
@@ -97,6 +98,7 @@
     "wildcard": "Wildcard non supportato: è implementato solo * iniziale per il suffisso.",
     "canary": "Canary mantiene le euristiche originali: Pixel 10a usa API 35 (nota: reale 36), dispositivi sconosciuti 37, board API 32. Le sei settimane e il livello patch alternativo sono stime, non accettazione Google né validità dei certificati.",
     "vending_priority": "La compatibilità SDK del Play Store ha la precedenza sull’impronta.",
+    "vending_build_priority": "L’iniezione Build del Play Store ha priorità sulle modalità SDK e impronta.",
     "pixel_patch_unknown": "I metadati Google non forniscono la data esatta della patch; il candidato la lascia vuota."
   },
   "strongHelp": "Imposta spoofProvider=0 per il candidato. I valori patch Build e proprietà restano coerenti; nessun esito è garantito.",
@@ -123,6 +125,7 @@
     "SECURITY_PATCH": "Data della patch di sicurezza",
     "DEVICE_INITIAL_SDK_INT": "API al lancio del dispositivo",
     "advanced": "Opzioni avanzate",
+    "fullInjection": "Iniezione completa",
     "spoofBuild": "Sostituisci campi Build",
     "spoofProps": "Sostituisci letture delle proprietà",
     "spoofProvider": "Compatibilità Provider precedente",
@@ -146,6 +149,7 @@
     "invalid": "Impossibile leggere questa istantanea. Le altre restano disponibili."
   },
   "inspection": {
+    "private": "Proprietà private corrispondenti · {matched}/{total}",
     "title": "Confronto delle informazioni",
     "help": "Confronta le proprietà di sistema attuali con i valori Build e proprietà salvati. Altri moduli potrebbero già influenzare i valori di sistema.",
     "refresh": "Aggiorna valori",
@@ -207,6 +211,7 @@
     "legacySource": "Questo vecchio record di origine identifica solo dispositivo e build. Non associa l’impronta completa, il modello o l’API al lancio."
   },
   "quick": {
+    "build": "Usa i campi Build configurati",
     "title": "Controlli dell’impronta",
     "vending": "Modalità di sostituzione Play Store",
     "vendingHelp": "La modalità impronta modifica solo FINGERPRINT. La compatibilità SDK ha la precedenza.",

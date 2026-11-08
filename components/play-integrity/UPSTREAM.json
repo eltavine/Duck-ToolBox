@@ -1,6 +1,11 @@
 {
   "repository": "https://github.com/osm0sis/PlayIntegrityFork",
   "revision": "23ec56c2440c4fd1a5e893a23ef7861d6366a828",
+  "full_injection_reference": {
+    "repository": "https://github.com/KOWX712/PlayIntegrityFix",
+    "revision": "1138c6f3cebb70c00ec5573911cee745134a3e6d",
+    "tag": "v4.9-inject-s"
+  },
   "license": "GPL-3.0-only",
   "dependencies": {
     "json": "55f93686c01528224f448c19128836e7df245f72",

@@ -97,14 +97,21 @@ pub fn valid_patch_date(value: &str) -> bool {
 
 pub fn inspect(entries: &BTreeMap<String, String>) -> Vec<Value> {
     let mut warnings = Vec::new();
-    if entries
+    let full_injection = entries
+        .get("fullInjection")
+        .is_none_or(|value| value != "0");
+    let vending_sdk = entries
         .get("spoofVendingSdk")
         .and_then(|s| s.parse::<u32>().ok())
-        .is_some_and(|s| s > 0)
-        && entries
-            .get("spoofVendingFinger")
-            .is_some_and(|s| !s.is_empty() && s != "0")
-    {
+        .is_some_and(|s| s > 0);
+    let vending_fingerprint = entries
+        .get("spoofVendingFinger")
+        .is_some_and(|s| !s.is_empty() && s != "0");
+    if full_injection && entries.get("spoofVendingBuild").is_some_and(|s| s == "1") {
+        if vending_sdk || vending_fingerprint {
+            warnings.push(json!({"code":"vending_build_priority","fields":["spoofVendingBuild"]}));
+        }
+    } else if vending_sdk && vending_fingerprint {
         warnings.push(
             json!({"code":"vending_priority","fields":["spoofVendingSdk","spoofVendingFinger"]}),
         );
@@ -137,10 +144,10 @@ pub fn inspect(entries: &BTreeMap<String, String>) -> Vec<Value> {
             warnings.push(json!({"code":"mismatch","fields":[field,key]}));
         }
     }
-    if entries
-        .get("spoofProvider")
-        .is_none_or(|value| value.is_empty() || value == "1")
-    {
+    if match entries.get("spoofProvider").map(String::as_str) {
+        None | Some("") => !full_injection,
+        Some(value) => value == "1",
+    } {
         warnings.push(json!({"code":"provider","fields":["spoofProvider"]}));
     }
     for key in entries.keys().filter(|key| key.contains('*')) {

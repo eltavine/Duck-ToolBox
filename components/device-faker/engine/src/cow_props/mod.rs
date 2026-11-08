@@ -63,10 +63,28 @@ pub fn apply_cow_spoof(
     prop_map: &HashMap<String, String>,
     explicit: &HashSet<String>,
 ) -> anyhow::Result<Vec<(String, String)>> {
-    let mut unfound: Vec<(String, String)> = Vec::new();
+    apply(prop_map, Some(explicit)).map(|result| result.unfound)
+}
+
+pub(super) fn patch_existing(prop_map: &HashMap<String, String>) -> anyhow::Result<bool> {
+    apply(prop_map, None).map(|result| result.patched > 0)
+}
+
+#[derive(Default)]
+struct AppliedProperties {
+    patched: usize,
+    unfound: Vec<(String, String)>,
+}
+
+// Only the Device Faker profile path can insert new properties.
+fn apply(
+    prop_map: &HashMap<String, String>,
+    insert_explicit: Option<&HashSet<String>>,
+) -> anyhow::Result<AppliedProperties> {
+    let mut result = AppliedProperties::default();
 
     if prop_map.is_empty() {
-        return Ok(unfound);
+        return Ok(result);
     }
 
     let find_fn = match sys_prop_find() {
@@ -105,6 +123,7 @@ pub fn apply_cow_spoof(
     // 解析失败时跳过属性内存修改，保留真实映射并记录原因。
     let backend = match PropBackend::resolve_cached() {
         Ok(b) => Some(b),
+        Err(error) if insert_explicit.is_none() => return Err(error),
         Err(e) => {
             warn!("prop backend resolve failed: {e:#}; private property patching is unavailable");
             None
@@ -114,13 +133,13 @@ pub fn apply_cow_spoof(
     // 预初始化 serial area（供所有 update() 调用共享）
     let mut serial_pa = match prepare_serial_area(&mappings) {
         Ok(pa) => Some(pa),
+        Err(error) if insert_explicit.is_none() => return Err(error),
         Err(e) => {
             warn!("Failed to prepare serial area: {e}, patches will use fallback");
             None
         }
     };
 
-    let mut cow_patched = 0usize;
     let mut cow_inserted = 0usize;
     let mut cow_skipped = 0usize;
     let mut cow_patch_only_skipped = 0usize;
@@ -149,8 +168,11 @@ pub fn apply_cow_spoof(
             backend,
             &mut clones,
         ) {
-            Ok(true) => cow_patched += 1,
+            Ok(true) => result.patched += 1,
             Ok(false) => {
+                let Some(explicit) = insert_explicit else {
+                    continue;
+                };
                 // 「本机可能不存在」的 key（dlkm 分区副本、OEM 营销名族与别名）只在部分
                 // ROM 上导出，且这些 key 是模块为覆盖前缀路由**自动展开**出来的。本进程
                 // find() 不到 = 该 key 在此 ROM 上不存在（或本进程读不到）：此时 app 读到
@@ -179,11 +201,11 @@ pub fn apply_cow_spoof(
                             cow_inserted += 1;
                         }
                         Ok(false) => {
-                            unfound.push((key.to_string(), value.to_string()));
+                            result.unfound.push((key.to_string(), value.to_string()));
                         }
                         Err(e) => {
                             warn!("COW insert failed for '{key}': {e}");
-                            unfound.push((key.to_string(), value.to_string()));
+                            result.unfound.push((key.to_string(), value.to_string()));
                         }
                     }
                 }
@@ -195,12 +217,13 @@ pub fn apply_cow_spoof(
     // 全部 patch 完成：副本降回只读，形态与正常共享只读属性区一致。
     clones.seal();
 
-    if cow_patched > 0 || cow_inserted > 0 || cow_patch_only_skipped > 0 {
+    if result.patched > 0 || cow_inserted > 0 || cow_patch_only_skipped > 0 {
         info!(
-            "COW spoof: {cow_patched} patched, {cow_inserted} inserted, {cow_skipped} skipped (unobservable), {cow_patch_only_skipped} skipped (absent on ROM), {} total",
+            "COW spoof: {} patched, {cow_inserted} inserted, {cow_skipped} skipped (unobservable), {cow_patch_only_skipped} skipped (absent on ROM), {} total",
+            result.patched,
             filtered.len()
         );
     }
 
-    Ok(unfound)
+    Ok(result)
 }

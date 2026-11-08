@@ -45,7 +45,17 @@ async function refresh() {
           {{ t("guide.checked") }}: {{ new Date(process.observed_at * 1000).toLocaleString() }}
         </p>
         <p class="text-muted-foreground mt-1">
-          {{ t("inspection.hook") }}: {{ t(process.property_hook ? "on" : "off") }}
+          <template v-if="process.private_requested">
+            {{
+              t("inspection.private", {
+                matched: process.private_matching,
+                total: process.private_requested,
+              })
+            }}
+          </template>
+          <template v-else>
+            {{ t("inspection.hook") }}: {{ t(process.property_hook ? "on" : "off") }}
+          </template>
         </p>
       </div>
       <SettingDetails :title="t('inspection.values')" class="mt-3">

@@ -4,6 +4,7 @@ import { Plus, Trash2 } from "@lucide/vue"
 import { Button } from "@/components/ui/button"
 import { Field, FieldContent, FieldDescription, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { Switch } from "@/components/ui/switch"
 import {
   Select,
   SelectContent,
@@ -24,7 +25,9 @@ const fields: string[] = identityPairs.flatMap(([field, property]) => [field, pr
 const flags = ["spoofBuild", "spoofProps", "spoofProvider", "spoofSignature"] as const
 const values = ["spoofVendingFinger", "spoofVendingSdk", "verboseLogs"] as const
 const extra = computed(() =>
-  Object.keys(entries.value).filter((key) => ![...fields, ...flags, ...values].includes(key)),
+  Object.keys(entries.value).filter(
+    (key) => ![...fields, ...flags, ...values, "fullInjection", "spoofVendingBuild"].includes(key),
+  ),
 )
 const validName = computed(
   () => /^[A-Za-z0-9._*]{1,128}$/.test(name.value) && !(name.value in entries.value),
@@ -51,6 +54,17 @@ function add() {
     <IdentityFields v-model="entries" />
     <SettingDetails :title="t('editing.advanced')">
       <div class="flex flex-col gap-5">
+        <Field orientation="horizontal" class="rounded-xl bg-muted/40 p-3">
+          <FieldContent>
+            <FieldLabel for="pif-full-injection">{{ t("editing.fullInjection") }}</FieldLabel>
+            <FieldDescription>{{ t("flagHelp.fullInjection") }}</FieldDescription>
+          </FieldContent>
+          <Switch
+            id="pif-full-injection"
+            :model-value="entries.fullInjection !== '0'"
+            @update:model-value="set('fullInjection', $event ? '1' : '0')"
+          />
+        </Field>
         <Field
           v-for="key in flags"
           :key="key"
@@ -69,7 +83,12 @@ function add() {
             <SelectTrigger :id="`pif-${key}`" class="w-36 shrink-0"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="inherit">{{
-                t(key === "spoofSignature" ? "editing.defaultOff" : "editing.defaultOn")
+                t(
+                  key === "spoofSignature" ||
+                    (key === "spoofProvider" && entries.fullInjection !== "0")
+                    ? "editing.defaultOff"
+                    : "editing.defaultOn",
+                )
               }}</SelectItem>
               <SelectItem value="0">0 · {{ t("off") }}</SelectItem>
               <SelectItem value="1">1 · {{ t("on") }}</SelectItem>

@@ -66,12 +66,34 @@ static std::string digest(JNIEnv *env,const std::string &raw) {
     for(auto byte:bytes) {result+=hex[byte>>4];result+=hex[byte&15];}
     return result;
 }
+static void includeField(nlohmann::json &fields, size_t &remaining, const char *key, std::string value) {
+    if (value.empty()) return;
+    const auto encoded = nlohmann::json(value).dump(-1, ' ', false, nlohmann::json::error_handler_t::replace);
+    const auto size = strlen(key) + 4 + encoded.size();
+    if (size > remaining || nlohmann::json::parse(encoded) != value) return;
+    remaining -= size;
+    fields[key] = std::move(value);
+}
+
 void observe(JNIEnv *env,const std::string &raw,const std::string &process,
-             const std::string &boot,const std::string &start,bool propertyHook) {
+             const std::string &boot,const std::string &start,bool propertyHook,
+             size_t privateRequested,size_t privateMatching) {
     if(raw.size()>max_config||env->PushLocalFrame(128)<0) {env->ExceptionClear();return;}
     const auto revision=digest(env,raw);
     nlohmann::json build=nlohmann::json::object(),props=nlohmann::json::object();
-    for(const auto *key:{"MODEL","FINGERPRINT","BRAND","MANUFACTURER","PRODUCT","DEVICE","ID","RELEASE","INCREMENTAL","TYPE","TAGS","SECURITY_PATCH"}) {
+    // Give each readback group its own budget so long fields cannot hide the
+    // process identity or private-property result from the diagnostics.
+    size_t buildBudget=1400, propertyBudget=1400;
+    for(const auto *key:{"SDK_INT","DEVICE_INITIAL_SDK_INT"}) {
+        auto type=env->FindClass("android/os/Build$VERSION");
+        if(error(env)||!type) continue;
+        auto field=env->GetStaticFieldID(type,key,"I");
+        if(error(env)||!field) {env->DeleteLocalRef(type);continue;}
+        const auto value=env->GetStaticIntField(type,field);
+        if(!error(env)) includeField(build,buildBudget,key,std::to_string(value));
+        env->DeleteLocalRef(type);
+    }
+    for(const auto *key:{"MODEL","FINGERPRINT","SECURITY_PATCH","BRAND","MANUFACTURER","PRODUCT","DEVICE","ID","RELEASE","INCREMENTAL","TYPE","TAGS"}) {
         const bool version=std::string_view(key)=="RELEASE"||std::string_view(key)=="SECURITY_PATCH";
         auto type=env->FindClass(version?"android/os/Build$VERSION":"android/os/Build");
         if(error(env)||!type) continue;
@@ -79,35 +101,24 @@ void observe(JNIEnv *env,const std::string &raw,const std::string &process,
         if(error(env)||!field) continue;
         auto value=static_cast<jstring>(env->GetStaticObjectField(type,field));
         if(error(env)) continue;
-        auto text=utf8(env,value);
-        if(!text.empty()) build[key]=text;
+        includeField(build,buildBudget,key,utf8(env,value));
         env->DeleteLocalRef(type); if(value) env->DeleteLocalRef(value);
     }
-    for(const auto *key:{"SDK_INT","DEVICE_INITIAL_SDK_INT"}) {
-        auto type=env->FindClass("android/os/Build$VERSION");
-        if(error(env)||!type) continue;
-        auto field=env->GetStaticFieldID(type,key,"I");
-        if(error(env)||!field) {env->DeleteLocalRef(type);continue;}
-        const auto value=env->GetStaticIntField(type,field);
-        if(!error(env)) build[key]=std::to_string(value);
-        env->DeleteLocalRef(type);
-    }
-    for(const auto *key:{"ro.product.model","ro.build.fingerprint","ro.product.brand","ro.product.manufacturer","ro.product.name","ro.product.device","ro.build.id","ro.build.version.release","ro.build.version.incremental","ro.build.type","ro.build.tags","ro.build.version.security_patch","ro.product.first_api_level"}) {
+    for(const auto *key:{"ro.product.model","ro.build.fingerprint","ro.product.first_api_level","ro.build.version.security_patch","ro.product.brand","ro.product.manufacturer","ro.product.name","ro.product.device","ro.build.id","ro.build.version.release","ro.build.version.incremental","ro.build.type","ro.build.tags"}) {
         if(const auto *info=__system_property_find(key)) {
             std::string value;
             __system_property_read_callback(info,[](void *cookie,const char *,const char *text,uint32_t) {
                 if(text && strlen(text)<=256) *static_cast<std::string *>(cookie)=text;
             },&value);
-            // A replacement character must not masquerade as an observed original byte.
-            auto checked=nlohmann::json::parse(nlohmann::json(value).dump(-1,' ',false,nlohmann::json::error_handler_t::replace));
-            if(!value.empty() && checked.get<std::string>()==value) props[key]=value;
+            includeField(props,propertyBudget,key,std::move(value));
         }
     }
     auto record=nlohmann::json({{"revision",revision},{"boot_id",boot},{"start",start},{"pid",getpid()},
         {"process",process},{"build",build},{"properties",props},{"property_hook",propertyHook},
+        {"private_requested",privateRequested},{"private_matching",privateMatching},
         {"observed_at",std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count()}}).dump();
     if(revision.size()==64 && !boot.empty() && !start.empty() && record.size()<3500)
-        __android_log_print(ANDROID_LOG_INFO,"PIF/Observation","%s",record.c_str());
+        __android_log_write(ANDROID_LOG_INFO,"PIF/Observation",record.c_str());
     env->PopLocalFrame(nullptr);
 }
 }

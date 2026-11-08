@@ -18,11 +18,7 @@ void PropertyHook::modify(void *opaque,const char *name,const char *value,uint32
     auto *context=static_cast<Context *>(opaque); auto *owner=context->owner;
     const char *replacement=value;
     if(name && value) {
-        auto exact=owner->properties.find(name);
-        if(exact!=owner->properties.end()) replacement=exact->second.c_str();
-        else for(const auto &[key,candidate]:owner->properties) {
-            if(key.starts_with("*") && std::string_view(name).ends_with(std::string_view(key).substr(1))) {replacement=candidate.c_str();break;}
-        }
+        if (const auto *override = propertyOverride(owner->properties, name)) replacement=override->c_str();
         if(owner->logLevel>99 || replacement!=value) LOGD("[%s]: %s -> %s",name,value,replacement);
     }
     context->callback(context->cookie,name,replacement,serial);

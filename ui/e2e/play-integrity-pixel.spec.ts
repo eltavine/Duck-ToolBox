@@ -146,9 +146,22 @@ test("prepares three overrides in a draft and shows pending process activation a
   open,
 }) => {
   await open("/play-integrity/config")
+  await page.getByText("Advanced options", { exact: true }).click()
+  const full = page.getByRole("switch", { name: "Full injection", exact: true })
+  await expect(full).toBeChecked()
+  await full.click()
+  await expect(full).not.toBeChecked()
+  const provider = page.getByRole("combobox", {
+    name: "Legacy Provider compatibility",
+    exact: true,
+  })
+  await provider.click()
+  await page.getByRole("option", { name: "1 · On", exact: true }).click()
   await page.getByRole("button", { name: "Prepare all three overrides", exact: true }).click()
+  await expect(full).toBeChecked()
+  await expect(provider).toHaveText("1 · On")
   await page.getByRole("button", { name: "Preview changes", exact: true }).click()
-  await expect(page.getByRole("cell", { name: "spoofVendingFinger", exact: true })).toBeVisible()
+  await expect(page.getByRole("cell", { name: "spoofVendingBuild", exact: true })).toBeVisible()
   await page.getByRole("button", { name: "Apply configuration", exact: true }).click()
   await expect(
     page

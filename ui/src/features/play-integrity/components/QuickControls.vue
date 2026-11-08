@@ -19,16 +19,16 @@ function set(key: string, value: string) {
 }
 const customEditing = ref(false)
 const sdkEditing = ref(false)
-const mode = computed(() =>
-  sdkEditing.value || Number(entries.value.spoofVendingSdk) > 0
-    ? "sdk"
-    : entries.value.spoofVendingFinger === "1"
-      ? "fingerprint"
-      : customEditing.value ||
-          (entries.value.spoofVendingFinger && entries.value.spoofVendingFinger !== "0")
-        ? "custom"
-        : "off",
-)
+const mode = computed(() => {
+  const full = entries.value.fullInjection !== "0"
+  const build = entries.value.spoofVendingBuild
+  if (full && build === "1") return "build"
+  if (sdkEditing.value || Number(entries.value.spoofVendingSdk) > 0) return "sdk"
+  const finger = entries.value.spoofVendingFinger
+  if (customEditing.value || (finger && finger !== "0" && finger !== "1")) return "custom"
+  if (finger === "1") return "fingerprint"
+  return full && build !== "0" ? "build" : "off"
+})
 function vending(value: unknown) {
   const selected = String(value)
   const existingCustom =
@@ -37,6 +37,7 @@ function vending(value: unknown) {
   sdkEditing.value = false
   entries.value = {
     ...entries.value,
+    spoofVendingBuild: selected === "build" ? "1" : "0",
     spoofVendingSdk: selected === "sdk" ? "1" : "0",
     spoofVendingFinger:
       selected === "fingerprint" ? "1" : selected === "custom" ? (existingCustom ?? "") : "0",
@@ -47,9 +48,11 @@ function all() {
   sdkEditing.value = false
   entries.value = {
     ...entries.value,
+    fullInjection: "1",
     spoofBuild: "1",
     spoofProps: "1",
-    spoofVendingFinger: "1",
+    spoofVendingBuild: "1",
+    spoofVendingFinger: "0",
     spoofVendingSdk: "0",
   }
 }
@@ -74,9 +77,10 @@ function all() {
         ><SelectTrigger id="quick-vending" class="w-full"><SelectValue /></SelectTrigger>
         <SelectContent
           ><SelectItem
-            v-for="value in ['off', 'fingerprint', 'custom', 'sdk']"
+            v-for="value in ['off', 'build', 'fingerprint', 'custom', 'sdk']"
             :key="value"
             :value="value"
+            :disabled="value === 'build' && entries.fullInjection === '0'"
             >{{ t(`quick.${value}`) }}</SelectItem
           ></SelectContent
         >

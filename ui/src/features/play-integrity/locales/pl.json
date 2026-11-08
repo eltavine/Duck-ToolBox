@@ -81,6 +81,7 @@
   "denylistHelp": "Magisk DenyList jest zarządzana automatycznie: tryb pełny usuwa GMS i Sklep Play; tryb samych skryptów je dodaje. Spowoduje to modyfikację listy w Twoim menedżerze roota.",
   "selinuxHelp": "W trybie permissive mechanizm zgodności nadrzędnej ogranicza odczyty plików reguł/enforce SELinux. Nie przełącza to jądra w tryb enforcing.",
   "flagHelp": {
+    "fullInjection": "Używa natywnego wstrzykiwania Build i prywatnych właściwości procesu na ARM64. Wyłącz, aby użyć poprzednich metod.",
     "spoofBuild": "Zastąp pola Build w procesie docelowym.",
     "spoofProps": "Zastąp odczyty właściwości systemowych w procesie docelowym.",
     "spoofProvider": "Zgodność ze starszymi wersjami: blokuj żądania łańcucha certyfikatów DroidGuard. Może to kolidować z atestacją sprzętową.",
@@ -97,6 +98,7 @@
     "wildcard": "Nieobsługiwany symbol wieloznaczny: zaimplementowano wyłącznie dopasowanie sufiksu zaczynające się od *.",
     "canary": "Wersja Canary zachowuje heurystyki projektu nadrzędnego: Pixel 10a używa API 35 pomimo odnotowanego rzeczywistego API 36; nieznane urządzenia używają 37; API płyty głównej (board) to 32. Sześciotygodniowy okres wygaśnięcia oraz zapasowe poprawki to wartości szacunkowe, a nie gwarancja akceptacji przez Google czy ważności certyfikatu.",
     "vending_priority": "Zgodność SDK Sklepu Play ma pierwszeństwo przed zastępowaniem odcisku.",
+    "vending_build_priority": "Wstrzykiwanie Build dla Sklepu Play ma pierwszeństwo przed trybami SDK i odcisku.",
     "pixel_patch_unknown": "Dane Google nie zawierają dokładnej daty poprawki; kandydat pozostawia ją pustą."
   },
   "strongHelp": "Ustawia spoofProvider=0 dla tego kandydata. Wartości łatek w Build i właściwościach pozostają sparowane; żaden werdykt nie jest gwarantowany.",
@@ -123,6 +125,7 @@
     "SECURITY_PATCH": "Data poprawki zabezpieczeń",
     "DEVICE_INITIAL_SDK_INT": "Początkowy fabryczny poziom API",
     "advanced": "Opcje zaawansowane",
+    "fullInjection": "Pełne wstrzykiwanie",
     "spoofBuild": "Zastąp pola Build",
     "spoofProps": "Zastąp odczyty właściwości",
     "spoofProvider": "Zgodność ze starszym Providerem",
@@ -146,6 +149,7 @@
     "invalid": "Nie udało się odczytać tej migawki. Inne migawki są dostępne."
   },
   "inspection": {
+    "private": "Zgodne prywatne właściwości · {matched}/{total}",
     "title": "Porównanie informacji",
     "help": "Porównaj bieżące odczyty właściwości systemowych z zapisanymi wartościami Build i nadpisaniami właściwości. Inne moduły mogły już wpłynąć na odczyty systemowe.",
     "refresh": "Odśwież odczyty",
@@ -207,6 +211,7 @@
     "legacySource": "Ten starszy zapis źródła wskazuje tylko urządzenie i kompilację. Nie wiąże pełnego odcisku, modelu ani API z chwili premiery."
   },
   "quick": {
+    "build": "Użyj skonfigurowanych pól Build",
     "title": "Ustawienia odcisku",
     "vending": "Tryb zastępowania Sklepu Play",
     "vendingHelp": "Tryb odcisku zmienia tylko FINGERPRINT. Zgodność SDK ma pierwszeństwo.",

@@ -5,7 +5,9 @@
  */
 #include "java_injection.hpp"
 #include <android/log.h>
+#include <charconv>
 #include <limits>
+#include <strings.h>
 #define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG, "PIF/Native", __VA_ARGS__)
 #define VENDING_PACKAGE "com.android.vending"
 namespace pif {
@@ -27,6 +29,70 @@ jstring javaString(JNIEnv *env, std::string_view text) {
         return env->ExceptionCheck() ? nullptr : value;
     }();
     return static_cast<jstring>(env->PopLocalFrame(result));
+}
+
+static bool setBuildField(JNIEnv *env, jclass type, const std::string &key,
+                          const std::string &text, bool allowPrimitives) {
+    const auto find = [&](const char *signature) {
+        auto field = env->GetStaticFieldID(type, key.c_str(), signature);
+        if (env->ExceptionCheck()) { env->ExceptionClear(); return jfieldID{}; }
+        return field;
+    };
+    if (auto field = find("Ljava/lang/String;")) {
+        auto value = javaString(env, text);
+        if (!env->ExceptionCheck() && value) env->SetStaticObjectField(type, field, value);
+        if (!env->ExceptionCheck() && value) env->DeleteLocalRef(value);
+        return true;
+    }
+    if (!allowPrimitives) return false;
+
+    const char *begin = text.c_str();
+    if (text.starts_with('+')) ++begin;
+    jlong number = 0;
+    const auto end = text.c_str() + text.size();
+    const auto parsed = std::from_chars(begin, end, number);
+    if (parsed.ec == std::errc{} && parsed.ptr == end && !(text.starts_with("+-"))) {
+        if (number >= std::numeric_limits<jint>::min() && number <= std::numeric_limits<jint>::max()) {
+            if (auto field = find("I")) {
+                env->SetStaticIntField(type, field, static_cast<jint>(number));
+                return true;
+            }
+        }
+        if (auto field = find("J")) {
+            env->SetStaticLongField(type, field, number);
+            return true;
+        }
+    }
+    const bool truthy = text == "1" || strcasecmp(text.c_str(), "true") == 0;
+    if (truthy || text == "0" || strcasecmp(text.c_str(), "false") == 0) {
+        if (auto field = find("Z")) {
+            env->SetStaticBooleanField(type, field, truthy ? JNI_TRUE : JNI_FALSE);
+            return true;
+        }
+    }
+    return false;
+}
+
+void applyBuildFields(JNIEnv *env, const nlohmann::json &build, bool allowPrimitives) {
+    if (env->ExceptionCheck()) return;
+    if (env->PushLocalFrame(8) < 0) { env->ExceptionClear(); return; }
+    const auto writeFields = [&] {
+        auto buildClass = env->FindClass("android/os/Build");
+        if (env->ExceptionCheck() || !buildClass) return;
+        auto versionClass = env->FindClass("android/os/Build$VERSION");
+        if (env->ExceptionCheck() || !versionClass) return;
+        for (const auto &entry : build.items()) {
+            const auto &text = entry.value().get_ref<const std::string &>();
+            if (text.empty()) continue;
+            if (!setBuildField(env, buildClass, entry.key(), text, allowPrimitives)) {
+                setBuildField(env, versionClass, entry.key(), text, allowPrimitives);
+            }
+            if (env->ExceptionCheck()) return;
+        }
+    };
+    writeFields();
+    if (env->ExceptionCheck()) env->ExceptionClear();
+    env->PopLocalFrame(nullptr);
 }
 
 static void setFieldNative(JNIEnv *env, jclass /* clazz_EntryPoint */, jclass targetClass, jobject fieldObj, jstring typeObj, jobject valueObj) {
@@ -74,10 +140,12 @@ static void setFieldNative(JNIEnv *env, jclass /* clazz_EntryPoint */, jclass ta
 }
 
 void JavaInjection::initialize(JNIEnv *environment, std::vector<char> dex, const Settings &settings) {
+    if (settings.nativeBuild) applyBuildFields(environment, settings.build, !settings.vending);
+    if (!settings.injectDex()) return;
     env=environment; dexVector=std::move(dex); json=settings.build;
     pkgName=settings.vending ? VENDING_PACKAGE : "com.google.android.gms.unstable";
     vendingFingerprintValue=settings.vendingFingerprint;
-    verboseLogs=settings.verboseLogs; spoofBuild=settings.spoofBuild;
+    verboseLogs=settings.verboseLogs; spoofBuild=settings.nativeBuild ? 0 : settings.spoofBuild;
     spoofProvider=settings.spoofProvider; spoofSignature=settings.spoofSignature;
     spoofVendingFinger=settings.spoofVendingFinger; spoofVendingSdk=settings.spoofVendingSdk;
     inject();
