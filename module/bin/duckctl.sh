@@ -17,6 +17,9 @@ fi
 SCRIPT_DIR="$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)"
 MODULE_ROOT="${DUCK_TOOLBOX_ROOT:-$(CDPATH='' cd -- "$SCRIPT_DIR/.." && pwd)}"
 case "$MODULE_ROOT" in
+  /data/adb/modules/duck-toolbox-lite|/data/adb/modules_update/duck-toolbox-lite)
+    DEFAULT_DATA_ROOT="/data/adb/duck-toolbox-lite"
+    ;;
   /data/adb/modules/*|/data/adb/modules_update/*)
     DEFAULT_DATA_ROOT="/data/adb/duck-toolbox"
     ;;

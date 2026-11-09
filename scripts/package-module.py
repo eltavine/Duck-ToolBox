@@ -13,13 +13,23 @@ import sys
 import zipfile
 import warnings
 
+from supply_chain.payload import (
+    ARTIFACT_PREFIX,
+    FULL_ID,
+    LITE_ID,
+    LITE_SOURCES,
+    module_properties,
+    validate_lite_payload,
+)
+
 ROOT = Path(__file__).resolve().parents[1]
 MODULE = ROOT / "module"
 
 
 def require(path):
     if not path.is_file() or not path.stat().st_size:
-        raise ValueError(f"Missing required payload: {path.relative_to(ROOT)}")
+        relative = path.relative_to(ROOT) if path.is_relative_to(ROOT) else path
+        raise ValueError(f"Missing required payload: {relative}")
 
 
 def elf(path, width, machine):
@@ -198,14 +208,82 @@ def validate():
         raise ValueError("The installable module must not contain a second root-manager module")
 
 
+def package_metadata(variant, channel):
+    lines = (MODULE / "module.prop").read_text().splitlines()
+    version = module_properties("\n".join(lines))["version"]
+    values = {}
+    module_id = LITE_ID if variant == "lite" else FULL_ID
+    name = f"{ARTIFACT_PREFIX[module_id]}-{version}"
+    if variant == "lite":
+        values.update(
+            id=LITE_ID,
+            name="Duck ToolBox Lite",
+            description="Tricky Store manager, RKP workbench and device RKP issuer in one WebUI.",
+        )
+        lines = [line for line in lines if not line.startswith("updateJson=")]
+    if channel == "nightly":
+        code = subprocess.check_output(["git", "rev-list", "--count", "HEAD"], cwd=ROOT, text=True).strip()
+        name += f"-{code}-canary"
+        values.update(version=f"{version} ({code}-canary)", versionCode=code)
+    metadata = "\n".join(
+        f"{key}={values[key]}" if (key := line.partition("=")[0]) in values else line
+        for line in lines
+    ) + "\n"
+    return name, metadata
+
+
+def package_lite(binary, webroot, archive, metadata, validate_only):
+    require(binary)
+    with tempfile.TemporaryDirectory(prefix="duck-lite-") as directory:
+        module = Path(directory)
+        for relative in LITE_SOURCES:
+            destination = module / relative
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(MODULE / relative, destination)
+        shutil.copy2(binary, module / "bin/duckd")
+        (module / "bin/duckd").chmod(0o755)
+        shutil.copytree(webroot, module / "webroot", symlinks=True)
+        (module / "module.prop").write_text(metadata)
+        paths = list(module.rglob("*"))
+        if any(path.is_symlink() for path in paths):
+            raise ValueError("Lite payload cannot contain symbolic links")
+        names = {path.relative_to(module).as_posix() for path in paths if path.is_file()}
+        validate_lite_payload(
+            names, lambda name: (module / name).read_bytes(), module_properties(metadata)
+        )
+        if not validate_only:
+            write_module_archive(module, archive)
+
+
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--binary", default="target/aarch64-linux-android/release/duckd")
-    parser.add_argument("--output")
+    parser.add_argument("--variant", choices=["full", "lite"], default="full")
+    parser.add_argument("--binary")
+    parser.add_argument("--webroot", help="Lite WebUI build directory")
+    outputs = parser.add_mutually_exclusive_group()
+    outputs.add_argument("--output")
+    outputs.add_argument("--output-dir", default="dist")
     parser.add_argument("--channel", choices=["stable", "nightly"], help="Set archive metadata without modifying module/module.prop")
     parser.add_argument("--validate-only", action="store_true")
     args = parser.parse_args()
-    binary = ROOT / args.binary
+    name, metadata = package_metadata(args.variant, args.channel)
+    archive = ROOT / (args.output or Path(args.output_dir) / f"{name}.zip")
+    if archive.resolve().is_relative_to(MODULE.resolve()):
+        parser.error("Archive output must be outside the module source directory")
+    if args.variant == "lite":
+        package_lite(
+            ROOT / (args.binary or "target/lite/duckd"),
+            ROOT / (args.webroot or "target/lite/webroot"),
+            archive,
+            metadata,
+            args.validate_only,
+        )
+        if not args.validate_only:
+            print(archive)
+        return
+    if args.webroot:
+        parser.error("--webroot is only supported for Lite")
+    binary = ROOT / (args.binary or "target/aarch64-linux-android/release/duckd")
     require(binary)
     destination = MODULE / "bin/duckd"
     if binary.resolve() != destination.resolve():
@@ -222,16 +300,6 @@ def main():
     validate()
     if args.validate_only:
         return
-    version = next(line.split("=", 1)[1] for line in (MODULE / "module.prop").read_text().splitlines() if line.startswith("version="))
-    metadata = (MODULE / "module.prop").read_text()
-    name = f"duck-toolbox-{version}"
-    if args.channel == "nightly":
-        code = subprocess.check_output(["git", "rev-list", "--count", "HEAD"], cwd=ROOT, text=True).strip()
-        name += f"-{code}-canary"
-        values = {"version": f"{version} ({code}-canary)", "versionCode": code}
-        metadata = "\n".join(f"{key}={values[key]}" if (key := line.partition("=")[0]) in values else line for line in metadata.splitlines()) + "\n"
-    archive = ROOT / (args.output or f"dist/{name}.zip")
-    archive.parent.mkdir(parents=True, exist_ok=True)
     write_module_archive(MODULE, archive, metadata if args.channel else None)
     print(archive)
 

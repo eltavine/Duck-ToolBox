@@ -9,6 +9,9 @@ import re
 import shutil
 import subprocess
 import tempfile
+import zipfile
+
+from payload import ARTIFACT_PREFIX, FULL_ID, LITE_ID, module_properties
 
 
 def digest(path):
@@ -20,18 +23,19 @@ def gh(*arguments):
     return subprocess.check_output(["gh", *map(str, arguments)], text=True, timeout=300)
 
 
-def read_payload(directory, commit):
+def read_payload(directory, commit, module_id=FULL_ID):
     record = json.loads((directory / "release.json").read_text())
     if (
-        record.get("schema") != 1
+        record.get("schema") != 2
         or record.get("source_commit") != commit
+        or record.get("module_id") != module_id
         or not re.fullmatch(r"[0-9a-f]{40}", commit)
     ):
         raise ValueError("Release source identity mismatch")
     name = record["name"]
     if not re.fullmatch(r"[0-9]{8}T[0-9]{12}Z", record.get("release_timestamp", "")):
         raise ValueError("Missing immutable release timestamp")
-    if not re.fullmatch(r"duck-toolbox-[A-Za-z0-9._-]+", name):
+    if not re.fullmatch(rf"{ARTIFACT_PREFIX[module_id]}-[A-Za-z0-9._-]+", name):
         raise ValueError("Unsafe module artifact name")
     expected = {f"{name}.zip", f"{name}.spdx.json"}
     if (
@@ -48,12 +52,23 @@ def read_payload(directory, commit):
             or digest(path) != checksum
         ):
             raise ValueError(f"Release checksum mismatch: {filename}")
+    with zipfile.ZipFile(directory / record["archive"]) as archive:
+        metadata = module_properties(archive.read("module.prop").decode())
+    if (
+        metadata.get("id") != module_id
+        or metadata.get("version") != record["version"]
+        or metadata.get("versionCode") != record["version_code"]
+        or not re.fullmatch(r"[0-9]+", record["version_code"])
+        or (module_id == LITE_ID and "updateJson" in metadata)
+    ):
+        raise ValueError("ZIP module metadata does not match the release record")
     document = json.loads((directory / record["sbom"]).read_text())
     module = next(
         p for p in document["packages"] if p["SPDXID"] == "SPDXRef-Duck-ToolBox-Module"
     )
     if (
-        module["versionInfo"] != record["version"]
+        module["name"] != module_id
+        or module["versionInfo"] != record["version"]
         or module["packageFileName"] != record["archive"]
     ):
         raise ValueError("SBOM module version or filename mismatch")
@@ -62,6 +77,14 @@ def read_payload(directory, commit):
     ]:
         raise ValueError("SBOM does not describe the release archive")
     return record
+
+
+def read_release(directory, commit):
+    full = read_payload(directory / "full", commit, FULL_ID)
+    lite = read_payload(directory / "lite", commit, LITE_ID)
+    if (full["version"], full["version_code"]) != (lite["version"], lite["version_code"]):
+        raise ValueError("Full and Lite versions must match")
+    return {"full": full, "lite": lite}
 
 
 def verify_bundle(archive, bundle, repository, commit, sbom=None):
@@ -99,7 +122,7 @@ def verify_bundle(archive, bundle, repository, commit, sbom=None):
             )
 
 
-def notes(root, record, repository, commit, channel):
+def notes(root, records, repository, commit, channel):
     if channel == "stable":
         body = (root / "CHANGELOG.md").read_text()
     else:
@@ -108,22 +131,23 @@ def notes(root, record, repository, commit, channel):
     for component in ["device-faker", "play-integrity"]:
         body += f"\nGPLv3 {component} corresponding source: https://github.com/{repository}/tree/{commit}/components/{component}\n"
     body += (
-        "\nThe installable ZIP has build-provenance and SPDX 2.3 SBOM attestations. "
+        f"\n- Full (default update): `{records['full']['archive']}`\n"
+        f"- Lite (manual installation and updates): `{records['lite']['archive']}`\n\n"
+        "Lite includes the Tricky Store manager, RKP workbench and device RKP issuer. "
+        "It uses a separate module ID. Uninstall the other edition and reboot before switching.\n\n"
+        "Each installable ZIP has build-provenance and SPDX 2.3 SBOM attestations. "
         "The SBOM inventories delivered files and pinned source/build inputs; it is not a measured binary dependency graph.\n\n"
         "Verify the downloaded ZIP with GitHub CLI:\n\n```sh\n"
-        f"gh attestation verify '{record['archive']}' --repo {repository} "
+        f"gh attestation verify '{records['full']['archive']}' --repo {repository} "
         f"--signer-workflow {repository}/.github/workflows/ci.yml "
         f"--source-digest {commit} --source-ref refs/heads/main --deny-self-hosted-runners\n```\n\n"
         "For the SBOM attestation, add `--predicate-type https://spdx.dev/Document/v2.3`. "
-        "The attached Sigstore bundles can also be supplied with `--bundle`.\n"
+        "Substitute the Lite filename to verify Lite. The matching Sigstore bundles can also be supplied with `--bundle`.\n"
     )
     return body
 
 
-def publish(root, directory, provenance, sbom_bundle, channel, repository, commit):
-    if not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", repository):
-        raise ValueError("Invalid repository")
-    record = read_payload(directory, commit)
+def verified_assets(directory, record, provenance, sbom_bundle, repository, commit):
     archive = directory / record["archive"]
     sbom = directory / record["sbom"]
     verify_bundle(archive, provenance, repository, commit)
@@ -134,11 +158,16 @@ def publish(root, directory, provenance, sbom_bundle, channel, repository, commi
         destination = directory / f"{record['name']}.{suffix}.sigstore.json"
         shutil.copyfile(source, destination)
         assets.append(destination)
-    checksums = directory / "SHA256SUMS"
-    checksums.write_text("".join(f"{digest(path)}  {path.name}\n" for path in assets))
-    assets.append(checksums)
+    return assets
+
+
+def publish(root, directory, bundles, channel, repository, commit):
+    if not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", repository):
+        raise ValueError("Invalid repository")
+    records = read_release(directory, commit)
+    record = records["full"]
     if channel == "stable":
-        if record["name"] != f"duck-toolbox-{record['version']}":
+        if any(r["name"] != f"{ARTIFACT_PREFIX[r['module_id']]}-{r['version']}" for r in records.values()):
             raise ValueError("Canary metadata cannot be published as stable")
         tag = f"v{record['version']}"
         flags = ["--latest"]
@@ -148,14 +177,21 @@ def publish(root, directory, provenance, sbom_bundle, channel, repository, commi
         )
         if (
             not version
-            or record["name"] != f"duck-toolbox-{version[1]}-{version[2]}-canary"
+            or record["version_code"] != version[2]
+            or any(r["name"] != f"{ARTIFACT_PREFIX[r['module_id']]}-{version[1]}-{version[2]}-canary" for r in records.values())
         ):
             raise ValueError("Nightly publication requires matching canary metadata")
         tag = f"nightly-{commit[:8]}-{record['release_timestamp']}"
         flags = ["--prerelease", "--latest=false"]
+    assets = []
+    for variant, edition in records.items():
+        assets.extend(verified_assets(directory / variant, edition, *bundles[variant], repository, commit))
+    checksums = directory / "SHA256SUMS"
+    checksums.write_text("".join(f"{digest(path)}  {path.name}\n" for path in assets))
+    assets.append(checksums)
     with tempfile.TemporaryDirectory(prefix="duck-release-") as temporary:
         body = Path(temporary) / "notes.md"
-        body.write_text(notes(root, record, repository, commit, channel))
+        body.write_text(notes(root, records, repository, commit, channel))
         # Assets are attached while draft, before immutable-release publication locks them.
         try:
             gh(
@@ -210,11 +246,11 @@ def publish(root, directory, provenance, sbom_bundle, channel, repository, commi
     release = json.loads(
         gh("release", "view", tag, "--repo", repository, "--json", "assets")
     )
-    uploaded = {a["name"]: a["size"] for a in release["assets"]}
-    if uploaded != {path.name: path.stat().st_size for path in assets}:
-        raise ValueError("Draft release assets are incomplete")
+    uploaded = {a["name"]: (a["size"], a["digest"]) for a in release["assets"]}
+    if uploaded != {path.name: (path.stat().st_size, f"sha256:{digest(path)}") for path in assets}:
+        raise ValueError("Draft release assets are incomplete or their digests differ")
     matches = [
-        asset["url"] for asset in release["assets"] if asset["name"] == archive.name
+        asset["url"] for asset in release["assets"] if asset["name"] == record["archive"]
     ]
     if len(matches) != 1:
         raise ValueError("Published release did not return the named module ZIP")
@@ -228,23 +264,29 @@ if __name__ == "__main__":
     parser.add_argument("--check-only", action="store_true")
     parser.add_argument("--provenance", type=Path)
     parser.add_argument("--sbom-bundle", type=Path)
+    parser.add_argument("--lite-provenance", type=Path)
+    parser.add_argument("--lite-sbom-bundle", type=Path)
     parser.add_argument("--channel", choices=["stable", "nightly"])
     arguments = parser.parse_args()
     commit = os.environ["GITHUB_SHA"]
     if arguments.check_only:
-        read_payload(arguments.directory, commit)
+        read_release(arguments.directory, commit)
     else:
         if (
             not arguments.provenance
             or not arguments.sbom_bundle
+            or not arguments.lite_provenance
+            or not arguments.lite_sbom_bundle
             or not arguments.channel
         ):
-            parser.error("Publishing requires both attestation bundles and a channel")
+            parser.error("Publishing requires both editions' attestation bundles and a channel")
         asset = publish(
             Path(__file__).resolve().parents[2],
             arguments.directory,
-            arguments.provenance,
-            arguments.sbom_bundle,
+            {
+                "full": (arguments.provenance, arguments.sbom_bundle),
+                "lite": (arguments.lite_provenance, arguments.lite_sbom_bundle),
+            },
             arguments.channel,
             os.environ["GITHUB_REPOSITORY"],
             commit,

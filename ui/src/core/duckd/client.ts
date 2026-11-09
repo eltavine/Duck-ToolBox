@@ -4,7 +4,7 @@ import { bridge, heredoc, shellQuote } from "@/core/bridge"
 
 import { DuckError, ENVELOPE_API, parseEnvelope } from "./envelope"
 
-export const MODULE_ID = "duck-toolbox"
+export const MODULE_ID = import.meta.env.MODE === "lite" ? "duck-toolbox-lite" : "duck-toolbox"
 const DEFAULT_MODULE_DIR = `/data/adb/modules/${MODULE_ID}`
 
 /**

@@ -6,6 +6,20 @@ compiled into one JSON CLI (`duckd`); the WebUI is a set of feature folders that
 discovers at build time. Features only meet through versioned contracts, so each one can be
 changed, removed or added on its own.
 
+## Full and Lite
+
+**Full** is the default for Stable, Canary, and the KernelSU Modules listing.
+**Lite** keeps the Tricky Store manager, RKP workbench and device RKP issuer. It
+ships without Zygisk injection libraries and uses the root manager for WebUI and
+module operations. The Tricky Store manager configures a separately installed
+keystore module.
+
+Install or update Lite manually with the `duck-lite-*.zip` asset from
+[GitHub Releases](https://github.com/eltavine/Duck-ToolBox/releases). Lite has its own
+module ID and data directory at `/data/adb/duck-toolbox-lite`. Switching editions
+requires uninstalling the current edition and rebooting first. Uninstall removes
+that edition's local profiles and output files, including exported keyboxes.
+
 ## Tools
 
 - **Play Integrity**: an independently built GPLv3 engine derived from Play Integrity Fork,
@@ -258,25 +272,26 @@ What keeps it modular and resistant to breaking changes:
 | `action.sh` (Magisk) | Opens the WebUI in KSUWebUIStandalone or WebUI X, installing KSUWebUIStandalone if neither is present. |
 | `uninstall.sh` | Removes entry links, flags, the boot hash and `/data/adb/duck-toolbox`. |
 
-Saved data lives in `/data/adb/duck-toolbox/var`, outside the module directory, so updates
-keep it.
+Full stores saved data in `/data/adb/duck-toolbox/var`. Lite uses
+`/data/adb/duck-toolbox-lite/var`. Both paths sit outside the module directory so updates
+keep them.
 
 **Updates.** The stable channel follows `updateJson` in `module.prop`. The canary channel
 reads the newest CI artifact through nightly.link: CI uploads the module directory as
 `duck-toolbox-<version>-<commit count>-canary`, and the commit count is its `versionCode`.
-Each successful package on a `main` push or manual CI run also publishes the module ZIP
-as a GitHub prerelease. Tags use `nightly-<8-character commit hash>-<UTC timestamp>`
+Each successful package on a `main` push or manual CI run publishes Full and Lite
+together as a GitHub prerelease. Tags use `nightly-<8-character commit hash>-<UTC timestamp>`
 (for example, `nightly-1234abcd-20261011T120000123456Z`). These releases do not replace
 the latest stable release; Telegram uploads continue on push builds.
 Published module ZIPs include GitHub build-provenance and SBOM attestations, an SPDX
 inventory and checksums. See [release verification and inventory coverage](docs/supply-chain.md).
-The `*-verified` Actions artifact contains the exact release ZIP; the legacy
+The `*-verified` Actions artifact contains the exact ZIP for each edition. The legacy
 nightly.link directory archive is packaged separately and has a different digest.
 The **Stable** workflow runs when the `version` field changes in
 `module/module.prop` or through a manual request. Metadata-only edits skip publication.
 It reuses the CI checks and builds, preserves `version`
-and `versionCode` from `module/module.prop`, publishes `v<version>` as the latest
-non-prerelease release, and sends the same ZIP to Telegram with a `stable` label.
+and `versionCode` from `module/module.prop`, publishes both ZIPs under `v<version>`
+as the latest stable release, and sends the Full ZIP to Telegram with a `stable` label.
 Before running it on `main`, increase `versionCode` beyond all accepted releases and
 update `update.json` to match the version and `duck-toolbox-<version>.zip` asset.
 
@@ -408,13 +423,23 @@ python3 scripts/package-module.py --channel nightly
 
 Channel metadata is written into each ZIP without changing `module/module.prop`.
 Nightly packages use the repository's commit-count version code and `canary` suffix.
-Both release channels retain the GPLv3 license and dependency notices. The engine
+Full retains the GPLv3 license and dependency notices in both channels. The engine
 build records its exact Git commit, and packaging rejects a dirty or mismatched
 source checkout or WebUI source link. Both feature footers link to the source at
 the exact build commit, including the build scripts and dependency lockfiles.
 The pinned build/dependency script is `scripts/build-play-integrity.py`.
 See [the rule review](components/play-integrity/RULES.md) for original sources
 and required device validation.
+
+To build Lite using the Android backend prerequisites above:
+
+```sh
+cargo build --locked --release --package duckd --target aarch64-linux-android \
+  --target-dir target/lite --no-default-features --features lite
+(cd ui && pnpm build --mode lite)
+python3 scripts/package-module.py --variant lite \
+  --binary target/lite/aarch64-linux-android/release/duckd --channel nightly
+```
 
 The power control uses `duckd play-integrity disable` (standalone:
 `pif-engine request disable`) and `play-integrity power` for status. Disable

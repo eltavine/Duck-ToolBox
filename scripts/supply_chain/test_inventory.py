@@ -8,12 +8,14 @@ import zipfile
 
 from fixtures import COMMIT, archive, inventory, source
 from inputs import (
+    LITE_LOCKFILES,
     LOCKFILES,
     expected_packages,
     validate_inventory,
     enrich_cargo_sources,
 )
 import sbom
+from payload import LITE_ID
 
 
 class InventoryTests(unittest.TestCase):
@@ -138,6 +140,41 @@ class InventoryTests(unittest.TestCase):
                 sbom.assemble(
                     copy.deepcopy(inventory(self.root)), self.root, changed, COMMIT
                 )
+
+    def test_lite_inventory_has_only_its_declared_inputs_and_delivered_components(self):
+        zipped = archive(self.root, variant="lite")
+        with patch.object(sbom, "scan", return_value=inventory(self.root, LITE_LOCKFILES)) as scan:
+            record = sbom.generate(self.root, zipped, "unused", COMMIT, "lite")
+        self.assertEqual(scan.call_args.args[-1], LITE_LOCKFILES)
+        document = json.loads((self.root / record["sbom"]).read_text())
+        delivered = {r["relatedSpdxElement"] for r in document["relationships"]
+                     if r["spdxElementId"] == sbom.MODULE_ID and r["relationshipType"] == "CONTAINS"}
+        self.assertEqual({p["name"] for p in document["packages"] if p["SPDXID"] in delivered},
+                         {"duckd", "webui"})
+        self.assertEqual(record["module_id"], LITE_ID)
+
+    def test_lite_rejects_full_payloads_even_below_webroot(self):
+        for name in ("zygisk/arm64-v8a.so", "play-integrity/pif-engine", "device-faker/build.json",
+                     "bin/tini-arm64", "webroot/assets/injection.so", "zygisk/"):
+            with self.subTest(name=name):
+                zipped = archive(self.root, variant="lite")
+                with zipfile.ZipFile(zipped, "a") as contents:
+                    contents.writestr(name, b"excluded")
+                with self.assertRaisesRegex(ValueError, "Lite payload"):
+                    sbom.archive_files(zipped, "lite")
+
+    def test_lite_rejects_a_full_backend_or_a_full_webui(self):
+        for name, bad, message in (
+            ("bin/duckd", b"\x7fELF\x02\x01" + bytes(12) + b"\xb7\x00Full backend", "Lite backend"),
+            ("webroot/build.json", b'{"edition":"full"}', "Lite WebUI"),
+        ):
+            changed = self.root / "changed.zip"
+            with (zipfile.ZipFile(archive(self.root, variant="lite")) as before,
+                  zipfile.ZipFile(changed, "w") as after):
+                for entry in before.namelist():
+                    after.writestr(entry, bad if entry == name else before.read(entry))
+            with self.subTest(name=name), self.assertRaisesRegex(ValueError, message):
+                sbom.archive_files(changed, "lite")
 
     def test_unsafe_or_duplicate_payload_entries_are_rejected(self):
         for name in ["../escape", "/absolute", "a\\b", "module.prop"]:

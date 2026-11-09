@@ -5,7 +5,9 @@ import tailwindcss from "@tailwindcss/vite"
 import vue from "@vitejs/plugin-vue"
 import { defineConfig } from "vite"
 
-export default defineConfig({
+const liteFeatures = ["rkp", "rkp-device", "tricky-store"]
+
+export default defineConfig(({ mode }) => ({
   // KernelSU serves webroot/ through WebViewAssetLoader, so assets must resolve relative
   // to index.html.
   base: "./",
@@ -19,14 +21,46 @@ export default defineConfig({
       // Keep the message compiler: translations downloaded at runtime arrive as strings.
       runtimeOnly: false,
     }),
+    mode === "lite" && {
+      name: "lite-feature-catalog",
+      apply: "build",
+      generateBundle(_options, bundle) {
+        const included = new Set<string>()
+        for (const chunk of Object.values(bundle)) {
+          if (chunk.type !== "chunk") continue
+          for (const module of chunk.moduleIds) {
+            const feature = /\/src\/features\/([^/]+)\//.exec(module)?.[1]
+            if (feature) included.add(feature)
+          }
+        }
+        if (JSON.stringify([...included].sort()) !== JSON.stringify(liteFeatures)) {
+          this.error(`Unexpected Lite WebUI features: ${[...included].sort().join(", ")}`)
+        }
+        this.emitFile({
+          type: "asset",
+          fileName: "build.json",
+          source: JSON.stringify({ edition: "lite", features: liteFeatures }) + "\n",
+        })
+      },
+    },
   ],
   resolve: {
-    alias: {
-      "@": fileURLToPath(new URL("./src", import.meta.url)),
-    },
+    alias: [
+      ...(mode === "lite"
+        ? [
+            {
+              find: /^\.\/feature-catalog$/,
+              replacement: fileURLToPath(
+                new URL("./src/app/feature-catalog.lite.ts", import.meta.url),
+              ),
+            },
+          ]
+        : []),
+      { find: "@", replacement: fileURLToPath(new URL("./src", import.meta.url)) },
+    ],
   },
   build: {
-    outDir: "../module/webroot",
+    outDir: mode === "lite" ? "../target/lite/webroot" : "../module/webroot",
     emptyOutDir: true,
     // Tailwind CSS v4 needs Chrome 111+; index.html blocks older WebViews with a notice.
     target: "chrome111",
@@ -53,4 +87,4 @@ export default defineConfig({
       },
     },
   },
-})
+}))

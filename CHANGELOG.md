@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Lite
+
+- Publish a Zygisk-free Lite ZIP with the Tricky Store manager, RKP workbench and
+  device RKP issuer. Full remains the default update edition.
+- Publish independent SPDX inventories, build-provenance and SBOM attestations
+  for both editions in the same release.
+
 ### Device Faker
 
 - Embed 207 searchable device presets contributed by SkyQiQiQwQ in Issue #48.

@@ -5,6 +5,7 @@ import json
 import zipfile
 
 from inputs import LOCKFILES, digest
+from payload import ARTIFACT_PREFIX, FULL_ID, LITE_ID, LITE_REQUIRED, LITE_WEBUI
 
 COMMIT = "a" * 40
 
@@ -64,11 +65,11 @@ def source(root):
     return root
 
 
-def inventory(root):
+def inventory(root, lockfiles=LOCKFILES):
     from inputs import expected_packages
 
     packages, files, relationships = [], [], []
-    for index, (relative, entries) in enumerate(expected_packages(root).items()):
+    for index, (relative, entries) in enumerate(expected_packages(root, lockfiles).items()):
         file_id = f"SPDXRef-Input-{index}"
         files.append(
             {
@@ -140,10 +141,20 @@ def inventory(root):
     }
 
 
-def archive(root, version="1.2.3"):
-    path = root / f"duck-toolbox-{version}.zip"
+def archive(root, version="1.2.3", variant="full", version_code="123"):
+    root.mkdir(parents=True, exist_ok=True)
+    module_id = LITE_ID if variant == "lite" else FULL_ID
+    path = root / f"{ARTIFACT_PREFIX[module_id]}-{version}.zip"
     with zipfile.ZipFile(path, "w") as output:
-        output.writestr("module.prop", f"id=duck-toolbox\nversion={version}\n")
+        output.writestr("module.prop", f"id={module_id}\nversion={version}\nversionCode={version_code}\n")
+        if variant == "lite":
+            files = {
+                "webroot/build.json": json.dumps(LITE_WEBUI),
+                "bin/duckd": b"\x7fELF\x02\x01" + bytes(12) + b"\xb7\x00Duck ToolBox Lite backend.",
+            }
+            for name in LITE_REQUIRED - {"module.prop"} | {"webroot/assets/app.js"}:
+                output.writestr(name, files.get(name, b"fixture payload"))
+            return path
         output.writestr("bin/tini-arm64", b"tini")
         for name in ["play-integrity", "device-faker"]:
             output.writestr(f"{name}/build.json", json.dumps({"source_commit": COMMIT}))

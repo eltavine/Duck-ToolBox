@@ -7,6 +7,7 @@ import importlib.util
 import json
 from pathlib import Path, PurePosixPath
 import re
+import stat
 import tempfile
 import uuid
 import zipfile
@@ -16,7 +17,8 @@ from spdx_tools.spdx.validation.document_validator import validate_full_spdx_doc
 from spdx_tools.spdx.model import File, Checksum, ChecksumAlgorithm
 from spdx_tools.spdx.spdx_element_utils import calculate_package_verification_code
 
-from inputs import digest, scan
+from inputs import LITE_LOCKFILES, LOCKFILES, digest, scan
+from payload import FULL_ID, LITE_ID, module_properties, validate_lite_payload
 
 ROOT = Path(__file__).resolve().parents[2]
 REPOSITORY = "https://github.com/eltavine/Duck-ToolBox"
@@ -59,11 +61,13 @@ def relate(document, source, kind, target):
     )
 
 
-def archive_files(archive):
+def archive_files(archive, variant="full"):
     files = []
     with zipfile.ZipFile(archive) as zipped:
         names = set()
         for entry in zipped.infolist():
+            if variant == "lite" and (entry.is_dir() or stat.S_ISLNK(entry.external_attr >> 16)):
+                raise ValueError(f"Invalid Lite payload entry: {entry.filename}")
             if entry.is_dir():
                 continue
             name = entry.filename
@@ -95,6 +99,12 @@ def archive_files(archive):
                     "copyrightText": "NOASSERTION",
                 }
             )
+        if "module.prop" not in names:
+            raise ValueError("Missing module payload: module.prop")
+        metadata = module_properties(zipped.read("module.prop").decode())
+        if variant == "lite":
+            validate_lite_payload(names, zipped.read, metadata)
+            return files, metadata
         required = {
             "module.prop",
             "bin/duckd",
@@ -110,11 +120,6 @@ def archive_files(archive):
         }
         if not required <= names:
             raise ValueError(f"Missing module payloads: {sorted(required - names)}")
-        metadata = dict(
-            line.split("=", 1)
-            for line in zipped.read("module.prop").decode().splitlines()
-            if "=" in line
-        )
         for relative in ["play-integrity/build.json", "device-faker/build.json"]:
             build = json.loads(zipped.read(relative))
             component_commit = build.get("source_commit")
@@ -124,10 +129,14 @@ def archive_files(archive):
     return files, metadata
 
 
-def embedded_components(root, commit):
+def embedded_components(root, commit, variant="full"):
     components = [
         package("duckd", commit, f"{REPOSITORY}/tree/{commit}/crates", "MIT"),
         package("webui", commit, f"{REPOSITORY}/tree/{commit}/ui", "MIT"),
+    ]
+    if variant == "lite":
+        return components
+    components.extend([
         package(
             "zygisk-runtime",
             commit,
@@ -140,7 +149,7 @@ def embedded_components(root, commit):
             f"{REPOSITORY}/tree/{commit}/components/language-spoof",
             "GPL-3.0-only",
         ),
-    ]
+    ])
     for name in ["play-integrity", "device-faker"]:
         upstream = json.loads((root / f"components/{name}/UPSTREAM.json").read_text())
         components.append(
@@ -180,12 +189,12 @@ def embedded_components(root, commit):
     return components
 
 
-def assemble(document, root, archive, commit):
-    files, metadata = archive_files(archive)
-    if metadata.get("id") != "duck-toolbox" or any(
+def assemble(document, root, archive, commit, variant="full"):
+    files, metadata = archive_files(archive, variant)
+    if variant == "full" and (metadata.get("id") != FULL_ID or any(
         metadata[path] != commit
         for path in ["play-integrity/build.json", "device-faker/build.json"]
-    ):
+    )):
         raise ValueError("Archive component source does not match the SBOM checkout")
     checksum = digest(archive)
     document["name"] = archive.name
@@ -195,7 +204,7 @@ def assemble(document, root, archive, commit):
         r for r in document["relationships"] if r["relationshipType"] != "DESCRIBES"
     ]
     module = package(
-        "duck-toolbox",
+        metadata["id"],
         metadata["version"],
         checksums=[{"algorithm": "SHA256", "checksumValue": checksum}],
         primaryPackagePurpose="ARCHIVE",
@@ -225,7 +234,7 @@ def assemble(document, root, archive, commit):
             "Declared source/build inventory; inclusion does not establish presence in the final binaries."
         )
         relate(document, item["SPDXID"], "BUILD_DEPENDENCY_OF", MODULE_ID)
-    components = embedded_components(root, commit)
+    components = embedded_components(root, commit, variant)
     document["packages"].extend([module, *components])
     relate(document, "SPDXRef-DOCUMENT", "DESCRIBES", MODULE_ID)
     for item in components:
@@ -236,12 +245,13 @@ def assemble(document, root, archive, commit):
     for item in files:
         relate(document, MODULE_ID, "CONTAINS", item["SPDXID"])
     document.setdefault("files", []).extend(files)
-    tini = next(item for item in components if item["name"] == "tini-static-arm64")
-    delivered_tini = next(
-        (item for item in files if item["fileName"] == "./module/bin/tini-arm64"), None
-    )
-    if not delivered_tini or tini["checksums"][0] not in delivered_tini["checksums"]:
-        raise ValueError("Delivered Tini does not match its pinned hash")
+    if variant == "full":
+        tini = next(item for item in components if item["name"] == "tini-static-arm64")
+        delivered_tini = next(
+            (item for item in files if item["fileName"] == "./module/bin/tini-arm64"), None
+        )
+        if not delivered_tini or tini["checksums"][0] not in delivered_tini["checksums"]:
+            raise ValueError("Delivered Tini does not match its pinned hash")
     return metadata
 
 
@@ -256,22 +266,25 @@ def validate(path):
         )
 
 
-def generate(root, archive, syft, commit):
+def generate(root, archive, syft, commit, variant="full"):
     if not re.fullmatch(r"[0-9a-f]{40}", commit):
         raise ValueError("An immutable source commit is required")
     with tempfile.TemporaryDirectory(prefix="duck-sbom-") as directory:
-        document = scan(root, Path(directory) / "inputs", syft, commit)
-    metadata = assemble(document, root, archive, commit)
+        lockfiles = LITE_LOCKFILES if variant == "lite" else LOCKFILES
+        document = scan(root, Path(directory) / "inputs", syft, commit, lockfiles)
+    metadata = assemble(document, root, archive, commit, variant)
     output = archive.with_suffix(".spdx.json")
     output.write_text(json.dumps(document, ensure_ascii=False, indent=2) + "\n")
     validate(output)
     record = {
-        "schema": 1,
+        "schema": 2,
         "release_timestamp": datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ"),
         "source_commit": commit,
+        "module_id": LITE_ID if variant == "lite" else FULL_ID,
         "archive": archive.name,
         "sbom": output.name,
         "version": metadata["version"],
+        "version_code": metadata["versionCode"],
         "name": archive.stem,
         "sha256": {archive.name: digest(archive), output.name: digest(output)},
     }
@@ -287,5 +300,6 @@ if __name__ == "__main__":
     parser.add_argument("--archive", required=True, type=Path)
     parser.add_argument("--syft", required=True)
     parser.add_argument("--commit", required=True)
+    parser.add_argument("--variant", choices=["full", "lite"], default="full")
     arguments = parser.parse_args()
-    generate(ROOT, arguments.archive, arguments.syft, arguments.commit)
+    generate(ROOT, arguments.archive, arguments.syft, arguments.commit, arguments.variant)

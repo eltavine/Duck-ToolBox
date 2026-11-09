@@ -43,9 +43,14 @@ static FEATURES: &[&dyn Feature] = &[
 ];
 
 fn cli() -> clap::Command {
+    let description = if cfg!(feature = "lite") && FEATURES.len() == 3 {
+        "Duck ToolBox Lite backend. API subcommands print one JSON envelope."
+    } else {
+        "Duck ToolBox backend. API subcommands print one JSON envelope; linux-env shell opens an interactive terminal."
+    };
     clap::Command::new("duckd")
         .version(env!("CARGO_PKG_VERSION"))
-        .about("Duck ToolBox backend. API subcommands print one JSON envelope; linux-env shell opens an interactive terminal.")
+        .about(description)
         .arg(
             Arg::new("json")
                 .long("json")

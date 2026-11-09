@@ -8,6 +8,7 @@ use serde::Serialize;
 
 const DATA_ROOT_ENV: &str = "DUCK_TOOLBOX_DATA_ROOT";
 const ANDROID_DATA_ROOT: &str = "/data/adb/duck-toolbox";
+const ANDROID_LITE_DATA_ROOT: &str = "/data/adb/duck-toolbox-lite";
 
 #[derive(Debug, Clone, Serialize)]
 pub struct AppPaths {
@@ -95,6 +96,12 @@ fn resolve_data_root(
     }
 
     if target_is_android {
+        if module_root
+            .file_name()
+            .is_some_and(|name| name == "duck-toolbox-lite")
+        {
+            return PathBuf::from(ANDROID_LITE_DATA_ROOT);
+        }
         return PathBuf::from(ANDROID_DATA_ROOT);
     }
 
@@ -172,6 +179,19 @@ mod tests {
         let data_root = resolve_data_root(Path::new("/data/adb/modules/duck-toolbox"), None, true);
 
         assert_eq!(data_root, PathBuf::from(ANDROID_DATA_ROOT));
+    }
+
+    #[test]
+    fn android_lite_uses_separate_data_in_active_and_pending_installations() {
+        for path in [
+            "/data/adb/modules/duck-toolbox-lite",
+            "/data/adb/modules_update/duck-toolbox-lite",
+        ] {
+            assert_eq!(
+                resolve_data_root(Path::new(path), None, true),
+                PathBuf::from(super::ANDROID_LITE_DATA_ROOT),
+            );
+        }
     }
 
     #[test]

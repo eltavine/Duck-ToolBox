@@ -17,7 +17,6 @@ permissions:
   contents: read
 
 env:
-  MODULE_ID: duck-toolbox
   ANDROID_API_LEVEL: 26
   TARGET: aarch64-linux-android
   NDK_VERSION: r30
@@ -62,6 +61,13 @@ jobs:
             cargo check --locked --package duckd --no-default-features --features "${feature}"
             echo "::endgroup::"
           done
+      - name: Check the compiled Lite feature catalog
+        env:
+          DUCK_TOOLBOX_ROOT: ${{ github.workspace }}/module
+          DUCK_TOOLBOX_DATA_ROOT: ${{ runner.temp }}/duck-lite
+        run: |
+          cargo run --quiet --locked --package duckd --no-default-features --features lite -- features \
+            | jq -e '.ok and ([.data.features[].id] | sort == ["rkp", "rkp-device", "tricky-store"])'
 
   play-integrity:
     name: Independent Play Integrity engine
@@ -180,11 +186,14 @@ jobs:
           export CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER="${CC_aarch64_linux_android}"
           cargo clippy --locked --package duck-linux-env --all-targets --target "${TARGET}" -- -D warnings
           cargo build --locked --release --package duckd --target "${TARGET}"
+          install -D -m 0755 "target/${TARGET}/release/duckd" artifact/full/duckd
+          cargo build --locked --release --package duckd --target "${TARGET}" --no-default-features --features lite
+          install -D -m 0755 "target/${TARGET}/release/duckd" artifact/lite/duckd
       - name: Upload backend binary
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: duckd
-          path: target/${{ env.TARGET }}/release/duckd
+          path: artifact/
           if-no-files-found: error
 
   webui:
@@ -215,11 +224,19 @@ jobs:
           VITE_PIF_SOURCE_COMMIT: ${{ github.sha }}
           VITE_DEVICE_FAKER_SOURCE_COMMIT: ${{ github.sha }}
         run: pnpm build
+      - name: Bundle Lite WebUI
+        run: pnpm build --mode lite
       - name: Upload WebUI bundle
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: webroot
           path: module/webroot
+          if-no-files-found: error
+      - name: Upload Lite WebUI bundle
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: webroot-lite
+          path: target/lite/webroot
           if-no-files-found: error
 
   contract:
@@ -325,6 +342,8 @@ jobs:
       artifact-name: ${{ steps.assemble.outputs.artifact-name }}
       module-file: ${{ steps.assemble.outputs.module-file }}
       sbom-file: ${{ steps.assemble.outputs.sbom-file }}
+      lite-module-file: ${{ steps.assemble.outputs.lite-module-file }}
+      lite-sbom-file: ${{ steps.assemble.outputs.lite-sbom-file }}
       module-version: ${{ steps.assemble.outputs.module-version }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -340,6 +359,11 @@ jobs:
         with:
           name: webroot
           path: module/webroot
+      - name: Download Lite WebUI bundle
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: webroot-lite
+          path: artifact/webroot-lite
       - name: Download independent engine
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
@@ -356,28 +380,32 @@ jobs:
           version="$(sed -n 's/^version=//p' module/module.prop)"
           tag=""
           if [ "${RELEASE_CHANNEL}" = stable ]; then
-            name="${MODULE_ID}-${version}"
             tag="v${version}"
           else
             code="$(git rev-list --count HEAD)"
             # Canary builds count commits, so every push is newer than the one before.
-            name="${MODULE_ID}-${version}-${code}-canary"
             version="${version} (${code}-canary)"
           fi
-          install -m 0755 artifact/bin/duckd module/bin/duckd
-          cp README.md CHANGELOG.md module/
-          mkdir -p dist
-          python3 scripts/package-module.py --binary module/bin/duckd --channel "${RELEASE_CHANNEL}" --output "dist/${name}.zip"
+          # Keep the release ZIPs and their inventory records isolated by edition.
+          full="$(python3 scripts/package-module.py --binary artifact/bin/full/duckd --channel "${RELEASE_CHANNEL}" --output-dir dist/full)"
+          lite="$(python3 scripts/package-module.py --variant lite --binary artifact/bin/lite/duckd --webroot artifact/webroot-lite --channel "${RELEASE_CHANNEL}" --output-dir dist/lite)"
+          name="${full##*/}"
+          name="${name%.zip}"
+          lite_name="${lite##*/}"
+          lite_name="${lite_name%.zip}"
           {
             echo "MODULE_VERSION=${version}"
             echo "RELEASE_TAG=${tag}"
             echo "ARTIFACT_NAME=${name}"
-            echo "MODULE_PATH=dist/${name}.zip"
+            echo "MODULE_PATH=dist/full/${name}.zip"
+            echo "LITE_MODULE_PATH=dist/lite/${lite_name}.zip"
           } >> "$GITHUB_ENV"
           {
             echo "artifact-name=${name}-verified"
             echo "module-file=${name}.zip"
             echo "sbom-file=${name}.spdx.json"
+            echo "lite-module-file=${lite_name}.zip"
+            echo "lite-sbom-file=${lite_name}.spdx.json"
             echo "module-version=${version}"
           } >> "$GITHUB_OUTPUT"
       - name: Validate KernelSU Modules metadata and ZIP
@@ -387,6 +415,13 @@ jobs:
           zip: ${{ env.MODULE_PATH }}
           prerelease: ${{ !inputs.stable }}
           tag: ${{ env.RELEASE_TAG }}
+          dry-run: true
+      - name: Validate Lite ZIP
+        uses: KernelSU-Modules/tools/actions/module-release@ca1187c92135b3c31e48d37e008d61153120a08b
+        with:
+          zip: ${{ env.LITE_MODULE_PATH }}
+          # The repository's catalog manifest registers Full only.
+          manifest: target/lite/module.yaml
           dry-run: true
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
@@ -400,12 +435,12 @@ jobs:
         uses: anchore/sbom-action/download-syft@e22c389904149dbc22b58101806040fa8d37a610 # v0
         with:
           syft-version: v1.55.0
-      - name: Generate and validate module SBOM
+      - name: Generate and validate both module SBOMs
         env:
           SYFT: ${{ steps.syft.outputs.cmd }}
-        run: >-
-          python3 scripts/supply_chain/sbom.py
-          --archive "${MODULE_PATH}" --syft "${SYFT}" --commit "${GITHUB_SHA}"
+        run: |
+          python3 scripts/supply_chain/sbom.py --archive "${MODULE_PATH}" --syft "${SYFT}" --commit "${GITHUB_SHA}"
+          python3 scripts/supply_chain/sbom.py --variant lite --archive "${LITE_MODULE_PATH}" --syft "${SYFT}" --commit "${GITHUB_SHA}"
       # The artifact is the module directory itself, so its nightly.link zip installs as is.
       - name: Upload module
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
@@ -436,7 +471,8 @@ jobs:
       attestations: write
     environment: Telegram
     env:
-      MODULE_PATH: dist/${{ needs.package.outputs.module-file }}
+      MODULE_PATH: dist/full/${{ needs.package.outputs.module-file }}
+      LITE_MODULE_PATH: dist/lite/${{ needs.package.outputs.lite-module-file }}
       MODULE_VERSION: ${{ needs.package.outputs.module-version }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -455,14 +491,29 @@ jobs:
         with:
           subject-path: |
             ${{ env.MODULE_PATH }}
-            dist/${{ needs.package.outputs.sbom-file }}
+            dist/full/${{ needs.package.outputs.sbom-file }}
           create-storage-record: false
       - name: Attest module SBOM
         id: sbom
         uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
         with:
           subject-path: ${{ env.MODULE_PATH }}
-          sbom-path: dist/${{ needs.package.outputs.sbom-file }}
+          sbom-path: dist/full/${{ needs.package.outputs.sbom-file }}
+          create-storage-record: false
+      - name: Attest Lite build provenance
+        id: lite-provenance
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
+        with:
+          subject-path: |
+            ${{ env.LITE_MODULE_PATH }}
+            dist/lite/${{ needs.package.outputs.lite-sbom-file }}
+          create-storage-record: false
+      - name: Attest Lite SBOM
+        id: lite-sbom
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
+        with:
+          subject-path: ${{ env.LITE_MODULE_PATH }}
+          sbom-path: dist/lite/${{ needs.package.outputs.lite-sbom-file }}
           create-storage-record: false
       - name: Verify attestations and publish complete release
         id: publish-release
@@ -470,9 +521,12 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           PROVENANCE_BUNDLE: ${{ steps.provenance.outputs.bundle-path }}
           SBOM_BUNDLE: ${{ steps.sbom.outputs.bundle-path }}
+          LITE_PROVENANCE_BUNDLE: ${{ steps.lite-provenance.outputs.bundle-path }}
+          LITE_SBOM_BUNDLE: ${{ steps.lite-sbom.outputs.bundle-path }}
         run: >-
           python3 scripts/supply_chain/release.py
           --provenance "${PROVENANCE_BUNDLE}" --sbom-bundle "${SBOM_BUNDLE}"
+          --lite-provenance "${LITE_PROVENANCE_BUNDLE}" --lite-sbom-bundle "${LITE_SBOM_BUNDLE}"
           --channel "${RELEASE_CHANNEL}"
       - name: Notify Telegram with module or release link
         if: steps.publish-release.outcome == 'success' && (github.event_name == 'push' || inputs.stable)

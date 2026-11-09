@@ -247,6 +247,8 @@ class ShellEntrypointTest(unittest.TestCase):
             root = Path(directory)
             wrapper = self.fixture(root)
             shutil.copy2(Path(__file__).with_name("package-module.py"), root / "scripts/package-module.py")
+            (root / "scripts/supply_chain").mkdir()
+            shutil.copy2(Path(__file__).parent / "supply_chain/payload.py", root / "scripts/supply_chain/payload.py")
             binary = root / "backend"
             binary.write_bytes(b"not an Android ELF")
             result = subprocess.run(["bash", str(wrapper), str(binary)], capture_output=True, text=True)

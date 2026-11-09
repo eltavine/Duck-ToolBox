@@ -4,9 +4,8 @@ import { configDefaults, defineConfig, mergeConfig } from "vitest/config"
 
 import viteConfig from "./vite.config.ts"
 
-export default mergeConfig(
-  viteConfig,
-  defineConfig({
+export default defineConfig((env) =>
+  mergeConfig(viteConfig(env), {
     test: {
       environment: "happy-dom",
       include: ["src/**/*.test.ts", "scripts/**/*.test.ts"],

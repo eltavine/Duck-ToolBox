@@ -1,12 +1,25 @@
+from fnmatch import fnmatchcase
+import json
 from pathlib import Path
 import unittest
 
 import yaml
 
+from payload import ARTIFACT_PREFIX, FULL_ID, LITE_ID
+
 ROOT = Path(__file__).resolve().parents[2]
 
 
 class WorkflowPermissionsTests(unittest.TestCase):
+    def test_default_update_sources_select_only_full(self):
+        catalog = yaml.safe_load((ROOT / "module.yaml").read_text())
+        update = json.loads((ROOT / "update.json").read_text())
+        pattern = catalog["release"]["assetPattern"]
+        for module_id in (FULL_ID, LITE_ID):
+            name = f"{ARTIFACT_PREFIX[module_id]}-{update['version']}.zip"
+            self.assertEqual(fnmatchcase(name, pattern), module_id == FULL_ID)
+            self.assertEqual(update["zipUrl"].endswith("/" + name), module_id == FULL_ID)
+
     def test_external_release_workflow_actions_are_immutable(self):
         for name in ["ci.yml", "stable.yml"]:
             workflow = yaml.safe_load((ROOT / ".github/workflows" / name).read_text())
@@ -39,21 +52,20 @@ class WorkflowPermissionsTests(unittest.TestCase):
             },
         )
 
-    def test_both_attestations_bind_the_zip_with_pinned_actions(self):
+    def test_each_edition_has_both_attestations_with_distinct_subjects(self):
         workflow = yaml.safe_load((ROOT / ".github/workflows/ci.yml").read_text())
         steps = workflow["jobs"]["publish"]["steps"]
         attest = [
             step for step in steps if step.get("uses", "").startswith("actions/attest@")
         ]
-        self.assertEqual(len(attest), 2)
-        for step in attest:
-            self.assertRegex(step["uses"], r"@[0-9a-f]{40}$")
-            self.assertIn(
-                "${{ env.MODULE_PATH }}", step["with"]["subject-path"].splitlines()
-            )
-        self.assertIn("sbom-path", attest[1]["with"])
-        self.assertNotIn("sbom-path", attest[0]["with"])
-        self.assertIn(
-            "dist/${{ needs.package.outputs.sbom-file }}",
-            attest[0]["with"]["subject-path"].splitlines(),
-        )
+        self.assertEqual(len(attest), 4)
+        for edition, zip_var, prefix in (("full", "MODULE_PATH", ""), ("lite", "LITE_MODULE_PATH", "lite-")):
+            steps = {step["id"]: step["with"] for step in attest}
+            provenance = steps[prefix + "provenance"]
+            sbom = steps[prefix + "sbom"]
+            zip_path = f"${{{{ env.{zip_var} }}}}"
+            sbom_path = f"dist/{edition}/${{{{ needs.package.outputs.{prefix}sbom-file }}}}"
+            self.assertEqual(provenance["subject-path"].splitlines(), [zip_path, sbom_path])
+            self.assertNotIn("sbom-path", provenance)
+            self.assertEqual(sbom["subject-path"], zip_path)
+            self.assertEqual(sbom["sbom-path"], sbom_path)

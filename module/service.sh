@@ -7,7 +7,7 @@ umask 077
 MODPATH=${0%/*}
 
 # shellcheck source=util_functions.sh
-. "$MODPATH/util_functions.sh"
+. "$MODPATH/util_functions.sh" || exit 1
 
 repair_runtime
 

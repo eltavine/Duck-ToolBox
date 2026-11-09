@@ -31,6 +31,13 @@ if [ -z "$API" ] || [ "$API" -lt 26 ]; then
   abort "! Android 8.0 (API 26) or newer is required."
 fi
 
+# shellcheck source=util_functions.sh
+. "$MODPATH/util_functions.sh" || abort "! Could not verify the module edition."
+
+if conflicting_installation "$MODULE_ID" /data/adb; then
+  abort "! Full and Lite cannot coexist. Uninstall the other edition and reboot before installing."
+fi
+
 if [ ! -d "/data/adb/modules/tricky_store" ] &&
   [ ! -d "/data/adb/modules/oh_my_keymint" ] &&
   [ ! -d "/data/adb/modules/teesim" ]; then
@@ -42,9 +49,6 @@ fi
 if [ "$KSU" = "true" ] || [ "$APATCH" = "true" ]; then
   rm -f "$MODPATH/action.sh"
 fi
-
-# shellcheck source=util_functions.sh
-. "$MODPATH/util_functions.sh"
 
 ui_print "- Preparing runtime directory at $DATA_ROOT"
 umask 077
@@ -61,9 +65,11 @@ fi
 ui_print " "
 ui_print "! Duck ToolBox is not part of Tricky Store, TEESimulator or OhMyKeymint."
 ui_print "  Do not report its issues to those projects."
-# shellcheck source=device-faker.sh
-. "$MODPATH/device-faker.sh"
-setup_device_faker || abort "! Device Faker payload setup failed."
-ui_print "- Embedded Device Faker prepared; reboot before enabling it in the WebUI."
+if [ "$MODULE_ID" = "duck-toolbox" ]; then
+  # shellcheck source=device-faker.sh
+  . "$MODPATH/device-faker.sh"
+  setup_device_faker || abort "! Device Faker payload setup failed."
+  ui_print "- Embedded Device Faker prepared; reboot before enabling it in the WebUI."
+fi
 ui_print "- Installation complete."
 ui_print " "

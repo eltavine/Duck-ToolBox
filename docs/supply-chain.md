@@ -1,11 +1,14 @@
 # Release provenance and software inventory
 
-Canary and Stable releases publish the installable module ZIP with:
+Canary and Stable releases publish Full and Lite together. Each ZIP has:
 
 - `<module>.spdx.json`: SPDX 2.3 inventory of delivered files, embedded components and declared source/build dependencies.
 - `<module>.provenance.sigstore.json`: GitHub build-provenance attestation for the ZIP and SBOM file.
 - `<module>.sbom.sigstore.json`: GitHub SBOM attestation whose subject is the same ZIP.
-- `SHA256SUMS`: hashes of the ZIP, SBOM and both attestation bundles.
+
+The shared `SHA256SUMS` file records hashes for both ZIPs, both inventories and
+all four attestation bundles. `duck-toolbox-*.zip` remains the Full update asset.
+`duck-lite-*.zip` is the manual Lite installation and update asset.
 
 The ZIP is finalized and validated before inventory generation or signing. The signing
 steps do not rewrite it. The SBOM is a separate attachment, so it does not need to
@@ -43,16 +46,17 @@ attestation; the SBOM attestation separately binds its contents to the module ZI
 
 ## Inventory coverage
 
-Syft 1.55.0 scans a staging directory containing only the four application Cargo
-lockfiles, the WebUI pnpm lockfile, the Android Gradle lockfile and supporting
-manifests. Every locked package must appear with evidence tied to its own lockfile;
-each lockfile's SHA-256 is checked against the checkout. All documents in a pnpm
+For Full, Syft 1.55.0 scans the four application Cargo lockfiles, the WebUI pnpm
+lockfile, the Android Gradle lockfile and supporting manifests. For Lite, it scans
+the shared workspace Cargo lockfile, WebUI pnpm lockfile and their manifests.
+Every locked package must appear with evidence tied to its own lockfile. The
+scanner checks each lockfile's SHA-256 against the checkout. All documents in a pnpm
 lockfile stream are included, including package-manager dependencies.
 Cargo registry archive checksums and exact Git source revisions are retained.
 Git dependencies' Package URLs include their VCS source, and Maven group IDs are
 included when checking dependency identities.
 
-The inventory is supplemented with the embedded Play Integrity, Device Faker,
+The Full inventory is supplemented with the embedded Play Integrity, Device Faker,
 language and Zygisk components, their upstream source identities, source dependencies
 pinned by the native build script, and the precompiled Tini release and checksum.
 Unknown dependency licenses remain `NOASSERTION`; existing component notices govern
@@ -79,13 +83,14 @@ environment. No signing key or additional personal access token is required.
 The legacy artifact named `duck-toolbox-<version>-<count>-canary` remains a directory
 archive for the existing nightly.link updater. It is repackaged by Actions and is
 not the attested ZIP. The companion `*-verified` Actions artifact contains the exact
-inner installation ZIP and its SBOM; extract that ZIP before installing/verifying it.
+installation ZIP and SBOM for each edition. Extract the desired ZIP before installing
+or verifying it.
 PR artifacts have an SBOM but no official release attestations.
 
-The publisher checks the downloaded artifact hashes and source identity, verifies
-both signed bundles against this repository/workflow/main commit, and compares the
-verified SBOM predicate with the distributed SBOM. ZIP, SBOM, bundles and checksums
-are attached to a draft, checked for completeness, then published together. This
+The publisher checks both editions' downloaded artifact hashes, versions and source
+identity. It verifies each signed bundle against the repository, workflow and main
+commit, and compares each verified SBOM predicate with its distributed SBOM. The
+draft is published after GitHub's uploaded asset digests match the local files. This
 also supports GitHub's optional immutable releases setting. A partial upload may
 resume only an unpublished draft for the same source commit and expected assets;
 an existing public release is never overwritten. Telegram selects the ZIP by exact
