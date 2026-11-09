@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.2.2-Stable - 2026-11-09
+
 ### Lite
 
 - Publish a Zygisk-free Lite ZIP with the Tricky Store manager, RKP workbench and
@@ -11,6 +13,8 @@
 
 ### Device Faker
 
+- Add per-app device profiles, reusable templates and installed app selection. Resolve
+  profiles and target assignments separately for each Android user.
 - Embed 207 searchable device presets contributed by SkyQiQiQwQ in Issue #48.
   Preserve supplied identity, marketing and build fields without filling missing values.
   Review and edit presets before adding them to a draft; saving and enabling remain separate.
@@ -19,9 +23,24 @@
 
 ### Play Integrity
 
+- Add Full injection mode and expose process-level activation diagnostics in the WebUI.
 - Default the engine to disabled unless explicitly enabled. Keep existing explicit
   enable settings and leave configuration import, preview and application independent
   of the power setting.
+
+### Remote Key Provisioning
+
+- Allow users to include a build fingerprint explicitly in remote signing requests.
+- Recognize `rkpdapp.google.apk` in the system RKP APEX for device V1 provisioning.
+
+### Language spoofing
+
+- Add per-app and per-user language rules in the Full edition through Zygisk.
+
+### ZRAM
+
+- Add swap inventory, runtime ZRAM configuration and opt-in boot profiles. Protect
+  devices managed by the system and preserve saved settings across failed changes.
 
 ### Linux environments
 
